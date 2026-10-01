@@ -7,8 +7,14 @@
     "directory": "./public",
     "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
-    "not_found_handling": "none"
+    "not_found_handling": "none",
+    "run_worker_first": true
   },
+  "workers_dev": false, // vrtor.io is the only public host
+  "routes": [
+    { "pattern": "vrtor.io", "custom_domain": true },
+    { "pattern": "www.vrtor.io", "custom_domain": true }
+  ],
   "kv_namespaces": [
     { "binding": "WAITLIST", "id": "1873fda3120a49cd9d44e76b1c048575" }
   ],

@@ -100,6 +100,7 @@ code { font-family: var(--mono); font-size: 0.92em; }
 .scroll-cue { margin: 18px 0 0; font-size: 0.9rem; color: var(--muted); }
 .scroll-cue::after { content: " \2193"; color: var(--boundary); }
 
+.hero-h1 { margin: 0 0 18px; font: 700 clamp(1.5rem, 2.6vw, 2.125rem)/1.15 var(--display); letter-spacing: -0.02em; }
 .eyebrow { margin: 0 0 10px; color: var(--muted); font-size: 0.95rem; }
 .address { margin: 0; }
 .address-bar {

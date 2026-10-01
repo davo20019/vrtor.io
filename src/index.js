@@ -1,8 +1,9 @@
-// vrtor.io edge worker.
-// Static pages live in /public and are served by Workers Static Assets.
-// This worker only runs for paths that aren't a static file:
+// vrtor.io edge worker. It runs first for every request:
+//   - www.vrtor.io -> vrtor.io (one canonical host)
+//   - the *.workers.dev preview is kept out of search results
 //   - short subject links (vrtor.io/com) that are easy to type in a headset browser
 //   - the waitlist API
+//   - everything else: the static site in /public (Workers Static Assets)
 
 import { SUBJECTS } from './subjects.js';
 
@@ -11,28 +12,47 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const slug = url.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
-
-    if (slug === 'api/waitlist') return handleWaitlist(request, env);
-
-    const subject = SUBJECTS[slug];
-    if (subject && !subject.url) {
-      // Coming soon: show it in the catalog.
-      return Response.redirect(new URL(`/#subjects`, url).toString(), 302);
+    if (url.hostname === 'www.vrtor.io') {
+      url.hostname = 'vrtor.io';
+      return Response.redirect(url.toString(), 301);
     }
-    if (subject?.url) {
-      const target = new URL(subject.url);
-      // Carry through any query (e.g. ?xrdebug) and tag the visit as coming from vrtor.
-      url.searchParams.forEach((v, k) => target.searchParams.set(k, v));
-      if (!target.searchParams.has('ref')) target.searchParams.set('ref', 'vrtor');
-      return Response.redirect(target.toString(), 302);
-    }
-
-    return env.ASSETS.fetch(new Request(new URL('/404.html', url), request)).then(
-      (res) => new Response(res.body, { status: 404, headers: res.headers }),
-    );
+    return withHeaders(await route(request, env, url), url);
   },
 };
+
+async function route(request, env, url) {
+  const slug = url.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+
+  if (slug === 'api/waitlist') return handleWaitlist(request, env);
+
+  const subject = SUBJECTS[slug];
+  if (subject && !subject.url) {
+    // Coming soon: show it in the catalog.
+    return Response.redirect(new URL(`/#subjects`, url).toString(), 302);
+  }
+  if (subject?.url) {
+    const target = new URL(subject.url);
+    // Carry through any query (e.g. ?xrdebug) and tag the visit as coming from vrtor.
+    url.searchParams.forEach((v, k) => target.searchParams.set(k, v));
+    if (!target.searchParams.has('ref')) target.searchParams.set('ref', 'vrtor');
+    return Response.redirect(target.toString(), 302);
+  }
+
+  const asset = await env.ASSETS.fetch(request);
+  if (asset.status !== 404) return asset;
+  const page = await env.ASSETS.fetch(new Request(new URL('/404', url), request));
+  return new Response(page.body, { status: 404, headers: page.headers });
+}
+
+function withHeaders(res, url) {
+  const out = new Response(res.body, res);
+  const h = out.headers;
+  h.set('X-Content-Type-Options', 'nosniff');
+  h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  h.set('Permissions-Policy', 'camera=(), geolocation=(), microphone=(), xr-spatial-tracking=(self)');
+  if (url.hostname.endsWith('.workers.dev')) h.set('X-Robots-Tag', 'noindex'); // the preview; vrtor.io is canonical
+  return out;
+}
 
 async function handleWaitlist(request, env) {
   if (request.method !== 'POST') return json({ error: 'Use POST.' }, 405);
