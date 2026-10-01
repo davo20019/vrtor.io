@@ -15,7 +15,7 @@ export function createGraniteGrain(scene) {
   return texture;
 }
 export class GraniteMaterial extends MaterialPluginBase {
-  constructor(material,texture){super(material,'GraniteGrain',200,{},true,true);this.texture=texture;}
+  constructor(material,texture,blocks=false){super(material,'GraniteGrain',200,{},true,true);this.texture=texture;this.blocks=blocks;}
   getClassName(){return 'GraniteMaterial';}
   getSamplers(samplers){samplers.push('graniteGrainSampler');}
   getActiveTextures(textures){textures.push(this.texture);}
@@ -26,6 +26,11 @@ export class GraniteMaterial extends MaterialPluginBase {
     return {
       CUSTOM_FRAGMENT_DEFINITIONS:'uniform sampler2D graniteGrainSampler;',
       CUSTOM_FRAGMENT_BEFORE_LIGHTS:`
+        ${this.blocks?`
+        float stoneWall=1.0-smoothstep(.6,.85,abs(normalW.y));
+        // The source groups terrace walls with ground cover; restore stone on vertical faces.
+        surfaceAlbedo=mix(surfaceAlbedo,vec3(.503,.485,.423),stoneWall);
+        `:''}
         vec3 graniteWeights=pow(abs(normalW),vec3(4.0));
         graniteWeights/=max(dot(graniteWeights,vec3(1.0)),0.0001);
         float graniteGrain=dot(vec3(
@@ -34,6 +39,18 @@ export class GraniteMaterial extends MaterialPluginBase {
           texture2D(graniteGrainSampler,vPositionW.xy*2.5).r
         ),graniteWeights);
         surfaceAlbedo*=mix(0.9,1.05,graniteGrain);
+        ${this.blocks?`
+        // Illustrative joints on the architectural reconstruction, not survey data.
+        vec2 stoneUV=abs(normalW.x)>.6?vPositionW.zy:vPositionW.xy;
+        stoneUV/=vec2(.62,.28);
+        stoneUV.x+=fract(sin(floor(stoneUV.y)*12.9898)*43758.5453)*.65;
+        vec2 stoneCell=floor(stoneUV),stoneFraction=fract(stoneUV);
+        vec2 stoneEdge=min(stoneFraction,1.0-stoneFraction)*vec2(.62,.28);
+        float edgeDistance=min(stoneEdge.x,stoneEdge.y);
+        float stoneJoint=1.0-smoothstep(.003,.012+fwidth(edgeDistance),edgeDistance);
+        float stoneTone=fract(sin(dot(stoneCell,vec2(12.9898,78.233)))*43758.5453);
+        surfaceAlbedo*=mix(1.0,mix(.83,1.02,stoneTone)*mix(1.0,.58,stoneJoint),stoneWall);
+        `:''}
       `,
     };
   }

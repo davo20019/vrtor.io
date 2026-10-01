@@ -11,7 +11,7 @@ export async function buildTerrain(scene){
   for(let i=0;i<positions.length;i+=3){
     const x=positions[i],z=positions[i+2];
     const col=Math.round((x/meta.extent+.5)*(size-1)),row=Math.round((z/meta.extent+.5)*(size-1));
-    const radius=Math.hypot(x,z),blend=Math.max(0,Math.min(1,(radius-100)/200));
+    const radius=Math.hypot(x,z),blend=Math.max(0,Math.min(1,(radius-350)/250));
     const smooth=blend*blend*(3-2*blend);
     // This local join is illustrative; the terrain is never a teleport target.
     positions[i+1]=heights[row*size+col]*smooth-.2*(1-smooth);

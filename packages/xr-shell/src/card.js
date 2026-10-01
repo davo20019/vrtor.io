@@ -73,6 +73,29 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
   row.paddingBottom = px(28);
   bg.addControl(row);
 
+  const closeButton = Button.CreateSimpleButton(`${name}-close`, '×');
+  closeButton.width = px(84);
+  closeButton.height = px(84);
+  closeButton.top = px(20);
+  closeButton.left = px(-20);
+  closeButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
+  closeButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+  closeButton.color = '#ffffff';
+  closeButton.background = 'rgba(255,255,255,0.08)';
+  closeButton.cornerRadius = sz(42);
+  closeButton.thickness = sz(2);
+  closeButton.fontSize = sz(48);
+  closeButton.isVisible = false;
+  let onClose = null, closeArmed = false;
+  closeButton.onPointerDownObservable.add(() => (closeArmed = true));
+  closeButton.onPointerOutObservable.add(() => (closeArmed = false));
+  closeButton.onPointerUpObservable.add(() => {
+    if (!closeArmed) return;
+    closeArmed = false;
+    onClose?.();
+  });
+  bg.addControl(closeButton);
+
   // A line from the card's lower edge to what it describes.
   let line = null;
   const linePoints = [Vector3.Zero(), Vector3.Zero()];
@@ -96,8 +119,14 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
     mesh: plane,
     /** The mesh and its GUI texture, for compositing as a quad layer (see layers.js). */
     panel: { mesh: plane, ui },
-    /** { kicker, title, body, fact, actions: [{ label, primary, onClick }] } */
-    setContent({ kicker: k = '', title: t = '', body: b = '', fact: f = '', actions = [] }) {
+    /** { kicker, title, body, fact, actions: [{ label, primary, onClick }], onClose? } */
+    setContent({ kicker: k = '', title: t = '', body: b = '', fact: f = '', actions = [], onClose: close = null }) {
+      onClose = close;
+      closeButton.isVisible = typeof close === 'function';
+      kicker.width = px(textWidth - (closeButton.isVisible ? 84 : 0));
+      kicker.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+      title.width = px(textWidth - (closeButton.isVisible ? 84 : 0));
+      title.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
       kicker.text = k.toUpperCase();
       title.text = t;
       body.text = b;

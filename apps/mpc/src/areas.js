@@ -5,4 +5,6 @@ export const AREAS = [
   { id: 'condor-temple', name: 'Temple of the Condor', detail: 'Natural rock integrated into the architecture' },
   { id: 'water-room', name: 'Water Mirrors Room', detail: 'Explore another surveyed enclosure' },
   { id: 'knob-room', name: 'Knob Room', detail: 'Look closely at the projections in the stonework' },
+  { id: 'citadel', name: 'Machu Picchu', detail: 'Walk the connected architectural model of the citadel' },
 ];
+export const SITE = 6;

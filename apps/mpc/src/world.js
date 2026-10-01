@@ -2,12 +2,12 @@ import {
   Color3, Color4, DirectionalLight, DracoDecoder, DynamicTexture,
   HemisphericLight, ImageProcessingConfiguration, LoadAssetContainerAsync,
   Mesh, MeshBuilder, PBRMaterial, ReflectionProbe, RenderTargetTexture,
-  Scene, ShadowGenerator, StandardMaterial, Texture, Vector3, VertexData,
+  Ray, Scene, ShadowGenerator, StandardMaterial, Texture, Vector3, VertexData,
 } from '@babylonjs/core';
 import '@babylonjs/loaders/glTF';
 import { buildTerrain } from './terrain.js';
 import { createGraniteGrain, GraniteMaterial } from './granite.js';
-import { AREAS } from './areas.js';
+import { AREAS, SITE } from './areas.js';
 const BASE = import.meta.env.BASE_URL;
 DracoDecoder.DefaultConfiguration = {
   wasmUrl: `${BASE}draco/draco_wasm_wrapper_gltf.js`,
@@ -20,6 +20,9 @@ export async function buildWorld(engine, onProgress) {
   const response = await fetch(`${BASE}models/survey.json`);
   if (!response.ok) throw new Error('Survey information could not load.');
   const survey = await response.json();
+  const siteResponse=await fetch(`${BASE}models/citadel.json`);
+  if(!siteResponse.ok)throw new Error('The citadel information could not load.');
+  survey.push(await siteResponse.json());
   const scene = new Scene(engine);
   scene.clearColor = new Color4(.64,.76,.81,1);
   scene.fogMode = Scene.FOGMODE_EXP2;
@@ -45,17 +48,13 @@ export async function buildWorld(engine, onProgress) {
   const hemi=new HemisphericLight('sky-light',V(0,1,0),scene);
   hemi.intensity=.28;hemi.groundColor=Color3.FromHexString('#747664');
   const sun=new DirectionalLight('sun',V(-.6,-1,.5).normalize(),scene);
-  sun.position=V(40,60,-35);sun.intensity=2;sun.shadowMinZ=1;sun.shadowMaxZ=150;
+  sun.position=V(300,400,-250);sun.intensity=2;sun.shadowMinZ=1;sun.shadowMaxZ=1500;
   const shadows=new ShadowGenerator(2048,sun);
   shadows.usePercentageCloserFiltering=true;shadows.filteringQuality=ShadowGenerator.QUALITY_LOW;
   shadows.bias=.0001;shadows.normalBias=.018;
   const shadowMap=shadows.getShadowMap();shadowMap.refreshRate=RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
-  // A quiet outdoor setting beneath the scan boundary; this is illustrative, not surveyed terrain.
-  const ground=MeshBuilder.CreateGround('context-ground',{width:120,height:120},scene);
-  ground.position.y=-.15;ground.isPickable=false;ground.receiveShadows=true;
-  const groundMat=new PBRMaterial('earth',scene);
-  groundMat.albedoColor=Color3.FromHexString('#68705b').toLinearSpace();groundMat.roughness=1;groundMat.metallic=0;ground.material=groundMat;
-  await buildTerrain(scene);
+  // The elevation backdrop supplies the local ground too, avoiding overlapping planes.
+  const terrain=await buildTerrain(scene);terrain.receiveShadows=true;
   const grain=createGraniteGrain(scene);
   let current=null, active=-1, light=0;
   const floors=[];
@@ -69,9 +68,11 @@ export async function buildWorld(engine, onProgress) {
     const triangles=meshes.reduce((n,m)=>n+m.getTotalIndices()/3,0);
     if (triangles!==meta.triangles) {container.dispose();throw new Error('Survey geometry did not load completely.');}
     for (const m of container.materials) if (m instanceof PBRMaterial) {
-      m.albedoColor=Color3.FromHexString('#d8d3c4').toLinearSpace();m.roughness=.88;m.metallic=0;
+      const stone=i!==SITE||m.name.includes('stone');
+      if(stone)m.albedoColor=Color3.FromHexString(i===SITE?'#bcb9ae':'#d8d3c4').toLinearSpace();m.roughness=.88;m.metallic=0;
+      if(i===SITE&&m.name.includes('grass')){m.zOffset=-2;m.zOffsetUnits=-2;}
       // Open survey surfaces have no modeled thickness; preserve both visible sides.
-      m.backFaceCulling=false;m.twoSidedLighting=true;new GraniteMaterial(m,grain);
+      m.backFaceCulling=false;m.twoSidedLighting=true;if(stone||i===SITE)new GraniteMaterial(m,grain,i===SITE);
     }
     for (const m of meshes) {m.isPickable=false;m.receiveShadows=true;}
     return {i,meta,container,meshes,triangles};
@@ -81,17 +82,28 @@ export async function buildWorld(engine, onProgress) {
     for (const f of floors) f.dispose();floors.length=0;
     current?.container.dispose();current=prepared;active=prepared.i;
     prepared.container.addAllToScene();
-    for (const m of prepared.meshes) {shadows.addShadowCaster(m,false);m.freezeWorldMatrix();}
+    for (const m of prepared.meshes) {
+      // Overlapping ground faces in the architectural source must not self-shadow.
+      if(prepared.i!==SITE||m.material?.name.includes('stone'))shadows.addShadowCaster(m,false);
+      m.freezeWorldMatrix();
+    }
+    const groups=new Map();
+    for(const cell of prepared.meta.nav){
+      const key=prepared.i===SITE?`${Math.floor(cell[0]/20)},${Math.floor(cell[2]/20)}`:'scan';
+      if(!groups.has(key))groups.set(key,[]);groups.get(key).push(cell);
+    }
+    for(const [key,cells] of groups){
     const positions=[],indices=[],normals=[];
-    for (const [x,y,z,a,b,c,d] of prepared.meta.nav) {
-      const h=prepared.meta.step*.46, base=positions.length/3;
+    for (const [x,y,z,a,b,c,d] of cells) {
+      const h=prepared.meta.step*(prepared.i===SITE?.42:.46), base=positions.length/3;
       positions.push(x-h,a,z-h,x+h,b,z-h,x+h,c,z+h,x-h,d,z+h);
       normals.push(0,1,0,0,1,0,0,1,0,0,1,0);
       indices.push(base,base+2,base+1,base,base+3,base+2);
     }
     const data=new VertexData();data.positions=positions;data.indices=indices;data.normals=normals;
-    const floor=new Mesh('survey-walking-surface',scene);data.applyToMesh(floor);
+    const floor=new Mesh(`walking-surface-${key}`,scene);data.applyToMesh(floor);
     floor.visibility=0;floor.isPickable=true;floor.freezeWorldMatrix();floors.push(floor);
+    }
     shadowMap.refreshRate=RenderTargetTexture.REFRESHRATE_RENDER_ONEVERYFRAME;
     scene.executeWhenReady(()=>{shadowMap.refreshRate=RenderTargetTexture.REFRESHRATE_RENDER_ONCE;shadowMap.resetRefreshCounter();});
   }
@@ -104,8 +116,26 @@ export async function buildWorld(engine, onProgress) {
     const s=survey.find(s => s.id===AREAS[i].id);
     return {...s,stand:V(...s.stand),at:V(...s.at)};
   }
-  activate(await prepare(0));
-  return {scene,floors,prepare,activate,daylight,stop,
+  let walkMap=null;
+  function walk(position,delta){
+    const meta=current.meta,origin=meta.nav[0],step=meta.step;
+    const key=(x,z)=>`${Math.round((x-origin[0])/step)},${Math.round((z-origin[2])/step)}`;
+    if(walkMap?.i!==active)walkMap={i:active,cells:new Map(meta.nav.map(c=>[key(c[0],c[2]),c]))};
+    const x=position.x+delta.x,z=position.z+delta.z,cell=walkMap.cells.get(key(x,z));
+    if(!cell||Math.abs(cell[1]-(position.y-1.65))>.45)return null;
+    for(const h of [.65,1.4])for(const d of [V(1,0,0),V(-1,0,0),V(0,0,1),V(0,0,-1)]){
+      const hit=scene.pickWithRay(new Ray(V(x,cell[1]+h,z),d,.24),m=>current.meshes.includes(m));
+      if(hit?.hit)return null;
+    }
+    // The offline footprint excludes walls and edges; sample its measured slope.
+    const half=step*(active===SITE?.42:.46);
+    const u=Math.max(0,Math.min(1,(x-cell[0])/(2*half)+.5));
+    const v=Math.max(0,Math.min(1,(z-cell[2])/(2*half)+.5));
+    const y=(cell[3]*(1-u)+cell[4]*u)*(1-v)+(cell[6]*(1-u)+cell[5]*u)*v;
+    return V(x,y+1.65,z);
+  }
+  activate(await prepare(SITE));
+  return {scene,floors,prepare,activate,daylight,stop,walk,
     get active(){return active;},get triangleCount(){return current.triangles;},
     get monument(){return current.meshes;},
   };

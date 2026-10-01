@@ -50,5 +50,5 @@
     }
   ],
   "accessed": "2026-10-01",
-  "adaptation": "Bilinearly resampled. Scene flattens the central 100 metres and blends to original relief by 300 metres. Survey placement/orientation relative to terrain is approximate, not georeferenced."
+  "adaptation": "Bilinearly resampled. Scene flattens the central 350 metres and blends to original relief by 600 metres. Survey placement/orientation relative to terrain is approximate, not georeferenced."
 }
