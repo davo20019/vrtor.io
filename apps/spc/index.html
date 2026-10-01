@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Space: Perseverance on Mars · vrtor</title>
+  <meta name="description" content="Stand next to NASA's Perseverance rover on Mars, at real size, and learn what each part does. Works in a VR headset's browser or any web browser." />
+  <link rel="canonical" href="https://vrtor.io/spc/" />
+  <meta name="theme-color" content="#0c0d12" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:title" content="Space: Perseverance on Mars · vrtor" />
+  <meta property="og:description" content="Walk around NASA's Perseverance rover on Mars and learn what each part does. In VR, right in your browser." />
+  <meta property="og:image" content="https://vrtor.io/assets/cards/space.jpg" />
+  <meta property="og:url" content="https://vrtor.io/spc/" />
+</head>
+<body>
+  <canvas id="scene" aria-label="3D scene: NASA's Perseverance rover on Mars"></canvas>
+
+  <header class="top">
+    <a class="brand" href="/">vrtor<span>Space</span></a>
+  </header>
+
+  <div class="loading" role="status">
+    <p>Landing on Mars…</p>
+    <p class="loading-pct">0%</p>
+  </div>
+
+  <section class="card" aria-live="polite" hidden>
+    <p class="card-kicker"></p>
+    <h1 class="card-title"></h1>
+    <p class="card-body"></p>
+    <p class="card-fact"></p>
+    <div class="card-actions"></div>
+  </section>
+
+  <nav class="bar" aria-label="Controls">
+    <button class="btn btn-primary" type="button" data-enter-vr hidden>Enter VR</button>
+    <button class="btn" type="button" data-tour>Tour</button>
+    <button class="btn" type="button" data-sound aria-pressed="true">Sound on</button>
+    <p class="hint" hidden>Drag to look around · scroll to zoom · click a glowing marker</p>
+  </nav>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

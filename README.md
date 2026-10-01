@@ -5,30 +5,46 @@ address (`vrtor.io/ac`) because typing with a VR controller is painful.
 
 ## Stack
 
-- **Cloudflare Worker + Static Assets** (`wrangler.jsonc`)
-- `public/`: the static site (plain HTML/CSS/JS, no build step)
-  - `journey.js`: the scroll-driven 3D journey (three.js via import map): café, interview, keynote hall, with Rocketbox people playing motion-capture clips. In a WebXR headset, "Walk through it in VR" enters the current scene; the trigger moves to the next.
-  - `assets/`: rooms, people and animations copied from the Acento VR asset pipeline. Licenses and attribution in `public/assets/CREDITS.md` (CC BY 4.0 rooms need that credit kept).
-- `src/index.js`: runs only for non-static paths:
-  - `/<room>` → 302 to the room's app (see `src/rooms.js`), adds `?ref=vrtor`, keeps any query string
-  - `POST /api/waitlist` → stores `{ email, rooms[] }` in the `WAITLIST` KV namespace
+One repo, one Cloudflare Worker per app (npm workspaces):
+
+```
+apps/home/       vrtor.io itself: the catalog site + the router Worker ("vrtor")
+apps/spc/        Space: Perseverance on Mars (Babylon.js WebXR, Vite), Worker "vrtor-spc"
+packages/xr-shell/  shared WebXR pieces for every subject (Quest-tuned session setup,
+                 teleport, comfort fade, frame-rate governor, floating info card)
+```
+
+- **apps/home** (`wrangler.jsonc`): Workers Static Assets from `public/` (plain HTML/CSS/JS, no build step).
+  - `public/journey.js`: the scroll-driven 3D catalog (three.js via import map). Asset licenses in `public/assets/CREDITS.md`.
+  - `src/index.js` runs first for every request:
+    - `/<code>/*` for subjects built here (`service` in `src/subjects.js`) → forwarded to that subject's Worker through a **service binding** (same origin: one WebXR permission prompt, shared storage and, later, one sign-in)
+    - other subject links → 302 to where that app lives (Communication stays on the Acento site)
+    - `POST /api/waitlist` → `WAITLIST` KV
+- **apps/spc**: Vite build with `base: '/spc/'` into `dist/spc/`, served by its own Worker. Not public on its own (`workers_dev: false`); only reachable through vrtor.io/spc. It loads the shared 3D files from `/assets/space/` on the same origin and self-hosts the Draco decoder.
 
 ```bash
 npm install
-npm run dev      # http://localhost:8787
-npm run deploy   # wrangler deploy
+npm run dev      # http://localhost:8790 (all Workers, rebuilds on change)
+npm run deploy   # deploys vrtor-spc first (the binding needs it), then vrtor
+```
+
+Test in a headset: WebXR needs HTTPS, so tunnel the dev server and open the printed URL + `/spc/` in the headset browser:
+
+```bash
+cloudflared tunnel --url http://localhost:8790
 ```
 
 Read the waitlist:
 
 ```bash
-npx wrangler kv key list --binding WAITLIST --remote
+npx wrangler kv key list --binding WAITLIST --remote -c apps/home/wrangler.jsonc
 ```
 
-## Adding a room
+## Adding a subject
 
-1. Pick a two-letter slug and add it in `src/rooms.js` (with a `url` once it's live). Add the full name as an alias.
-2. Add or update its card in `public/index.html` (`.room.live` for open rooms).
+1. Copy `apps/spc` to `apps/<code>`: set `base`/`outDir` in `vite.config.js` and `name` in `wrangler.jsonc`.
+2. In `apps/home`: add `{ code, service }` to `src/subjects.js` and the service binding to `wrangler.jsonc`.
+3. Add it to `scripts/dev.js` and the root `deploy` script, and update its card in `apps/home/public/index.html`.
 
 ## How Accent (accent.learnenglishsounds.com/vr) plugs in
 

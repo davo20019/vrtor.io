@@ -1,5 +1,5 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "vrtor",
   "main": "src/index.js",
   "compatibility_date": "2026-09-01",
@@ -14,6 +14,10 @@
   "routes": [
     { "pattern": "vrtor.io", "custom_domain": true },
     { "pattern": "www.vrtor.io", "custom_domain": true }
+  ],
+  // Subjects built in this repo, served at vrtor.io/<code>/ (see src/subjects.js).
+  "services": [
+    { "binding": "SPC", "service": "vrtor-spc" }
   ],
   "kv_namespaces": [
     { "binding": "WAITLIST", "id": "1873fda3120a49cd9d44e76b1c048575" }

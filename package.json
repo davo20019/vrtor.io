@@ -2,9 +2,14 @@
   "name": "vrtor",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "dev": "node scripts/dev.js",
+    "build": "npm run build -w @vrtor/spc",
+    "deploy": "npm run deploy -w @vrtor/spc && npm run deploy -w @vrtor/home"
   },
   "devDependencies": {
     "wrangler": "^4.145.0"

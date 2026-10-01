@@ -1,0 +1,12 @@
+{
+  "name": "@vrtor/xr-shell",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "peerDependencies": {
+    "@babylonjs/core": "^9.0.0",
+    "@babylonjs/gui": "^9.0.0"
+  }
+}

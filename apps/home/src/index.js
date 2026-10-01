@@ -1,6 +1,7 @@
 // vrtor.io edge worker. It runs first for every request:
 //   - www.vrtor.io and http:// -> https://vrtor.io (one canonical address)
 //   - the *.workers.dev preview is kept out of search results
+//   - subjects built in this repo (vrtor.io/spc/*): forwarded to their own Worker
 //   - short subject links (vrtor.io/com) that are easy to type in a headset browser
 //   - the waitlist API
 //   - everything else: the static site in /public (Workers Static Assets)
@@ -27,6 +28,14 @@ async function route(request, env, url) {
   const slug = url.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
 
   if (slug === 'api/waitlist') return handleWaitlist(request, env);
+
+  // Subjects with their own Worker live under vrtor.io/<code>/; other names for them redirect there.
+  const top = slug.split('/')[0];
+  const app = SUBJECTS[top];
+  if (app?.service && env[app.service]) {
+    if (top === app.code) return env[app.service].fetch(request);
+    if (top === slug) return Response.redirect(new URL(`/${app.code}/${url.search}`, url).toString(), 302);
+  }
 
   const subject = SUBJECTS[slug];
   if (subject && !subject.url) {

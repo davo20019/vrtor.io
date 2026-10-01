@@ -1,9 +1,13 @@
 // Short links: vrtor.io/<code> opens that subject's WebXR app.
 // Codes are three letters (quick to type with a controller); the full word works too.
-// Subjects without a url are coming soon and redirect to the catalog on the homepage.
+// A subject is one of:
+//   - `service`: its own Worker in this repo (apps/<code>), served right here at
+//     vrtor.io/<code>/ through that service binding (see wrangler.jsonc)
+//   - `url`: an app hosted elsewhere, reached by redirect
+//   - neither: coming soon, redirects to the catalog on the homepage
 
 const COMMUNICATION = { name: 'Communication', url: 'https://accent.learnenglishsounds.com/vr' };
-const SPACE = { name: 'Space' };
+const SPACE = { name: 'Space', code: 'spc', service: 'SPC' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
 const NATURE = { name: 'Nature' };
