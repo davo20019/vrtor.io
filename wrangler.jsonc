@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "vrtor",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  },
+  "kv_namespaces": [
+    { "binding": "WAITLIST", "id": "1873fda3120a49cd9d44e76b1c048575" }
+  ],
+  "observability": { "enabled": true }
+}

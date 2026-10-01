@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>vrtor — learn by doing, in VR, in your browser</title>
+  <meta name="description" content="vrtor is a set of VR learning rooms that open in your headset's web browser. Practice speaking English with an AI coach that listens. No app store, no install." />
+  <link rel="canonical" href="https://vrtor.io/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://vrtor.io/" />
+  <meta property="og:title" content="vrtor — VR learning rooms in your browser" />
+  <meta property="og:description" content="Open a room in your headset's browser and practice with an AI coach. Start with Accent: vrtor.io/accent" />
+  <meta name="theme-color" content="#E9EEF2" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="top">
+    <a class="wordmark" href="/" aria-label="vrtor home">vrtor<span aria-hidden="true">.io</span></a>
+    <nav aria-label="Primary">
+      <a href="#rooms">Rooms</a>
+      <a href="#open">Open in a headset</a>
+      <a href="#waitlist">Waitlist</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="floor" aria-hidden="true"></div>
+      <p class="eyebrow">In your headset's browser, go to</p>
+      <h1 id="hero-title" class="address">
+        <span class="sr-only">vrtor.io/accent</span>
+        <span class="address-bar" aria-hidden="true">
+          <span class="host">vrtor.io/</span><span class="path" data-type="accent"></span><span class="caret"></span>
+        </span>
+      </h1>
+      <p class="lede">
+        Stand on a stage, give the talk, and get coached on how you sounded.
+        vrtor rooms are places to practice the things you learn by doing&nbsp;— built for the web, opened in any headset browser, with an AI that listens back.
+      </p>
+      <div class="actions">
+        <a class="btn primary" href="/accent">Open the Accent room</a>
+        <button class="btn ghost" type="button" data-copy="vrtor.io/accent">Copy link</button>
+      </div>
+      <p class="fine">Made for Meta Quest Browser and other WebXR headsets.</p>
+    </section>
+
+    <section id="rooms" class="rooms" aria-labelledby="rooms-title">
+      <div class="section-head">
+        <h2 id="rooms-title">Rooms</h2>
+        <p>Each room is a short address. Type it once, bookmark it in the headset.</p>
+      </div>
+
+      <ul class="room-list">
+        <li class="room live">
+          <div class="room-meta">
+            <span class="status"><span class="dot" aria-hidden="true"></span>Open now</span>
+            <code class="slug">vrtor.io/accent</code>
+          </div>
+          <h3>Accent</h3>
+          <p>Rehearse a presentation or a conversation out loud. The coach listens for rhythm, stress, pitch and pace, then tells you what to change on the next take.</p>
+          <a class="room-link" href="/accent">Open Accent <span aria-hidden="true">→</span></a>
+        </li>
+
+        <li class="room">
+          <div class="room-meta">
+            <span class="status">Planned</span>
+            <code class="slug">vrtor.io/interview</code>
+          </div>
+          <h3>Interview</h3>
+          <p>Sit across from an interviewer who asks follow-ups based on your answers, for the role you're applying to. Debrief after on what landed and what rambled.</p>
+          <button class="room-link" type="button" data-room="interview">Get notified <span aria-hidden="true">→</span></button>
+        </li>
+
+        <li class="room">
+          <div class="room-meta">
+            <span class="status">Planned</span>
+            <code class="slug">vrtor.io/cafe</code>
+          </div>
+          <h3>Café</h3>
+          <p>Order, small-talk and ask for directions in a new language with people who answer back at your level, and slow down when you're lost.</p>
+          <button class="room-link" type="button" data-room="cafe">Get notified <span aria-hidden="true">→</span></button>
+        </li>
+
+        <li class="room">
+          <div class="room-meta">
+            <span class="status">Planned</span>
+            <code class="slug">vrtor.io/scale</code>
+          </div>
+          <h3>Scale</h3>
+          <p>Walk inside a cell, stand next to a blue whale, hold a molecule. Ask the guide anything about what you're looking at.</p>
+          <button class="room-link" type="button" data-room="scale">Get notified <span aria-hidden="true">→</span></button>
+        </li>
+      </ul>
+    </section>
+
+    <section id="open" class="steps" aria-labelledby="open-title">
+      <div class="section-head">
+        <h2 id="open-title">Open a room in your headset</h2>
+        <p>No app store and nothing to install.</p>
+      </div>
+      <ol class="step-list">
+        <li><div><strong>Open the browser.</strong> On Quest, it's the globe icon in your app library.</div></li>
+        <li><div><strong>Type the room's address.</strong> For example <code>vrtor.io/accent</code>. Bookmark it so next time is one click.</div></li>
+        <li><div><strong>Press Enter VR.</strong> Allow the microphone when asked; the coach needs to hear you.</div></li>
+        <li><div><strong>Speak.</strong> Feedback arrives between takes, so you can try again straight away.</div></li>
+      </ol>
+    </section>
+
+    <section id="waitlist" class="waitlist" aria-labelledby="waitlist-title">
+      <h2 id="waitlist-title">Get told when a new room opens</h2>
+      <p>One email per new room. Nothing else.</p>
+      <form class="wl-form" novalidate>
+        <label class="sr-only" for="wl-email">Email address</label>
+        <input id="wl-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required />
+        <input type="hidden" name="room" value="any" />
+        <button class="btn primary" type="submit">Join the waitlist</button>
+      </form>
+      <p class="wl-msg" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>vrtor.io</span>
+    <span>Accent is built with <a href="https://accent.learnenglishsounds.com/">Acento</a>.</span>
+  </footer>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
