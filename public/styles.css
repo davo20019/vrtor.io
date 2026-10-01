@@ -262,6 +262,37 @@ h3 { margin: 0; font: 700 1.375rem/1.2 var(--display); letter-spacing: -0.01em; 
   .address-bar { border-radius: 18px; }
 }
 
+/* Phones: every panel becomes a compact sheet at the bottom so the 3D scene keeps the top of the screen */
+@media (max-width: 760px) {
+  .journey-sticky { padding: 64px 12px 12px; }
+  .beat, .beat-intro, .beat-card, .beat-end {
+    top: auto; bottom: 12px; left: 12px; right: 12px; max-width: none;
+    padding: 14px 16px 16px; border-radius: 20px;
+    background: rgba(247, 249, 251, 0.86);
+  }
+  .beat-end, .beat-end.on { transform: none; }
+  .beat { transform: translateY(12px); transition-duration: 0.25s; }
+  .beat.on { transform: none; }
+  .hero-h1 { font-size: 1.3rem; margin-bottom: 10px; }
+  .eyebrow { margin-bottom: 6px; font-size: 0.8rem; }
+  .address-bar { font-size: 1.45rem; padding: 0.18em 0.4em; }
+  .lede { display: none; }
+  .scroll-cue { margin-top: 10px; font-size: 0.8rem; }
+  .actions { gap: 8px; margin-top: 12px; }
+  .beat .btn { min-height: 40px; padding: 0 14px; font-size: 0.875rem; }
+  .beat-intro .actions a[href="#subjects"] { display: none; }
+  .beat-card h2, .beat-end h2 { font-size: 1.2rem; }
+  .beat-card > p:not(.when), .beat-end > p {
+    margin-top: 6px; font-size: 0.875rem; line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .when { font-size: 0.72rem !important; }
+  .stops { margin-top: 10px; gap: 6px; }
+  .stops li { padding: 4px 10px; font-size: 0.78rem; }
+  .card-link { margin-top: 10px; font-size: 0.9rem; }
+  .journey-loading { bottom: auto; top: 70px; right: 16px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .beat { transition: none; }

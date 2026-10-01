@@ -1,2 +1,19 @@
-/assets/*
+# Files with a content hash in their name never change: cache for a year.
+/assets/rooms/*
   Cache-Control: public, max-age=31536000, immutable
+/assets/venues/*
+  Cache-Control: public, max-age=31536000, immutable
+/assets/avatars/*
+  Cache-Control: public, max-age=31536000, immutable
+/assets/animations/*
+  Cache-Control: public, max-age=31536000, immutable
+/assets/crowd/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Unhashed assets (card images, scene models we may re-export): cache a day, revalidate after.
+/assets/cards/*
+  Cache-Control: public, max-age=86400
+/assets/space/*
+  Cache-Control: public, max-age=86400
+/assets/nature/*
+  Cache-Control: public, max-age=86400

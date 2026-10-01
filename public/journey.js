@@ -863,9 +863,12 @@ function resize() {
   composer.setPixelRatio(renderer.getPixelRatio());
   composer.setSize(w, h);
   camera.aspect = w / h;
-  camera.fov = camera.aspect < 0.8 ? 72 : 55;
+  // Tall phone screens have a narrow horizontal view; open the vertical FOV so labels and subjects still fit.
+  camera.fov = camera.aspect < 0.6 ? 88 : camera.aspect < 0.9 ? 74 : 55;
   // Wide screens: shift the frame so the people sit to the right of the text panels.
   if (camera.aspect > 1.2) camera.setViewOffset(w, h, -w * 0.17, 0, w, h);
+  // Phones: text sits in a sheet at the bottom, so lift the subject into the top half.
+  else if (camera.aspect < 0.9) camera.setViewOffset(w, h, 0, h * 0.2, w, h);
   else camera.clearViewOffset();
   camera.updateProjectionMatrix();
 }

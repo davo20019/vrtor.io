@@ -1,5 +1,5 @@
 // vrtor.io edge worker. It runs first for every request:
-//   - www.vrtor.io -> vrtor.io (one canonical host)
+//   - www.vrtor.io and http:// -> https://vrtor.io (one canonical address)
 //   - the *.workers.dev preview is kept out of search results
 //   - short subject links (vrtor.io/com) that are easy to type in a headset browser
 //   - the waitlist API
@@ -12,8 +12,11 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (url.hostname === 'www.vrtor.io') {
+    const canonicalHost = url.hostname === 'www.vrtor.io' || url.hostname === 'vrtor.io';
+    // env.DEV comes from .dev.vars, so `wrangler dev` (which poses as http://vrtor.io) isn't bounced to production.
+    if (canonicalHost && !env.DEV && (url.hostname !== 'vrtor.io' || url.protocol === 'http:')) {
       url.hostname = 'vrtor.io';
+      url.protocol = 'https:';
       return Response.redirect(url.toString(), 301);
     }
     return withHeaders(await route(request, env, url), url);
@@ -48,6 +51,7 @@ function withHeaders(res, url) {
   const out = new Response(res.body, res);
   const h = out.headers;
   h.set('X-Content-Type-Options', 'nosniff');
+  if (url.hostname === 'vrtor.io') h.set('Strict-Transport-Security', 'max-age=31536000');
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   h.set('Permissions-Policy', 'camera=(), geolocation=(), microphone=(), xr-spatial-tracking=(self)');
   if (url.hostname.endsWith('.workers.dev')) h.set('X-Robots-Tag', 'noindex'); // the preview; vrtor.io is canonical
