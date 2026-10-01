@@ -14,22 +14,31 @@ export function createGraniteGrain(scene) {
   ctx.putImageData(data,0,0);texture.update();texture.wrapU=texture.wrapV=Texture.WRAP_ADDRESSMODE;
   return texture;
 }
+export function loadSurveyStone(scene) {
+  const load=name=>{
+    const t=new Texture(`${import.meta.env.BASE_URL}materials/${name}.png`,scene,false,true,Texture.TRILINEAR_SAMPLINGMODE);
+    t.gammaSpace=false;t.wrapU=t.wrapV=Texture.WRAP_ADDRESSMODE;
+    return t;
+  };
+  return {normal:load('survey-stone-normal'),relief:load('survey-stone-relief')};
+}
 export class GraniteMaterial extends MaterialPluginBase {
-  constructor(material,texture,blocks=false){super(material,'GraniteGrain',200,{},true,true);this.texture=texture;this.blocks=blocks;}
+  constructor(material,texture,survey=null){super(material,'GraniteGrain',200,{},true,true);this.texture=texture;this.survey=survey;}
   getClassName(){return 'GraniteMaterial';}
-  getSamplers(samplers){samplers.push('graniteGrainSampler');}
-  getActiveTextures(textures){textures.push(this.texture);}
-  hasTexture(texture){return texture===this.texture;}
-  bindForSubMesh(buffer){buffer.setTexture('graniteGrainSampler',this.texture);}
+  isReadyForSubMesh(){return this.texture.isReady()&&(!this.survey||(this.survey.normal.isReady()&&this.survey.relief.isReady()));}
+  getSamplers(samplers){samplers.push('graniteGrainSampler');if(this.survey)samplers.push('surveyNormalSampler','surveyReliefSampler');}
+  getActiveTextures(textures){textures.push(this.texture);if(this.survey)textures.push(this.survey.normal,this.survey.relief);}
+  hasTexture(texture){return texture===this.texture||texture===this.survey?.normal||texture===this.survey?.relief;}
+  bindForSubMesh(buffer){buffer.setTexture('graniteGrainSampler',this.texture);if(this.survey){buffer.setTexture('surveyNormalSampler',this.survey.normal);buffer.setTexture('surveyReliefSampler',this.survey.relief);}}
   getCustomCode(type){
     if(type!=='fragment')return null;
     return {
-      CUSTOM_FRAGMENT_DEFINITIONS:'uniform sampler2D graniteGrainSampler;',
+      CUSTOM_FRAGMENT_DEFINITIONS:`uniform sampler2D graniteGrainSampler; ${this.survey?'uniform sampler2D surveyNormalSampler; uniform sampler2D surveyReliefSampler;':''}`,
       CUSTOM_FRAGMENT_BEFORE_LIGHTS:`
-        ${this.blocks?`
+        ${this.survey?`
         float stoneWall=1.0-smoothstep(.6,.85,abs(normalW.y));
         // The source groups terrace walls with ground cover; restore stone on vertical faces.
-        surfaceAlbedo=mix(surfaceAlbedo,vec3(.503,.485,.423),stoneWall);
+        surfaceAlbedo=mix(surfaceAlbedo,vec3(.43,.413,.371),stoneWall);
         `:''}
         vec3 graniteWeights=pow(abs(normalW),vec3(4.0));
         graniteWeights/=max(dot(graniteWeights,vec3(1.0)),0.0001);
@@ -39,17 +48,22 @@ export class GraniteMaterial extends MaterialPluginBase {
           texture2D(graniteGrainSampler,vPositionW.xy*2.5).r
         ),graniteWeights);
         surfaceAlbedo*=mix(0.9,1.05,graniteGrain);
-        ${this.blocks?`
-        // Illustrative joints on the architectural reconstruction, not survey data.
-        vec2 stoneUV=abs(normalW.x)>.6?vPositionW.zy:vPositionW.xy;
-        stoneUV/=vec2(.62,.28);
-        stoneUV.x+=fract(sin(floor(stoneUV.y)*12.9898)*43758.5453)*.65;
-        vec2 stoneCell=floor(stoneUV),stoneFraction=fract(stoneUV);
-        vec2 stoneEdge=min(stoneFraction,1.0-stoneFraction)*vec2(.62,.28);
-        float edgeDistance=min(stoneEdge.x,stoneEdge.y);
-        float stoneJoint=1.0-smoothstep(.003,.012+fwidth(edgeDistance),edgeDistance);
-        float stoneTone=fract(sin(dot(stoneCell,vec2(12.9898,78.233)))*43758.5453);
-        surfaceAlbedo*=mix(1.0,mix(.83,1.02,stoneTone)*mix(1.0,.58,stoneJoint),stoneWall);
+        ${this.survey?`
+        // Physical 4 m × 1.4 m relief sampled from the Main Temple laser geometry.
+        // Reusing this patch gives measured surface cues, not a survey of every wall.
+        vec3 stoneAxis=abs(normalW.x)>abs(normalW.z)?vec3(normalW.x>=0.0?1.0:-1.0,0.0,0.0):vec3(0.0,0.0,normalW.z>=0.0?1.0:-1.0);
+        vec3 stoneTangent=cross(vec3(0.0,1.0,0.0),stoneAxis);
+        vec3 stoneUp=normalize(cross(normalW,stoneTangent));
+        vec2 stoneUV=vec2(dot(vPositionW,stoneTangent)/4.0,vPositionW.y/1.4);
+        vec3 stoneCapture=texture2D(surveyReliefSampler,stoneUV).rgb;
+        vec3 stoneNormal=texture2D(surveyNormalSampler,stoneUV).rgb*2.0-1.0;
+        vec3 fittedNormal=normalize(normalW*stoneNormal.z+stoneTangent*stoneNormal.x*.65+stoneUp*stoneNormal.y*.65);
+        normalW=normalize(mix(normalW,fittedNormal,stoneWall));
+        surfaceAlbedo*=mix(1.0,stoneCapture.r*mix(.92,1.08,stoneCapture.g),stoneWall);
+        // Mottled ground cover at two scales; no photo texture or fabricated brick grid.
+        float groundCover=texture2D(graniteGrainSampler,vPositionW.xz*.035).r;
+        float groundFine=texture2D(graniteGrainSampler,vPositionW.xz*.8).r;
+        surfaceAlbedo*=mix(mix(.72,1.18,groundCover)*mix(.86,1.08,groundFine),1.0,stoneWall);
         `:''}
       `,
     };

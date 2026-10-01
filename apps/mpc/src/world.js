@@ -2,11 +2,13 @@ import {
   Color3, Color4, DirectionalLight, DracoDecoder, DynamicTexture,
   HemisphericLight, ImageProcessingConfiguration, LoadAssetContainerAsync,
   Mesh, MeshBuilder, PBRMaterial, ReflectionProbe, RenderTargetTexture,
-  Ray, Scene, ShadowGenerator, StandardMaterial, Texture, Vector3, VertexData,
+  Scene, ShadowGenerator, StandardMaterial, Texture, Vector3, VertexData,
 } from '@babylonjs/core';
 import '@babylonjs/loaders/glTF';
+import { createSurfaceWalker } from './walk.js';
+import { createGrass } from './grass.js';
 import { buildTerrain } from './terrain.js';
-import { createGraniteGrain, GraniteMaterial } from './granite.js';
+import { createGraniteGrain, GraniteMaterial, loadSurveyStone } from './granite.js';
 import { AREAS, SITE } from './areas.js';
 const BASE = import.meta.env.BASE_URL;
 DracoDecoder.DefaultConfiguration = {
@@ -31,31 +33,33 @@ export async function buildWorld(engine, onProgress) {
   const ip = scene.imageProcessingConfiguration;
   ip.toneMappingEnabled = true;
   ip.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_ACES;
-  ip.exposure = 1;
+  ip.exposure = 1.08;
   scene.onNewTextureAddedObservable.add(t => t.anisotropicFilteringLevel = Math.min(16, engine.getCaps().maxAnisotropy || 4));
   const sky = MeshBuilder.CreateSphere('sky', {diameter:30000,segments:24,sideOrientation:Mesh.BACKSIDE},scene);
   const texture = new DynamicTexture('sky-gradient',{width:4,height:512},scene,false);
   const ctx=texture.getContext(), gradient=ctx.createLinearGradient(0,0,0,512);
-  gradient.addColorStop(0,'#598ba9');gradient.addColorStop(.4,'#9bbbc7');gradient.addColorStop(.5,'#c7d6d2');gradient.addColorStop(1,'#718073');
+  gradient.addColorStop(0,'#246fae');gradient.addColorStop(.35,'#64a7d3');gradient.addColorStop(.5,'#b9d6e4');gradient.addColorStop(.65,'#64a7d3');gradient.addColorStop(1,'#246fae');
   ctx.fillStyle=gradient;ctx.fillRect(0,0,4,512);texture.update();
   texture.wrapU=texture.wrapV=Texture.CLAMP_ADDRESSMODE;
   const skyMat=new StandardMaterial('sky',scene);
   skyMat.disableLighting=true;skyMat.emissiveTexture=texture;skyMat.backFaceCulling=false;
+  const skyProcessing=new ImageProcessingConfiguration();skyProcessing.toneMappingEnabled=false;
+  skyMat.imageProcessingConfiguration=skyProcessing;
   sky.material=skyMat;sky.isPickable=false;sky.infiniteDistance=true;sky.applyFog=false;
   const probe=new ReflectionProbe('outdoor-light',128,scene);
   probe.renderList=[sky];probe.refreshRate=RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
-  scene.environmentTexture=probe.cubeTexture;scene.environmentIntensity=.25;
+  scene.environmentTexture=probe.cubeTexture;scene.environmentIntensity=.35;
   const hemi=new HemisphericLight('sky-light',V(0,1,0),scene);
-  hemi.intensity=.28;hemi.groundColor=Color3.FromHexString('#747664');
+  hemi.intensity=.62;hemi.groundColor=Color3.FromHexString('#747664');
   const sun=new DirectionalLight('sun',V(-.6,-1,.5).normalize(),scene);
-  sun.position=V(300,400,-250);sun.intensity=2;sun.shadowMinZ=1;sun.shadowMaxZ=1500;
+  sun.position=V(300,400,-250);sun.intensity=1.7;sun.shadowMinZ=1;sun.shadowMaxZ=1500;
   const shadows=new ShadowGenerator(2048,sun);
   shadows.usePercentageCloserFiltering=true;shadows.filteringQuality=ShadowGenerator.QUALITY_LOW;
   shadows.bias=.0001;shadows.normalBias=.018;
   const shadowMap=shadows.getShadowMap();shadowMap.refreshRate=RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
   // The elevation backdrop supplies the local ground too, avoiding overlapping planes.
-  const terrain=await buildTerrain(scene);terrain.receiveShadows=true;
-  const grain=createGraniteGrain(scene);
+  const grain=createGraniteGrain(scene),surveyStone=loadSurveyStone(scene);
+  const terrain=await buildTerrain(scene,grain);terrain.receiveShadows=true;
   let current=null, active=-1, light=0;
   const floors=[];
   async function prepare(i, progress=onProgress) {
@@ -70,9 +74,9 @@ export async function buildWorld(engine, onProgress) {
     for (const m of container.materials) if (m instanceof PBRMaterial) {
       const stone=i!==SITE||m.name.includes('stone');
       if(stone)m.albedoColor=Color3.FromHexString(i===SITE?'#bcb9ae':'#d8d3c4').toLinearSpace();m.roughness=.88;m.metallic=0;
-      if(i===SITE&&m.name.includes('grass')){m.zOffset=-2;m.zOffsetUnits=-2;}
+      if(i===SITE&&m.name.includes('grass')){m.albedoColor=Color3.FromHexString('#647b36').toLinearSpace();m.zOffset=-2;m.zOffsetUnits=-2;}
       // Open survey surfaces have no modeled thickness; preserve both visible sides.
-      m.backFaceCulling=false;m.twoSidedLighting=true;if(stone||i===SITE)new GraniteMaterial(m,grain,i===SITE);
+      m.backFaceCulling=false;m.twoSidedLighting=true;if(stone||i===SITE)new GraniteMaterial(m,grain,i===SITE?surveyStone:null);
     }
     for (const m of meshes) {m.isPickable=false;m.receiveShadows=true;}
     return {i,meta,container,meshes,triangles};
@@ -109,32 +113,16 @@ export async function buildWorld(engine, onProgress) {
   }
   function daylight() {
     light=(light+1)%2;sun.direction=light?V(.8,-.5,-.3).normalize():V(-.6,-1,.5).normalize();
-    sun.diffuse=Color3.FromHexString(light?'#ffe0b0':'#fff9eb');sun.intensity=light?1.8:2;
+    sun.diffuse=Color3.FromHexString(light?'#ffe0b0':'#fff9eb');sun.intensity=light?1.55:1.7;
     shadowMap.resetRefreshCounter();return light?'Late afternoon':'Morning';
   }
   function stop(i=active) {
     const s=survey.find(s => s.id===AREAS[i].id);
     return {...s,stand:V(...s.stand),at:V(...s.at)};
   }
-  let walkMap=null;
-  function walk(position,delta){
-    const meta=current.meta,origin=meta.nav[0],step=meta.step;
-    const key=(x,z)=>`${Math.round((x-origin[0])/step)},${Math.round((z-origin[2])/step)}`;
-    if(walkMap?.i!==active)walkMap={i:active,cells:new Map(meta.nav.map(c=>[key(c[0],c[2]),c]))};
-    const x=position.x+delta.x,z=position.z+delta.z,cell=walkMap.cells.get(key(x,z));
-    if(!cell||Math.abs(cell[1]-(position.y-1.65))>.45)return null;
-    for(const h of [.65,1.4])for(const d of [V(1,0,0),V(-1,0,0),V(0,0,1),V(0,0,-1)]){
-      const hit=scene.pickWithRay(new Ray(V(x,cell[1]+h,z),d,.24),m=>current.meshes.includes(m));
-      if(hit?.hit)return null;
-    }
-    // The offline footprint excludes walls and edges; sample its measured slope.
-    const half=step*(active===SITE?.42:.46);
-    const u=Math.max(0,Math.min(1,(x-cell[0])/(2*half)+.5));
-    const v=Math.max(0,Math.min(1,(z-cell[2])/(2*half)+.5));
-    const y=(cell[3]*(1-u)+cell[4]*u)*(1-v)+(cell[6]*(1-u)+cell[5]*u)*v;
-    return V(x,y+1.65,z);
-  }
+  const walk=createSurfaceWalker(scene,()=>current);
   activate(await prepare(SITE));
+  await createGrass(scene,()=>active===SITE);
   return {scene,floors,prepare,activate,daylight,stop,walk,
     get active(){return active;},get triangleCount(){return current.triangles;},
     get monument(){return current.meshes;},

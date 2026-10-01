@@ -30,7 +30,7 @@ def sample(x,y):
  assert 0<=x<767 and 0<=y<767
  a=int(x);b=int(y);tx=x-a;ty=y-b
  return float((mosaic[b,a]*(1-tx)+mosaic[b,a+1]*tx)*(1-ty)+(mosaic[b+1,a]*(1-tx)+mosaic[b+1,a+1]*tx)*ty)
-base=sample(px,py);size=257;extent=10000
+base=sample(px,py);size=513;extent=10000
 field=np.empty((size,size),dtype='<f4')
 for row in range(size):
  for col in range(size):
@@ -38,6 +38,6 @@ for row in range(size):
   field[row,col]=sample(px+east/mpp,py-north/mpp)-base
 assert np.isfinite(field).all() and field.max()-field.min()>500
 (root/'andes-height.bin').write_bytes(field.tobytes())
-meta={'center':[lat,lon],'resolution':size,'extent':extent,'referenceElevation':round(base,3),'elevationRange':[round(float(field.min()+base),3),round(float(field.max()+base),3)],'format':'little-endian float32, relative metres; rows south to north, columns west to east','sources':sources,'accessed':'2026-10-01','adaptation':'Bilinearly resampled. Scene flattens the central 100 metres and blends to original relief by 300 metres. Survey placement/orientation relative to terrain is approximate, not georeferenced.'}
+meta={'center':[lat,lon],'resolution':size,'extent':extent,'referenceElevation':round(base,3),'elevationRange':[round(float(field.min()+base),3),round(float(field.max()+base),3)],'format':'little-endian float32, relative metres; rows south to north, columns west to east','sources':sources,'accessed':'2026-10-01','adaptation':'Bilinearly resampled. Scene flattens the central 350 metres and blends to original relief by 600 metres. Survey placement/orientation relative to terrain is approximate, not georeferenced.'}
 (root/'andes.json').write_text(json.dumps(meta,indent=2)+'\n')
 print('TERRAIN',size,extent,'reference',base,'elevation range',meta['elevationRange'],'bytes',field.nbytes)

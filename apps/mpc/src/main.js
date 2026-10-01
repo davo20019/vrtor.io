@@ -13,7 +13,7 @@ let destination=null;
 let lesson=-1,phase='observe',feedback='',score=0,answered=new Set(),cardOpen=true,busy=true,walkView=true,people=false;
 const inXr=()=>!!rig?.inXr();
 const action=(label,onClick,primary=false)=>({label,onClick:()=>{if(!busy)onClick();},primary});
-const siteCredit='Connected model: Ministerio de Cultura Perú, CC BY 4.0; adapted by vrtor. Architectural detail and scale are approximate.';
+const siteCredit='Model: Ministerio de Cultura Perú, CC BY 4.0. Stone relief: INC Peru, CAST (University of Arkansas), Cotsen Institute (UCLA), CC BY-NC 3.0. Adapted by vrtor; layout and scale approximate.';
 const controls='Push the stick forward to teleport; left or right to turn. Trigger selects. A or X reopens this card.';
 const credit='Survey: INC Peru, CAST (University of Arkansas) and Cotsen Institute (UCLA). CC BY-NC 3.0; adapted by vrtor.';
 function content(){

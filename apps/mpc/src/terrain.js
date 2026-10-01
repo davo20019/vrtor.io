@@ -1,6 +1,6 @@
-import { Color3, MeshBuilder, PBRMaterial, VertexData, VertexBuffer } from '@babylonjs/core';
+import { Color3, MaterialPluginBase, MeshBuilder, PBRMaterial, VertexData, VertexBuffer } from '@babylonjs/core';
 const BASE=import.meta.env.BASE_URL;
-export async function buildTerrain(scene){
+export async function buildTerrain(scene,grain){
   const [info,data]=await Promise.all([fetch(`${BASE}models/andes.json`),fetch(`${BASE}models/andes-height.bin`)]);
   if(!info.ok||!data.ok)throw new Error('The elevation data could not load.');
   const meta=await info.json(),buffer=await data.arrayBuffer();
@@ -19,7 +19,7 @@ export async function buildTerrain(scene){
   const normals=[];VertexData.ComputeNormals(positions,mesh.getIndices(),normals);
   mesh.updateVerticesData(VertexBuffer.PositionKind,positions,true);
   mesh.updateVerticesData(VertexBuffer.NormalKind,normals);
-  const green=Color3.FromHexString('#506449').toLinearSpace(),rock=Color3.FromHexString('#7a8070').toLinearSpace(),colors=[];
+  const green=Color3.FromHexString('#526940').toLinearSpace(),rock=Color3.FromHexString('#8b8a75').toLinearSpace(),colors=[];
   for(let i=0;i<normals.length;i+=3){
     const steep=Math.min(1,Math.max(0,(.83-Math.abs(normals[i+1]))*2));
     const tint=Color3.Lerp(green,rock,steep);
@@ -28,6 +28,24 @@ export async function buildTerrain(scene){
   mesh.setVerticesData(VertexBuffer.ColorKind,colors);
   const mat=new PBRMaterial('illustrative-mountain-cover',scene);
   mat.albedoColor=Color3.White();mat.metallic=0;mat.roughness=1;mesh.material=mat;
+  new TerrainCover(mat,grain);
   mesh.isPickable=false;mesh.freezeWorldMatrix();
   return mesh;
+}
+
+class TerrainCover extends MaterialPluginBase {
+  constructor(material,texture){super(material,'TerrainCover',200,{},true,true);this.texture=texture;}
+  getClassName(){return 'TerrainCover';}
+  getSamplers(samplers){samplers.push('terrainCoverSampler');}
+  getActiveTextures(textures){textures.push(this.texture);}
+  hasTexture(texture){return texture===this.texture;}
+  bindForSubMesh(buffer){buffer.setTexture('terrainCoverSampler',this.texture);}
+  getCustomCode(type){return type==='fragment'?{
+    CUSTOM_FRAGMENT_DEFINITIONS:'uniform sampler2D terrainCoverSampler;',
+    CUSTOM_FRAGMENT_BEFORE_LIGHTS:`
+      float canopy=texture2D(terrainCoverSampler,vPositionW.xz*.00018).r;
+      float cover=texture2D(terrainCoverSampler,vPositionW.xz*.0007).r;
+      surfaceAlbedo*=mix(.64,1.15,canopy)*mix(.8,1.12,cover);
+    `,
+  }:null;}
 }

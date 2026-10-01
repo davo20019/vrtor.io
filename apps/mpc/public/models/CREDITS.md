@@ -36,8 +36,12 @@ The experience is offered for free educational use, with no advertising, subscri
 
 This file, the experience’s About panel, and the headset introduction identify the source and adaptations. The adapted survey assets remain CC BY-NC 3.0. No endorsement by the credited institutions is implied.
 
+## Survey-derived wall maps
+
+The connected walk also uses a reusable 4 m × 1.4 m Main Temple geometry sample as normal/relief maps, under the same CC BY-NC 3.0 terms and credits. These maps provide surface cues; their placement and colors remain illustrative. [Processing and limits](./SITE-CREDITS.md#survey-derived-surface-detail).
+
 ## Andean terrain backdrop
 
 Background heights are resampled from [Mapzen Terrain Tiles](https://registry.opendata.aws/terrain-tiles/), accessed 2026-10-01. **SRTM/GMTED2010 data courtesy of the U.S. Geological Survey**, via Mapzen. These source datasets are public domain; see the provider’s [attribution and source terms](https://github.com/tilezen/joerd/blob/master/docs/attribution.md). No satellite photographs are used.
 
-`andes-height.bin` is a 257×257 grid over a 10 km square centred at approximately 13.1635°S, 72.5462°W, with heights relative to the centre elevation. `andes.json` records tile URLs, hashes, access date and processing. Produced by `scripts/prepare-machu-terrain.py` from Terrarium height tiles using the [documented encoding](https://github.com/tilezen/joerd/blob/master/docs/formats.md). Scene colors are illustrative; the central 350 m is flattened, blending to the resampled relief at 600 m. The independent survey meshes are not georeferenced to the terrain. This backdrop conveys the surrounding topography; it must not be presented as a measured registration of the archaeological structures or used for navigation.
+`andes-height.bin` is a 513×513 grid over a 10 km square centred at approximately 13.1635°S, 72.5462°W, with heights relative to the centre elevation. `andes.json` records tile URLs, hashes, access date and processing. Produced by `scripts/prepare-machu-terrain.py` from Terrarium height tiles using the [documented encoding](https://github.com/tilezen/joerd/blob/master/docs/formats.md). Scene colors are illustrative; the central 350 m is flattened, blending to the resampled relief at 600 m. The independent survey meshes are not georeferenced to the terrain. This backdrop conveys the surrounding topography; it must not be presented as a measured registration of the archaeological structures or used for navigation.

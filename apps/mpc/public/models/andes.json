@@ -3,12 +3,12 @@
     -13.1635,
     -72.5462
   ],
-  "resolution": 257,
+  "resolution": 513,
   "extent": 10000,
   "referenceElevation": 2407.032,
   "elevationRange": [
     1442.621,
-    3872.812
+    3873.014
   ],
   "format": "little-endian float32, relative metres; rows south to north, columns west to east",
   "sources": [
