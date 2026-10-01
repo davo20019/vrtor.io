@@ -7,6 +7,7 @@
 //   - neither: coming soon, redirects to the catalog on the homepage
 
 const COMMUNICATION = { name: 'Communication', url: 'https://accent.learnenglishsounds.com/vr' };
+const MACHU = { name: 'Machu Picchu', code: 'mpc', service: 'MPC' };
 const TAJ = { name: 'Taj Mahal', code: 'taj', service: 'TAJ' };
 const SPACE = { name: 'Space', code: 'spc', service: 'SPC' };
 const MECHANICS = { name: 'Mechanics' };
@@ -21,6 +22,10 @@ export const SUBJECTS = {
   accent: COMMUNICATION,
   acento: COMMUNICATION,
   speak: COMMUNICATION,
+
+  mpc: MACHU,
+  'machu-picchu': MACHU,
+  machupicchu: MACHU,
 
   taj: TAJ,
   'taj-mahal': TAJ,

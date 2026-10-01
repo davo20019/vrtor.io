@@ -238,17 +238,21 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
     async exit() {
       if (inXr()) await base.exitXRAsync();
     },
-    /** Fades out, moves the viewer to `position` (on the floor) facing `lookAt`, fades back in. */
-    async moveTo(position, lookAt) {
+    /** Fades out, optionally swaps the scene while hidden, moves the viewer to `position` facing `lookAt`, and fades back in. */
+    async moveTo(position, lookAt, whileHidden) {
       if (!inXr()) return;
       await fade.to(1, 180);
-      camera.position.y = (position.y || 0) + camera.realWorldHeight;
-      camera.position.x = position.x;
-      camera.position.z = position.z;
-      camera.setTarget(lookAt);
-      governor.hold(0.5);
-      resolution?.hold(0.5);
-      await fade.to(0, 260);
+      try {
+        await whileHidden?.();
+        camera.position.y = (position.y || 0) + camera.realWorldHeight;
+        camera.position.x = position.x;
+        camera.position.z = position.z;
+        camera.setTarget(lookAt);
+        governor.hold(0.5);
+        resolution?.hold(0.5);
+      } finally {
+        await fade.to(0, 260);
+      }
     },
     /** What the headset is doing, for the `?xrdebug` readout: `1.50x · 72/72 fps · text layers`. */
     stats() {

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Machu Picchu: stone by stone · vrtor</title>
+  <meta name="description" content="Walk through six laser-scanned areas of Machu Picchu and discover Inca stonework. A free educational 3D experience in your VR headset's browser." />
+  <link rel="canonical" href="https://vrtor.io/mpc/" />
+  <meta name="theme-color" content="#101b22" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:title" content="Machu Picchu: stone by stone · vrtor" />
+  <meta property="og:description" content="Explore real laser-scanned stone geometry in six Machu Picchu survey areas. Free educational VR." />
+  <meta property="og:image" content="https://vrtor.io/assets/cards/machu-picchu.jpg" />
+  <meta property="og:url" content="https://vrtor.io/mpc/" />
+</head>
+<body>
+  <canvas id="scene" tabindex="0" aria-label="Interactive 3D laser survey of Machu Picchu"></canvas>
+  <header class="top"><a class="brand" href="/">vrtor<span>Machu Picchu</span></a><span class="place">CUSCO REGION, PERU · WORLD WONDERS 02</span></header>
+  <div class="loading" role="status"><p>Arriving at Machu Picchu…</p><p class="loading-pct">0%</p><button class="btn" data-retry hidden>Try again</button></div>
+  <section class="card" aria-live="polite" hidden><p class="card-kicker"></p><h1 class="card-title"></h1><p class="card-body"></p><p class="card-fact"></p><div class="card-actions"></div></section>
+  <button class="vr-cta" type="button" data-enter-vr hidden><span class="vr-cta-text"><strong>Enter VR</strong><small>Walk through Inca stonework</small></span></button>
+  <nav class="bar" aria-label="Experience controls">
+    <select class="btn area-select" data-area aria-label="Survey area" disabled></select>
+    <button class="btn" type="button" data-next disabled>Next area</button>
+    <button class="btn" type="button" data-lesson disabled>Learn</button>
+    <button class="btn" type="button" data-view disabled>At eye level</button>
+    <button class="btn" type="button" data-light disabled>Morning</button>
+    <p class="area-status" role="status"></p><p class="hint" hidden>Drag to look · scroll to move closer</p>
+  </nav>
+  <details class="credits"><summary>About this experience</summary>
+    <p>Six separate laser-survey areas, with measured stone geometry and gaps in coverage. Not a continuous model of the entire citadel. The mountain backdrop uses elevation data around Machu Picchu. Placement, local ground and sky are approximate and illustrative. Original grayscale vertex values are preserved. The scans have no photographic surface textures; granite colors, procedural mineral grain and lighting are illustrative.</p>
+    <p>Credit: Instituto Nacional de Cultura (Peru), Center for Advanced Spatial Technologies (University of Arkansas), and Cotsen Institute for Archaeology (UCLA).</p>
+    <p>Data acquired and processed by CAST staff Snow Winters, Malcolm Williamson and Katie Simon, and students in the 2009 UCLA Cuzco/Machu Picchu Field School, directed by Alexei Vranich. Developed under the authority of INC, Vladimir Dávila and Fernando Astete.</p>
+    <p><a href="https://gmv.cast.uark.edu/scanning-2/data/machu-picchu-3d-data/" target="_blank" rel="noopener">Survey source</a> · <a href="https://creativecommons.org/licenses/by-nc/3.0/" target="_blank" rel="noopener">CC BY-NC 3.0</a> · <a href="./models/CREDITS.md" target="_blank" rel="noopener">Download credits and changes</a>. Units, origin, normals, materials and compression adapted by vrtor. No additional mesh reduction.</p>
+    <p>Terrain: <a href="https://registry.opendata.aws/terrain-tiles/" target="_blank" rel="noopener">Mapzen Terrain Tiles</a>, SRTM/GMTED2010 data courtesy of the U.S. Geological Survey. Heights resampled; the local join and surface colors are illustrative.</p>
+    <p>This educational experience is free, without ads, subscriptions or paid-product promotion.</p>
+    <p>Learning sources: <a href="https://whc.unesco.org/en/list/274/" target="_blank" rel="noopener">UNESCO</a> and the <a href="https://www.machupicchu.gob.pe/wp-content/uploads/2024/05/1-6-MACHUPICCHU-INVESTIGACIONES-INTERDISCIPLINARIAS-TOMO-I.pdf" target="_blank" rel="noopener">Peruvian Ministry of Culture’s research publication</a>.</p>
+  </details>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

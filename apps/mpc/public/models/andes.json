@@ -1,0 +1,54 @@
+{
+  "center": [
+    -13.1635,
+    -72.5462
+  ],
+  "resolution": 257,
+  "extent": 10000,
+  "referenceElevation": 2407.032,
+  "elevationRange": [
+    1442.621,
+    3872.812
+  ],
+  "format": "little-endian float32, relative metres; rows south to north, columns west to east",
+  "sources": [
+    {
+      "url": "https://elevation-tiles-prod.s3.amazonaws.com/terrarium/13/2444/4397.png",
+      "sha256": "ec309ed91384f2eb49075cdf4835ea3345ca850983c6cb8962782feba7332d79"
+    },
+    {
+      "url": "https://elevation-tiles-prod.s3.amazonaws.com/terrarium/13/2445/4397.png",
+      "sha256": "f842d5bff2e94a07f578c74f422f8e7f884ab2725e70e61ea03b7dd4901c7ebb"
+    },
+    {
+      "url": "https://elevation-tiles-prod.s3.amazonaws.com/terrarium/13/2446/4397.png",
+      "sha256": "5ac18e76ade655e6b15b027120193cdaf9d2a1086877eaf9c004348f963674d1"
+    },
+    {
+      "url": "https://elevation-tiles-prod.s3.amazonaws.com/terrarium/13/2444/4398.png",
+      "sha256": "83864c1a7c709ab8e2cb9f533f16edac4b5767d28190dc2fd711757b641b3140"
+    },
+    {
+      "url": "https://elevation-tiles-prod.s3.amazonaws.com/terrarium/13/2445/4398.png",
+      "sha256": "3a5710dfa967a344f2f732595d516e0d0396c69d7031bef89a5b4d6b0924fce7"
+    },
+    {
+      "url": "https://elevation-tiles-prod.s3.amazonaws.com/terrarium/13/2446/4398.png",
+      "sha256": "56a60c28e2588a2a1333e178e7665b93d21b5b117fd5f307bbebca30e7bb5790"
+    },
+    {
+      "url": "https://elevation-tiles-prod.s3.amazonaws.com/terrarium/13/2444/4399.png",
+      "sha256": "f4421566b0cf1b721ac48864c01b1d1d3462dc2ca6550dcf9fa78471edc14fc6"
+    },
+    {
+      "url": "https://elevation-tiles-prod.s3.amazonaws.com/terrarium/13/2445/4399.png",
+      "sha256": "f3371010791030d9bc3f01a6a74a6fcf88a101dd095269ab3ae29ff220df8109"
+    },
+    {
+      "url": "https://elevation-tiles-prod.s3.amazonaws.com/terrarium/13/2446/4399.png",
+      "sha256": "d4992e0b5aa4f67472c4ebad1abbc210010fff00c768eda7d8db95b2b776024e"
+    }
+  ],
+  "accessed": "2026-10-01",
+  "adaptation": "Bilinearly resampled. Scene flattens the central 100 metres and blends to original relief by 300 metres. Survey placement/orientation relative to terrain is approximate, not georeferenced."
+}

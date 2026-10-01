@@ -18,7 +18,8 @@
   // Subjects built in this repo, served at vrtor.io/<code>/ (see src/subjects.js).
   "services": [
     { "binding": "SPC", "service": "vrtor-spc" },
-    { "binding": "TAJ", "service": "vrtor-taj" }
+    { "binding": "TAJ", "service": "vrtor-taj" },
+    { "binding": "MPC", "service": "vrtor-mpc" }
   ],
   "kv_namespaces": [
     { "binding": "WAITLIST", "id": "1873fda3120a49cd9d44e76b1c048575" }

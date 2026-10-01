@@ -81,3 +81,23 @@ The downloadable CC BY model retains all 409,419 triangles in the downloaded GLB
 Build: `npm run build -w @vrtor/taj`. Deploy its Worker before the home Worker, which routes through the `TAJ` service binding. `npm run dev`, `npm run build`, and `npm run deploy` include both subject apps. `vrtor.io/taj-mahal` and `vrtor.io/tajmahal` redirect to `/taj/`.
 
 The asset conversion is reproducible with Blender and `scripts/prepare-taj.py`; see its invocation at the top of the script.
+
+### Machu Picchu (`/mpc/`)
+
+The second World Wonders experience is a **free noncommercial educational** walkthrough through six real laser-survey meshes: Main Temple, Temple of the Sun, Intihuatana, Temple of the Condor, Water Mirrors Room and Knob Room. Four observation-and-answer activities compare fitted masonry, curved construction, carved rock and natural bedrock. Desktop controls include area selection, eye-level/overview views and morning/afternoon lighting; headset controls use the shared shell's teleport, snap turns, comfort fades, adaptive resolution, MSAA and compositor lesson panels.
+
+The meshes come directly from CAST's public OBJ downloads under **CC BY-NC 3.0**. Required institutional and contributor credits, source archive links, changes and reuse restrictions are in `apps/mpc/public/models/CREDITS.md`, the About panel, and the headset introduction. Keep this experience free and without ads, subscriptions, purchase links or paid-product promotion. The assets and screenshots are noncommercial licensed; do not reuse them in paid rooms or commercial marketing without additional permission. Being free alone does not establish that a different use is noncommercial.
+
+All **4,064,071 triangles** from the provider's six published (already reduced) meshes are retained, delivered in roughly **17.2 MB** of Draco GLBs. Only the active area is loaded; its previous geometry/materials are disposed on travel. Temple of the Condor is the heaviest area at about two million triangles, so physical headset performance still needs verification. The scene uses illustrative granite color/mineral grain and daylight with a cached shadow map. Original grayscale vertex values are retained; no photographic textures are present. Separate areas are independently centred and **not** registered into a continuous model of the citadel; capture gaps remain visible, and placement/local ground/sky are illustrative. The mountain backdrop uses public Mapzen terrain elevation data around Machu Picchu (USGS SRTM/GMTED2010); its 257×257 grid adds about 0.26 MB and 131,072 triangles. Its local join is flattened/blended and the survey pieces are not georeferenced to the terrain.
+
+`/machu-picchu` and `/machupicchu` redirect to `/mpc/`, preserving queries. Its Worker is `vrtor-mpc`; the home Worker routes via the `MPC` service binding. Deploy this Worker before home. Root build/dev/deploy scripts include it (local port 8793, inspector 9243).
+
+To reproduce assets, download the six archives linked in the model credits into an extracted source directory, then run:
+
+```bash
+/Applications/Blender.app/Contents/MacOS/Blender --factory-startup -b --python scripts/prepare-machu.py -- /path/to/extracted/surveys
+/Applications/Blender.app/Contents/MacOS/Blender --factory-startup -b --python scripts/check-machu-floor.py
+npm run build -w @vrtor/mpc
+```
+
+Navigation is generated from horizontal supported scan patches with clearance at neighboring cells. Every delivered teleport quad corner and spawn point is checked against the decompressed GLB, including the Blender/glTF/Babylon coordinate conversion. The XR shell's optional `moveTo` callback swaps areas and updates teleport surfaces while the comfort fade is fully dark.

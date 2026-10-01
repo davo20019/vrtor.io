@@ -16,6 +16,8 @@ if (!homeArgs.includes('--port')) homeArgs.push('--port', '8790');
 const children = [
   run('npm', ['run', 'watch', '-w', '@vrtor/spc']),
   run('npm', ['run', 'watch', '-w', '@vrtor/taj']),
+  run('npm', ['run', 'watch', '-w', '@vrtor/mpc']),
+  run('npx', ['wrangler', 'dev', '-c', 'apps/mpc/wrangler.jsonc', '--port', '8793', '--inspector-port', '9243']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/taj/wrangler.jsonc', '--port', '8792', '--inspector-port', '9242']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/spc/wrangler.jsonc', '--port', '8791', '--inspector-port', '9241']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/home/wrangler.jsonc', '--inspector-port', '9240', ...homeArgs]),

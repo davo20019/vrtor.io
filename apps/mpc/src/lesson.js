@@ -1,0 +1,38 @@
+export const LESSONS = [
+  {
+    title: 'Read the stone joints', view: 0,
+    body: 'Move closer to the Main Temple walls. Look for the edges of individual blocks and the recessed niches. The shape of the stones is captured by a laser survey.',
+    question: 'What makes the fitted stonework distinctive?',
+    choices: ['Closely fitted blocks', 'Concrete panels', 'Painted joints'], answer: 0,
+    hint: 'Look at how the individual stone surfaces meet.',
+    why: 'The Inca fitted shaped stone blocks closely together. The scan preserves the joints and surface relief as actual 3D geometry.',
+    fact: 'Machu Picchu is a 15th-century Inca site in the Peruvian Andes.',
+  },
+  {
+    title: 'Follow the curve', view: 1,
+    body: 'Explore the Temple of the Sun. Compare its curved masonry with the more rectangular Main Temple. Notice how the construction meets the natural rock beneath it.',
+    question: 'What shape distinguishes this temple wall?',
+    choices: ['A straight rectangle', 'A semicircular curve', 'A pointed arch'], answer: 1,
+    hint: 'Trace the wall around the exposed rock.',
+    why: 'The Temple of the Sun has a semicircular wall built around natural bedrock. Its surviving masonry shows how architecture and rock were integrated.',
+    fact: 'The temple has finely worked stone and window openings.',
+  },
+  {
+    title: 'Stone shaped from the mountain', view: 2,
+    body: 'Look around the Intihuatana terrace. Find the carved rock feature and compare it with the constructed walls. Change the light to make the different surfaces easier to read.',
+    question: 'What is the central Intihuatana feature?',
+    choices: ['A brick tower', 'A wooden post', 'A carved rock'], answer: 2,
+    hint: 'Look for a feature shaped directly from the rock.',
+    why: 'The Intihuatana is a carved rock feature. Scholars associate it with ritual, the sun and the surrounding mountains; its precise original function remains a subject of interpretation.',
+    fact: 'The reconstruction does not simulate astronomical alignments.',
+  },
+  {
+    title: 'Architecture meets bedrock', view: 3,
+    body: 'Walk through the surveyed Temple of the Condor area. Compare the large irregular rock surfaces with the courses of built stone walls.',
+    question: 'What materials are combined in this area?',
+    choices: ['Glass and steel', 'Natural rock and masonry', 'Wood and concrete'], answer: 1,
+    hint: 'Compare the irregular boulders with the assembled blocks.',
+    why: 'The area combines natural granite rock and constructed stonework. Its familiar name refers to an interpretation of the rock forms as a condor.',
+    fact: 'The scan includes gaps where the survey did not capture a surface.',
+  },
+];
