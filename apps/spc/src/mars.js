@@ -12,7 +12,6 @@ import {
   Mesh,
   MeshBuilder,
   ParticleSystem,
-  PBRMaterial,
   ReflectionProbe,
   RenderTargetTexture,
   Scene,
@@ -153,21 +152,21 @@ function terrain(scene) {
   ground.updateVerticesData(VertexBuffer.PositionKind, positions);
   ground.createNormals(true);
 
-  const mat = new PBRMaterial('sand', scene);
-  const tex = (file, gamma = true) => {
+  // Plain (non-PBR) shading for the sand: it fills most of every frame, so it must be cheap
+  // for the headset to keep its eye buffer large; matte sand looks the same either way.
+  const mat = new StandardMaterial('sand', scene);
+  const tex = (file) => {
     const t = new Texture(A + 'ground/' + file, scene, false, true, Texture.TRILINEAR_SAMPLINGMODE);
     t.uScale = t.vScale = 70;
-    t.gammaSpace = gamma;
     return t;
   };
-  mat.albedoTexture = tex('aerial_sand_diff_1k.jpg');
-  mat.albedoColor = Color3.FromHexString('#e09a6a');
-  mat.bumpTexture = tex('aerial_sand_nor_1k.jpg', false);
+  mat.diffuseTexture = tex('aerial_sand_diff_1k.jpg');
+  // The lights are set for physically based materials, which divide by π (and add sky light): scale to match.
+  mat.diffuseColor = Color3.FromHexString('#f08a58').scale(1.45 / Math.PI);
+  mat.bumpTexture = tex('aerial_sand_nor_1k.jpg');
   mat.bumpTexture.level = 0.8;
   mat.invertNormalMapY = true;
-  mat.metallic = 0;
-  mat.roughness = 0.95;
-  mat.environmentIntensity = 0.4;
+  mat.specularColor = Color3.Black();
   ground.material = mat;
   ground.freezeWorldMatrix();
   return ground;

@@ -118,7 +118,15 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
         const idle = button.background;
         button.onPointerEnterObservable.add(() => (button.background = action.primary ? '#ffc65a' : 'rgba(255,255,255,0.2)'));
         button.onPointerOutObservable.add(() => (button.background = idle));
-        button.onPointerUpObservable.add(() => action.onClick());
+        // Acts on release, and only for a press that began on this button (releasing over
+        // another button after the ray drifted must not trigger that one too).
+        let armed = false;
+        button.onPointerDownObservable.add(() => (armed = true));
+        button.onPointerUpObservable.add(() => {
+          if (!armed) return;
+          armed = false;
+          action.onClick();
+        });
         row.addControl(button);
       }
     },

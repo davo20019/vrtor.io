@@ -113,8 +113,13 @@ function close() {
   render();
 }
 
+const XR_DEBUG = new URLSearchParams(location.search).has('xrdebug');
+let lastPress = '';
+
 function render() {
   const data = content(index);
+  // `?xrdebug`: the headset's resolution, frame rate and the last press, in the card's kicker.
+  if (XR_DEBUG && inXr()) data.kicker = `${rig.stats()}${lastPress ? ` · ${lastPress}` : ''}`;
   // Headset: the card floats beside the part, a little to the left, with a line to it.
   if (inXr()) {
     ui.card.hidden = true;
@@ -202,6 +207,11 @@ scene.onPointerObservable.add((info) => {
   }
   const pick = (xrPointer && type === PointerEventTypes.POINTERDOWN) || (!xrPointer && type === PointerEventTypes.POINTERTAP);
   if (!pick) return;
+  if (XR_DEBUG && xrPointer) {
+    const uv = info.pickInfo?.getTextureCoordinates();
+    lastPress = `press ${info.pickInfo?.pickedMesh?.name ?? 'nothing'}${uv ? ` (${uv.x.toFixed(2)},${uv.y.toFixed(2)})` : ''}`;
+    if (info.pickInfo?.pickedMesh === card.mesh) setTimeout(render, 50);
+  }
   const stop = rover.stopFor(info.pickInfo?.pickedMesh);
   if (!stop) return;
   const i = rover.stops.indexOf(stop);

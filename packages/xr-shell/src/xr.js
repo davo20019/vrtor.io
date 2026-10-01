@@ -8,13 +8,15 @@
 //     frame rate allows (resolution.js); a size that ever fails to enter is
 //     never tried again (eyeBuffer.js)
 //   - MSAA on the layer, light fixed foveation
-//   - 90 Hz while the scene keeps up, 72 when it can't (frameRate.js)
+//   - 90 Hz while the scene keeps up, stepping down to 72 when it can't (frameRate.js);
+//     resolution only drops once the refresh is as low as it goes: sharpness first
 //   - text panels composited as WebXR quad layers, sampled once at display
 //     resolution instead of through the eye buffer (layers.js); `?layers=0` turns them off
 import { Color3, MeshBuilder, Ray, StandardMaterial, Vector3, WebXRState } from '@babylonjs/core';
 import { WebXRWebGLLayerWrapper } from '@babylonjs/core/XR/webXRWebGLLayer.js';
 import { FrameRateGovernor } from './frameRate.js';
 import { createPanelLayers, quadLayersSupported } from './layers.js';
+import { PressAim } from './pressAim.js';
 import { chooseEyeBufferScale, eyeBufferMemory } from './eyeBuffer.js';
 import { AdaptiveResolution } from './resolution.js';
 
@@ -112,6 +114,26 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
   };
   const panelLayers = createPanelLayers(scene, sessionManager, pointerHits);
 
+  // A press clicks what the ray hit as the trigger pull began, not where the pull has tipped it
+  // by the time it counts as pressed (pressAim.js).
+  const pressAim = new PressAim();
+  const triggerValue = (pointerId) => {
+    const component = xr.pointerSelection?.getXRControllerByPointerId(pointerId)?.motionController?.getMainComponent();
+    return component ? component.value : null;
+  };
+  const simulateMove = scene.simulatePointerMove.bind(scene);
+  scene.simulatePointerMove = (pick, init) => {
+    if (init?.pointerType === 'xr' && init.pointerId !== undefined) {
+      pressAim.sample(init.pointerId, pick, triggerValue(init.pointerId), performance.now());
+    }
+    return simulateMove(pick, init);
+  };
+  const simulateDown = scene.simulatePointerDown.bind(scene);
+  scene.simulatePointerDown = (pick, init) => {
+    if (init?.pointerType !== 'xr' || init.pointerId === undefined) return simulateDown(pick, init);
+    return simulateDown(pressAim.pickFor(init.pointerId, pick, performance.now()), init);
+  };
+
   // Where the viewer stands when the session starts (their real height is kept).
   base.onInitialXRPoseSetObservable.add((cam) => {
     if (!start) return;
@@ -161,14 +183,18 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
       return setViewport(viewport, view);
     };
   }
+  /** Smoothed frame interval (ms), for the `?xrdebug` readout. */
+  let frameMs = 0;
   sessionManager.onXRFrameObservable.add(() => {
     if (pendingFrames && --pendingFrames === 0) eyeBuffer.confirm();
     const nowMs = performance.now();
     if (lastFrameMs) {
       const dt = nowMs - lastFrameMs;
       const periodMs = 1000 / (sessionManager.currentFrameRate || DEFAULT_FRAME_RATE);
-      resolution?.sample(dt, periodMs);
       requestFrameRate(governor.sample(dt, periodMs));
+      // A lower refresh gives every frame more time: try that before giving up pixels.
+      if (governor.atMinimum) resolution?.sample(dt, periodMs);
+      if (dt < 250) frameMs = frameMs ? frameMs + (dt - frameMs) * 0.05 : dt;
     }
     lastFrameMs = nowMs;
   });
@@ -221,6 +247,13 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
       governor.hold(0.5);
       resolution?.hold(0.5);
       await fade.to(0, 260);
+    },
+    /** What the headset is doing, for the `?xrdebug` readout: `1.50x · 72/72 fps · text layers`. */
+    stats() {
+      const rendering = resolution ? resolution.scale : allocated;
+      const rate = sessionManager.currentFrameRate;
+      const fps = frameMs ? Math.round(1000 / frameMs) : 0;
+      return `${rendering.toFixed(2)}x of ${allocated.toFixed(2)}x · ${fps}${rate ? `/${Math.round(rate)}` : ''} fps · text ${panelLayers.active() ? 'layers' : 'in scene'} · fov ${fov}`;
     },
     /** Where the viewer's head is now. */
     headPosition() {

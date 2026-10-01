@@ -33,6 +33,11 @@ export class FrameRateGovernor {
     return this.rates[this.index] ?? null;
   }
 
+  /** Whether the refresh can't go any lower (or can't be changed at all). */
+  get atMinimum() {
+    return this.index <= 0;
+  }
+
   /** Ignore frame times for a while (a scene is loading). */
   hold(seconds) {
     this.holdMs = Math.max(this.holdMs, seconds * 1000);
