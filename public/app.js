@@ -3,7 +3,7 @@
   const path = document.querySelector('.path[data-type]');
   if (!path) return;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const words = ['accent', 'interview', 'cafe', 'scale'];
+  const words = ['ac', 'iv', 'cf', 'sc'];
   if (reduce) { path.textContent = words[0]; return; }
 
   let w = 0, i = 0, deleting = false;
@@ -12,7 +12,7 @@
     i += deleting ? -1 : 1;
     path.textContent = word.slice(0, i);
     let delay = deleting ? 55 : 110;
-    if (!deleting && i === word.length) { deleting = true; delay = w === 0 ? 3200 : 1600; }
+    if (!deleting && i === word.length) { deleting = true; delay = w === 0 ? 3600 : 1800; }
     else if (deleting && i === 0) { deleting = false; w = (w + 1) % words.length; delay = 400; }
     setTimeout(tick, delay);
   };

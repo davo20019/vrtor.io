@@ -1,7 +1,7 @@
 // vrtor.io edge worker.
 // Static pages live in /public and are served by Workers Static Assets.
 // This worker only runs for paths that aren't a static file:
-//   - short room links (vrtor.io/accent) that are easy to type in a headset browser
+//   - short room links (vrtor.io/ac) that are easy to type in a headset browser
 //   - the waitlist API
 
 import { ROOMS } from './rooms.js';

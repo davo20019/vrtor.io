@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>vrtor — learn by doing, in VR, in your browser</title>
+  <title>vrtor: learn by doing, in VR, in your browser</title>
   <meta name="description" content="vrtor is a set of VR learning rooms that open in your headset's web browser. Practice speaking English with an AI coach that listens. No app store, no install." />
   <link rel="canonical" href="https://vrtor.io/" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://vrtor.io/" />
-  <meta property="og:title" content="vrtor — VR learning rooms in your browser" />
-  <meta property="og:description" content="Open a room in your headset's browser and practice with an AI coach. Start with Accent: vrtor.io/accent" />
+  <meta property="og:title" content="vrtor: VR learning rooms in your browser" />
+  <meta property="og:description" content="Open a room in your headset's browser and practice with an AI coach. Start with Accent: vrtor.io/ac" />
   <meta name="theme-color" content="#E9EEF2" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -30,71 +30,108 @@
   </header>
 
   <main id="main">
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="floor" aria-hidden="true"></div>
-      <p class="eyebrow">In your headset's browser, go to</p>
-      <h1 id="hero-title" class="address">
-        <span class="sr-only">vrtor.io/accent</span>
-        <span class="address-bar" aria-hidden="true">
-          <span class="host">vrtor.io/</span><span class="path" data-type="accent"></span><span class="caret"></span>
-        </span>
-      </h1>
-      <p class="lede">
-        Stand on a stage, give the talk, and get coached on how you sounded.
-        vrtor rooms are places to practice the things you learn by doing&nbsp;— built for the web, opened in any headset browser, with an AI that listens back.
-      </p>
-      <div class="actions">
-        <a class="btn primary" href="/accent">Open the Accent room</a>
-        <button class="btn ghost" type="button" data-copy="vrtor.io/accent">Copy link</button>
+    <section class="journey" aria-labelledby="hero-title">
+      <div class="journey-sticky">
+        <canvas class="journey-canvas" aria-hidden="true"></canvas>
+        <div class="journey-fade" aria-hidden="true"></div>
+        <p class="journey-loading" role="status">Loading the café <span>0%</span></p>
+
+        <div class="beat beat-intro on" data-beat="0,0.12">
+          <p class="eyebrow">In your headset's browser, go to</p>
+          <h1 id="hero-title" class="address">
+            <span class="sr-only">vrtor.io/ac</span>
+            <span class="address-bar" aria-hidden="true">
+              <span class="host">vrtor.io/</span><span class="path" data-type="ac"></span><span class="caret"></span>
+            </span>
+          </h1>
+          <p class="lede">Practice in real places, with people who talk back and an AI coach that tells you what to fix. Built for the web, so it opens in any headset browser.</p>
+          <div class="actions">
+            <a class="btn primary" href="/ac">Open the Accent room</a>
+            <button class="btn ghost" type="button" data-enter-vr hidden>Walk through it in VR</button>
+            <button class="btn ghost" type="button" data-copy="vrtor.io/ac">Copy link</button>
+          </div>
+          <p class="scroll-cue">Scroll to follow one learner's first six weeks</p>
+        </div>
+
+        <article class="beat beat-card" data-beat="0.13,0.35">
+          <p class="when">Week 1 &middot; Café</p>
+          <h2>Catch up with a friend over coffee.</h2>
+          <p>She asks about your week and follows up on what you say. You answer out loud, in English, without a script.</p>
+          <aside class="coach"><span class="coach-label">Coach note</span>You rushed "I've been working on". Slow the first three words and the rest of the sentence follows.</aside>
+        </article>
+
+        <article class="beat beat-card" data-beat="0.39,0.64">
+          <p class="when">Week 3 &middot; Interview</p>
+          <h2>Answer "Tell me about yourself."</h2>
+          <p>An interviewer listens, nods, and asks the follow-up a real one would. You get sixty seconds.</p>
+          <aside class="coach"><span class="coach-label">Coach note</span>4 fillers this time, down from 11 in week one. Swap the last ones for a pause.</aside>
+        </article>
+
+        <article class="beat beat-card" data-beat="0.68,0.86">
+          <p class="when">Week 6 &middot; Keynote hall</p>
+          <h2>Give the talk.</h2>
+          <p>A full hall, a clock, and your opening line. The room reacts to how you deliver it.</p>
+          <aside class="coach"><span class="coach-label">Coach note</span>138 words a minute and your pauses landed. Look at the left side of the room more.</aside>
+        </article>
+
+        <div class="beat beat-end" data-beat="0.86,1.01">
+          <h2>Six weeks from the café to the stage.</h2>
+          <p>All three places are in the Accent room today.</p>
+          <div class="actions">
+            <a class="btn primary" href="/ac">Start in the café</a>
+            <a class="btn ghost" href="#rooms">See every room</a>
+          </div>
+        </div>
+
+        <p class="example-tag">Example journey. Coach notes show the kind of feedback Accent gives.</p>
       </div>
-      <p class="fine">Made for Meta Quest Browser and other WebXR headsets.</p>
     </section>
 
     <section id="rooms" class="rooms" aria-labelledby="rooms-title">
       <div class="section-head">
         <h2 id="rooms-title">Rooms</h2>
-        <p>Each room is a short address. Type it once, bookmark it in the headset.</p>
+        <p>Every room is two letters after vrtor.io/, so it's quick to type with a controller.</p>
       </div>
 
       <ul class="room-list">
         <li class="room live">
           <div class="room-meta">
             <span class="status"><span class="dot" aria-hidden="true"></span>Open now</span>
-            <code class="slug">vrtor.io/accent</code>
+            <code class="slug">vrtor.io/ac</code>
           </div>
           <h3>Accent</h3>
           <p>Rehearse a presentation or a conversation out loud. The coach listens for rhythm, stress, pitch and pace, then tells you what to change on the next take.</p>
-          <a class="room-link" href="/accent">Open Accent <span aria-hidden="true">→</span></a>
+          <a class="room-link" href="/ac">Open Accent <span aria-hidden="true">→</span></a>
         </li>
 
         <li class="room">
           <div class="room-meta">
             <span class="status">Planned</span>
-            <code class="slug">vrtor.io/interview</code>
+            <code class="slug">vrtor.io/iv</code>
           </div>
           <h3>Interview</h3>
           <p>Sit across from an interviewer who asks follow-ups based on your answers, for the role you're applying to. Debrief after on what landed and what rambled.</p>
-          <button class="room-link" type="button" data-room="interview">Get notified <span aria-hidden="true">→</span></button>
+          <button class="room-link" type="button" data-room="interview" data-room-slug="iv">Get notified <span aria-hidden="true">→</span></button>
         </li>
 
         <li class="room">
           <div class="room-meta">
             <span class="status">Planned</span>
-            <code class="slug">vrtor.io/cafe</code>
+            <code class="slug">vrtor.io/cf</code>
           </div>
           <h3>Café</h3>
           <p>Order, small-talk and ask for directions in a new language with people who answer back at your level, and slow down when you're lost.</p>
-          <button class="room-link" type="button" data-room="cafe">Get notified <span aria-hidden="true">→</span></button>
+          <button class="room-link" type="button" data-room="cafe" data-room-slug="cf">Get notified <span aria-hidden="true">→</span></button>
         </li>
 
         <li class="room">
           <div class="room-meta">
             <span class="status">Planned</span>
-            <code class="slug">vrtor.io/scale</code>
+            <code class="slug">vrtor.io/sc</code>
           </div>
           <h3>Scale</h3>
           <p>Walk inside a cell, stand next to a blue whale, hold a molecule. Ask the guide anything about what you're looking at.</p>
-          <button class="room-link" type="button" data-room="scale">Get notified <span aria-hidden="true">→</span></button>
+          <button class="room-link" type="button" data-room="scale" data-room-slug="sc">Get notified <span aria-hidden="true">→</span></button>
         </li>
       </ul>
     </section>
@@ -106,7 +143,7 @@
       </div>
       <ol class="step-list">
         <li><div><strong>Open the browser.</strong> On Quest, it's the globe icon in your app library.</div></li>
-        <li><div><strong>Type the room's address.</strong> For example <code>vrtor.io/accent</code>. Bookmark it so next time is one click.</div></li>
+        <li><div><strong>Type the room's address.</strong> For example <code>vrtor.io/ac</code>. Bookmark it so next time is one click.</div></li>
         <li><div><strong>Press Enter VR.</strong> Allow the microphone when asked; the coach needs to hear you.</div></li>
         <li><div><strong>Speak.</strong> Feedback arrives between takes, so you can try again straight away.</div></li>
       </ol>
@@ -131,5 +168,7 @@
   </footer>
 
   <script src="/app.js" defer></script>
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+  <script type="module" src="/journey.js"></script>
 </body>
 </html>
