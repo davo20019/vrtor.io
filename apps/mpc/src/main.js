@@ -1,5 +1,5 @@
 import { ArcRotateCamera, Engine, UniversalCamera, Vector3 } from '@babylonjs/core';
-import { createCard, createXr, xrSupported } from '@vrtor/xr-shell';
+import { createCard, createPresence, createXr, mountPresenceControls, presenceCard, xrSupported } from '@vrtor/xr-shell';
 import { buildWorld, V } from './world.js';
 import { AREAS, SITE } from './areas.js';
 import { LESSONS } from './lesson.js';
@@ -7,10 +7,10 @@ import './style.css';
 const $=s=>document.querySelector(s);
 const ui={loading:$('.loading'),pct:$('.loading-pct'),card:$('.card'),kicker:$('.card-kicker'),title:$('.card-title'),body:$('.card-body'),fact:$('.card-fact'),actions:$('.card-actions'),vr:$('[data-enter-vr]'),learn:$('[data-lesson]'),view:$('[data-view]'),light:$('[data-light]'),site:$('[data-site]'),next:$('[data-next]'),status:$('.area-status'),hint:$('.hint')};
 const engine=new Engine($('#scene'),true,{xrCompatible:true,stencil:true},true);
-let world,scene,camera,walker,panel,rig,flight,sitePose;
+let world,scene,camera,walker,panel,rig,flight,sitePose,presence;
 const keys=new Set();
 let destination=null;
-let lesson=-1,phase='observe',feedback='',score=0,answered=new Set(),cardOpen=true,busy=true,walkView=true;
+let lesson=-1,phase='observe',feedback='',score=0,answered=new Set(),cardOpen=true,busy=true,walkView=true,people=false;
 const inXr=()=>!!rig?.inXr();
 const action=(label,onClick,primary=false)=>({label,onClick:()=>{if(!busy)onClick();},primary});
 const siteCredit='Connected model: Ministerio de Cultura Perú, CC BY 4.0; adapted by vrtor. Architectural detail and scale are approximate.';
@@ -19,13 +19,27 @@ const credit='Survey: INC Peru, CAST (University of Arkansas) and Cotsen Institu
 function content(){
   const area=AREAS[destination??world?.active??0];
   if(busy)return {kicker:'Preparing the survey',title:'Traveling…',body:`Loading ${area.name}. Each area keeps the published mesh geometry.`,fact:'',actions:[]};
-  if(lesson<0&&world.active===SITE)return {kicker:'World wonders · 02 · Connected walkthrough',title:'Walk through Machu Picchu',body:'Explore the paths, terraces and courts of the citadel in one connected architectural model. Close this card to look around freely. The detailed survey closeups are available through Learn.',fact:`${inXr()?controls:'Drag to look. Use WASD or the arrow keys to walk. Click a path to travel farther. On a phone, hold the movement arrows.'}\n${siteCredit}`,actions:[action('Start walking',()=>{walkView=true;if(!inXr()&&scene.activeCamera!==walker)frameArea(true);close();},true),action('Learn',restart)]};
+  if(people&&presence)return presenceCard(presence,action,()=>{people=false;render();});
+  if(lesson<0&&world.active===SITE)return {kicker:'World wonders · 02 · Connected walkthrough',title:'Walk through Machu Picchu',body:'Explore the paths, terraces and courts of the citadel in one connected architectural model. Close this card to look around freely. The detailed survey closeups are available through Learn.',fact:`${inXr()?controls:'Drag to look. Use WASD or the arrow keys to walk. Click a path to travel farther. On a phone, hold the movement arrows.'}\n${siteCredit}`,actions:[action('Start walking',()=>{walkView=true;if(!inXr()&&scene.activeCamera!==walker)frameArea(true);close();},true),action('Learn',restart),...peopleAction()]};
   if(lesson<0)return {kicker:`World wonders · 02 · ${world.active+1} / 6`,title:area.name,body:`${area.detail}. Explore six laser-scanned spaces at Machu Picchu, or follow four short investigations. These are separate survey areas, with gaps in coverage.`,fact:inXr()?`${controls}\n${credit}`:credit,actions:[action('Explore',close),action('Next area',()=>visit((world.active+1)%6)),action('Learn',restart,true)]};
   if(lesson>=LESSONS.length)return {kicker:'Lesson complete',title:`${score} of 4 first try`,body:'You compared fitted masonry, a curved temple wall, carved bedrock and natural rock integrated into buildings. Continue into the Water Mirrors Room and Knob Room.',fact:credit,actions:[action('Again',restart),action('More areas',()=>visit(4),true)]};
   const l=LESSONS[lesson];
   if(phase==='question')return {kicker:`Challenge ${lesson+1} of 4`,title:l.question,body:feedback||'Look closely at the scanned stonework before choosing. You can try again.',fact:'',actions:l.choices.map((c,i)=>action(c,()=>answer(i)))};
   if(phase==='answered')return {kicker:`Challenge ${lesson+1} of 4 · Correct`,title:'You found it',body:l.why,fact:feedback,actions:[action('Look around',close),action(lesson===3?'Finish':'Next',()=>go(lesson+1),true)]};
   return {kicker:`Investigate ${lesson+1} of 4`,title:l.title,body:l.body,fact:l.fact,actions:[action(lesson===2?'Change light':'Explore',lesson===2?changeLight:close),action('Test me',()=>{phase='question';feedback='';render();},true)]};
+}
+// In the headset the bar isn't visible, so visitors are a page of the card.
+function peopleAction(){
+  if(!inXr()||!presence||presence.state.status==='off')return [];
+  return [action(`People · ${presence.state.online||1}`,()=>{people=true;render();})];
+}
+function poseNow(){
+  if(busy||!world)return null;
+  if(inXr()){
+    const hand=side=>{const c=rig.xr.input.controllers.find(c=>c.inputSource.handedness===side);return (c?.grip??c?.pointer)?.getAbsolutePosition().clone();};
+    return {area:world.active,head:rig.headPosition(),forward:rig.camera.getDirection(Vector3.Forward()),left:hand('left'),right:hand('right')};
+  }
+  return {area:world.active,head:walker.position,forward:walker.getDirection(Vector3.Forward())};
 }
 function answer(choice){
   const l=LESSONS[lesson],first=!answered.has(lesson);answered.add(lesson);
@@ -42,7 +56,7 @@ function render(){
   if(inXr()){
     ui.card.hidden=true;
     if(!cardOpen){panel.hide();return;}
-    if(!onSite&&!busy)data.actions.push(action('Back to walk',()=>{walkView=true;visit(SITE);}));
+    if(!onSite&&!busy&&!people)data.actions.push(action('Back to walk',()=>{walkView=true;visit(SITE);}));
     if(new URLSearchParams(location.search).has('xrdebug'))data.kicker=rig.stats();
     panel.setContent({...data,onClose:close});
     const f=rig.headForward(),a=-.45;
@@ -54,7 +68,7 @@ function render(){
   ui.kicker.textContent=data.kicker;ui.title.textContent=data.title;ui.body.textContent=data.body;ui.fact.textContent=data.fact;ui.fact.hidden=!data.fact;
   ui.actions.replaceChildren(...data.actions.map(a=>{const b=document.createElement('button');b.type='button';b.className=a.primary?'btn btn-primary':'btn';b.textContent=a.label;b.disabled=busy;b.addEventListener('click',a.onClick);return b;}));
 }
-function close(){cardOpen=false;render();if(!inXr())$('#scene').focus({preventScroll:true});}
+function close(){cardOpen=false;people=false;render();if(!inXr())$('#scene').focus({preventScroll:true});}
 function changeLight(){ui.light.textContent=world.daylight();render();}
 function frameArea(walk=walkView){
   const s=world.stop();
@@ -128,6 +142,14 @@ async function start(){
   walker=new UniversalCamera('walk',V(0,2,0),scene);walker.minZ=.06;walker.maxZ=16000;walker.angularSensibility=2200;walker.inertia=0;
   walker.keysUp=[];walker.keysDown=[];walker.keysLeft=[];walker.keysRight=[];
   panel=createCard(scene,{name:'machu-lesson',height:.88});
+  let refreshBar=()=>{};
+  presence=createPresence(scene,{subject:'mpc',getPose:poseNow,onChange:state=>{
+    refreshBar(state);
+    // Refresh the open headset card in place (render() would also move it to where you look).
+    if(inXr()&&cardOpen&&!busy&&(people||(lesson<0&&world.active===SITE)))panel.setContent({...content(),onClose:close});
+  }});
+  refreshBar=mountPresenceControls(presence,$('.presence-controls'));refreshBar(presence.state);
+  if(new URLSearchParams(location.search).has('xrdebug'))window.vrtorPresence=presence;
   frameArea(true);
   try{if(await xrSupported()){rig=await createXr(scene,{floorMeshes:world.floors,start:{get position(){return world.stop().stand;},get lookAt(){return world.stop().at;}}});}}catch(e){console.warn('[mpc] VR unavailable',e);}
   if(rig){
@@ -197,7 +219,8 @@ $('#scene').addEventListener('pointerdown',e=>pointerStart={x:e.clientX,y:e.clie
 $('#scene').addEventListener('pointerup',e=>{
   if(!pointerStart||Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>6||busy||inXr()||scene.activeCamera!==walker)return;
   const rect=$('#scene').getBoundingClientRect();
-  const pick=scene.pick(e.clientX-rect.left,e.clientY-rect.top,m=>world.floors.includes(m)||world.monument.includes(m));
+  const pick=scene.pick(e.clientX-rect.left,e.clientY-rect.top,m=>world.floors.includes(m)||world.monument.includes(m)||(m.isPickable&&presence?.isAvatar(m)));
+  // A click on someone mutes them (presence.js); it isn't a walk.
   if(!pick?.hit||!world.floors.includes(pick.pickedMesh))return;
   const destination=pick.pickedPoint.add(V(0,1.65,0));
   const allowed=world.walk(destination,Vector3.Zero());

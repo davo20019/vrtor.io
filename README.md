@@ -40,11 +40,30 @@ Read the waitlist:
 npx wrangler kv key list --binding WAITLIST --remote -c apps/home/wrangler.jsonc
 ```
 
+## Visitors: seeing and talking to each other
+
+Anyone with a subject open can choose **Join others** to appear to everyone else in it as a simple avatar with a random name, and hear people near them. The mic stays off until they choose **Talk**; voices are spatial and fade out by 30m; tapping someone (or pointing and pulling the trigger) mutes them for you only.
+
+- Server: `apps/home/src/presence.js`, a Durable Object per room at `vrtor.io/api/presence/<code>` (WebSocket). Rooms hold 12 people; more open `<code>:1`, `<code>:2`, ... Names are assigned by the server.
+- Client: `packages/xr-shell/src/presence.js` (socket, avatars), `voice.js` (peer-to-peer WebRTC audio, signaled through the room), `presenceUi.js` (bar buttons and the headset card page).
+- Kill switches: set `PRESENCE` or `VOICE` to `"off"` in `apps/home/wrangler.jsonc` (or the dashboard) and deploy; connected rooms restart under the new setting.
+- Debug: `?xrdebug` exposes `window.vrtorPresence`; `vrtorPresence.stats()` shows each voice connection and its audio level.
+- No TURN relay yet, so a few network pairs (strict NATs) won't hear each other; Cloudflare Realtime TURN fixes that if it shows up in testing.
+
+Adding it to a subject (see `apps/mpc/src/main.js`):
+
+```js
+const presence = createPresence(scene, { subject: 'xyz', getPose, onChange });
+const updateBar = mountPresenceControls(presence, document.querySelector('.presence-controls'));
+// getPose() → { area, head, forward, left?, right? } or null; in the headset, show presenceCard(presence, action, back)
+```
+
 ## Adding a subject
 
 1. Copy `apps/spc` to `apps/<code>`: set `base`/`outDir` in `vite.config.js` and `name` in `wrangler.jsonc`.
 2. In `apps/home`: add `{ code, service }` to `src/subjects.js` and the service binding to `wrangler.jsonc`.
 3. Add it to `scripts/dev.js` and the root `deploy` script, and update its card in `apps/home/public/index.html`.
+4. Optional: visitors (see above). The presence route accepts any subject with a `service`.
 
 ## How Accent (accent.learnenglishsounds.com/vr) plugs in
 

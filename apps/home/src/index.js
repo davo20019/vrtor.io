@@ -4,9 +4,13 @@
 //   - subjects built in this repo (vrtor.io/spc/*): forwarded to their own Worker
 //   - short subject links (vrtor.io/com) that are easy to type in a headset browser
 //   - the waitlist API
+//   - live presence for the subjects (vrtor.io/api/presence/<code>, a WebSocket; see presence.js)
 //   - everything else: the static site in /public (Workers Static Assets)
 
 import { SUBJECTS } from './subjects.js';
+import { connectPresence } from './presence.js';
+
+export { PresenceRoom } from './presence.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -20,6 +24,9 @@ export default {
       url.protocol = 'https:';
       return Response.redirect(url.toString(), 301);
     }
+    // A WebSocket upgrade (status 101) can't be copied into a new Response, so it skips withHeaders.
+    const presence = url.pathname.match(/^\/api\/presence\/([a-z]{3})$/);
+    if (presence && SUBJECTS[presence[1]]?.service) return connectPresence(request, env, presence[1]);
     return withHeaders(await route(request, env, url), url);
   },
 };
@@ -62,7 +69,7 @@ function withHeaders(res, url) {
   h.set('X-Content-Type-Options', 'nosniff');
   if (url.hostname === 'vrtor.io') h.set('Strict-Transport-Security', 'max-age=31536000');
   h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  h.set('Permissions-Policy', 'camera=(), geolocation=(), microphone=(), xr-spatial-tracking=(self)');
+  h.set('Permissions-Policy', 'camera=(), geolocation=(), microphone=(self), xr-spatial-tracking=(self)');
   if (url.hostname.endsWith('.workers.dev')) h.set('X-Robots-Tag', 'noindex'); // the preview; vrtor.io is canonical
   return out;
 }

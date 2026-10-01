@@ -21,6 +21,12 @@
     { "binding": "TAJ", "service": "vrtor-taj" },
     { "binding": "MPC", "service": "vrtor-mpc" }
   ],
+  // Live presence and voice for the subjects (src/presence.js). Set either to "off" to switch it off.
+  "vars": { "PRESENCE": "on", "VOICE": "on" },
+  "durable_objects": {
+    "bindings": [{ "name": "PRESENCE_ROOM", "class_name": "PresenceRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PresenceRoom"] }],
   "kv_namespaces": [
     { "binding": "WAITLIST", "id": "1873fda3120a49cd9d44e76b1c048575" }
   ],
