@@ -165,6 +165,8 @@ async function buildOffice() {
 const FLOOR_Y = -0.82;
 const ROW_Z0 = 5.3, ROW_DZ = 1.0, ROWS = 10, SEAT_DX = 0.6;
 const CROWD_SIT = [0.46, -0.08]; // cushion height and setback in a sitter's own frame
+// The crowd's baked head turn per pose; glTF is the mirror of Acento's Babylon frame, so 'left' there is +yaw here.
+const CROWD_POSE_POS = 'left', CROWD_POSE_NEG = 'right';
 
 async function buildStage() {
   const scene = new THREE.Scene();
@@ -222,10 +224,12 @@ async function buildStage() {
   const placements = {};
   for (const s of seats) {
     if (standing.has(`${s.r}:${s.k}`) || rand() > 0.68) continue;
-    const toStage = Math.atan2(-s.x, -s.z); // yaw that faces the presenter
-    const pose = s.x > 0 ? 'left' : 'right';
+    // Seats face the stage (yaw PI); each person turns part of the way toward the presenter.
+    const toStage = Math.atan2(-s.x, -s.z);
+    const turn = Math.atan2(Math.sin(toStage - Math.PI), Math.cos(toStage - Math.PI)); // wrapped to [-PI, PI]
+    const pose = turn > 0 ? CROWD_POSE_POS : CROWD_POSE_NEG;
     const key = `${pose}-${s.r < 3 ? 'near' : 'far'}`;
-    (placements[key] ||= []).push({ s, yaw: Math.PI + (toStage - Math.PI) * 0.35 + (rand() - 0.5) * 0.15, pick: rand() });
+    (placements[key] ||= []).push({ s, yaw: Math.PI + turn * 0.35 + (rand() - 0.5) * 0.1, pick: rand() });
   }
   for (const [key, list] of Object.entries(placements)) {
     const meshes = variants[key] || [];
@@ -237,7 +241,7 @@ async function buildStage() {
       const inst = new THREE.InstancedMesh(src.geometry, src.material, mine.length);
       mine.forEach((p, i) => {
         const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), p.yaw);
-        m4.compose(new THREE.Vector3(p.s.x, FLOOR_Y, p.s.z), q, new THREE.Vector3(1, 1, 1));
+        m4.compose(new THREE.Vector3(p.s.x, FLOOR_Y, p.s.z + 0.1), q, new THREE.Vector3(1, 1, 1));
         src.updateMatrix();
         inst.setMatrixAt(i, m4.multiply(src.matrix));
       });
