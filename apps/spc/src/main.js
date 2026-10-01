@@ -5,7 +5,7 @@
 // card, and the tour moves you to each part.
 import { ArcRotateCamera, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
 import { createCard, createXr, xrSupported } from '@vrtor/xr-shell';
-import { createMarsScene, buildMars } from './mars.js';
+import { createMarsScene, buildMars, freezeShadows } from './mars.js';
 import { loadRover } from './rover.js';
 import { PARTS, WELCOME } from './parts.js';
 import { createWind } from './wind.js';
@@ -61,14 +61,17 @@ const XR_HOWTO = 'Point and pull the trigger to choose. Push the thumbstick forw
 function content(i) {
   const n = rover.stops.length;
   if (i < 0) {
-    return {
-      ...WELCOME,
-      fact: inXr() ? XR_HOWTO : WELCOME.fact,
-      actions: [
-        { label: 'Explore', onClick: close },
-        { label: 'Start the tour', primary: true, onClick: () => go(0, true) },
-      ],
-    };
+    // In a headset's browser, going into VR is the point: it's the main action.
+    const actions = rig && !inXr()
+      ? [
+          { label: 'Tour here', onClick: () => go(0, true) },
+          { label: 'Enter VR', primary: true, onClick: enterVr },
+        ]
+      : [
+          { label: 'Explore', onClick: close },
+          { label: 'Start the tour', primary: true, onClick: () => go(0, true) },
+        ];
+    return { ...WELCOME, fact: inXr() ? XR_HOWTO : WELCOME.fact, actions };
   }
   if (i >= n) {
     return {
@@ -217,6 +220,7 @@ async function start() {
     shadows: env.shadows,
     onProgress: (p) => (ui.pct.textContent = `${Math.round(p * 100)}%`),
   });
+  freezeShadows(env.shadows);
 
   if (await xrSupported()) {
     rig = await createXr(scene, {
@@ -226,6 +230,9 @@ async function start() {
   }
   if (rig) {
     ui.vr.hidden = false;
+    document.body.classList.add('xr-ready');
+    // In the headset the card is its own compositor layer: text sampled once, at display resolution.
+    rig.mirrorPanel(card.panel, { interactive: true });
     let framesSinceEnter = -1;
     rig.onChange((entered) => {
       document.body.classList.toggle('in-xr', entered);
@@ -261,14 +268,19 @@ async function start() {
   render();
 }
 
-ui.vr.addEventListener('click', async () => {
+async function enterVr() {
+  if (!rig || inXr()) return;
   wind.start();
+  ui.vr.disabled = true;
   try {
     await rig.enter();
   } catch (err) {
     console.error('[spc] could not enter VR', err);
+  } finally {
+    ui.vr.disabled = false;
   }
-});
+}
+ui.vr.addEventListener('click', enterVr);
 ui.tour.addEventListener('click', () => go(index >= 0 && index < (rover?.stops.length ?? 0) ? index : 0, true));
 ui.sound.addEventListener('click', () => {
   const on = wind.toggle();

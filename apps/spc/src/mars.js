@@ -47,8 +47,9 @@ export function createMarsScene(engine) {
   scene.onNewMeshAddedObservable.add((m) => {
     if (m.name !== 'sky' && m.renderingGroupId === 0) m.renderingGroupId = 1;
   });
-  // Textures seen at a slant (the ground) stay sharp.
-  scene.onNewTextureAddedObservable.add((t) => (t.anisotropicFilteringLevel = Math.max(t.anisotropicFilteringLevel, 8)));
+  // Textures seen at a slant (the ground, the rover's panels) stay sharp: the most the GPU allows (16 on a Quest).
+  const anisotropy = Math.min(16, engine.getCaps().maxAnisotropy || 4);
+  scene.onNewTextureAddedObservable.add((t) => (t.anisotropicFilteringLevel = Math.max(t.anisotropicFilteringLevel, anisotropy)));
   return scene;
 }
 
@@ -72,7 +73,9 @@ export async function buildMars(scene) {
   sun.position = new Vector3(-8, 11, 6);
   sun.diffuse = Color3.FromHexString('#fff0dc');
   sun.intensity = 3.2;
-  const shadows = new ShadowGenerator(1024, sun);
+  // The sun and the rover never move: the shadow map is drawn once (see freezeShadows), so it can be
+  // large and crisp without costing anything per frame.
+  const shadows = new ShadowGenerator(2048, sun);
   shadows.usePercentageCloserFiltering = true;
   shadows.filteringQuality = ShadowGenerator.QUALITY_LOW;
   shadows.bias = 0.002;
@@ -85,6 +88,11 @@ export async function buildMars(scene) {
   dust(scene);
 
   return { ground, shadows, sun, sky, rocks };
+}
+
+/** Draws the shadow map one last time (call after every caster is added), then never again. */
+export function freezeShadows(shadows) {
+  shadows.getShadowMap().refreshRate = RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
 }
 
 // A dome with the sky's gradient painted into an emissive texture (no lighting, no fog).

@@ -6,8 +6,18 @@ import { Color3, MeshBuilder, Vector3 } from '@babylonjs/core';
 import { AdvancedDynamicTexture, Button, Control, Rectangle, StackPanel, TextBlock } from '@babylonjs/gui';
 
 const ACCENT = '#ffb020';
+/** Layout width in GUI pixels; the texture itself is drawn TEX_SCALE times larger. */
 const TEX_WIDTH = 1024;
+/**
+ * Texel density over the layout: at 1.5x the card holds ~1900 texels per
+ * metre, more than the headset resolves at reading distance, and trilinear
+ * mipmaps with anisotropy keep it clean when seen at a slant.
+ */
+const TEX_SCALE = 1.5;
 const PAD = 56;
+/** A layout size in texture pixels. */
+const px = (n) => `${n * TEX_SCALE}px`;
+const sz = (n) => n * TEX_SCALE;
 
 export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } = {}) {
   const plane = MeshBuilder.CreatePlane(name, { width, height }, scene);
@@ -15,53 +25,52 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
   plane.renderingGroupId = 2;
   plane.setEnabled(false);
   const texHeight = Math.round((TEX_WIDTH * height) / width);
-  const ui = AdvancedDynamicTexture.CreateForMesh(plane, TEX_WIDTH, texHeight, true, false, true);
+  const ui = AdvancedDynamicTexture.CreateForMesh(plane, TEX_WIDTH * TEX_SCALE, texHeight * TEX_SCALE, true, false, true);
+  ui.anisotropicFilteringLevel = 16;
 
   const bg = new Rectangle(`${name}-bg`);
-  bg.thickness = 3;
+  bg.thickness = sz(3);
   bg.color = 'rgba(255,176,32,0.55)';
-  bg.cornerRadius = 36;
+  bg.cornerRadius = sz(36);
   bg.background = 'rgba(12,13,18,0.94)';
   ui.addControl(bg);
 
   const textWidth = TEX_WIDTH - 2 * PAD;
   const stack = new StackPanel(`${name}-text`);
   stack.isVertical = true;
-  stack.width = `${textWidth}px`;
+  stack.width = px(textWidth);
   stack.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
-  stack.top = `${PAD - 8}px`;
+  stack.top = px(PAD - 8);
   bg.addControl(stack);
 
   const text = (id, size, color, weight = 'normal') => {
     const t = new TextBlock(`${name}-${id}`);
     t.fontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-    t.fontSize = size;
+    t.fontSize = sz(size);
     t.fontWeight = weight;
     t.color = color;
     t.textWrapping = true;
     t.resizeToFit = true;
     t.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
-    t.width = `${textWidth}px`;
+    t.width = px(textWidth);
     stack.addControl(t);
     return t;
   };
   const kicker = text('kicker', 30, ACCENT, '600');
   const title = text('title', 62, '#ffffff', '700');
-  title.paddingTop = '4px';
+  title.paddingTop = px(4);
   const body = text('body', 36, '#dfe2ea');
-  body.paddingTop = '18px';
-  body.lineSpacing = '6px';
+  body.paddingTop = px(18);
   const fact = text('fact', 32, '#ffd27a');
-  fact.paddingTop = '30px';
-  fact.lineSpacing = '4px';
+  fact.paddingTop = px(30);
 
   const row = new StackPanel(`${name}-actions`);
   row.isVertical = false;
-  row.height = '120px';
+  row.height = px(120);
   row.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
   row.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
-  row.paddingRight = `${PAD - 16}px`;
-  row.paddingBottom = '28px';
+  row.paddingRight = px(PAD - 16);
+  row.paddingBottom = px(28);
   bg.addControl(row);
 
   // A line from the card's lower edge to what it describes.
@@ -85,6 +94,8 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
 
   return {
     mesh: plane,
+    /** The mesh and its GUI texture, for compositing as a quad layer (see layers.js). */
+    panel: { mesh: plane, ui },
     /** { kicker, title, body, fact, actions: [{ label, primary, onClick }] } */
     setContent({ kicker: k = '', title: t = '', body: b = '', fact: f = '', actions = [] }) {
       kicker.text = k.toUpperCase();
@@ -95,14 +106,14 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
       row.clearControls();
       for (const action of actions) {
         const button = Button.CreateSimpleButton(`${name}-${action.label}`, action.label);
-        button.width = action.primary ? '290px' : '230px';
-        button.height = '92px';
-        button.paddingLeft = '16px';
-        button.cornerRadius = 46;
-        button.thickness = action.primary ? 0 : 3;
+        button.width = action.primary ? px(290) : px(230);
+        button.height = px(92);
+        button.paddingLeft = px(16);
+        button.cornerRadius = sz(46);
+        button.thickness = action.primary ? 0 : sz(3);
         button.color = action.primary ? '#14100a' : '#ffffff';
         button.background = action.primary ? ACCENT : 'rgba(255,255,255,0.06)';
-        button.fontSize = 34;
+        button.fontSize = sz(34);
         button.fontWeight = '600';
         const idle = button.background;
         button.onPointerEnterObservable.add(() => (button.background = action.primary ? '#ffc65a' : 'rgba(255,255,255,0.2)'));
