@@ -3,7 +3,7 @@
   const path = document.querySelector('.path[data-type]');
   if (!path) return;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const words = ['ac', 'iv', 'cf', 'sc'];
+  const words = ['com', 'mec', 'mat', 'nat'];
   if (reduce) { path.textContent = words[0]; return; }
 
   let w = 0, i = 0, deleting = false;
@@ -38,14 +38,15 @@ document.querySelectorAll('[data-copy]').forEach((btn) => {
   const form = document.querySelector('.wl-form');
   if (!form) return;
   const msg = document.querySelector('.wl-msg');
-  const roomInput = form.querySelector('input[name="room"]');
+  const subjectInput = form.querySelector('input[name="subject"]');
   const email = form.querySelector('input[name="email"]');
 
-  // "Get notified" on a planned room jumps to the form, tagged with that room.
-  document.querySelectorAll('[data-room]').forEach((btn) => {
+  // "Get notified" on a coming subject jumps to the form, tagged with that subject.
+  document.querySelectorAll('[data-notify]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      roomInput.value = btn.dataset.room;
-      msg.textContent = `You'll hear when ${btn.closest('.room').querySelector('h3').textContent} opens.`;
+      subjectInput.value = btn.dataset.notify;
+      const name = btn.dataset.notify.charAt(0).toUpperCase() + btn.dataset.notify.slice(1);
+      msg.textContent = `You'll hear when ${name} opens.`;
       msg.classList.remove('error');
       document.getElementById('waitlist').scrollIntoView({ behavior: 'smooth' });
       email.focus({ preventScroll: true });
@@ -62,13 +63,13 @@ document.querySelectorAll('[data-copy]').forEach((btn) => {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email: email.value, room: roomInput.value }),
+        body: JSON.stringify({ email: email.value, subject: subjectInput.value }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Could not join the waitlist. Try again.');
       msg.textContent = "You're on the waitlist.";
       form.reset();
-      roomInput.value = 'any';
+      subjectInput.value = 'any';
     } catch (err) {
       msg.classList.add('error');
       msg.textContent = err.message;

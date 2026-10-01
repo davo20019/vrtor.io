@@ -1,10 +1,10 @@
 // vrtor.io edge worker.
 // Static pages live in /public and are served by Workers Static Assets.
 // This worker only runs for paths that aren't a static file:
-//   - short room links (vrtor.io/ac) that are easy to type in a headset browser
+//   - short subject links (vrtor.io/com) that are easy to type in a headset browser
 //   - the waitlist API
 
-import { ROOMS } from './rooms.js';
+import { SUBJECTS } from './subjects.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -15,9 +15,13 @@ export default {
 
     if (slug === 'api/waitlist') return handleWaitlist(request, env);
 
-    const room = ROOMS[slug];
-    if (room?.url) {
-      const target = new URL(room.url);
+    const subject = SUBJECTS[slug];
+    if (subject && !subject.url) {
+      // Coming soon: show it in the catalog.
+      return Response.redirect(new URL(`/#subjects`, url).toString(), 302);
+    }
+    if (subject?.url) {
+      const target = new URL(subject.url);
       // Carry through any query (e.g. ?xrdebug) and tag the visit as coming from vrtor.
       url.searchParams.forEach((v, k) => target.searchParams.set(k, v));
       if (!target.searchParams.has('ref')) target.searchParams.set('ref', 'vrtor');
@@ -41,20 +45,20 @@ async function handleWaitlist(request, env) {
   }
 
   const email = String(body.email ?? '').trim().toLowerCase();
-  const room = String(body.room ?? 'any').slice(0, 40);
+  const subject = String(body.subject ?? body.room ?? 'any').slice(0, 40);
   if (!EMAIL_RE.test(email) || email.length > 254) {
     return json({ error: 'Enter a valid email address.' }, 400);
   }
 
   const key = `waitlist:${email}`;
   const existing = await env.WAITLIST.get(key, 'json');
-  const rooms = new Set(existing?.rooms ?? []);
-  rooms.add(room);
+  const subjects = new Set(existing?.subjects ?? existing?.rooms ?? []);
+  subjects.add(subject);
   await env.WAITLIST.put(
     key,
     JSON.stringify({
       email,
-      rooms: [...rooms],
+      subjects: [...subjects],
       createdAt: existing?.createdAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       country: request.cf?.country ?? null,
