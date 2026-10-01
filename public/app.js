@@ -45,7 +45,7 @@ document.querySelectorAll('[data-copy]').forEach((btn) => {
   document.querySelectorAll('[data-notify]').forEach((btn) => {
     btn.addEventListener('click', () => {
       subjectInput.value = btn.dataset.notify;
-      const name = btn.dataset.notify.charAt(0).toUpperCase() + btn.dataset.notify.slice(1);
+      const name = btn.dataset.notify === 'pro' ? 'Pro' : btn.dataset.notify.charAt(0).toUpperCase() + btn.dataset.notify.slice(1);
       msg.textContent = `You'll hear when ${name} opens.`;
       msg.classList.remove('error');
       document.getElementById('waitlist').scrollIntoView({ behavior: 'smooth' });
