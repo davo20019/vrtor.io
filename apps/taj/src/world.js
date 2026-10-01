@@ -25,7 +25,7 @@ DracoDecoder.DefaultConfiguration = {
   wasmBinaryUrl: `${BASE}draco/draco_decoder_gltf.wasm`,
   fallbackUrl: `${BASE}draco/draco_decoder_gltf.js`,
 };
-export const TERRACE_Y = 5.2;
+export const TERRACE_Y = 5.93;
 export const V = (x, y, z) => new Vector3(x, y, z);
 export const VIEWS = [
   { stand: V(0, 0, -105), at: V(0, 22, 0) },
