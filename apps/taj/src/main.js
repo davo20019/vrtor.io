@@ -73,7 +73,7 @@ function content() {
         feedback ||
         "Look at the architecture before choosing. You can try again.",
       fact: "",
-      actions: l.choices.map((c, i) => action(c, () => answer(i), i === 2)),
+      actions: l.choices.map((c, i) => action(c, () => answer(i))),
     };
   if (phase === "answered")
     return {
