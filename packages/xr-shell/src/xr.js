@@ -137,6 +137,7 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
   // Where the viewer stands when the session starts (their real height is kept).
   base.onInitialXRPoseSetObservable.add((cam) => {
     if (!start) return;
+    cam.position.y += start.position.y || 0;
     cam.position.x = start.position.x;
     cam.position.z = start.position.z;
     cam.setTarget(start.lookAt);
@@ -241,6 +242,7 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
     async moveTo(position, lookAt) {
       if (!inXr()) return;
       await fade.to(1, 180);
+      camera.position.y = (position.y || 0) + camera.realWorldHeight;
       camera.position.x = position.x;
       camera.position.z = position.z;
       camera.setTarget(lookAt);

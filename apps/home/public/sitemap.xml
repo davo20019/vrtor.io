@@ -10,4 +10,9 @@
     <image:image><image:loc>https://vrtor.io/assets/cards/math.jpg</image:loc></image:image>
     <image:image><image:loc>https://vrtor.io/assets/cards/nature.jpg</image:loc></image:image>
   </url>
+  <url>
+    <loc>https://vrtor.io/taj/</loc>
+    <lastmod>2026-10-01</lastmod>
+    <image:image><image:loc>https://vrtor.io/assets/cards/taj-mahal.jpg</image:loc></image:image>
+  </url>
 </urlset>

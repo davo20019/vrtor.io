@@ -1,0 +1,345 @@
+import { ArcRotateCamera, Engine, Vector3 } from "@babylonjs/core";
+import { createCard, createXr, xrSupported } from "@vrtor/xr-shell";
+import { buildWorld, VIEWS, V } from "./world.js";
+import { LESSONS } from "./lesson.js";
+import "./style.css";
+const $ = (s) => document.querySelector(s);
+const ui = {
+  loading: $(".loading"),
+  pct: $(".loading-pct"),
+  card: $(".card"),
+  kicker: $(".card-kicker"),
+  title: $(".card-title"),
+  body: $(".card-body"),
+  fact: $(".card-fact"),
+  actions: $(".card-actions"),
+  vr: $("[data-enter-vr]"),
+  learn: $("[data-lesson]"),
+  view: $("[data-view]"),
+  light: $("[data-light]"),
+  hint: $(".hint"),
+};
+const engine = new Engine(
+  $("#scene"),
+  true,
+  { xrCompatible: true, stencil: true },
+  true,
+);
+let world, scene, camera, panel, rig, flight;
+let lesson = -1,
+  phase = "observe",
+  feedback = "",
+  score = 0,
+  answered = new Set(),
+  cardOpen = true,
+  view = 0,
+  study = false;
+const inXr = () => !!rig?.inXr();
+const action = (label, onClick, primary = false) => ({
+  label,
+  onClick,
+  primary,
+});
+const controls =
+  "Push the stick forward to teleport; left or right to turn. Point and pull the trigger to choose. A or X reopens the lesson.";
+function content() {
+  if (lesson < 0)
+    return {
+      kicker: "World wonders · 01",
+      title: "Symmetry in stone",
+      body: "Explore the Taj Mahal’s exterior in 3D. Find its mirror line, recognize its arches and towers, and test what you learn.",
+      fact: inXr()
+        ? controls
+        : "A 17th-century Mughal mausoleum in Agra, India. Exterior reconstruction; approximate scale.",
+      actions: [
+        action("Explore", close),
+        action("Start lesson", () => go(0), true),
+      ],
+    };
+  if (lesson >= LESSONS.length)
+    return {
+      kicker: "Lesson complete",
+      title: `${score} of 4 first try`,
+      body: "You explored the axis of symmetry, the pishtaq, four minarets and the chhatris. Revisit the building from another angle, or repeat the lesson.",
+      fact: "Built under Shah Jahan in memory of Mumtaz Mahal. UNESCO World Heritage since 1983.",
+      actions: [action("Again", restart), action("Explore", close, true)],
+    };
+  const l = LESSONS[lesson];
+  if (phase === "question")
+    return {
+      kicker: `Challenge ${lesson + 1} of 4`,
+      title: l.question,
+      body:
+        feedback ||
+        "Look at the architecture before choosing. You can try again.",
+      fact: "",
+      actions: l.choices.map((c, i) => action(c, () => answer(i), i === 2)),
+    };
+  if (phase === "answered")
+    return {
+      kicker: `Challenge ${lesson + 1} of 4 · Correct`,
+      title: "You found it",
+      body: l.why,
+      fact: feedback,
+      actions: [
+        action("Look around", close),
+        action(lesson === 3 ? "Finish" : "Next", () => go(lesson + 1), true),
+      ],
+    };
+  const experiment =
+    lesson === 0
+      ? action(study ? "Hide axis" : "Show axis", toggleStudy)
+      : lesson === 3
+        ? action("Change light", changeLight)
+        : action("Explore", close);
+  return {
+    kicker: `Investigate ${lesson + 1} of 4`,
+    title: l.title,
+    body: l.body,
+    fact: l.fact,
+    actions: [
+      experiment,
+      action(
+        "Test me",
+        () => {
+          phase = "question";
+          feedback = "";
+          render();
+        },
+        true,
+      ),
+    ],
+  };
+}
+function answer(choice) {
+  const l = LESSONS[lesson];
+  const first = !answered.has(lesson);
+  answered.add(lesson);
+  if (choice !== l.answer) {
+    feedback =
+      "Try again. " +
+      (lesson === 0
+        ? "Look for the line through the center of the building."
+        : lesson === 1
+          ? "The portal is the tall arched recess, rather than a tower or pavilion."
+          : lesson === 2
+            ? "There is one tower at each corner of the terrace."
+            : "Look for the smaller pavilions with their own domed roofs.");
+    render();
+    return;
+  }
+  if (first) score++;
+  feedback = first
+    ? "Correct on your first try."
+    : "Correct after another look.";
+  phase = "answered";
+  render();
+}
+async function go(i) {
+  lesson = i;
+  phase = "observe";
+  feedback = "";
+  cardOpen = true;
+  study = false;
+  world.study(false);
+  if (i < LESSONS.length && i >= 0) await travel(LESSONS[i].view);
+  render();
+}
+function restart() {
+  score = 0;
+  answered = new Set();
+  go(0);
+}
+function close() {
+  cardOpen = false;
+  render();
+}
+function toggleStudy() {
+  study = !study;
+  world.study(study);
+  render();
+}
+function changeLight() {
+  ui.light.textContent = world.daylight();
+  if (inXr() && lesson === 3) {
+    feedback = ui.light.textContent;
+  }
+  render();
+}
+async function travel(i) {
+  view = i;
+  const stop = VIEWS[i];
+  if (inXr()) await rig.moveTo(stop.stand, stop.at);
+  else {
+    const eye = stop.stand.add(V(0, 1.65, 0));
+    const off = eye.subtract(stop.at);
+    flight = {
+      target: stop.at.clone(),
+      radius: off.length(),
+      alpha: Math.atan2(off.z, off.x),
+      beta: Math.acos(off.y / off.length()),
+    };
+  }
+}
+function render() {
+  const data = content();
+  if (inXr()) {
+    ui.card.hidden = true;
+    if (!cardOpen) {
+      panel.hide();
+      return;
+    }
+    if (new URLSearchParams(location.search).has("xrdebug"))
+      data.kicker = rig.stats();
+    panel.setContent(data);
+    // Keep the card slightly to the left of the monument, so it can be read and inspected together.
+    const f = rig.headForward();
+    const a = -0.45;
+    const direction = V(
+      f.x * Math.cos(a) + f.z * Math.sin(a),
+      0,
+      -f.x * Math.sin(a) + f.z * Math.cos(a),
+    );
+    panel.place(rig.headPosition(), direction);
+    return;
+  }
+  panel.hide();
+  ui.card.hidden = !cardOpen;
+  if (!cardOpen) return;
+  ui.kicker.textContent = data.kicker;
+  ui.title.textContent = data.title;
+  ui.body.textContent = data.body;
+  ui.fact.textContent = data.fact;
+  ui.fact.hidden = !data.fact;
+  ui.actions.replaceChildren(
+    ...data.actions.map((a) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = a.primary ? "btn btn-primary" : "btn";
+      b.textContent = a.label;
+      b.addEventListener("click", a.onClick);
+      return b;
+    }),
+  );
+}
+async function start() {
+  world = await buildWorld(
+    engine,
+    (p) => (ui.pct.textContent = `${Math.round(p * 100)}%`),
+  );
+  scene = world.scene;
+  camera = new ArcRotateCamera("orbit", 0, 1, 120, V(0, 20, 0), scene);
+  camera.setPosition(V(76, 42, -116));
+  camera.minZ = 0.15;
+  camera.maxZ = 1600;
+  camera.lowerRadiusLimit = 5;
+  camera.upperRadiusLimit = 220;
+  camera.lowerBetaLimit = 0.12;
+  camera.upperBetaLimit = 2.7;
+  camera.wheelDeltaPercentage = 0.012;
+  camera.pinchDeltaPercentage = 0.004;
+  camera.panningSensibility = 0;
+  camera.attachControl($("#scene"), true);
+  panel = createCard(scene, { name: "taj-lesson", height: 0.68 });
+  // Headset setup is optional: the same lesson remains usable if WebXR initialization fails.
+  try {
+    if (await xrSupported())
+      rig = await createXr(scene, {
+        floorMeshes: world.floors,
+        start: { position: V(5.5, 0, -105), lookAt: V(0, 22, 0) },
+      });
+  } catch (e) {
+    console.warn("[taj] VR unavailable", e);
+  }
+  if (rig) {
+    ui.vr.hidden = false;
+    document.body.classList.add("xr-ready");
+    rig.mirrorPanel(panel.panel, { interactive: true });
+    let frames = -1;
+    rig.onChange((entered) => {
+      document.body.classList.toggle("in-xr", entered);
+      frames = entered ? 0 : -1;
+      if (!entered) render();
+    });
+    rig.xr.baseExperience.sessionManager.onXRFrameObservable.add(() => {
+      if (frames < 0 || ++frames < 6) return;
+      frames = -1;
+      cardOpen = true;
+      if (lesson >= 0 && lesson < LESSONS.length) travel(view).then(render);
+      else render();
+    });
+    rig.xr.input.onControllerAddedObservable.add((source) =>
+      source.onMotionControllerInitObservable.add((mc) => {
+        for (const id of ["a-button", "x-button"])
+          mc.getComponent(id)?.onButtonStateChangedObservable.add((c) => {
+            if (c.changes.pressed?.current) {
+              cardOpen = true;
+              render();
+            }
+          });
+      }),
+    );
+  }
+  scene.onBeforeRenderObservable.add(() => {
+    if (!flight || inXr()) return;
+    const k = Math.min(1, engine.getDeltaTime() / 180);
+    Vector3.LerpToRef(camera.target, flight.target, k, camera.target);
+    const da = Math.atan2(
+      Math.sin(flight.alpha - camera.alpha),
+      Math.cos(flight.alpha - camera.alpha),
+    );
+    camera.alpha += da * k;
+    camera.beta += (flight.beta - camera.beta) * k;
+    camera.radius += (flight.radius - camera.radius) * k;
+    if (
+      Math.abs(da) < 0.001 &&
+      Vector3.Distance(camera.target, flight.target) < 0.01 &&
+      Math.abs(camera.radius - flight.radius) < 0.02
+    )
+      flight = null;
+  });
+  ui.loading.hidden = true;
+  ui.hint.hidden = false;
+  ui.learn.disabled = ui.view.disabled = ui.light.disabled = false;
+  render();
+  // Expose inspection data for local visual and asset checks.
+  window.__taj = {
+    scene,
+    world,
+    panel,
+    get state() {
+      return { lesson, phase, score, view, study };
+    },
+  };
+}
+ui.learn.addEventListener("click", () => {
+  cardOpen = true;
+  if (lesson < 0) go(0);
+  else render();
+});
+ui.view.addEventListener("click", () => travel((view + 1) % VIEWS.length));
+ui.light.addEventListener("click", changeLight);
+ui.vr.addEventListener("click", async () => {
+  ui.vr.disabled = true;
+  try {
+    await rig.enter();
+  } catch (e) {
+    console.warn("[taj] Enter VR failed", e);
+    cardOpen = true;
+    ui.hint.hidden = false;
+    ui.hint.textContent =
+      "VR could not start. Try Enter VR again, or explore here.";
+  } finally {
+    ui.vr.disabled = false;
+  }
+});
+$("[data-retry]").addEventListener("click", () => location.reload());
+$("#scene").addEventListener("pointerdown", () => (flight = null));
+$("#scene").addEventListener("wheel", () => (flight = null), { passive: true });
+window.addEventListener("resize", () => engine.resize());
+engine.runRenderLoop(() => scene?.render());
+start().catch((e) => {
+  console.error("[taj]", e);
+  ui.pct.textContent = "The model could not load. Please try again.";
+  $("[data-retry]").hidden = false;
+});

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Taj Mahal: symmetry in stone · vrtor</title>
+    <meta
+      name="description"
+      content="Explore a detailed 3D Taj Mahal, investigate its symmetry, identify its architecture and test what you learned. Free in your VR headset's browser."
+    />
+    <link rel="canonical" href="https://vrtor.io/taj/" />
+    <meta name="theme-color" content="#101b22" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content="Taj Mahal: symmetry in stone · vrtor" />
+    <meta
+      property="og:description"
+      content="Learn the architecture of a world wonder in an interactive 3D VR experience."
+    />
+    <meta
+      property="og:image"
+      content="https://vrtor.io/assets/cards/taj-mahal.jpg"
+    />
+    <meta property="og:url" content="https://vrtor.io/taj/" />
+  </head>
+  <body>
+    <canvas
+      id="scene"
+      aria-label="Interactive 3D reconstruction of the Taj Mahal"
+    ></canvas>
+    <header class="top">
+      <a class="brand" href="/">vrtor<span>Taj Mahal</span></a
+      ><span class="place">AGRA, INDIA · WORLD WONDERS 01</span>
+    </header>
+    <div class="loading" role="status">
+      <p>Arriving at the Taj Mahal…</p>
+      <p class="loading-pct">0%</p>
+      <button class="btn" data-retry hidden>Try again</button>
+    </div>
+    <section class="card" aria-live="polite" hidden>
+      <p class="card-kicker"></p>
+      <h1 class="card-title"></h1>
+      <p class="card-body"></p>
+      <p class="card-fact"></p>
+      <div class="card-actions"></div>
+    </section>
+    <button class="vr-cta" type="button" data-enter-vr hidden>
+      <span class="vr-cta-text"
+        ><strong>Enter VR</strong><small>Explore symmetry in stone</small></span
+      >
+    </button>
+    <nav class="bar" aria-label="Experience controls">
+      <button class="btn" type="button" data-lesson disabled>Learn</button
+      ><button class="btn" type="button" data-view disabled>Viewpoint</button
+      ><button class="btn" type="button" data-light disabled>Morning</button>
+      <p class="hint" hidden>Drag to look · scroll to move closer</p>
+    </nav>
+    <details class="credits">
+      <summary>About this experience</summary>
+      <p>
+        A detailed educational reconstruction of the mausoleum and terrace, with
+        an illustrative garden approach. Approximate scale; exterior only.
+      </p>
+      <p>
+        3D model by
+        <a
+          href="https://sketchfab.com/3d-models/taj-mahal-3d-model-1eb09052f6cd421caeaa6cb3204cb15d"
+          target="_blank"
+          rel="noopener"
+          >Dinendra Neyo</a
+        >,
+        <a
+          href="https://creativecommons.org/licenses/by/4.0/"
+          target="_blank"
+          rel="noopener"
+          >CC BY 4.0</a
+        >. Scale, materials and compression adapted by vrtor.
+      </p>
+      <p>
+        Learning sources:
+        <a
+          href="https://whc.unesco.org/en/list/252/"
+          target="_blank"
+          rel="noopener"
+          >UNESCO</a
+        >
+        and the
+        <a
+          href="https://tajmahal.gov.in/architecture.aspx"
+          target="_blank"
+          rel="noopener"
+          >official Taj Mahal website</a
+        >.
+      </p>
+    </details>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

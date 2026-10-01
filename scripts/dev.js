@@ -7,7 +7,7 @@ import { spawn, spawnSync } from 'node:child_process';
 
 const run = (cmd, args) => spawn(cmd, args, { stdio: 'inherit' });
 
-const first = spawnSync('npm', ['run', 'build', '-w', '@vrtor/spc'], { stdio: 'inherit' });
+const first = spawnSync('npm', ['run', 'build'], { stdio: 'inherit' });
 if (first.status !== 0) process.exit(first.status ?? 1);
 
 const homeArgs = process.argv.slice(2);
@@ -15,6 +15,8 @@ if (!homeArgs.includes('--port')) homeArgs.push('--port', '8790');
 
 const children = [
   run('npm', ['run', 'watch', '-w', '@vrtor/spc']),
+  run('npm', ['run', 'watch', '-w', '@vrtor/taj']),
+  run('npx', ['wrangler', 'dev', '-c', 'apps/taj/wrangler.jsonc', '--port', '8792', '--inspector-port', '9242']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/spc/wrangler.jsonc', '--port', '8791', '--inspector-port', '9241']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/home/wrangler.jsonc', '--inspector-port', '9240', ...homeArgs]),
 ];
