@@ -3,6 +3,7 @@
 // Subjects without a url are coming soon and redirect to the catalog on the homepage.
 
 const COMMUNICATION = { name: 'Communication', url: 'https://accent.learnenglishsounds.com/vr' };
+const SPACE = { name: 'Space' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
 const NATURE = { name: 'Nature' };
@@ -16,6 +17,8 @@ export const SUBJECTS = {
   acento: COMMUNICATION,
   speak: COMMUNICATION,
 
+  spc: SPACE,
+  space: SPACE,
   mec: MECHANICS,
   mechanics: MECHANICS,
   mat: MATH,

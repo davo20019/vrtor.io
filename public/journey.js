@@ -1,5 +1,5 @@
 // The vrtor catalog: one 3D experience per subject, driven by scroll.
-// Communication (café, interview, keynote hall) -> Mechanics -> Math -> Nature.
+// Communication (café, interview, keynote hall) -> Space -> Math -> Nature.
 // Asset sources and licenses: /assets/CREDITS.md.
 // In a headset, Enter VR drops you into the current scene; pull the trigger to move to the next one.
 import * as THREE from 'three';
@@ -35,7 +35,7 @@ const SCENES = [
   { id: 'cafe', from: 0.0, to: 0.15 },
   { id: 'office', from: 0.15, to: 0.26 },
   { id: 'stage', from: 0.26, to: 0.42 },
-  { id: 'mechanics', from: 0.42, to: 0.61 },
+  { id: 'space', from: 0.42, to: 0.61 },
   { id: 'math', from: 0.61, to: 0.8 },
   { id: 'nature', from: 0.8, to: 1.0 },
 ];
@@ -127,7 +127,12 @@ async function person(avatarUrl, clipUrl, { position, facing = Math.PI, timeScal
   body.position.set(...position);
   body.rotation.y = facing;
   const mixer = new THREE.AnimationMixer(body);
-  const action = mixer.clipAction(anim.animations[0]);
+  // Clips carry tracks for bones some avatars lack (face nubs, footsteps); drop those to keep the console quiet.
+  const names = new Set();
+  body.traverse((o) => names.add(o.name));
+  const clip = anim.animations[0].clone();
+  clip.tracks = clip.tracks.filter((t) => names.has(THREE.PropertyBinding.parseTrackName(t.name).nodeName));
+  const action = mixer.clipAction(clip);
   action.timeScale = timeScale;
   action.play();
   mixer.setTime(offset);
@@ -367,8 +372,11 @@ function guideLabel(title, body, anchor, lift = 0.6, size = 1.5) {
   ctx.fillStyle = 'rgba(15,27,45,0.88)';
   ctx.beginPath(); ctx.roundRect(4, 4, W - 8, H - 8, 40); ctx.fill();
   ctx.fillStyle = '#ffb020'; ctx.font = '600 34px "JetBrains Mono", monospace'; ctx.fillText('GUIDE', 44, 70);
-  ctx.fillStyle = '#e9eef2'; ctx.font = '700 46px Unbounded, sans-serif'; ctx.fillText(title, 44, 128);
-  ctx.font = '400 34px "Atkinson Hyperlegible", sans-serif'; ctx.fillStyle = '#c6d0dc'; ctx.fillText(body, 44, 180);
+  const fit = (text, weight, px, family) => {
+    do { ctx.font = `${weight} ${px}px ${family}`; px -= 1; } while (ctx.measureText(text).width > W - 88 && px > 18);
+  };
+  ctx.fillStyle = '#e9eef2'; fit(title, 700, 46, 'Unbounded, sans-serif'); ctx.fillText(title, 44, 128);
+  ctx.fillStyle = '#c6d0dc'; fit(body, 400, 34, '"Atkinson Hyperlegible", sans-serif'); ctx.fillText(body, 44, 180);
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true, opacity: 0 }));
   sprite.scale.set(0.76 * size, 0.23 * size, 1);
@@ -395,8 +403,8 @@ async function loadModel(url) {
   return g.scene;
 }
 
-// ---------- Mechanics: NASA's Perseverance rover on Mars ----------
-async function buildMechanics() {
+// ---------- Space: NASA's Perseverance rover on Mars ----------
+async function buildSpace() {
   const scene = new THREE.Scene();
   scene.userData.toneMapping = THREE.ACESFilmicToneMapping;
   scene.userData.exposure = 1.0;
@@ -406,7 +414,7 @@ async function buildMechanics() {
   scene.environmentIntensity = 0.7;
   scene.fog = new THREE.FogExp2(0xd9b08a, 0.018);
 
-  const groundMat = await groundMaterial(A + 'mechanics/ground/aerial_sand', 40, 0xd28a5c);
+  const groundMat = await groundMaterial(A + 'space/ground/aerial_sand', 40, 0xd28a5c);
   scene.add(terrain(220, 220, groundMat, 2.2, 7));
 
   scene.add(new THREE.HemisphereLight(0xffe2c4, 0x7a4a30, 0.6));
@@ -414,7 +422,7 @@ async function buildMechanics() {
   scene.add(sun, sun.target);
 
   // Rover, scaled to its real size: about 3 m long.
-  const rover = await loadModel(A + 'mechanics/perseverance.glb');
+  const rover = await loadModel(A + 'space/perseverance.glb');
   const box = new THREE.Box3().setFromObject(rover);
   const size = box.getSize(new THREE.Vector3());
   const s = 3.0 / Math.max(size.x, size.z);
@@ -430,7 +438,7 @@ async function buildMechanics() {
   const rb = new THREE.Box3().setFromObject(turntable);
 
   // Scanned rocks, tinted to Martian basalt, scattered around.
-  const rockSrc = [await loadModel(A + 'mechanics/rock_07/rock_07.gltf'), await loadModel(A + 'mechanics/moon_rock_03/moon_rock_03.gltf')];
+  const rockSrc = [await loadModel(A + 'space/rock_07/rock_07.gltf'), await loadModel(A + 'space/moon_rock_03/moon_rock_03.gltf')];
   const rand = mulberry32(11);
   for (let i = 0; i < 70; i++) {
     const src = rockSrc[i % 2];
@@ -447,11 +455,31 @@ async function buildMechanics() {
   const dust = dustField(500, 30, 4, 0xffe1bf, 0.05);
   scene.add(dust);
 
-  const top = rb.max.y, front = rb.max.z;
+  // Each label points at its named part in the NASA model, on the side the camera sees it from.
+  turntable.updateMatrixWorld(true);
+  // Measured with the rover unrotated, so the box hugs the part; then turned back into the scene.
+  const partPoint = (name, from, side = false) => {
+    const part = rover.getObjectByName(name);
+    if (!part) return rb.getCenter(new THREE.Vector3());
+    const yaw = rover.rotation.y;
+    rover.rotation.y = 0; rover.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(part);
+    const picks = [box.getCenter(new THREE.Vector3())];
+    if (side) { // the side face nearest the viewer, low on the arm
+      const c = picks[0];
+      picks.splice(0, 1, new THREE.Vector3(box.min.x, box.min.y + (box.max.y - box.min.y) * 0.55, c.z), new THREE.Vector3(box.max.x, box.min.y + (box.max.y - box.min.y) * 0.55, c.z));
+    }
+    const local = picks.map((v) => rover.worldToLocal(v));
+    rover.rotation.y = yaw; rover.updateMatrixWorld(true);
+    const world = local.map((v) => rover.localToWorld(v));
+    const view = new THREE.Vector3(...from);
+    return world.sort((a, b) => a.distanceTo(view) - b.distanceTo(view))[0];
+  };
   const labels = [
-    guideLabel('Mastcam-Z', 'Two zoom cameras that see in 3D', new THREE.Vector3(0.6, top - 0.15, 0.6), 0.45),
-    guideLabel('Robotic arm', '2.1 m long, drills cores out of rock', new THREE.Vector3(0.4, 1.0, front - 0.1), 0.7),
-    guideLabel('Rocker-bogie', 'Keeps all six wheels on rough ground', new THREE.Vector3(-1.2, 0.35, 0.3), 1.1),
+    guideLabel('Mastcam-Z', 'Two zoom cameras that see in 3D', partPoint('Mastcam_Z_cams', [4, 2, 4]), 0.5),
+    guideLabel('Coring drill', 'Drills rock cores and seals them in tubes', partPoint('corring_drill', [2, 1.5, 4]), 0.8),
+    guideLabel('Rocker-bogie', 'Keeps all six wheels on the ground over rocks', partPoint('suspension', [-3.6, 1.1, 2.6], true), 1.0),
+    guideLabel('Nuclear power', 'Heat from plutonium makes its electricity', partPoint('rtg', [-4, 1.2, 1]), 0.7),
   ];
   labels.forEach((l) => scene.add(l));
 
@@ -466,10 +494,10 @@ async function buildMechanics() {
     ],
     seat: new THREE.Vector3(0, 0, 4),
     onProgress(t) {
-      turntable.rotation.y = t * 0.6;
-      labels[0].userData.setOpacity(labelFade(t, 0.18, 0.45));
-      labels[1].userData.setOpacity(labelFade(t, 0.45, 0.72));
-      labels[2].userData.setOpacity(labelFade(t, 0.72, 1.05));
+      labels[0].userData.setOpacity(labelFade(t, 0.12, 0.34));
+      labels[1].userData.setOpacity(labelFade(t, 0.34, 0.56));
+      labels[2].userData.setOpacity(labelFade(t, 0.56, 0.78));
+      labels[3].userData.setOpacity(labelFade(t, 0.78, 1.05));
     },
   };
 }
@@ -628,14 +656,16 @@ async function buildNature() {
 
   // Trees: a few generated species, each placed several times around the clearing.
   const presets = ['Oak Large', 'Ash Large', 'Aspen Large', 'Pine Large', 'Oak Medium', 'Ash Medium'];
-  const trees = presets.map((p, i) => {
+  // Generating a tree takes a moment; yield a frame between each so scrolling stays smooth.
+  const nextFrame = () => new Promise((res) => requestAnimationFrame(() => setTimeout(res, 0)));
+  const trees = [];
+  for (const preset of presets) {
+    await nextFrame();
     const t = new Tree();
-    t.loadPreset(p);
-    t.options.seed = 1000 + i * 97;
-    t.generate();
+    t.loadPreset(preset); // loadPreset generates the tree itself
     t.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    return t;
-  });
+    trees.push(t);
+  }
   const rand = mulberry32(21);
   const planted = [];
   // Keep a clear corridor where the camera flies in (toward +z) so no trunk fills the view.
@@ -702,7 +732,7 @@ async function buildNature() {
   scene.add(pollen);
 
   const fernLabel = guideLabel('Fern', 'No flowers or seeds: it spreads by spores', new THREE.Vector3(-1.4, 0.5, -0.6), 0.7);
-  const logLabel = guideLabel('Fallen trunk', 'Fungi turn it back into soil in ~50 years', new THREE.Vector3(1.6, 0.4, -1.6), 0.8);
+  const logLabel = guideLabel('Fallen trunk', 'Fungi and insects slowly turn it into soil', new THREE.Vector3(1.6, 0.4, -1.6), 0.8);
   scene.add(fernLabel, logLabel);
 
   let time = 0;
@@ -726,7 +756,7 @@ function mulberry32(a) {
   return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 
-const BUILDERS = { cafe: buildCafe, office: buildOffice, stage: buildStage, mechanics: buildMechanics, math: buildMath, nature: buildNature };
+const BUILDERS = { cafe: buildCafe, office: buildOffice, stage: buildStage, space: buildSpace, math: buildMath, nature: buildNature };
 function ensure(id) {
   if (!built[id]) built[id] = BUILDERS[id]().catch((err) => { console.error(`[vrtor] ${id} failed`, err); delete built[id]; throw err; });
   return built[id];
@@ -740,7 +770,7 @@ ensure('cafe').then((s) => {
   // Stream the rest after the first room is on screen.
   // Light procedural scenes first, heavy rooms after.
   (async () => {
-    for (const id of ['math', 'mechanics', 'nature', 'office', 'stage']) {
+    for (const id of ['math', 'space', 'nature', 'office', 'stage']) {
       try { ready[id] = await ensure(id); } catch { /* logged in ensure */ }
     }
   })();

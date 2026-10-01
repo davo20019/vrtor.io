@@ -3,7 +3,7 @@
   const path = document.querySelector('.path[data-type]');
   if (!path) return;
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const words = ['com', 'mec', 'mat', 'nat'];
+  const words = ['com', 'spc', 'mat', 'nat'];
   if (reduce) { path.textContent = words[0]; return; }
 
   let w = 0, i = 0, deleting = false;
