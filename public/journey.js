@@ -657,7 +657,7 @@ async function buildNature() {
   // Trees: a few generated species, each placed several times around the clearing.
   const presets = ['Oak Large', 'Ash Large', 'Aspen Large', 'Pine Large', 'Oak Medium', 'Ash Medium'];
   // Generating a tree takes a moment; yield a frame between each so scrolling stays smooth.
-  const nextFrame = () => new Promise((res) => requestAnimationFrame(() => setTimeout(res, 0)));
+  const nextFrame = () => new Promise((res) => setTimeout(res, 0)); // not rAF: it never fires in a background tab
   const trees = [];
   for (const preset of presets) {
     await nextFrame();

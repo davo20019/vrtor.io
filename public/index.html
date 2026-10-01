@@ -99,61 +99,68 @@
       </div>
     </section>
 
-    <section id="subjects" class="rooms" aria-labelledby="subjects-title">
+    <section id="subjects" class="catalog" aria-labelledby="subjects-title">
       <div class="section-head">
-        <h2 id="subjects-title">Subjects</h2>
+        <h2 id="subjects-title">What do you want to learn?</h2>
         <p>Each subject is three letters after vrtor.io/, so it's quick to type with a controller.</p>
       </div>
 
-      <ul class="room-list">
-        <li class="room live">
-          <div class="room-meta">
-            <span class="status"><span class="dot" aria-hidden="true"></span>Open now</span>
-            <code class="slug">vrtor.io/com</code>
-          </div>
+      <article class="featured">
+        <div class="featured-media">
+          <img src="/assets/cards/communication-stage.jpg" alt="A speaker on stage in a keynote hall, seen from the audience" loading="lazy" width="1200" height="693" />
+        </div>
+        <div class="featured-body">
+          <p class="status"><span class="dot" aria-hidden="true"></span>Open now</p>
           <h3>Communication</h3>
-          <p>A coffee chat, a job interview, a talk on stage. People talk back, and an AI coach listens to how you said it and tells you what to change on the next take.</p>
-          <a class="room-link" href="/com">Open Communication <span aria-hidden="true">→</span></a>
-        </li>
-
-        <li class="room">
-          <div class="room-meta">
-            <span class="status">Coming</span>
-            <code class="slug">vrtor.io/spc</code>
+          <code class="address-chip"><span>vrtor.io/</span>com</code>
+          <p class="featured-line">Practice the conversations that matter before they happen. People talk back, and an AI coach tells you what to change on the next take.</p>
+          <ul class="topics" aria-label="Topics in Communication">
+            <li>Coffee chat</li>
+            <li>Job interview</li>
+            <li>Talk on stage</li>
+          </ul>
+          <div class="actions">
+            <a class="btn primary" href="/com">Open Communication</a>
+            <a class="btn ghost" href="#open">How to open it in a headset</a>
           </div>
-          <h3>Space</h3>
-          <p>Walk around NASA's Perseverance rover on Mars and learn what each part does. Later: the Moon, the space station, the solar system.</p>
-          <button class="room-link" type="button" data-notify="space">Get notified <span aria-hidden="true">→</span></button>
-        </li>
+        </div>
+      </article>
 
-        <li class="room">
-          <div class="room-meta">
-            <span class="status">Coming</span>
-            <code class="slug">vrtor.io/mat</code>
+      <h3 class="coming-title">Coming next</h3>
+      <ul class="coming">
+        <li class="tile">
+          <img src="/assets/cards/space.jpg" alt="NASA's Perseverance rover on a Mars landscape with a guide label on its coring drill" loading="lazy" width="800" height="586" />
+          <div class="tile-body">
+            <div class="tile-head"><h4>Space</h4><code>/spc</code></div>
+            <p>Walk around NASA's Perseverance rover on Mars and learn what each part does.</p>
+            <button class="notify" type="button" data-notify="space">Notify me</button>
           </div>
-          <h3>Math</h3>
-          <p>Walk on a function, stretch a triangle, stand inside a graph. Ask the guide anything about what you're looking at.</p>
-          <button class="room-link" type="button" data-notify="math">Get notified <span aria-hidden="true">→</span></button>
         </li>
-
-        <li class="room">
-          <div class="room-meta">
-            <span class="status">Coming</span>
-            <code class="slug">vrtor.io/nat</code>
+        <li class="tile">
+          <img src="/assets/cards/math.jpg" alt="A glowing 3D function surface with contour lines and points rolling into a valley" loading="lazy" width="800" height="501" />
+          <div class="tile-body">
+            <div class="tile-head"><h4>Math</h4><code>/mat</code></div>
+            <p>Stand on a function and watch gradient descent find the valleys.</p>
+            <button class="notify" type="button" data-notify="math">Notify me</button>
           </div>
-          <h3>Nature</h3>
-          <p>Walk a forest and ask about every plant, shrink down inside a cell, stand next to a blue whale.</p>
-          <button class="room-link" type="button" data-notify="nature">Get notified <span aria-hidden="true">→</span></button>
         </li>
-
-        <li class="room">
-          <div class="room-meta">
-            <span class="status">Coming</span>
-            <code class="slug">vrtor.io/mec</code>
+        <li class="tile">
+          <img src="/assets/cards/nature.jpg" alt="A sunlit 3D forest with ferns and light shafts through the trees" loading="lazy" width="800" height="553" />
+          <div class="tile-body">
+            <div class="tile-head"><h4>Nature</h4><code>/nat</code></div>
+            <p>Walk a forest and ask the guide about every plant you see.</p>
+            <button class="notify" type="button" data-notify="nature">Notify me</button>
           </div>
-          <h3>Mechanics</h3>
-          <p>Take an engine apart and put it back together. See how a piston becomes rotation and how gears trade speed for force.</p>
-          <button class="room-link" type="button" data-notify="mechanics">Get notified <span aria-hidden="true">→</span></button>
+        </li>
+        <li class="tile">
+          <div class="blueprint" role="img" aria-label="Mechanics is still in design">
+            <span>In design</span>
+          </div>
+          <div class="tile-body">
+            <div class="tile-head"><h4>Mechanics</h4><code>/mec</code></div>
+            <p>Take an engine apart and see how a piston becomes rotation.</p>
+            <button class="notify" type="button" data-notify="mechanics">Notify me</button>
+          </div>
         </li>
       </ul>
     </section>
