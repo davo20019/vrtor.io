@@ -1,4 +1,4 @@
-// Lunar orbit around Columbia: stars, the Moon below, Earth and the Sun. Columbia is
+// Lunar orbit around Columbia: the real stars and planets, the Moon below, Earth and the Sun. Columbia is
 // at real size; the Moon, Earth and their distances are scaled down 1000 times
 // (1 km becomes 1 m), which keeps every angle as it was, so the horizon, the size of
 // Earth and the drift of the ground look right. All imagery is NASA's (scripts/prepare-apollo.py).
@@ -23,6 +23,7 @@ import {
   Vector4,
   VertexData,
 } from '@babylonjs/core';
+import SKY from './sky-1969.json';
 
 const BASE = import.meta.env.BASE_URL;
 const TEX = `${BASE}textures/`;
@@ -42,10 +43,16 @@ const PATCH = [-17, 63, -20, 20];
 /** How fast the ground drifts west to east below: the real orbit does ~3 degrees a minute; this is slowed. */
 const DRIFT_DEG_PER_MIN = 0.5;
 /**
- * Sun 16 degrees up in the east: early morning below, as when Eagle landed (the Sun was about 11 degrees
- * up at Tranquility Base). Earth, high above, is lit from the side.
+ * The real sky when Eagle landed: the catalogue's ecliptic frame, turned as the Moon was then
+ * (prepare-apollo-sky.py), then into the ground below Columbia. The Sun comes out about 19 degrees up
+ * in the east (early morning below: it was about 11 degrees up at Tranquility Base) and Earth about 50
+ * degrees up in the west, two-thirds lit.
  */
-const SUN_DIR = new Vector3(0.05, Math.sin((16 * Math.PI) / 180), -Math.cos((16 * Math.PI) / 180)).normalize();
+const SKY_ROTATION = surfaceFrame(NADIR.lat, NADIR.lon).multiply(fromRows(SKY.moonFrame));
+const toScene = (a) => Vector3.FromArray(a).applyRotationQuaternion(SKY_ROTATION).normalize();
+const SUN_DIR = toScene(SKY.sun);
+/** Where Earth hangs, seen from Columbia. */
+export const EARTH_DIR = toScene(SKY.earth);
 
 export function createSpaceScene(engine) {
   const scene = new Scene(engine);
@@ -88,10 +95,6 @@ export function buildSpace(scene) {
     earth,
     stars,
     sunDisc,
-    /** Earth hangs in `direction` from Columbia: chosen so it shows through the hatch window. */
-    placeEarth(direction) {
-      earth.place(direction);
-    },
   };
 }
 
@@ -305,20 +308,11 @@ function buildEarth(scene) {
     if (cam) mat.getEffect()?.setVector3('eye', cam.globalPosition);
   });
   earth.material = mat;
+  earth.position.copyFrom(EARTH_DIR.scale(EARTH_DISTANCE));
+  // Turned as it was at 20:17 UTC: Brazil faces the Moon, and the Sun stands over the eastern Pacific.
+  earth.rotationQuaternion = SKY_ROTATION.multiply(fromRows(SKY.earthFrame).conjugate());
 
-  return {
-    mesh: earth,
-    place(direction) {
-      const d = direction.normalizeToNew();
-      earth.position.copyFrom(d.scale(EARTH_DISTANCE));
-      // The Atlantic, with the Americas and Africa at the edges, faces the Moon.
-      const toMoon = d.scale(-1);
-      const frame = surfaceFrame(0, -35);
-      // surfaceFrame puts that point on +Y; turn +Y to face the Moon, keeping north roughly up.
-      const align = Quaternion.FromUnitVectorsToRef(Vector3.Up(), toMoon, new Quaternion());
-      earth.rotationQuaternion = align.multiply(frame);
-    },
-  };
+  return { mesh: earth };
 }
 
 // ---------- Stars and Sun ----------
@@ -332,7 +326,7 @@ varying vec4 vColor;
 void main() {
   vColor = color;
   gl_Position = worldViewProjection * vec4(position, 1.0);
-  gl_PointSize = 1.0 + 2.2 * color.a;
+  gl_PointSize = 8.0 * color.a;
 }`;
 
 Effect.ShadersStore.starsFragmentShader = `
@@ -340,33 +334,26 @@ precision highp float;
 varying vec4 vColor;
 void main() {
   vec2 c = gl_PointCoord - 0.5;
-  float a = smoothstep(0.5, 0.1, length(c));
+  // A round disc with a soft edge: the size carries a star's brightness, so it mustn't shrink to its core.
+  float a = smoothstep(0.5, 0.3, length(c));
   gl_FragColor = vec4(vColor.rgb * a, 1.0);
 }`;
 
+/** No star or planet shows this close to the Sun: its glare drowns them (Mercury was 2.5 degrees off it). */
+const GLARE_DEG = 8;
+const PLANET_TINT = {
+  Mercury: [1, 0.92, 0.84],
+  Venus: [1, 0.98, 0.92],
+  Mars: [1, 0.64, 0.45],
+  Jupiter: [1, 0.95, 0.86],
+  Saturn: [1, 0.9, 0.72],
+};
+
+/**
+ * The stars and planets, in the J2000 ecliptic frame of prepare-apollo-sky.py, turned into the scene. Each point's colour is its tint times its brightness; alpha is its size (1 = 8 px).
+ */
 function starField(scene) {
-  const count = 4500;
-  const positions = new Float32Array(count * 3);
-  const colors = new Float32Array(count * 4);
-  let seed = 1969;
-  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  for (let i = 0; i < count; i++) {
-    const z = rand() * 2 - 1;
-    const a = rand() * Math.PI * 2;
-    const r = Math.sqrt(1 - z * z);
-    positions.set([r * Math.cos(a) * STAR_DISTANCE, z * STAR_DISTANCE, r * Math.sin(a) * STAR_DISTANCE], i * 3);
-    // Mostly faint, a few bright; warm and cool tints.
-    const m = Math.pow(rand(), 5);
-    const b = 0.25 + 0.75 * Math.pow(rand(), 3) + m;
-    const t = rand();
-    const tint = t < 0.15 ? [1, 0.82, 0.65] : t < 0.35 ? [0.75, 0.85, 1] : [1, 1, 1];
-    colors.set([tint[0] * Math.min(b, 1), tint[1] * Math.min(b, 1), tint[2] * Math.min(b, 1), Math.min(m * 2, 1)], i * 4);
-  }
   const mesh = new Mesh('stars', scene);
-  const data = new VertexData();
-  data.positions = positions;
-  data.colors = colors;
-  data.applyToMesh(mesh);
   mesh.metadata = { sky: true };
   mesh.renderingGroupId = 0;
   mesh.isPickable = false;
@@ -379,7 +366,64 @@ function starField(scene) {
   mat.disableDepthWrite = true;
   mesh.material = mat;
   mesh.alwaysSelectAsActiveMesh = true;
+  mesh.rotationQuaternion = SKY_ROTATION;
+
+  const sun = Vector3.FromArray(SKY.sun);
+  const glare = Math.cos((GLARE_DEG * Math.PI) / 180);
+  const points = [];
+  const add = (dir, mag, tint) => {
+    if (Vector3.Dot(dir, sun) > glare) return;
+    // The eye's response is gentler than the light's: the faint stars keep some brightness, and the
+    // bright ones (planets, Sirius, Canopus) grow instead of saturating.
+    const b = Math.min(1, Math.max(0.22, Math.pow(10, -0.15 * (mag - 1.5))));
+    const size = Math.min(8, Math.max(1.3, 1.3 + (3.5 - mag) * 0.9));
+    points.push(dir.scale(STAR_DISTANCE), [tint[0] * b, tint[1] * b, tint[2] * b, size / 8]);
+  };
+  const build = () => {
+    const n = points.length / 2;
+    const positions = new Float32Array(n * 3);
+    const colors = new Float32Array(n * 4);
+    for (let i = 0; i < n; i++) {
+      points[2 * i].toArray(positions, i * 3);
+      colors.set(points[2 * i + 1], i * 4);
+    }
+    const data = new VertexData();
+    data.positions = positions;
+    data.colors = colors;
+    data.applyToMesh(mesh, true);
+  };
+
+  for (const p of SKY.planets) add(Vector3.FromArray(p.dir), p.mag, PLANET_TINT[p.name] ?? [1, 1, 1]);
+  build();
+  fetch(`${BASE}sky/stars.bin`)
+    .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`stars.bin: ${r.status}`))))
+    .then((buf) => {
+      const v = new DataView(buf);
+      for (let o = 0; o + 10 <= buf.byteLength; o += 10) {
+        const dir = new Vector3(v.getInt16(o, true), v.getInt16(o + 2, true), v.getInt16(o + 4, true)).scaleInPlace(1 / 32767);
+        add(dir, v.getInt16(o + 6, true) / 100, starTint(v.getInt16(o + 8, true) / 1000));
+      }
+      build();
+    })
+    .catch((err) => console.warn('[apo] no stars', err));
   return mesh;
+}
+
+/** A star's colour from its B-V index: its temperature (Ballesteros 2012) as a blackbody, softened toward white as the eye sees it. */
+function starTint(bv) {
+  const t = 4600 * (1 / (0.92 * bv + 1.7) + 1 / (0.92 * bv + 0.62)) / 100;
+  const clamp = (x) => Math.min(255, Math.max(0, x));
+  const r = t <= 66 ? 255 : clamp(329.7 * Math.pow(t - 60, -0.1332));
+  const g = clamp(t <= 66 ? 99.47 * Math.log(t) - 161.12 : 288.12 * Math.pow(t - 60, -0.0755));
+  const b = t >= 66 ? 255 : t <= 19 ? 0 : clamp(138.52 * Math.log(t - 10) - 305.04);
+  const m = Math.max(r, g, b);
+  return [r, g, b].map((c) => 0.45 + 0.55 * (c / m));
+}
+
+/** The rotation a matrix does, given as its rows (prepare-apollo-sky.py's frames): column k is where axis k goes. */
+function fromRows(m) {
+  const col = (k) => new Vector3(m[0][k], m[1][k], m[2][k]);
+  return Quaternion.RotationQuaternionFromAxis(col(0), col(1), col(2));
 }
 
 Effect.ShadersStore.sunVertexShader = `

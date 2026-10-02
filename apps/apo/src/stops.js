@@ -18,7 +18,7 @@ export const STOPS = [
     place: 'outside',
     title: 'Alone in lunar orbit',
     at: [0, 150, 0],
-    from: { world: [0.88, 0.3, -0.36], distance: 700 },
+    from: { world: [-0.39, 0.3, -0.87], distance: 700 },
     body: 'On July 20, 1969, the lunar module Eagle undocked and landed. For more than a day Collins circled the Moon in Columbia, about once every two hours, at roughly 5,900 km/h.',
     fact: 'Each time he passed behind the Moon, he lost all radio contact with Earth for about 48 minutes.',
   },

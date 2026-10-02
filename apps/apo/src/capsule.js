@@ -40,8 +40,11 @@ const EXTERIOR_OFFSET_CM = 9.5;
  * Moon below. (In orbit there is no up; the crew often flew it like this, heads away from the Moon.)
  */
 const TIP = Math.atan2(-0.956, 0.29);
-/** And turned so the heat shield faces the low morning Sun in the east (-Z): you can see what it's like. */
-const TURN = Math.PI;
+/**
+ * And turned so the hatch window faces Earth, which hung about 51 degrees up in the west (+Z) when Eagle
+ * landed (space.js); the low morning Sun in the east lights Columbia from the side.
+ */
+const TURN = Math.PI + (92.1 * Math.PI) / 180;
 const ACCENT = Color3.FromHexString('#ffb020');
 /** The middle of the cabin, in the scan's frame: it ends up at the world origin. */
 const MIDDLE = [0, 150, 0];

@@ -5,7 +5,7 @@
 // (no floor in orbit), a floating card, and the tour moves you to each stop.
 import { ArcRotateCamera, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
 import { createCard, createPresence, createXr, mountPresenceControls, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
-import { buildSpace, createSpaceScene } from './space.js';
+import { EARTH_DIR, buildSpace, createSpaceScene } from './space.js';
 import { loadCapsule } from './capsule.js';
 import { attachFloat } from './float.js';
 import { loadOutfit } from './suit.js';
@@ -101,7 +101,7 @@ function content(i) {
       kicker: 'Tour complete',
       title: 'You have been inside Columbia',
       body: 'Float around it, go back in, or point at any glowing marker to read about it again. On July 24, 1969, Columbia splashed down in the Pacific with all three astronauts aboard.',
-      fact: 'The scan: Smithsonian National Air and Space Museum. The Moon and Earth: NASA.',
+      fact: 'The scan: Smithsonian National Air and Space Museum. The Moon and Earth: NASA. The stars: the Yale Bright Star Catalogue, with the planets where they were on July 20, 1969.',
       actions: [
         { label: 'Start over', onClick: () => go(0, true) },
         { label: 'Close', primary: true, onClick: close },
@@ -326,9 +326,9 @@ async function start() {
   capsule = await loadCapsule(scene, STOPS, {
     onProgress: (p) => (ui.pct.textContent = `${Math.round(p * 100)}%`),
   });
-  // Earth hangs where the hatch window looks: that's where the last stop asks you to look.
+  // The hatch window stop looks out along the line to Earth, where it really hung (space.js).
   const hatch = capsule.stops.find((s) => s.id === 'window');
-  space.placeEarth(hatch.at.subtract(hatch.eye));
+  hatch.eye = hatch.at.subtract(EARTH_DIR.scale(Vector3.Distance(hatch.eye, hatch.at)));
 
   // The opening view: the first stop's, outside.
   const first = capsule.stops[0];

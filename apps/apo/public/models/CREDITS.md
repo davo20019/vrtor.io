@@ -34,3 +34,14 @@ NASA, public domain.
   https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/
 
 `scripts/prepare-apollo.py` builds the textures from these.
+
+## The stars and planets (`../sky/stars.bin`, `src/sky-1969.json`)
+
+- Stars: the Yale Bright Star Catalogue, 5th revised edition (Hoffleit & Warren 1991), every star down
+  to about magnitude 6.5, public domain, via CDS: https://cdsarc.cds.unistra.fr/viz-bin/cat/V/50
+- The Sun, Earth and planets as seen from the Moon at the landing (1969-07-20 20:17:40 UTC), computed
+  with Astronomy Engine (Don Cross, MIT licence): https://github.com/cosinekitty/astronomy
+
+`scripts/prepare-apollo-sky.py` builds both. The sky is turned so the Sun sits where it lights the
+Moon below; Venus and Saturn are up, Jupiter and Mars are below the horizon, and Mercury is lost in the
+Sun's glare.
