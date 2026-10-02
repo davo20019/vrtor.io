@@ -124,8 +124,9 @@ export function createVrUi({ renderer, rig, camera, places, credits, onPick, onO
     g.font = '30px system-ui, sans-serif';
     [
       'Trigger: pick here · out there, hold it to fly where you point',
-      'Grip: grab the Earth and drag it (spin the globe from orbit)',
-      'Left stick: move · Right stick: turn, and up or down',
+      'Grip: grab the Earth and drag it · both grips: pull apart to zoom in',
+      'Right stick: forward to zoom toward where you point, back to zoom out',
+      'Left stick: move · Right stick sideways: turn',
       'A, X or Y: this menu · B: back to orbit',
     ].forEach((line, i) => g.fillText(line, 54, legendY + i * 44, MENU_W - 108));
     g.fillStyle = '#8f8a80';
@@ -206,6 +207,10 @@ export function createVrUi({ renderer, rig, camera, places, credits, onPick, onO
   // ---------- per frame ----------
   const raycaster = new THREE.Raycaster();
   return {
+    // getRay of a controller by handedness ('left' | 'right'), if connected
+    rayOf(handedness) {
+      return hands[handedness]?.getRay;
+    },
     get menuOpen() {
       return menu.mesh.visible;
     },

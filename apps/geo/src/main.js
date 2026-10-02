@@ -278,8 +278,53 @@ function rotateCenter(q) {
   reorient.transformLatLonHeightToOrigin(state.center.lat, state.center.lon, 0);
 }
 
+// ---------- zoom ----------
+// Zooming changes your height (by a factor, so it feels the same from orbit to the street)
+// and, zooming in, also moves you toward what you point at: the closer you get, the more
+// that spot comes to sit under you.
+const MIN_AGL = 2;
+const MAX_AGL = 20_000_000;
+const _zq = new THREE.Quaternion();
+const _zpart = new THREE.Quaternion();
+const _zu = new THREE.Vector3();
+const _zhit = new THREE.Vector3();
+const IDENTITY = new THREE.Quaternion();
+function setHeight(agl) {
+  rig.position.y = state.groundY + THREE.MathUtils.clamp(agl, MIN_AGL, MAX_AGL);
+}
+function zoomToward(factor, getRay) {
+  if (!tiles) return;
+  state.flight = null;
+  spin = null;
+  const agl = Math.max(rig.position.y - state.groundY, 1);
+  const next = THREE.MathUtils.clamp(agl * factor, MIN_AGL, MAX_AGL);
+  if (next < agl && getRay) {
+    const [o, d] = getRay();
+    if (rayToGround(o, d, _zhit)) {
+      tiles.ellipsoid.getCartographicToPosition(state.center.lat, state.center.lon, 0, _zu);
+      _zq.setFromUnitVectors(_zu.normalize(), _zhit.normalize());
+      rotateCenter(_zpart.slerpQuaternions(IDENTITY, _zq, 1 - next / agl));
+    }
+  }
+  setHeight(next);
+}
+
+// Both grips held: pull your hands apart to zoom in, push them together to zoom out.
+const grips = new Set(); // getRay of each squeezed controller
+let pinch = null; // { d0, agl0 }
+function handsApart() {
+  const [a, b] = [...grips];
+  return a()[0].distanceTo(b()[0]);
+}
+
 function grabStart(getRay) {
   if (!tiles) return;
+  grips.add(getRay);
+  if (grips.size === 2) {
+    grab = null;
+    pinch = { d0: Math.max(handsApart(), 0.05), agl0: Math.max(rig.position.y - state.groundY, 1) };
+    return;
+  }
   const [o, d] = getRay();
   const point = rayToGround(o, d, new THREE.Vector3());
   if (!point) return; // pointing at the sky
@@ -289,6 +334,17 @@ function grabStart(getRay) {
 }
 
 function grabEnd(getRay) {
+  if (getRay) grips.delete(getRay);
+  if (pinch) {
+    // one hand let go: back to dragging with the other
+    pinch = null;
+    const other = [...grips][0];
+    if (other) {
+      grips.delete(other);
+      grabStart(other);
+    }
+    return;
+  }
   if (!grab || (getRay && grab.getRay !== getRay)) return;
   // keep the swing going if it was quick enough to be a fling
   if (grab.speed > 0.002) spin = { axis: grab.axis.clone(), speed: Math.min(grab.speed, 1) };
@@ -299,6 +355,11 @@ const _gu = new THREE.Vector3();
 const _gv = new THREE.Vector3();
 const _gaxis = new THREE.Vector3();
 function updateGrab(dt) {
+  if (pinch && grips.size === 2) {
+    state.flight = null;
+    setHeight(pinch.agl0 * (pinch.d0 / Math.max(handsApart(), 0.02)) ** 3);
+    return;
+  }
   if (grab) {
     const [o, d] = grab.getRay();
     // past the edge of the planet: hold still until the pointer comes back
@@ -374,11 +435,12 @@ canvas.addEventListener('pointerup', () => {
   if (drag?.grab) grabEnd(mouseGetRay);
   drag = null;
 });
+// Wheel or trackpad pinch: zoom toward the point under the cursor.
 canvas.addEventListener('wheel', (e) => {
-  state.flight = null;
-  const agl = Math.max(rig.position.y - state.groundY, 1);
-  rig.position.y = state.groundY + agl * Math.exp(e.deltaY * 0.002);
-}, { passive: true });
+  e.preventDefault();
+  setNdc(e);
+  zoomToward(Math.exp(e.deltaY * (e.ctrlKey ? 0.01 : 0.0015)), mouseGetRay);
+}, { passive: false });
 
 // Headset buttons, with edge detection per controller.
 const pressed = new Map();
@@ -417,7 +479,8 @@ function move(dt) {
         const x = edge(source, 4), y = edge(source, 5);
         if (x || y) vrUi.toggleMenu(); // X, Y
       } else {
-        my -= Math.abs(sy) > 0.2 ? sy : 0;
+        // push forward to zoom toward where this controller points, pull back to zoom out
+        if (Math.abs(sy) > 0.2) zoomToward(Math.exp(sy * 1.4 * dt), vrUi.rayOf('right'));
         if (Math.abs(sx) > 0.7) {
           if (!turnLatch) snapTurn(-Math.sign(sx) * Math.PI / 6);
           turnLatch = true;
@@ -608,6 +671,14 @@ function updatePlaceButtons() {
   if (PLACES[state.place].walk) walk.href = PLACES[state.place].walk;
 }
 $('[data-orbit]').addEventListener('click', backToOrbit);
+// + and −, for touch screens: zoom toward the middle of the view.
+const centreRay = () => {
+  mouseRay.setFromCamera(new THREE.Vector2(0, 0), camera);
+  return [mouseRay.ray.origin, mouseRay.ray.direction];
+};
+document.querySelectorAll('[data-zoom]').forEach((b) =>
+  b.addEventListener('click', () => zoomToward(b.dataset.zoom === 'in' ? 0.35 : 2.8, centreRay)),
+);
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;

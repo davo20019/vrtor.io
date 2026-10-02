@@ -55,8 +55,10 @@ Unlisted spike: the whole planet in WebXR from open data only (no keys, no accou
 headset (`src/vrUi.js`) a places menu opens in front of you: point and pull the trigger to fall
 from orbit into a place. Out there, hold a trigger to fly where that controller points (faster
 the higher you are); squeeze a grip to grab the Earth and drag it (from orbit it spins the
-globe, and a quick swing keeps it spinning; on desktop, drag the mouse from high up); left
-stick moves, right stick turns and goes up or down; A, X or Y reopens
+globe, and a quick swing keeps it spinning; on desktop, drag the mouse from high up); zoom by
+squeezing both grips and pulling your hands apart, or pushing the right stick forward
+(toward where it points; desktop: wheel or pinch toward the cursor, or + and −); left stick
+moves, right stick sideways turns; A, X or Y reopens
 the menu, B goes back to orbit. The left wrist shows where you are, height, fps and triangle
 counts; `?error=2` raises the terrain error target (fewer tiles) to compare quality against
 frame rate on a Quest. Depth is logarithmic so the near plane can stay at 5 cm (hands and

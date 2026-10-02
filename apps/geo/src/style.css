@@ -30,6 +30,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); c
 .btn { font: inherit; font-size: 14px; font-weight: 600; color: var(--text); background: var(--panel); border: 1px solid rgba(255,255,255,0.25); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
 .btn:hover { background: rgba(255,255,255,0.14); }
 .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-zoom { min-width: 40px; padding: 7px 0; font-size: 18px; line-height: 1; }
 .btn-walk { text-decoration: none; background: var(--accent); color: var(--accent-ink); border-color: transparent; }
 .btn[hidden] { display: none; }
 .btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
