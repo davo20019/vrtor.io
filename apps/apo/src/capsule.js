@@ -6,7 +6,6 @@ import {
   DracoDecoder,
   DynamicTexture,
   LoadAssetContainerAsync,
-  Mesh,
   MeshBuilder,
   PBRMaterial,
   Quaternion,
@@ -14,6 +13,7 @@ import {
   TransformNode,
   Vector3,
 } from '@babylonjs/core';
+import { faceViewer } from '@vrtor/xr-shell';
 import '@babylonjs/loaders/glTF';
 
 const BASE = import.meta.env.BASE_URL;
@@ -121,7 +121,7 @@ export async function loadCapsule(scene, stopsData, { onProgress } = {}) {
       const size = data.place === 'inside' ? 0.03 : 0.16;
       marker = MeshBuilder.CreatePlane(`marker-${data.id}`, { size }, scene);
       marker.position.copyFrom(at.add(eye.subtract(at).normalize().scale(lift)));
-      marker.billboardMode = Mesh.BILLBOARDMODE_ALL;
+      faceViewer(marker);
       const mat = new StandardMaterial(`marker-${data.id}`, scene);
       mat.disableLighting = true;
       mat.emissiveTexture = markerTex;

@@ -6,7 +6,6 @@ import {
   DracoDecoder,
   DynamicTexture,
   LoadAssetContainerAsync,
-  Mesh,
   MeshBuilder,
   PBRMaterial,
   Quaternion,
@@ -15,6 +14,7 @@ import {
   TransformNode,
   Vector3,
 } from '@babylonjs/core';
+import { faceViewer } from '@vrtor/xr-shell';
 import '@babylonjs/loaders/glTF';
 import { RAIL, heightAt } from './world.js';
 
@@ -84,7 +84,7 @@ export async function loadFlyer(scene, stopsData, { shadows, onProgress } = {}) 
       // Lifted a little toward the viewer, so the part can't swallow it.
       const lift = eye.subtract(at).normalize().scale(0.06);
       marker.position.copyFrom(local(data.at).add(lift));
-      marker.billboardMode = Mesh.BILLBOARDMODE_ALL;
+      faceViewer(marker);
       const mat = new StandardMaterial(`marker-${data.id}`, scene);
       mat.disableLighting = true;
       mat.emissiveTexture = markerTex;

@@ -10,8 +10,8 @@ const WINDOW_FRAMES = 80;
 const LATE_FACTOR = 1.5;
 /** Longer gaps are hitches (loading, a GC, the headset menu), not load. */
 const HITCH_MS = 250;
-/** Share of late frames in a window that steps the resolution down. */
-const DOWN_SHARE = 0.08;
+/** Share of late frames in a window that steps the resolution down: smooth motion over sharpness. */
+const DOWN_SHARE = 0.03;
 /** Share of late frames still counted as clean. */
 const CLEAN_SHARE = 0.01;
 /** Clean windows in a row before stepping up. */
@@ -62,6 +62,9 @@ export class AdaptiveResolution {
     this.frames = 0;
     this.late = 0;
     if (share > DOWN_SHARE) {
+      // Never climb back to a scale that dropped frames: rising and falling again would judder
+      // every few seconds.
+      this.ceiling = Math.max(this.floor, round(this.scale - STEP_UP));
       this.scale = Math.max(this.floor, round(this.scale - STEP_DOWN));
       this.cleanWindows = 0;
     } else if (share <= CLEAN_SHARE) {

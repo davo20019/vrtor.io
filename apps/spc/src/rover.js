@@ -6,13 +6,13 @@ import {
   DynamicTexture,
   LoadAssetContainerAsync,
   Matrix,
-  Mesh,
   Quaternion,
   MeshBuilder,
   PBRMaterial,
   StandardMaterial,
   Vector3,
 } from '@babylonjs/core';
+import { faceViewer } from '@vrtor/xr-shell';
 import '@babylonjs/loaders/glTF';
 
 const BASE = import.meta.env.BASE_URL;
@@ -116,7 +116,7 @@ export async function loadRover(scene, parts, { shadows, onProgress } = {}) {
 
     const marker = MeshBuilder.CreatePlane(`marker-${part.id}`, { size: 0.12 }, scene);
     marker.position.copyFrom(at);
-    marker.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    faceViewer(marker);
     const mat = new StandardMaterial(`marker-${part.id}`, scene);
     mat.disableLighting = true;
     mat.emissiveTexture = markerTex;

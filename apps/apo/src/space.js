@@ -23,6 +23,7 @@ import {
   Vector4,
   VertexData,
 } from '@babylonjs/core';
+import { faceViewer } from '@vrtor/xr-shell';
 import SKY from './sky-1969.json';
 
 const BASE = import.meta.env.BASE_URL;
@@ -217,7 +218,7 @@ function buildMoon(scene) {
   base = MeshBuilder.CreatePlane('tranquility', { size: 9 }, scene);
   base.metadata = { sky: true, stop: 'tranquility' };
   base.renderingGroupId = 0;
-  base.billboardMode = Mesh.BILLBOARDMODE_ALL;
+  faceViewer(base);
   const bmat = new StandardMaterial('tranquility', scene);
   const btex = ringTexture(scene, '#ffb020');
   bmat.disableLighting = true;
@@ -456,7 +457,7 @@ function sunSprite(scene) {
   disc.scaling.setAll(2 * distance * Math.tan((0.265 * Math.PI) / 180) * 11);
   disc.position.copyFrom(SUN_DIR.scale(distance));
   disc.infiniteDistance = true;
-  disc.billboardMode = Mesh.BILLBOARDMODE_ALL;
+  faceViewer(disc);
   disc.metadata = { sky: true };
   disc.renderingGroupId = 0;
   disc.isPickable = false;

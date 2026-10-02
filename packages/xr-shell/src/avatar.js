@@ -22,6 +22,7 @@
 import {
   Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial, TransformNode, Vector3, VertexBuffer,
 } from '@babylonjs/core';
+import { faceViewer } from './billboard.js';
 
 const FACE_DISTANCE = 20;
 const DRAW_DISTANCE = 45;
@@ -203,7 +204,7 @@ export function createAvatar(scene, { id, name, color, outfit = null }) {
 
   // Name tag, lit while they talk.
   const tag = MeshBuilder.CreatePlane(`person-${id}-tag`, { width: 0.6, height: 0.15 }, scene);
-  tag.billboardMode = Mesh.BILLBOARDMODE_ALL;
+  faceViewer(tag);
   tag.applyFog = false;
   const tex = new DynamicTexture(`person-${id}-tag`, { width: 512, height: 128 }, scene, true);
   tex.hasAlpha = true;

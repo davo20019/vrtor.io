@@ -42,7 +42,9 @@ export function attachFloat(rig, scene, { center = Vector3.Zero(), range = 30 } 
       // One turn per push: it re-arms when the stick comes back to the middle.
       if (Math.abs(rightStick.x) > 0.7 && turnArmed) {
         turnArmed = false;
-        camera.rotationQuaternion.multiplyInPlace(Quaternion.FromEulerAngles(0, Math.sign(rightStick.x) * TURN, 0));
+        // Turn about the world's up, not the head's: multiplied on the other side, a turn made while
+        // looking down or with the head tilted would tip the whole world off level.
+        Quaternion.FromEulerAngles(0, Math.sign(rightStick.x) * TURN, 0).multiplyToRef(camera.rotationQuaternion, camera.rotationQuaternion);
       } else if (Math.abs(rightStick.x) < 0.3) {
         turnArmed = true;
       }

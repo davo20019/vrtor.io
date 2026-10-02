@@ -8,8 +8,10 @@
 //     frame rate allows (resolution.js); a size that ever fails to enter is
 //     never tried again (eyeBuffer.js)
 //   - MSAA on the layer, light fixed foveation
-//   - 90 Hz while the scene keeps up, stepping down to 72 when it can't (frameRate.js);
-//     resolution only drops once the refresh is as low as it goes: sharpness first
+//   - 90 Hz while the scene keeps up, stepping down to 72 as soon as frames start to
+//     drop (frameRate.js), then resolution: dropped frames judder when you turn your
+//     head, which makes people sick, so smooth motion comes before sharpness
+//   - rendering starts at the size known to keep up and only grows while frames are clean
 //   - text panels composited as WebXR quad layers, sampled once at display
 //     resolution instead of through the eye buffer (layers.js); `?layers=0` turns them off
 import { Color3, MeshBuilder, Ray, StandardMaterial, Vector3, WebXRState } from '@babylonjs/core';
@@ -181,7 +183,7 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
     resolution = adaptive
       ? new AdaptiveResolution(
           pinned === null
-            ? { allocated, start: allocated, floor: Math.min(MIN_RESOLUTION_SCALE, allocated) }
+            ? { allocated, start: Math.min(RESOLUTION_SCALE, allocated), floor: Math.min(MIN_RESOLUTION_SCALE, allocated) }
             : { allocated, start: pinned, floor: pinned, ceiling: pinned },
         )
       : null;

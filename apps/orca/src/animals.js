@@ -6,12 +6,12 @@ import {
   DracoDecoder,
   DynamicTexture,
   LoadAssetContainerAsync,
-  Mesh,
   MeshBuilder,
   StandardMaterial,
   TransformNode,
   Vector3,
 } from '@babylonjs/core';
+import { faceViewer } from '@vrtor/xr-shell';
 import '@babylonjs/loaders/glTF';
 import { buildBody } from './body.js';
 
@@ -113,7 +113,7 @@ export async function loadAnimals(scene, stopsData, { shadows, platform, onProgr
       // Lifted a little toward the viewer, so the bone can't swallow it.
       const lift = eye.subtract(at).normalize().scale(0.05);
       marker.position.copyFrom(local(data.at).add(lift));
-      marker.billboardMode = Mesh.BILLBOARDMODE_ALL;
+      faceViewer(marker);
       const mat = new StandardMaterial(`marker-${data.id}`, scene);
       mat.disableLighting = true;
       mat.emissiveTexture = markerTex;

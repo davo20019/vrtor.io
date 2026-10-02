@@ -1,5 +1,6 @@
 // Shared pieces for VRtor's WebXR subjects (Babylon.js).
 export { createXr, xrSupported, RESOLUTION_SCALE, MAX_RESOLUTION_SCALE, FOVEATION } from './xr.js';
+export { faceViewer } from './billboard.js';
 export { createCard } from './card.js';
 export { FrameRateGovernor } from './frameRate.js';
 export { createPresence } from './presence.js';
