@@ -101,7 +101,7 @@ function content(i) {
       kicker: 'Tour complete',
       title: 'You have been inside Columbia',
       body: 'Float around it, go back in, or point at any glowing marker to read about it again. On July 24, 1969, Columbia splashed down in the Pacific with all three astronauts aboard.',
-      fact: 'The scan: Smithsonian National Air and Space Museum. The Moon and Earth: NASA. The stars: the Yale Bright Star Catalogue, with the planets where they were on July 20, 1969.',
+      fact: 'The scan: Smithsonian National Air and Space Museum. The Moon and Earth: NASA.',
       actions: [
         { label: 'Start over', onClick: () => go(0, true) },
         { label: 'Close', primary: true, onClick: close },
