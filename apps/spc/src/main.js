@@ -99,7 +99,8 @@ function content(i) {
   const { part } = rover.stops[i];
   const actions = [];
   if (i > 0) actions.push({ label: 'Back', onClick: () => go(i - 1, true) });
-  actions.push({ label: 'Close', onClick: close });
+  // Flat screens close with the card's ×; the headset card has no corner button.
+  if (inXr()) actions.push({ label: 'Close', onClick: close });
   actions.push({ label: i === n - 1 ? 'Finish' : 'Next', primary: true, onClick: () => go(i + 1, true) });
   return { kicker: `Part ${i + 1} of ${n}`, title: part.title, body: part.body, fact: part.fact, actions };
 }
@@ -341,6 +342,10 @@ async function enterVr() {
   }
 }
 ui.vr.addEventListener('click', enterVr);
+$('.card-close').addEventListener('click', close);
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && cardOpen && !inXr()) close();
+});
 ui.tour.addEventListener('click', () => go(index >= 0 && index < (rover?.stops.length ?? 0) ? index : 0, true));
 ui.sound.addEventListener('click', () => {
   const on = wind.toggle();
