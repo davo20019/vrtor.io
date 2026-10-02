@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Earth (experiment) · VRtor</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#05070b" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+</head>
+<body>
+  <canvas id="scene" aria-label="3D scene: the whole Earth in photorealistic 3D, from orbit down to street level"></canvas>
+
+  <header class="top">
+    <a class="brand" href="/">VRtor<span>Earth</span></a>
+    <p class="tag">Experiment</p>
+  </header>
+
+  <div class="loading" role="status">
+    <p class="loading-text">Getting to orbit…</p>
+  </div>
+
+  <aside class="stats" aria-live="off"></aside>
+
+  <button class="vr-cta" type="button" data-enter-vr hidden>
+    <strong>Enter VR</strong><small>Fall from orbit into a city</small>
+  </button>
+
+  <nav class="bar" aria-label="Places">
+    <div class="places"></div>
+    <button class="btn" type="button" data-orbit>Back to orbit</button>
+    <p class="hint">Drag to look · W A S D to move · E / Q up and down</p>
+  </nav>
+
+  <p class="attribution"><strong>Google</strong> <span class="attribution-data"></span></p>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -13,6 +13,8 @@ const SPACE = { name: 'Space', code: 'spc', service: 'SPC' };
 const APOLLO = { name: 'Apollo 11', code: 'apo', service: 'APO' };
 const FLYER = { name: 'Wright Flyer', code: 'fly', service: 'FLY' };
 const ORCA = { name: 'Orca', code: 'orca', service: 'ORCA' };
+// Unlisted experiment: Google's photorealistic Earth in VR (apps/geo).
+const EARTH = { name: 'Earth', code: 'geo', service: 'GEO' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
 const NATURE = { name: 'Nature' };
@@ -56,6 +58,9 @@ export const SUBJECTS = {
   killerwhale: ORCA,
   whale: ORCA,
   whales: ORCA,
+
+  geo: EARTH,
+  earth: EARTH,
 
   mec: MECHANICS,
   mechanics: MECHANICS,

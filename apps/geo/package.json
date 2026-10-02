@@ -1,0 +1,17 @@
+{
+  "name": "@vrtor/geo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch --mode development",
+    "deploy": "vite build && wrangler deploy"
+  },
+  "dependencies": {
+    "3d-tiles-renderer": "^0.5.3",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.2"
+  }
+}
