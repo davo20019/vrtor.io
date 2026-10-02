@@ -1,0 +1,130 @@
+// The tour of Columbia, outside then inside. Positions are in the Smithsonian scan's own
+// frame (centimetres, glTF axes, the interior's origin; see capsule.js), taken from the
+// curators' annotations: `at` is what the stop is about, `eye` where the viewer's eyes go.
+// Outside, `from` gives the eye as a direction and distance from `at` instead. Stops on the
+// exterior scan (`scan`) use its annotations, which the Smithsonian's viewer places 166.82 cm
+// lower than the mesh: they're given here with that added back.
+
+export const WELCOME = {
+  kicker: 'Apollo 11 · July 1969',
+  title: 'Columbia, above the Moon',
+  body: 'This is the real Apollo 11 command module, scanned inside and out by the Smithsonian, floating where it flew: about 110 km above the Moon. Michael Collins is flying it alone while Neil Armstrong and Buzz Aldrin are on the surface below.',
+  fact: 'Start the tour, or point at any glowing marker. You can go inside.',
+};
+
+export const STOPS = [
+  {
+    id: 'orbit',
+    place: 'outside',
+    title: 'Alone in lunar orbit',
+    at: [0, 150, 0],
+    from: { world: [0.88, 0.3, -0.36], distance: 700 },
+    body: 'On July 20, 1969, the lunar module Eagle undocked and landed. For more than a day Collins circled the Moon in Columbia, about once every two hours, at roughly 5,900 km/h.',
+    fact: 'Each time he passed behind the Moon, he lost all radio contact with Earth for about 48 minutes.',
+  },
+  {
+    id: 'tranquility',
+    place: 'outside',
+    title: 'Tranquility Base',
+    target: 'tranquility',
+    at: [0, 150, 0],
+    from: { world: [0.3, 0.3, 0.9], distance: 420 },
+    body: 'Follow the marker down to the plain on the Moon’s surface. That is the Sea of Tranquility, where Eagle landed. Armstrong and Aldrin are down there now, a few hundred kilometers away.',
+    fact: 'The Moon below is mapped from NASA’s Lunar Reconnaissance Orbiter. Its drift under you is slowed down.',
+  },
+  {
+    id: 'heat-shield',
+    place: 'outside',
+    scan: 'exterior',
+    title: 'The heat shield',
+    at: [124, 76, 112],
+    from: { dir: [0.72, -0.6, 0.35], distance: 260 },
+    body: 'The wide, scorched base faced forward on the way home. Coming back from the Moon at about 40,000 km/h, the air in front of it heated to around 2,800 °C. The shield’s resin, packed into a fiberglass honeycomb, charred and wore away on purpose, carrying the heat off with it.',
+    fact: 'The burn marks you see are real: this is how Columbia looked after splashdown in the Pacific on July 24, 1969.',
+  },
+  {
+    id: 'thrusters',
+    place: 'outside',
+    scan: 'exterior',
+    title: 'Steering thrusters',
+    at: [10, 122, 183],
+    from: { dir: [0.33, -0.15, 0.93], distance: 170 },
+    body: 'These small nozzles are part of the capsule’s own steering system: 12 thrusters that turned it to the right angle for reentry. In lunar orbit, the service module attached below did that job, along with the engine and the fuel.',
+    fact: 'Only this capsule came home. The service module was let go just before reentry and burned up in the atmosphere.',
+  },
+  {
+    id: 'hatch',
+    place: 'outside',
+    scan: 'hatch',
+    title: 'The hatch',
+    at: [-13, 187, 126],
+    from: { dir: [-0.07, 0.53, 0.84], distance: 190 },
+    body: 'In January 1967 a fire inside Apollo 1 killed astronauts Gus Grissom, Ed White and Roger Chaffee during a test on the launch pad. Their hatch opened inward and could not be opened in time. Every capsule after it, including this one, got a single hatch that swings outward in seconds.',
+    fact: 'The Smithsonian scanned the hatch separately, so here the way in is open. Next, go inside.',
+  },
+  {
+    id: 'couch',
+    place: 'inside',
+    title: 'The center couch',
+    eye: [-12, 148, 70],
+    at: [-12, 210, 51],
+    body: 'You are where the crew lay for launch and reentry, facing the main control panel. In lunar orbit Collins had this whole cabin to himself, about as much room as the inside of a large car.',
+    fact: 'The center couch could be folded away, which gave the crew room to move around the cabin.',
+  },
+  {
+    id: 'panel',
+    place: 'inside',
+    title: 'The main control panel',
+    eye: [-38, 172, 82],
+    at: [-40, 218, 76],
+    body: 'Hundreds of switches, dials and lights, each one labeled. The ball-shaped instrument is the attitude indicator, or "eight ball": it showed which way the spacecraft was pointing when there was no up or down to feel.',
+    fact: 'Lean in: the scan is sharp enough to read many of the switch labels.',
+  },
+  {
+    id: 'computer',
+    place: 'inside',
+    title: 'Talking to the computer',
+    eye: [-33, 172, 76],
+    at: [-33, 214, 62],
+    body: 'The keypad and green number displays are the DSKY, the crew’s link to the Apollo Guidance Computer. They typed two-digit "verb" and "noun" codes, like "display" plus "velocity", and the computer answered in numbers.',
+    fact: 'The computer had 2,048 words of working memory. Its programs were woven by hand into ropes of wire and tiny magnetic rings.',
+  },
+  {
+    id: 'sextant',
+    place: 'inside',
+    title: 'Navigating by the stars',
+    eye: [15, 173, -20],
+    at: [15, 208, -75],
+    body: 'This is the navigation station in the lower equipment bay. Through the two eyepieces, a sextant and a telescope, the crew sighted stars to check that the guidance system knew which way it was pointing.',
+    fact: 'Collins used the sextant to hunt for Eagle on the surface as he passed overhead. He never managed to spot it.',
+  },
+  {
+    id: 'note',
+    place: 'inside',
+    title: 'A note from Collins',
+    eye: [-7, 198, -22],
+    at: [-7, 225, -65],
+    body: 'Collins wrote this on the wall of the bay: "Spacecraft 107, alias Apollo 11, alias Columbia. The best ship to come down the line. God bless her. Michael Collins, CMP."',
+    fact: 'CMP means command module pilot, Collins’s job on the flight.',
+  },
+  {
+    id: 'calendar',
+    place: 'inside',
+    title: 'A hand-drawn calendar',
+    eye: [-63, 151, -33],
+    at: [-63, 151, -83],
+    body: 'A small calendar of the mission’s days is drawn on this wall. The Smithsonian’s scanners found it, along with other notes, in 2016, in corners of the cabin that visitors had never been able to see.',
+    fact: 'Columbia has been at the National Air and Space Museum in Washington since 1976.',
+  },
+  {
+    id: 'window',
+    place: 'inside',
+    // No marker: it would sit right on Earth.
+    marker: false,
+    title: 'Earth through the hatch window',
+    eye: [-10, 160, 40],
+    at: [-40, 190, 140],
+    body: 'Look up through the hatch opening: that blue and white ball is Earth, about 380,000 km away. From here it looks nearly four times as wide as the Moon looks from home.',
+    fact: 'Columbia had five windows: two facing forward, two at the sides and one in the hatch.',
+  },
+];

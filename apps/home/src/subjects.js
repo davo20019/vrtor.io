@@ -10,6 +10,7 @@ const COMMUNICATION = { name: 'Communication', url: 'https://accent.learnenglish
 const MACHU = { name: 'Machu Picchu', code: 'mpc', service: 'MPC' };
 const TAJ = { name: 'Taj Mahal', code: 'taj', service: 'TAJ' };
 const SPACE = { name: 'Space', code: 'spc', service: 'SPC' };
+const APOLLO = { name: 'Apollo 11', code: 'apo', service: 'APO' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
 const NATURE = { name: 'Nature' };
@@ -33,6 +34,11 @@ export const SUBJECTS = {
 
   spc: SPACE,
   space: SPACE,
+
+  apo: APOLLO,
+  apollo: APOLLO,
+  apollo11: APOLLO,
+  'apollo-11': APOLLO,
   mec: MECHANICS,
   mechanics: MECHANICS,
   mat: MATH,

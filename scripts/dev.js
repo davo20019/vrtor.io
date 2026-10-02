@@ -17,6 +17,8 @@ const children = [
   run('npm', ['run', 'watch', '-w', '@vrtor/spc']),
   run('npm', ['run', 'watch', '-w', '@vrtor/taj']),
   run('npm', ['run', 'watch', '-w', '@vrtor/mpc']),
+  run('npm', ['run', 'watch', '-w', '@vrtor/apo']),
+  run('npx', ['wrangler', 'dev', '-c', 'apps/apo/wrangler.jsonc', '--port', '8794', '--inspector-port', '9244']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/mpc/wrangler.jsonc', '--port', '8793', '--inspector-port', '9243']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/taj/wrangler.jsonc', '--port', '8792', '--inspector-port', '9242']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/spc/wrangler.jsonc', '--port', '8791', '--inspector-port', '9241']),

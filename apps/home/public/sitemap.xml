@@ -14,6 +14,11 @@
     <image:image><image:loc>https://vrtor.io/assets/cards/space.jpg</image:loc></image:image>
   </url>
   <url>
+    <loc>https://vrtor.io/apo/</loc>
+    <lastmod>2026-10-01</lastmod>
+    <image:image><image:loc>https://vrtor.io/assets/cards/apollo.jpg</image:loc></image:image>
+  </url>
+  <url>
     <loc>https://vrtor.io/taj/</loc>
     <lastmod>2026-10-01</lastmod>
     <image:image><image:loc>https://vrtor.io/assets/cards/taj-mahal.jpg</image:loc></image:image>

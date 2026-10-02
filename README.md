@@ -13,6 +13,7 @@ apps/home/       vrtor.io itself: the catalog site + the router Worker ("vrtor")
 apps/spc/        Space: Perseverance on Mars (Babylon.js WebXR, Vite), Worker "vrtor-spc"
 apps/taj/        Taj Mahal, Worker "vrtor-taj"
 apps/mpc/        Machu Picchu (with visitors), Worker "vrtor-mpc"
+apps/apo/        Apollo 11: inside Columbia in lunar orbit, Worker "vrtor-apo"
 packages/xr-shell/  shared WebXR pieces for every subject (Quest-tuned session setup,
                  teleport, comfort fade, frame-rate governor, floating info card)
 ```
@@ -99,6 +100,10 @@ that for no user-facing gain over a subdomain.
 2. **Bring-your-own Gemini key** tier already exists in Acento: keep it as a free, unlimited power-user option.
 3. **Teams / classrooms**: per-seat licences for schools, bootcamps, ESL programs; headset pairing codes already make shared headsets workable.
 4. **Sponsored or custom rooms**: companies pay for an Interview room preloaded with their roles, or a sales-pitch rehearsal room.
+
+### Apollo 11 (`/apo/`)
+
+The real command module Columbia, from the Smithsonian's CC0 3D scans (interior hull, couches, panels and graffiti layer, plus the exterior shell), at real size in lunar orbit. Interior and exterior scans share one frame but for a fitted 9.5 cm offset. Columbia is tipped so the crew's line of sight to the main panel is level, so a standing visitor faces it as the crew did, and turned so its heat shield faces the low morning Sun. The Moon (LRO colour and LOLA elevation from NASA's CGI Moon Kit, slope-shaded in a shader with a sharp 80 by 40 degree patch around the Sea of Tranquility) and Earth (July Blue Marble with clouds) are scaled 1:1000 so every angle stays true; Earth hangs where the hatch window looks. Tour stops sit on the curators' annotation points. There is no floor in orbit: in the headset, the left thumbstick floats you where you look and the right one turns and raises or lowers you (`src/float.js`); flat screens turn in place inside. `scripts/prepare-apollo.py` downloads the scans and builds the textures; sources are in `apps/apo/public/models/CREDITS.md`.
 
 ### Taj Mahal (`/taj/`)
 
