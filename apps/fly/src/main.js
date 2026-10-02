@@ -7,6 +7,7 @@ import { ArcRotateCamera, Engine, PointerEventTypes, Vector3 } from '@babylonjs/
 import { createCard, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { buildWorld, createScene } from './world.js';
 import { loadFlyer } from './flyer.js';
+import { createOutfit } from './outfit.js';
 import { STOPS, WELCOME } from './stops.js';
 import './style.css';
 
@@ -324,6 +325,8 @@ async function start() {
   let refreshBar = () => {};
   presence = createPresence(scene, {
     subject: 'fly',
+    // Everyone here wears a coat and tie, in their own color, and a bowler (outfit.js).
+    outfit: createOutfit(scene),
     getPose: poseNow,
     onChange: (state) => {
       refreshBar(state);

@@ -15,6 +15,10 @@
 // instances of the same meshes, so a room full of suits is one draw call (and helmets another).
 // Without a helmet, a clear bubble goes over the usual face. With the face hidden, the name tag
 // lighting up is what shows who's talking.
+// Lighter outfits keep the face: `hat` is a mesh worn on top of it (origin at the wearer's eyes,
+// facing +Z, instanced like the helmet), and `coat` ({ color, shirt }) repaints the usual torso as
+// a coat with a shirt front, a collar and a tie in the wearer's own color. The Wright Flyer dresses
+// everyone in a dark coat and tie and a bowler.
 import {
   Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial, TransformNode, Vector3, VertexBuffer,
 } from '@babylonjs/core';
@@ -86,6 +90,8 @@ function paint(mesh, color) {
 export function createAvatar(scene, { id, name, color, outfit = null }) {
   const suit = outfit?.suit ?? null;
   const helmet = outfit?.helmet ?? null;
+  const hat = outfit?.hat ?? null;
+  const coat = outfit?.coat ?? null;
   const tint = Color3.FromHexString(color);
   const light = Color3.Lerp(tint, Color3.White(), 0.55);
   const white = new Color3(1, 1, 1);
@@ -140,6 +146,12 @@ export function createAvatar(scene, { id, name, color, outfit = null }) {
     mouth.position.set(0, -0.052, 0.118);
     mouth.scaling.set(0.05, 0.008, 0.02);
   }
+  if (hat && !helmet) {
+    const worn = hat.createInstance(`person-${id}-hat`);
+    worn.parent = head;
+    worn.isPickable = true;
+    worn.metadata = { presenceId: id };
+  }
   if (suit && !helmet) {
     const bubble = sphere(0.37, 16, [1, 1, 1], [0, 0.005, 0.005]);
     bubble.name = `person-${id}-helmet`;
@@ -160,7 +172,23 @@ export function createAvatar(scene, { id, name, color, outfit = null }) {
     body.isPickable = true;
     body.metadata = { presenceId: id };
   } else {
-    body = finish(merge(`person-${id}-body`, [paint(torsoShape, tint), paint(sphere(0.11, 10, [1, 1, 0.35], [0, 0.34, 0.19]), light)]), root, true);
+    body = finish(merge(`person-${id}-body`, coat ? coatParts(torsoShape, coat) : [paint(torsoShape, tint), paint(sphere(0.11, 10, [1, 1, 0.35], [0, 0.34, 0.19]), light)]), root, true);
+  }
+  /** The torso as a coat: a shirt front and collar, and a tie in the wearer's color. */
+  function coatParts(torsoShape, { color: coatColor, shirt = '#f2efe8' }) {
+    const white = Color3.FromHexString(shirt);
+    const collar = MeshBuilder.CreateTorus('part', { diameter: 0.2, thickness: 0.035, tessellation: 16 }, scene);
+    collar.position.y = TORSO_HEIGHT - 0.03;
+    return [
+      paint(torsoShape, Color3.FromHexString(coatColor)),
+      // The opening of the coat: a flat shirt front narrowing down the chest.
+      paint(sphere(0.2, 12, [0.48, 0.95, 0.14], [0, 0.44, 0.172]), white),
+      paint(collar, white),
+      // The tie, with a dark edge so it shows in any color: a knot under the collar, then the blade.
+      paint(sphere(0.05, 8, [1, 0.85, 0.6], [0, 0.495, 0.178]), tint),
+      paint(sphere(0.08, 8, [0.6, 2.3, 0.3], [0, 0.405, 0.183]), ink),
+      paint(sphere(0.07, 8, [0.6, 2.4, 0.3], [0, 0.41, 0.19]), tint),
+    ];
   }
   /** Eyes to the body's origin: the torso's base, or a suit's neck ring. */
   const bodyDrop = suit ? SUIT_NECK : NECK + TORSO_HEIGHT;
