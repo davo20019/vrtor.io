@@ -51,18 +51,17 @@ npx wrangler kv key list --binding WAITLIST --remote -c apps/home/wrangler.jsonc
 
 ## Earth experiment (vrtor.io/geo)
 
-Unlisted spike: the whole planet in WebXR from open data only (no keys, no accounts). In the
-headset (`src/vrUi.js`) a places menu opens in front of you: point and pull the trigger to fall
-from orbit into a place. Out there, hold a trigger to fly where that controller points (faster
-the higher you are); squeeze a grip to grab the Earth and drag it (from orbit it spins the
-globe, and a quick swing keeps it spinning; on desktop, drag the mouse from high up); zoom by
-squeezing both grips and pulling your hands apart, or pushing the right stick forward
-(toward where it points; desktop: wheel or pinch toward the cursor, or + and −); left stick
-moves, right stick sideways turns; A, X or Y reopens
-the menu, B goes back to orbit. The left wrist shows where you are, height, fps and triangle
-counts; `?error=2` raises the terrain error target (fewer tiles) to compare quality against
-frame rate on a Quest. Depth is logarithmic so the near plane can stay at 5 cm (hands and
-menus) while orbit doesn't z-fight.
+Unlisted spike: the whole planet in WebXR from open data only (no keys, no accounts). It starts
+as a 3D globe on a table in front of you (globe mode, `src/main.js`): grab it with a grip (or
+drag the mouse) to turn it, and zoom into any spot by pulling both grips apart, pushing the
+right stick forward, holding a trigger, or the wheel / pinch / + and − on desktop. Zooming in
+grows the model around that spot, from the whole planet down to the streets, and once the view
+is 300 m up you step into the full-size world there (world mode): walk or fly (hold a trigger
+to fly where you point), and B (or zooming out past 30 km) takes you back to the globe. The
+places menu (A, X or Y in the headset, `src/vrUi.js`) turns the globe to a place and zooms in.
+The left wrist shows where you are, the view height, fps and triangle counts; `?error=2` raises
+the terrain error target (fewer tiles). Depth is logarithmic so the near plane can stay at 5 cm
+(hands and menus) at every scale.
 
 - Imagery: [Sentinel-2 cloudless 2016](https://s2maps.eu) by EOX, CC BY 4.0, about 10 m per
   pixel (later years are NonCommercial: don't switch layers).

@@ -94,7 +94,7 @@ export function createVrUi({ renderer, rig, camera, places, credits, onPick, onO
   });
   const rows = Math.ceil(places.length / cols);
   const actionsY = top + rows * (bh + gap) + 14;
-  buttons.push({ id: 'orbit', label: 'Back to orbit', x: left, y: actionsY, w: bw * 1.5 + gap / 2, h: bh });
+  buttons.push({ id: 'orbit', label: 'Back to the globe', x: left, y: actionsY, w: bw * 1.5 + gap / 2, h: bh });
   buttons.push({ id: 'close', label: 'Close', x: left + bw * 1.5 + gap * 1.5, y: actionsY, w: bw * 1.5 + gap / 2, h: bh });
 
   let current = 0;
@@ -123,11 +123,11 @@ export function createVrUi({ renderer, rig, camera, places, credits, onPick, onO
     g.fillStyle = '#c9c4ba';
     g.font = '30px system-ui, sans-serif';
     [
-      'Trigger: pick here · out there, hold it to fly where you point',
-      'Grip: grab the Earth and drag it · both grips: pull apart to zoom in',
-      'Right stick: forward to zoom toward where you point, back to zoom out',
-      'Left stick: move · Right stick sideways: turn',
-      'A, X or Y: this menu · B: back to orbit',
+      'Grip: grab the Earth and turn it · both grips: pull apart to zoom in',
+      'Trigger: pick here · out there, hold to zoom (or fly) where you point',
+      'Right stick: forward zooms toward where you point, back zooms out',
+      'Left stick: roll the globe, or walk · Right stick sideways: turn',
+      'A, X or Y: this menu · B: back to the globe',
     ].forEach((line, i) => g.fillText(line, 54, legendY + i * 44, MENU_W - 108));
     g.fillStyle = '#8f8a80';
     g.font = '20px system-ui, sans-serif';
@@ -152,14 +152,16 @@ export function createVrUi({ renderer, rig, camera, places, credits, onPick, onO
 
   const _head = new THREE.Vector3();
   const _fwd = new THREE.Vector3();
+  const _up = new THREE.Vector3(0, 1, 0);
   const _local = new THREE.Vector3();
   function openMenu() {
-    // 1 m in front of where you're looking, a little below eye level, facing you.
+    // 1 m away, 30° to the left of where you're looking (the globe sits straight ahead),
+    // a little below eye level, facing you.
     camera.getWorldPosition(_head);
     camera.getWorldDirection(_fwd);
     _fwd.y = 0;
     if (_fwd.lengthSq() < 1e-6) _fwd.set(0, 0, -1);
-    _fwd.normalize();
+    _fwd.normalize().applyAxisAngle(_up, 0.52);
     _local.copy(_head).addScaledVector(_fwd, 1.0);
     _local.y -= 0.15;
     rig.worldToLocal(_local);
@@ -234,7 +236,7 @@ export function createVrUi({ renderer, rig, camera, places, credits, onPick, onO
       for (const hand of Object.values(hands)) {
         const v = hand.source?.gamepad?.buttons[0]?.value ?? 0;
         if (hand.suppress) continue;
-        if (v > 0.1 && (!best || v > best.value)) best = { ray: hand.ray, value: v };
+        if (v > 0.1 && (!best || v > best.value)) best = { ray: hand.ray, getRay: hand.getRay, value: v };
       }
       return best;
     },

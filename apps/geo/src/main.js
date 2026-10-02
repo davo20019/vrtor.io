@@ -1,5 +1,6 @@
-// Earth (experiment): the whole planet from open data, in WebXR. Start in orbit, fall
-// into a city, fly around it. No keys, no accounts:
+// Earth (experiment): the whole planet from open data, in WebXR. It starts as a 3D globe
+// in front of you (globe mode): turn it, zoom into any place, and when you're close enough
+// you step in at full size (world mode) to stand and fly there. No keys, no accounts:
 //   - imagery: Sentinel-2 cloudless 2016 by EOX (CC BY 4.0), about 10 m per pixel
 //   - terrain: Terrain Tiles on AWS (Mapzen Terrarium; SRTM, GMTED2010, ETOPO1 and others)
 //   - buildings: Overture Maps footprints and heights (ODbL, mostly OpenStreetMap),
@@ -27,9 +28,18 @@ export const CREDITS =
   HELSINKI_CREDIT;
 
 const D2R = Math.PI / 180;
-const ORBIT = 6_000_000; // metres above the ground: the whole Earth fills the view
-const ARRIVE = 300; // metres above the ground at the end of a fall
+const ARRIVE = 300; // metres above the ground when you step into the world
 const EYE = 1.6; // flat-screen eye height
+
+// Globe mode: the Earth as a model whose spot `state.center` sits on a table point in
+// front of you, scaled by `state.scale` (1 = real size). Seen from your eyes about
+// 0.85 m away, that's the view from 0.85 / scale metres up; zooming in until that's
+// ARRIVE steps you into the full-size world there.
+const TABLE = new THREE.Vector3(0, 1.0, -0.75); // in the rig (your floor space)
+const GLOBE_RADIUS = 0.35; // metres, fully zoomed out
+const SCALE_MIN = GLOBE_RADIUS / 6_371_000;
+const VIEW = 0.85; // metres from your eyes to the table point
+const SCALE_STEP_IN = VIEW / ARRIVE;
 const params = new URLSearchParams(location.search);
 
 const $ = (s) => document.querySelector(s);
@@ -96,7 +106,7 @@ const vrUi = createVrUi({
   camera,
   places: PLACES,
   credits: CREDITS,
-  onPick: (i) => (i === state.place && !state.visited ? fall() : goToPlace(i)),
+  onPick: (i) => goToPlace(i),
   onOrbit: () => backToOrbit(),
   onGrab: (getRay) => grabStart(getRay),
   onRelease: (getRay) => grabEnd(getRay),
@@ -113,12 +123,18 @@ const state = {
   fadeDone: null,
   fps: 0,
   menuIn: 0, // frames until the welcome menu opens (the headset pose needs a moment)
+  mode: 'globe', // 'globe' (the Earth as a model in front of you) | 'world' (full size)
+  scale: SCALE_MIN,
+  globeFlight: null, // animated zoom into a place on the globe
   center: { lat: 0, lon: 0 }, // the spot (radians) at the local origin, under you
 };
 
 let tiles = null;
 let reorient = null;
 let helsinki = null;
+// Holds the tiles: identity in world mode, the scaled model in globe mode.
+const earth = new THREE.Group();
+scene.add(earth);
 const buildings = createBuildings(scene);
 
 // ---------- tiles ----------
@@ -136,11 +152,11 @@ function start() {
   if (params.has('error')) tiles.errorTarget = Number(params.get('error'));
   tiles.setCamera(camera);
   tiles.setResolutionFromRenderer(camera, renderer);
-  scene.add(tiles.group);
+  earth.add(tiles.group);
 
   helsinki = createHelsinki(camera, renderer, params.get('hel') || undefined);
   scene.add(helsinki.tiles.group);
-  if (params.has('debug')) window.vrtorGeo = { THREE, tiles, helsinki, rig, state, camera, vrUi };
+  if (params.has('debug')) window.vrtorGeo = { THREE, tiles, helsinki, rig, state, camera, vrUi, earth, grabStart, grabEnd, updateGrab, rayToGround, updateGlobe };
 
   // Terrain doesn't draw where a photo mesh already did (helsinki.js marks the stencil).
   tiles.addEventListener('load-model', ({ scene }) => {
@@ -164,42 +180,10 @@ function start() {
     }
   });
 
-  placeAt(0, ORBIT);
-}
-
-// Stand over a place at `height` metres above its ground, facing its heading.
-function placeAt(i, height) {
-  const p = PLACES[i];
-  state.place = i;
-  state.visited = false;
-  reorient.transformLatLonHeightToOrigin(p.lat * D2R, p.lon * D2R, 0);
-  state.center = { lat: p.lat * D2R, lon: p.lon * D2R };
-  grab = null;
-  spin = null;
-  state.groundY = p.ground;
-  rig.position.set(0, p.ground + height, 0);
-  rig.rotation.set(0, Math.PI - p.heading * D2R, 0);
-  if (!renderer.xr.isPresenting) camera.rotation.x = pitchFor(height);
-  updatePlaceButtons();
-  vrUi.setCurrent(i);
-}
-
-// On a flat screen, look down at the planet from orbit and level out near the ground.
-// (In the headset you look wherever you like.)
-function pitchFor(agl) {
-  return agl > 500_000 ? -1.25 : agl > 20_000 ? -0.9 : -0.3;
-}
-
-// Fly (in log height, so the speed you see stays steady) to `agl` metres above the ground.
-function flyTo(agl, duration) {
-  state.flight = {
-    from: Math.log10(Math.max(rig.position.y - state.groundY, 1)),
-    to: Math.log10(agl),
-    pitchFrom: camera.rotation.x,
-    pitchTo: pitchFor(agl),
-    t: 0,
-    duration,
-  };
+  const p = PLACES[0];
+  setCenter(p.lat * D2R, p.lon * D2R);
+  state.groundY = 0;
+  enterGlobe(SCALE_MIN);
 }
 
 async function fadeTo(v) {
@@ -207,24 +191,126 @@ async function fadeTo(v) {
   await new Promise((r) => (state.fadeDone = r));
 }
 
+function setCenter(lat, lon) {
+  state.center = { lat, lon };
+  reorient.transformLatLonHeightToOrigin(lat, lon, 0);
+}
+
+function selectPlace(i) {
+  state.place = i;
+  updatePlaceButtons();
+  vrUi.setCurrent(i);
+}
+
+// ---------- modes ----------
+function enterGlobe(scale) {
+  state.mode = 'globe';
+  state.scale = THREE.MathUtils.clamp(scale, SCALE_MIN, SCALE_STEP_IN);
+  state.flight = null;
+  grab = null;
+  spin = null;
+  rig.position.set(0, 0, 0);
+  if (!renderer.xr.isPresenting) camera.rotation.x = -0.72; // down at the table point
+}
+
+// Step into the full-size world at the spot on the table, ARRIVE metres up.
+async function stepIn(heading = null) {
+  if (state.mode !== 'globe' || state.stepping) return;
+  state.stepping = true;
+  state.globeFlight = null;
+  await fadeTo(1);
+  state.mode = 'world';
+  earth.position.set(0, 0, 0);
+  earth.quaternion.identity();
+  earth.scale.setScalar(1);
+  earth.updateMatrixWorld(true);
+  grab = null;
+  spin = null;
+  rig.position.set(0, state.groundY + ARRIVE, 0);
+  if (heading != null) rig.rotation.set(0, Math.PI - heading * D2R, 0);
+  if (!renderer.xr.isPresenting) camera.rotation.x = -0.3;
+  await fadeTo(0);
+  state.stepping = false;
+}
+
+// Back to the globe in front of you (B, or zooming out high above the world).
+async function backToGlobe(scale = SCALE_MIN) {
+  if (state.mode !== 'world' || state.stepping) return;
+  state.stepping = true;
+  await fadeTo(1);
+  recenter();
+  enterGlobe(scale);
+  await fadeTo(0);
+  state.stepping = false;
+}
+const backToOrbit = () => (state.mode === 'world' ? backToGlobe() : globeTo(SCALE_MIN));
+
+// Picking a place: on the globe, turn to it and zoom in, then step in facing its view.
 async function goToPlace(i) {
   if (!tiles) return;
   i = (i + PLACES.length) % PLACES.length;
-  state.flight = null;
-  await fadeTo(1);
-  placeAt(i, ORBIT);
-  await fadeTo(0);
-  fall();
+  selectPlace(i);
+  if (state.mode === 'world') await backToGlobe(Math.max(state.scale, SCALE_MIN));
+  const p = PLACES[i];
+  tiles.ellipsoid.getCartographicToPosition(state.center.lat, state.center.lon, 0, _from);
+  tiles.ellipsoid.getCartographicToPosition(p.lat * D2R, p.lon * D2R, 0, _to);
+  state.globeFlight = {
+    q: new THREE.Quaternion().setFromUnitVectors(_from.clone().normalize(), _to.clone().normalize()),
+    from: _from.clone(),
+    s0: Math.log(state.scale),
+    s1: Math.log(SCALE_STEP_IN),
+    t: 0,
+    duration: 7,
+    place: p,
+  };
+  grab = null;
+  spin = null;
+}
+const _from = new THREE.Vector3();
+const _to = new THREE.Vector3();
+const _gf = new THREE.Vector3();
+const _gfq = new THREE.Quaternion();
+
+// Animate the globe to a scale (used by "Back to orbit" on the globe).
+function globeTo(scale) {
+  state.globeFlight = { q: null, s0: Math.log(state.scale), s1: Math.log(scale), t: 0, duration: 3 };
 }
 
-function fall() {
-  state.visited = true;
-  flyTo(ARRIVE, 14);
+function updateGlobeFlight(dt) {
+  const f = state.globeFlight;
+  if (!f) return;
+  f.t = Math.min(f.t + dt / f.duration, 1);
+  const e = f.t * f.t * (3 - 2 * f.t);
+  if (f.q) {
+    // turn first (done by 60%), zoom all the way
+    const turn = Math.min(1, e / 0.6);
+    _gfq.slerpQuaternions(IDENTITY, f.q, turn * turn * (3 - 2 * turn));
+    _gf.copy(f.from).applyQuaternion(_gfq);
+    tiles.ellipsoid.getPositionToCartographic(_gf, _gcarto);
+    setCenter(_gcarto.lat, _gcarto.lon);
+  }
+  state.scale = Math.exp(f.s0 + (f.s1 - f.s0) * e);
+  if (f.t === 1) {
+    state.globeFlight = null;
+    if (f.place) stepIn(f.place.heading);
+  }
 }
 
-function backToOrbit() {
-  if (!tiles) return;
-  flyTo(ORBIT, 10);
+// Place the model each frame: the spot under `center` on the table point, turned with you,
+// raised by its ground height so mountains don't swallow the table.
+const _table = new THREE.Vector3();
+function updateGlobe() {
+  rig.localToWorld(_table.copy(TABLE));
+  earth.quaternion.copy(rig.quaternion);
+  earth.scale.setScalar(state.scale);
+  earth.position.set(_table.x, _table.y - state.scale * state.groundY, _table.z);
+  earth.updateMatrixWorld(true);
+}
+
+// Height of the view in globe mode (metres, as if you were up there at real size).
+function globeHeight() {
+  camera.getWorldPosition(_head);
+  return Math.max(_head.distanceTo(_table), 0.2) / state.scale;
 }
 
 // Keep the spot under you at the origin (see the note at the top).
@@ -243,11 +329,12 @@ function recenter() {
 }
 
 // ---------- grabbing the Earth ----------
-// Squeeze a grip (or drag the mouse from high up) to grab the spot you point at, then
-// move: the Earth turns so that spot stays under your pointer. It works by moving which
-// spot is at the origin under you, so you stay upright; from orbit it spins the globe,
-// near the ground it pans the land. Let go mid-swing and it keeps spinning, slowing down.
-let grab = null; // { point: grabbed spot (Earth-centred), getRay, axis, speed }
+// Squeeze a grip (or drag the mouse on the globe) to grab the Earth where you point, then
+// move: each frame it turns by exactly the arc your pointer moved across it, so the
+// surface follows your hand (and nothing moves while your hand is still). It works by
+// moving which spot is at the origin under you, so north stays up; on the globe it spins
+// the model, in the world it pans the land. Let go mid-swing and it keeps spinning.
+let grab = null; // { prev: last pointer hit (world), getRay, axis, speed }
 let spin = null; // { axis, speed } after letting go: radians per second about an Earth axis
 const _gray = new THREE.Ray();
 const _ghit = new THREE.Vector3();
@@ -290,13 +377,25 @@ const _zu = new THREE.Vector3();
 const _zhit = new THREE.Vector3();
 const IDENTITY = new THREE.Quaternion();
 function setHeight(agl) {
+  if (state.mode === 'globe') {
+    // a height on the globe is a scale; zooming out of the world past 30 km (below) and
+    // into the globe past ARRIVE (here) switch modes
+    state.scale = THREE.MathUtils.clamp(VIEW / agl, SCALE_MIN, SCALE_STEP_IN);
+    if (state.scale >= SCALE_STEP_IN) stepIn();
+    return;
+  }
   rig.position.y = state.groundY + THREE.MathUtils.clamp(agl, MIN_AGL, MAX_AGL);
+  if (agl > 30_000) backToGlobe(VIEW / agl);
+}
+function currentHeight() {
+  return state.mode === 'globe' ? VIEW / state.scale : Math.max(rig.position.y - state.groundY, 1);
 }
 function zoomToward(factor, getRay) {
-  if (!tiles) return;
+  if (!tiles || state.stepping) return;
   state.flight = null;
+  state.globeFlight = null;
   spin = null;
-  const agl = Math.max(rig.position.y - state.groundY, 1);
+  const agl = currentHeight();
   const next = THREE.MathUtils.clamp(agl * factor, MIN_AGL, MAX_AGL);
   if (next < agl && getRay) {
     const [o, d] = getRay();
@@ -322,15 +421,15 @@ function grabStart(getRay) {
   grips.add(getRay);
   if (grips.size === 2) {
     grab = null;
-    pinch = { d0: Math.max(handsApart(), 0.05), agl0: Math.max(rig.position.y - state.groundY, 1) };
+    pinch = { d0: Math.max(handsApart(), 0.05), agl0: currentHeight() };
     return;
   }
-  const [o, d] = getRay();
-  const point = rayToGround(o, d, new THREE.Vector3());
-  if (!point) return; // pointing at the sky
-  grab = { point, getRay, axis: new THREE.Vector3(), speed: 0 };
+  const prev = pointerHit(getRay, new THREE.Vector3());
+  if (!prev) return; // pointing at the sky
+  grab = { prev, getRay, axis: new THREE.Vector3(), speed: 0 };
   spin = null;
   state.flight = null;
+  state.globeFlight = null;
 }
 
 function grabEnd(getRay) {
@@ -354,6 +453,17 @@ function grabEnd(getRay) {
 const _gu = new THREE.Vector3();
 const _gv = new THREE.Vector3();
 const _gaxis = new THREE.Vector3();
+const _gc = new THREE.Vector3();
+const _gnow = new THREE.Vector3();
+
+// Where the pointer meets the Earth, in world space (null when it points past it). The
+// Earth's sphere doesn't move in the world when it turns, so this depends only on the ray.
+function pointerHit(getRay, target) {
+  const [o, d] = getRay();
+  if (!rayToGround(o, d, target)) return null;
+  return target.applyMatrix4(tiles.group.matrixWorld);
+}
+
 function updateGrab(dt) {
   if (pinch && grips.size === 2) {
     state.flight = null;
@@ -361,21 +471,27 @@ function updateGrab(dt) {
     return;
   }
   if (grab) {
-    const [o, d] = grab.getRay();
-    // past the edge of the planet: hold still until the pointer comes back
-    if (!rayToGround(o, d, _ghit)) {
-      grab.speed = 0;
+    if (!pointerHit(grab.getRay, _gnow)) {
+      grab.speed = 0; // past the edge of the planet: wait for the pointer to come back
       return;
     }
-    // the rotation carrying the spot now under the pointer to the grabbed one
-    _gu.copy(_ghit).normalize();
-    _gv.copy(grab.point).normalize();
+    // the arc the pointer moved over the sphere, about the Earth's centre (world space)
+    _gc.set(0, 0, 0).applyMatrix4(tiles.group.matrixWorld);
+    _gu.copy(grab.prev).sub(_gc).normalize();
+    _gv.copy(_gnow).sub(_gc).normalize();
+    grab.prev.copy(_gnow);
     const angle = _gu.angleTo(_gv);
-    if (angle < 1e-9) return;
-    _gq.setFromUnitVectors(_gu, _gv);
-    rotateCenter(_gq);
-    // smoothed angular velocity, for the fling
+    if (angle < 1e-9) {
+      grab.speed *= Math.exp(-dt * 10);
+      return;
+    }
+    // the Earth turns u → v under you, i.e. the spot under you turns the other way:
+    // that axis in Earth-centred terms, by -angle
     _gaxis.crossVectors(_gu, _gv).normalize();
+    _inv.copy(tiles.group.matrixWorld).invert();
+    _gaxis.transformDirection(_inv).negate();
+    rotateCenter(_gq.setFromAxisAngle(_gaxis, angle));
+    // smoothed angular velocity, for the fling
     const k = Math.min(1, dt * 12);
     grab.axis.lerp(_gaxis, k).normalize();
     grab.speed += (angle / Math.max(dt, 1e-3) - grab.speed) * k;
@@ -393,6 +509,7 @@ ray.firstHitOnly = true;
 const DOWN = new THREE.Vector3(0, -1, 0);
 let groundTick = 0;
 function probeGround() {
+  if (state.mode === 'globe') return probeGlobeGround();
   const agl = rig.position.y - state.groundY;
   if (agl > 40_000 || ++groundTick % 8) return;
   ray.set(_p.set(rig.position.x, rig.position.y + 2000, rig.position.z), DOWN);
@@ -403,11 +520,23 @@ function probeGround() {
   if (hit && hit.point.y < rig.position.y + 1.5) state.groundY = hit.point.y;
 }
 
+// On the globe: the ground height under the table point, eased so the model doesn't jump.
+function probeGlobeGround() {
+  if (++groundTick % 8) return;
+  const s = state.scale;
+  ray.set(_p.set(_table.x, _table.y + s * 9000, _table.z), DOWN);
+  ray.far = s * 20000 + 1;
+  const hit = ray.intersectObjects([tiles.group, helsinki.tiles.group], true).sort((a, b) => a.distance - b.distance)[0];
+  if (!hit) return;
+  const ground = (hit.point.y - (_table.y - s * state.groundY)) / s;
+  state.groundY += (ground - state.groundY) * 0.5;
+}
+
 // ---------- input ----------
 const keys = new Set();
 addEventListener('keydown', (e) => keys.add(e.code));
 addEventListener('keyup', (e) => keys.delete(e.code));
-// Mouse: from high up, drag spins the globe (grab); near the ground, drag looks around.
+// Mouse: on the globe, drag turns it (grab); in the world, drag looks around.
 let drag = null;
 const mouseNdc = new THREE.Vector2();
 const mouseRay = new THREE.Raycaster();
@@ -417,7 +546,7 @@ const mouseGetRay = () => {
 };
 const setNdc = (e) => mouseNdc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
 canvas.addEventListener('pointerdown', (e) => {
-  drag = { x: e.clientX, y: e.clientY, grab: rig.position.y - state.groundY > 20_000 };
+  drag = { x: e.clientX, y: e.clientY, grab: state.mode === 'globe' };
   canvas.setPointerCapture(e.pointerId);
   setNdc(e);
   if (drag.grab) grabStart(mouseGetRay);
@@ -490,9 +619,11 @@ function move(dt) {
       }
     }
     // Hold a trigger to fly where that controller points (down to descend, up to climb),
-    // faster the harder you pull.
+    // faster the harder you pull. On the globe, it zooms toward where you point.
     const fp = vrUi.flyPointer();
-    if (fp) {
+    if (fp && state.mode === 'globe') {
+      zoomToward(Math.exp(-1.3 * fp.value * dt), fp.getRay);
+    } else if (fp) {
       state.flight = null;
       const agl = Math.max(rig.position.y - state.groundY, 1);
       const speed = THREE.MathUtils.clamp(agl * 0.8, 4, 4_000_000) * fp.value;
@@ -512,6 +643,26 @@ function move(dt) {
   if (!mx && !mz && !my) return;
   state.flight = null;
 
+  if (state.mode === 'globe') {
+    // sticks / keys roll the globe under the table point, at a pace that suits the zoom
+    state.globeFlight = null;
+    const rate = (currentHeight() * 0.9) / 6_371_000; // radians per second
+    camera.getWorldDirection(_fwd);
+    _fwd.y = 0;
+    _fwd.normalize();
+    _right.crossVectors(_fwd, UP);
+    if (my) zoomToward(Math.exp(my * 1.2 * dt)); // up zooms out, down zooms in
+    // travel the way you push: turning the spot under you toward a direction d means
+    // rotating about (up × d)
+    _gaxis.crossVectors(UP, _fwd).multiplyScalar(-mz).add(_gu.crossVectors(UP, _right).multiplyScalar(mx));
+    const amount = Math.min(1, _gaxis.length());
+    if (amount < 1e-4) return;
+    _inv.copy(tiles.group.matrixWorld).invert();
+    _gaxis.transformDirection(_inv);
+    rotateCenter(_gq.setFromAxisAngle(_gaxis, rate * dt * amount));
+    return;
+  }
+
   // Speed grows with height: walking pace near the street, thousands of km/s in orbit.
   const agl = Math.max(rig.position.y - state.groundY, 1);
   const speed = THREE.MathUtils.clamp(agl * 0.8, 4, 4_000_000);
@@ -529,10 +680,12 @@ const sky = new THREE.Color(0x8db4e2);
 const space = new THREE.Color(0x000000);
 let lastNear = 0, lastFar = 0;
 function updateView(agl) {
-  // The far plane follows the horizon; the near one stays close (log depth, above).
+  // The far plane follows the horizon (in the model's scale on the globe); the near one
+  // stays close (log depth, above).
   const near = 0.05;
   const horizon = Math.sqrt(2 * 6_371_000 * agl) + agl;
-  const far = 2 ** Math.ceil(Math.log2(Math.max(30_000, 2 * horizon)));
+  const worldScale = state.mode === 'globe' ? state.scale : 1;
+  const far = 2 ** Math.ceil(Math.log2(Math.max(state.mode === 'globe' ? 1000 : 30_000, 2 * horizon * worldScale)));
   if (near !== lastNear || far !== lastFar) {
     camera.near = lastNear = near;
     camera.far = lastFar = far;
@@ -540,7 +693,8 @@ function updateView(agl) {
   }
 
   // Blue sky below 10 km, black space above 200 km, stars once the sky is dark.
-  const t = THREE.MathUtils.clamp((Math.log10(agl) - 4) / 1.3, 0, 1);
+  // (the globe floats in space)
+  const t = state.mode === 'globe' ? 1 : THREE.MathUtils.clamp((Math.log10(agl) - 4) / 1.3, 0, 1);
   scene.background.copy(sky).lerp(space, t);
   stars.visible = t > 0.3;
   stars.material.opacity = (t - 0.3) / 0.7;
@@ -579,7 +733,15 @@ renderer.setAnimationLoop(() => {
     vrUi.update();
   }
 
-  if (tiles) {
+  if (tiles && state.mode === 'globe') {
+    updateGrab(dt);
+    move(dt);
+    updateGlobeFlight(dt);
+    updateGlobe();
+    probeGround();
+    updateView(globeHeight());
+    updateTiles(globeHeight(), state.center.lat, state.center.lon);
+  } else if (tiles) {
     updateGrab(dt);
     move(dt);
     if (state.flight) {
@@ -596,6 +758,24 @@ renderer.setAnimationLoop(() => {
     if (Math.hypot(rig.position.x, rig.position.z) > Math.max(5000, agl * 0.2)) recenter();
 
     updateView(Math.max(agl + (renderer.xr.isPresenting ? 1.6 : EYE), 1));
+    _inv.copy(tiles.group.matrixWorld).invert();
+    _p.copy(rig.position).applyMatrix4(_inv);
+    tiles.ellipsoid.getPositionToCartographic(_p, _carto);
+    updateTiles(agl, _carto.lat, _carto.lon);
+  }
+  updateFade(dt);
+
+  renderer.render(scene, camera);
+
+  if (fpsClock >= 1) {
+    state.fps = Math.round(frames / fpsClock);
+    frames = 0;
+    fpsClock = 0;
+    updateReadout();
+  }
+});
+
+function updateTiles(agl, lat, lon) {
     camera.updateMatrixWorld(true);
     if (renderer.xr.isPresenting) {
       const xrCam = renderer.xr.getCamera();
@@ -610,27 +790,13 @@ renderer.setAnimationLoop(() => {
     }
     tiles.update();
     helsinki.update(tiles.group);
-    _inv.copy(tiles.group.matrixWorld).invert();
-    _p.copy(rig.position).applyMatrix4(_inv);
-    tiles.ellipsoid.getPositionToCartographic(_p, _carto);
-    buildings.update(tiles.group, _carto.lat, _carto.lon, agl);
-  }
-  updateFade(dt);
-
-  renderer.render(scene, camera);
-
-  if (fpsClock >= 1) {
-    state.fps = Math.round(frames / fpsClock);
-    frames = 0;
-    fpsClock = 0;
-    updateReadout();
-  }
-});
+    buildings.update(tiles.group, lat, lon, agl);
+}
 
 function updateReadout() {
   if (!tiles) return;
   const p = PLACES[state.place];
-  const agl = rig.position.y - state.groundY;
+  const agl = state.mode === 'globe' ? globeHeight() : rig.position.y - state.groundY;
   const s = tiles.stats || {};
   // Once you've grabbed or flown more than 200 km away, say where you are instead.
   const c = state.center;
@@ -638,14 +804,15 @@ function updateReadout() {
     Math.sin(c.lat) * Math.sin(p.lat * D2R) + Math.cos(c.lat) * Math.cos(p.lat * D2R) * Math.cos(c.lon - p.lon * D2R)));
   const coords = `${Math.abs(c.lat / D2R).toFixed(1)}°${c.lat >= 0 ? 'N' : 'S'}, ${Math.abs(c.lon / D2R).toFixed(1)}°${c.lon >= 0 ? 'E' : 'W'}`;
   const where = away > 200_000 ? `Over ${coords}` : agl > 50_000 ? `Above ${p.name}` : `${p.name}, ${p.spot}`;
+  const view = state.mode === 'globe' ? `Globe · view from ${formatHeight(agl)}` : `${formatHeight(agl)} up`;
   const kTris = Math.round(buildings.triangles / 1000);
-  const measures = `${formatHeight(agl)} up · ${state.fps} fps · ${s.visible ?? '?'} ground tiles, ${(s.downloading ?? 0) + (s.parsing ?? 0) + buildings.loading} loading · buildings ${kTris}k tris`;
+  const measures = `${view} · ${state.fps} fps · ${s.visible ?? '?'} ground tiles, ${(s.downloading ?? 0) + (s.parsing ?? 0) + buildings.loading} loading · buildings ${kTris}k tris`;
   statsEl.textContent = `${where}\n${measures}`;
 
 
   vrUi.setStatus([
     where,
-    `${formatHeight(agl)} up · ${state.fps} fps`,
+    `${view} · ${state.fps} fps`,
     `${s.visible ?? '?'} ground tiles · ${kTris}k building tris`,
     'Data: EOX · Mapzen · Overture/OSM · City of Helsinki',
   ]);
@@ -658,10 +825,7 @@ PLACES.forEach((p, i) => {
   b.className = 'btn';
   b.type = 'button';
   b.textContent = p.name;
-  b.addEventListener('click', () => {
-    if (i === state.place && !state.visited) fall();
-    else goToPlace(i);
-  });
+  b.addEventListener('click', () => goToPlace(i));
   placesEl.append(b);
 });
 function updatePlaceButtons() {
