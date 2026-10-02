@@ -127,6 +127,7 @@ async function buildCafe() {
     scene,
     mixers: [friend.mixer],
     fov: [55, 70, 84],
+    push: 0.4, // metres the camera eases forward as the hero scrolls away
     // From just inside the room, a slow walk up to your seat at her table.
     pose: drift([[1.1, 1.5, -1.7], [0, 1.02, 1.45]], [[0.35, 1.3, -0.45], [0, 1.1, 1.48]]),
     caption: ['Communication: a coffee chat', '/com'],
@@ -210,6 +211,7 @@ async function buildHall() {
     scene,
     mixers: [speaker.mixer],
     fov: [55, 70, 84],
+    push: 1.2,
     // From the middle of the stalls, a slow glide down the aisle toward the stage.
     pose: drift([[0.6, 1.9, 13], [0, 0.95, 0]], [[1.1, 1.45, 8.2], [0, 1.1, 0]]),
     caption: ['Communication: a talk on stage', '/com'],
@@ -315,6 +317,7 @@ async function buildMars() {
     scene,
     mixers: [dust],
     fov: [45, 55, 62],
+    push: 1.0,
     pose(t, pos, look) {
       const a = 0.8 + t * 0.75;
       const r = portrait ? 7.4 : 6.5, h = portrait ? 2.3 : 1.9;
@@ -373,7 +376,12 @@ blendScene.add(blendQuad);
 
 // ---------- Camera framing per screen shape ----------
 let portrait = false;
-const pos = new THREE.Vector3(), look = new THREE.Vector3();
+const pos = new THREE.Vector3(), look = new THREE.Vector3(), fwd = new THREE.Vector3();
+
+// 0 with the hero fully on screen, 1 once it has scrolled away; smoothed in the loop.
+let scrollTarget = 0, scrollK = 0;
+function readScroll() { scrollTarget = THREE.MathUtils.clamp(window.scrollY / Math.max(hero.offsetHeight, 1), 0, 1); }
+if (!reduceMotion) { window.addEventListener('scroll', readScroll, { passive: true }); readScroll(); }
 function resize() {
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (!w || !h) return;
@@ -398,6 +406,11 @@ function render(s, k, target = null) {
   if (camera.fov !== fov) camera.fov = fov;
   camera.updateProjectionMatrix();
   s.pose(Math.min(k, 1), pos, look);
+  // Scrolling the hero away dollies the camera a little further in (position and target together).
+  if (scrollK > 0) {
+    fwd.subVectors(look, pos).normalize().multiplyScalar(s.push * ease(scrollK));
+    pos.add(fwd); look.add(fwd);
+  }
   camera.position.copy(pos);
   camera.lookAt(look);
   renderer.toneMapping = s.scene.userData.toneMapping ?? THREE.NoToneMapping;
@@ -430,6 +443,7 @@ function draw(dt) {
   if (!s) return;
   t += dt;
   for (const m of s.mixers) m.update(dt);
+  scrollK += (scrollTarget - scrollK) * (1 - Math.exp(-dt * 6));
   // Poses run a little past the dwell so both cameras are still moving while they dissolve.
   const span = DWELL + FADE;
   if (fading > 0) {
