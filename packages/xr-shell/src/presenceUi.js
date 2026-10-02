@@ -22,6 +22,19 @@ function addStyle() {
   document.head.append(el);
 }
 
+/**
+ * These buttons can wrap the bar onto a second row on a phone. Publishes how far the
+ * bar's top sits above the viewport bottom as --bar-top, so the card stays above it.
+ */
+function trackBarTop(bar) {
+  if (!bar) return;
+  const root = document.documentElement;
+  const measure = () => root.style.setProperty('--bar-top', `${Math.ceil(innerHeight - bar.getBoundingClientRect().top)}px`);
+  new ResizeObserver(measure).observe(bar);
+  addEventListener('resize', measure);
+  measure();
+}
+
 /** What the people button and card say about the room right now. */
 export function presenceSummary(state) {
   const others = Math.max(0, state.online - 1);
@@ -78,6 +91,8 @@ export function mountPresenceControls(presence, container) {
   cancel.textContent = 'Cancel';
   form.append(input, save, shuffle, cancel);
   container.append(people, mic, note, form);
+
+  trackBarTop(container.closest('.bar') ?? container.parentElement);
 
   const toast = document.createElement('div');
   toast.className = 'presence-toast';
