@@ -2,6 +2,7 @@
 // built in a worker (buildingsWorker.js) and drawn one mesh per tile. Only below a few km:
 // from higher up the satellite imagery already shows the city.
 import * as THREE from 'three';
+import { HELSINKI_TILES, HELSINKI_TILE_HALF } from './helsinki.js';
 
 const Z = 14;
 const SHOW_BELOW = 4000; // metres above the ground
@@ -15,6 +16,8 @@ export function createBuildings(scene) {
 
   const material = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
   const worker = new Worker(new URL('./buildingsWorker.js', import.meta.url), { type: 'module' });
+  // Areas covered by a real photo mesh get no extruded blocks.
+  worker.postMessage({ exclude: HELSINKI_TILES, half: HELSINKI_TILE_HALF });
   const tiles = new Map(); // key → { mesh, state: 'loading' | 'ready' | 'empty', used }
   let pending = 0;
 

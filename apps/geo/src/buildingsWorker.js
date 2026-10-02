@@ -145,6 +145,7 @@ async function build(x, y) {
     const polys = classifyRings(f.loadGeometry());
     if (!polys.length) return;
     const outer0 = polys[0][0];
+    if (exclude.length && excluded(latOf(outer0[0].y / extent) * 180 / Math.PI, lonOf(outer0[0].x / extent) * 180 / Math.PI)) return;
     // Ground under the building: lowest of a few footprint corners, so slopes don't leave gaps.
     let base = Infinity;
     if (ground) {
@@ -215,7 +216,26 @@ async function build(x, y) {
   return { center, pos: new Float32Array(pos), col: new Float32Array(col) };
 }
 
-self.onmessage = async ({ data: { key, x, y } }) => {
+// Squares (centre lat/lon in degrees, half size in metres) where a photo mesh already
+// shows the real buildings.
+let exclude = [];
+let excludeHalf = 0;
+function excluded(latDeg, lonDeg) {
+  for (const [la, lo] of exclude) {
+    const dy = (latDeg - la) * 111_132;
+    const dx = (lonDeg - lo) * 111_320 * Math.cos(la * Math.PI / 180);
+    if (Math.abs(dx) <= excludeHalf && Math.abs(dy) <= excludeHalf) return true;
+  }
+  return false;
+}
+
+self.onmessage = async ({ data }) => {
+  if (data.exclude) {
+    exclude = data.exclude;
+    excludeHalf = data.half;
+    return;
+  }
+  const { key, x, y } = data;
   try {
     const r = await build(x, y);
     self.postMessage({ key, ...r }, [r.pos.buffer, r.col.buffer]);

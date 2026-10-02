@@ -3,6 +3,7 @@
 // ground. `heading` is the compass direction you face on arrival. `walk` links to a vrtor
 // subject where you can walk the place in detail.
 export const PLACES = [
+  { name: 'Helsinki', spot: 'Kalasatama, in real 3D', lat: 60.1845, lon: 24.9775, ground: 5, heading: 240 },
   { name: 'New York', spot: 'Midtown Manhattan', lat: 40.7580, lon: -73.9855, ground: 15, heading: 30 },
   { name: 'Paris', spot: 'the Eiffel Tower', lat: 48.8559, lon: 2.2984, ground: 35, heading: 310 },
   { name: 'Rio', spot: 'Sugarloaf and the bay', lat: -22.9519, lon: -43.2105, ground: 700, heading: 120 },

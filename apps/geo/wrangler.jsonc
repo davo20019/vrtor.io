@@ -13,5 +13,7 @@
   // Reached only through the vrtor Worker's GEO service binding (vrtor.io/geo).
   "workers_dev": false,
   "preview_urls": false,
+  // Open 3D data we host ourselves (see worker/index.js), served at /geo/data/<key>.
+  "r2_buckets": [{ "binding": "DATA", "bucket_name": "vrtor-geo-data" }],
   "observability": { "enabled": true }
 }

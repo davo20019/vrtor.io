@@ -4,6 +4,7 @@
 //   - terrain: Terrain Tiles on AWS (Mapzen Terrarium; SRTM, GMTED2010, ETOPO1 and others)
 //   - buildings: Overture Maps footprints and heights (ODbL, mostly OpenStreetMap),
 //     extruded in buildings.js
+//   - Helsinki's Kalasatama district: the city's real photo mesh (CC BY 4.0), helsinki.js
 //
 // Precision: the tiles are in Earth-centred coordinates (millions of metres), too big
 // for the GPU's 32-bit floats. ReorientationPlugin moves the tiles so the spot you are
@@ -15,12 +16,14 @@ import { TilesRenderer } from '3d-tiles-renderer';
 import { ReorientationPlugin, TerrariumMeshPlugin, XYZTilesOverlay } from '3d-tiles-renderer/plugins';
 import { PLACES } from './places.js';
 import { createBuildings } from './buildings.js';
+import { createHelsinki, HELSINKI_CREDIT } from './helsinki.js';
 
 const IMAGERY = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/{z}/{y}/{x}.jpg';
 const TERRAIN = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
 export const CREDITS =
   'Imagery: Sentinel-2 cloudless 2016 by EOX (Copernicus Sentinel data 2016), CC BY 4.0 · ' +
-  'Terrain: Mapzen Terrain Tiles on AWS · Buildings: Overture Maps Foundation, © OpenStreetMap contributors (ODbL)';
+  'Terrain: Mapzen Terrain Tiles on AWS · Buildings: Overture Maps Foundation, © OpenStreetMap contributors (ODbL) · ' +
+  HELSINKI_CREDIT;
 
 const D2R = Math.PI / 180;
 const ORBIT = 6_000_000; // metres above the ground: the whole Earth fills the view
@@ -35,7 +38,7 @@ const statsEl = $('.stats');
 
 // ---------- renderer, scene, rig ----------
 const canvas = $('#scene');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, stencil: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.xr.enabled = true;
@@ -137,6 +140,7 @@ const state = {
 
 let tiles = null;
 let reorient = null;
+let helsinki = null;
 const buildings = createBuildings(scene);
 
 // ---------- tiles ----------
@@ -155,6 +159,21 @@ function start() {
   tiles.setCamera(camera);
   tiles.setResolutionFromRenderer(camera, renderer);
   scene.add(tiles.group);
+
+  helsinki = createHelsinki(camera, renderer, params.get('hel') || undefined);
+  scene.add(helsinki.tiles.group);
+  if (params.has('debug')) window.vrtorGeo = { THREE, tiles, helsinki, rig, state, camera };
+
+  // Terrain doesn't draw where a photo mesh already did (helsinki.js marks the stencil).
+  tiles.addEventListener('load-model', ({ scene }) => {
+    scene.traverse((o) => {
+      if (!o.isMesh) return;
+      o.material.stencilWrite = true;
+      o.material.stencilRef = 1;
+      o.material.stencilFunc = THREE.NotEqualStencilFunc;
+      o.material.stencilZPass = THREE.KeepStencilOp;
+    });
+  });
 
   tiles.addEventListener('load-root-tileset', () => {
     loading.hidden = true;
@@ -256,8 +275,10 @@ function probeGround() {
   if (agl > 40_000 || ++groundTick % 8) return;
   ray.set(_p.set(rig.position.x, rig.position.y + 2000, rig.position.z), DOWN);
   ray.far = agl + 6000;
-  const hit = ray.intersectObject(tiles.group, true).sort((a, b) => a.distance - b.distance)[0];
-  if (hit) state.groundY = hit.point.y;
+  const hit = ray.intersectObjects([tiles.group, helsinki.tiles.group], true).sort((a, b) => a.distance - b.distance)[0];
+  // A surface well above your feet is a wall you walked into (the photo mesh has the
+  // buildings in it): keep the ground you had instead of popping onto the roof.
+  if (hit && hit.point.y < rig.position.y + 1.5) state.groundY = hit.point.y;
 }
 
 // ---------- input ----------
@@ -427,10 +448,13 @@ renderer.setAnimationLoop(() => {
       const w = layer?.framebufferWidth ?? 3664;
       const h = layer?.framebufferHeight ?? 1920;
       tiles.setResolution(xrCam, w / 2, h);
+      helsinki.tiles.setResolution(xrCam, w / 2, h);
     } else {
       tiles.setResolutionFromRenderer(camera, renderer);
+      helsinki.tiles.setResolutionFromRenderer(camera, renderer);
     }
     tiles.update();
+    helsinki.update(tiles.group);
     _inv.copy(tiles.group.matrixWorld).invert();
     _p.copy(rig.position).applyMatrix4(_inv);
     tiles.ellipsoid.getPositionToCartographic(_p, _carto);
@@ -505,18 +529,18 @@ renderer.xr.addEventListener('sessionstart', () => {
   camera.position.set(0, 0, 0);
   camera.rotation.set(0, 0, 0);
   hud.mesh.visible = true;
-  if (tiles) {
-    tiles.deleteCamera(camera);
-    tiles.setCamera(renderer.xr.getCamera());
+  for (const t of tiles ? [tiles, helsinki.tiles] : []) {
+    t.deleteCamera(camera);
+    t.setCamera(renderer.xr.getCamera());
   }
 });
 renderer.xr.addEventListener('sessionend', () => {
   hud.mesh.visible = false;
   camera.position.set(0, EYE, 0);
   camera.rotation.set(0, 0, 0);
-  if (tiles) {
-    tiles.deleteCamera(renderer.xr.getCamera());
-    tiles.setCamera(camera);
+  for (const t of tiles ? [tiles, helsinki.tiles] : []) {
+    t.deleteCamera(renderer.xr.getCamera());
+    t.setCamera(camera);
   }
 });
 
