@@ -34,8 +34,23 @@ export const FOVEATION = 0.25;
 const DEFAULT_FRAME_RATE = 72;
 const ACCENT = '#ffb020';
 
+/** Headset browsers, whose user agents can also say "Mobile" or "Android". */
+const HEADSET_UA = /OculusBrowser|Quest|Pico|Wolvic|Android XR|\bVR\b/i;
+
+/**
+ * Phones and tablets: Chrome on Android reports immersive-vr (Cardboard-style
+ * split screen), which isn't the experience these pages are built for.
+ */
+function isHandheld() {
+  const ua = navigator.userAgent || '';
+  if (HEADSET_UA.test(ua)) return false;
+  if (navigator.userAgentData?.mobile) return true;
+  return /Android|iPhone|iPad|iPod|Mobi/i.test(ua);
+}
+
 export async function xrSupported() {
   try {
+    if (isHandheld()) return false;
     return !!navigator.xr && (await navigator.xr.isSessionSupported('immersive-vr'));
   } catch {
     return false;
