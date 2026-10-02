@@ -1,7 +1,8 @@
 # vrtor.io
 
-VR learning rooms that open in a headset's web browser. Each room has a short
-address (`vrtor.io/ac`) because typing with a VR controller is painful.
+Free 3D learning experiences, one per subject, that open in a headset's web browser.
+Each subject has a short address (`vrtor.io/mpc`) because typing with a VR controller
+is painful. In Space, Taj Mahal and Machu Picchu, visitors can also see and talk to each other (see Visitors below).
 
 ## Stack
 
@@ -10,6 +11,8 @@ One repo, one Cloudflare Worker per app (npm workspaces):
 ```
 apps/home/       vrtor.io itself: the catalog site + the router Worker ("vrtor")
 apps/spc/        Space: Perseverance on Mars (Babylon.js WebXR, Vite), Worker "vrtor-spc"
+apps/taj/        Taj Mahal, Worker "vrtor-taj"
+apps/mpc/        Machu Picchu (with visitors), Worker "vrtor-mpc"
 packages/xr-shell/  shared WebXR pieces for every subject (Quest-tuned session setup,
                  teleport, comfort fade, frame-rate governor, floating info card)
 ```
@@ -19,7 +22,8 @@ packages/xr-shell/  shared WebXR pieces for every subject (Quest-tuned session s
   - `src/index.js` runs first for every request:
     - `/<code>/*` for subjects built here (`service` in `src/subjects.js`) → forwarded to that subject's Worker through a **service binding** (same origin: one WebXR permission prompt, shared storage and, later, one sign-in)
     - other subject links → 302 to where that app lives (Communication stays on the Acento site)
-    - `POST /api/waitlist` → `WAITLIST` KV
+    - `POST /api/waitlist` → `WAITLIST` KV and the Brevo list "vrtor waitlist" (#23, folder vrtor), subjects in the `VRTOR_SUBJECTS` attribute. Needs the `BREVO_API_KEY` secret; without it, signups only go to KV.
+      New signups get a welcome email (`src/welcome-email.js`) from `hello@vrtor.io` (`WELCOME_FROM`; empty turns it off). Mail to any @vrtor.io address is forwarded to David's Gmail by Cloudflare Email Routing (catch-all rule).
 - **apps/spc**: Vite build with `base: '/spc/'` into `dist/spc/`, served by its own Worker. Not public on its own (`workers_dev: false`); only reachable through vrtor.io/spc. It loads the shared 3D files from `/assets/space/` on the same origin and self-hosts the Draco decoder.
 
 ```bash
@@ -54,12 +58,13 @@ Anyone with a subject open can choose **Join others** to appear to everyone else
 - Debug: `?xrdebug` exposes `window.vrtorPresence`; `vrtorPresence.stats()` shows each voice connection and its audio level.
 - No TURN relay yet, so a few network pairs (strict NATs) won't hear each other; Cloudflare Realtime TURN fixes that if it shows up in testing.
 
-Adding it to a subject (see `apps/mpc/src/main.js`):
+Adding it to a subject (see `apps/taj/src/main.js` for an orbit-camera subject, `apps/mpc/src/main.js` for one with its own walker):
 
 ```js
 const presence = createPresence(scene, { subject: 'xyz', getPose, onChange });
 const updateBar = mountPresenceControls(presence, document.querySelector('.presence-controls'));
 // getPose() → { area, head, forward, left?, right? } or null; in the headset, show presenceCard(presence, action, back)
+// xrPose(rig) covers the headset; orbitPose(camera, groundMeshes) stands a flat-screen orbit viewer on the ground below the camera
 ```
 
 ## Adding a subject

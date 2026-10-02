@@ -1,5 +1,14 @@
 import { ArcRotateCamera, Engine, Vector3 } from "@babylonjs/core";
-import { createCard, createXr, xrSupported } from "@vrtor/xr-shell";
+import {
+  createCard,
+  createPresence,
+  createXr,
+  mountPresenceControls,
+  orbitPose,
+  presenceCard,
+  xrPose,
+  xrSupported,
+} from "@vrtor/xr-shell";
 import { buildWorld, VIEWS, V } from "./world.js";
 import { LESSONS } from "./lesson.js";
 import "./style.css";
@@ -25,7 +34,7 @@ const engine = new Engine(
   { xrCompatible: true, stencil: true },
   true,
 );
-let world, scene, camera, panel, rig, flight;
+let world, scene, camera, panel, rig, flight, presence;
 let lesson = -1,
   phase = "observe",
   feedback = "",
@@ -33,7 +42,8 @@ let lesson = -1,
   answered = new Set(),
   cardOpen = true,
   view = 0,
-  study = false;
+  study = false,
+  people = false;
 const inXr = () => !!rig?.inXr();
 const action = (label, onClick, primary = false) => ({
   label,
@@ -41,8 +51,13 @@ const action = (label, onClick, primary = false) => ({
   primary,
 });
 const controls =
-  "Push the stick forward to teleport; left or right to turn. Point and pull the trigger to choose. A or X reopens the lesson.";
+  "Push the stick forward to teleport; left or right to turn. Point and pull the trigger to choose. A or X reopens the lesson; B or Y joins other visitors, then turns your mic on and off.";
 function content() {
+  if (people && presence)
+    return presenceCard(presence, action, () => {
+      people = false;
+      render();
+    });
   if (lesson < 0)
     return {
       kicker: "World wonders · 01",
@@ -54,6 +69,7 @@ function content() {
       actions: [
         action("Explore", close),
         action("Start lesson", () => go(0), true),
+        ...peopleAction(),
       ],
     };
   if (lesson >= LESSONS.length)
@@ -111,6 +127,31 @@ function content() {
     ],
   };
 }
+// In the headset the bar isn't visible, so visitors are a page of the card.
+function peopleAction() {
+  if (!inXr() || !presence || presence.state.status !== "online") return [];
+  const s = presence.state;
+  const open = () => {
+    people = true;
+    render();
+  };
+  // One step to join from the welcome card; B or Y does the same anywhere (presence.attachXr).
+  if (!s.joined)
+    return [
+      action(s.online > 1 ? `Join ${s.online - 1} here` : "Join others", () => {
+        presence.join();
+        open();
+      }),
+    ];
+  return [action(`People · ${s.here}`, open)];
+}
+function poseNow() {
+  if (!world) return null;
+  // Terrace and paths first (they're higher), then the garden court, so orbiting anywhere places you.
+  return inXr()
+    ? xrPose(rig)
+    : orbitPose(camera, [...world.floors, world.ground]);
+}
 function answer(choice) {
   const l = LESSONS[lesson];
   const first = !answered.has(lesson);
@@ -152,6 +193,7 @@ function restart() {
 }
 function close() {
   cardOpen = false;
+  people = false;
   render();
 }
 function toggleStudy() {
@@ -241,6 +283,21 @@ async function start() {
   camera.panningSensibility = 0;
   camera.attachControl($("#scene"), true);
   panel = createCard(scene, { name: "taj-lesson", height: 0.68 });
+  let refreshBar = () => {};
+  presence = createPresence(scene, {
+    subject: "taj",
+    getPose: poseNow,
+    onChange: (state) => {
+      refreshBar(state);
+      // Refresh the open headset card in place (render() would also move it to where you look).
+      if (inXr() && cardOpen && (people || lesson < 0))
+        panel.setContent(content());
+    },
+  });
+  refreshBar = mountPresenceControls(presence, $(".presence-controls"));
+  refreshBar(presence.state);
+  if (new URLSearchParams(location.search).has("xrdebug"))
+    window.vrtorPresence = presence;
   // Headset setup is optional: the same lesson remains usable if WebXR initialization fails.
   try {
     if (await xrSupported())
@@ -268,6 +325,7 @@ async function start() {
       if (lesson >= 0 && lesson < LESSONS.length) travel(view).then(render);
       else render();
     });
+    presence.attachXr(rig.xr);
     rig.xr.input.onControllerAddedObservable.add((source) =>
       source.onMotionControllerInitObservable.add((mc) => {
         for (const id of ["a-button", "x-button"])

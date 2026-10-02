@@ -4,7 +4,7 @@
 // Flat screens: orbit camera and an HTML card. Headset: teleport, a floating
 // card, and the tour moves you to each part.
 import { ArcRotateCamera, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
-import { createCard, createXr, xrSupported } from '@vrtor/xr-shell';
+import { createCard, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { createMarsScene, buildMars, freezeShadows } from './mars.js';
 import { loadRover } from './rover.js';
 import { PARTS, WELCOME } from './parts.js';
@@ -54,12 +54,22 @@ let rover = null;
 /** -1: welcome; 0..n-1: a part; n: the end of the tour. */
 let index = -1;
 let cardOpen = true;
+/** The headset card is showing the visitors page. */
+let people = false;
+let presence = null;
+let ground = null;
 
 const inXr = () => !!rig?.inXr();
-const XR_HOWTO = 'Point and pull the trigger to choose. Push the thumbstick forward to teleport, left or right to turn. A or X brings this card back.';
+const XR_HOWTO = 'Point and pull the trigger to choose. Push the thumbstick forward to teleport, left or right to turn. A or X brings this card back; B or Y joins other visitors, then turns your mic on and off.';
 
 function content(i) {
   const n = rover.stops.length;
+  if (people && presence) {
+    return presenceCard(presence, (label, onClick, primary = false) => ({ label, onClick, primary }), () => {
+      people = false;
+      render();
+    });
+  }
   if (i < 0) {
     // In a headset's browser, going into VR is the point: it's the main action.
     const actions = rig && !inXr()
@@ -70,6 +80,7 @@ function content(i) {
       : [
           { label: 'Explore', onClick: close },
           { label: 'Start the tour', primary: true, onClick: () => go(0, true) },
+          ...peopleAction(),
         ];
     return { ...WELCOME, fact: inXr() ? XR_HOWTO : WELCOME.fact, actions };
   }
@@ -93,11 +104,33 @@ function content(i) {
   return { kicker: `Part ${i + 1} of ${n}`, title: part.title, body: part.body, fact: part.fact, actions };
 }
 
+// In the headset the bar isn't visible, so visitors are a page of the card.
+function peopleAction() {
+  if (!inXr() || !presence || presence.state.status !== 'online') return [];
+  const s = presence.state;
+  const open = () => {
+    people = true;
+    render();
+  };
+  // One step to join from the welcome card; B or Y does the same anywhere (presence.attachXr).
+  if (!s.joined) {
+    const label = s.online > 1 ? `Join ${s.online - 1} here` : 'Join others';
+    return [{ label, onClick: () => { presence.join(); open(); } }];
+  }
+  return [{ label: `People · ${s.here}`, onClick: open }];
+}
+
+function poseNow() {
+  if (!rover) return null;
+  return inXr() ? xrPose(rig) : orbitPose(camera, [ground]);
+}
+
 /** Shows stop `i`; with `travel`, moves the viewer (or the orbit camera) to look at it. */
 async function go(i, travel = false) {
   wind.start();
   index = i;
   cardOpen = true;
+  people = false;
   const stop = rover.stops[i] ?? null;
   rover.select(stop);
   if (travel && stop) {
@@ -109,6 +142,7 @@ async function go(i, travel = false) {
 
 function close() {
   cardOpen = false;
+  people = false;
   rover.select(null);
   render();
 }
@@ -231,6 +265,21 @@ async function start() {
     onProgress: (p) => (ui.pct.textContent = `${Math.round(p * 100)}%`),
   });
   freezeShadows(env.shadows);
+  ground = env.ground;
+
+  let refreshBar = () => {};
+  presence = createPresence(scene, {
+    subject: 'spc',
+    getPose: poseNow,
+    onChange: (state) => {
+      refreshBar(state);
+      // Refresh the open headset card in place (render() would also move it).
+      if (inXr() && cardOpen && (people || index < 0)) card.setContent(content(index));
+    },
+  });
+  refreshBar = mountPresenceControls(presence, $('.presence-controls'));
+  refreshBar(presence.state);
+  if (XR_DEBUG) window.vrtorPresence = presence;
 
   if (await xrSupported()) {
     rig = await createXr(scene, {
@@ -256,6 +305,7 @@ async function start() {
       cardOpen = true;
       render();
     });
+    presence.attachXr(rig.xr);
     // A or X: bring the card back in front of you.
     rig.xr.input.onControllerAddedObservable.add((source) => {
       source.onMotionControllerInitObservable.add((mc) => {

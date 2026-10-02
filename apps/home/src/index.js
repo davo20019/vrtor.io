@@ -3,12 +3,13 @@
 //   - the *.workers.dev preview is kept out of search results
 //   - subjects built in this repo (vrtor.io/spc/*): forwarded to their own Worker
 //   - short subject links (vrtor.io/com) that are easy to type in a headset browser
-//   - the waitlist API
+//   - the waitlist API (KV, plus the Brevo list when BREVO_API_KEY is set)
 //   - live presence for the subjects (vrtor.io/api/presence/<code>, a WebSocket; see presence.js)
 //   - everything else: the static site in /public (Workers Static Assets)
 
 import { SUBJECTS } from './subjects.js';
 import { connectPresence } from './presence.js';
+import { welcomeEmail } from './welcome-email.js';
 
 export { PresenceRoom } from './presence.js';
 
@@ -110,7 +111,45 @@ async function handleWaitlist(request, env) {
       country: request.cf?.country ?? null,
     }),
   );
+  // KV already holds the signup, so a Brevo outage is logged rather than shown to the visitor.
+  await addToBrevo(env, email, [...subjects]).catch((err) => console.error('brevo', err.message));
+  // Welcome only on the first signup, not when someone adds another subject.
+  if (!existing) await sendWelcome(env, email, subject).catch((err) => console.error('brevo welcome', err.message));
   return json({ ok: true });
+}
+
+// Adds (or updates) the contact on the vrtor waitlist list in Brevo, with the subjects asked about.
+async function addToBrevo(env, email, subjects) {
+  if (!env.BREVO_API_KEY) return;
+  const res = await fetch('https://api.brevo.com/v3/contacts', {
+    method: 'POST',
+    headers: { 'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({
+      email,
+      listIds: [Number(env.BREVO_LIST_ID)],
+      attributes: { VRTOR_SUBJECTS: subjects.join(', ') },
+      updateEnabled: true,
+    }),
+  });
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+}
+
+async function sendWelcome(env, email, subject) {
+  if (!env.BREVO_API_KEY || !env.WELCOME_FROM) return;
+  const { subject: title, html, text } = welcomeEmail(subject);
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({
+      sender: { name: 'vrtor', email: env.WELCOME_FROM },
+      to: [{ email }],
+      subject: title,
+      htmlContent: html,
+      textContent: text,
+      tags: ['vrtor-welcome'],
+    }),
+  });
+  if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
 }
 
 function json(data, status = 200) {

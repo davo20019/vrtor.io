@@ -263,6 +263,7 @@ export async function buildWorld(engine, onProgress) {
   return {
     scene,
     floors,
+    ground,
     monument,
     daylight,
     study(show) {
