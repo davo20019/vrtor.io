@@ -17,6 +17,7 @@ import { ReorientationPlugin, TerrariumMeshPlugin, XYZTilesOverlay } from '3d-ti
 import { PLACES } from './places.js';
 import { createBuildings } from './buildings.js';
 import { createHelsinki, HELSINKI_CREDIT } from './helsinki.js';
+import { createVrUi } from './vrUi.js';
 
 const IMAGERY = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/{z}/{y}/{x}.jpg';
 const TERRAIN = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
@@ -38,7 +39,9 @@ const statsEl = $('.stats');
 
 // ---------- renderer, scene, rig ----------
 const canvas = $('#scene');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, stencil: true });
+// Logarithmic depth: precise from your controllers (5 cm away) out to the far side of the
+// planet, so the near plane never has to grow with height and cut off hands and menus.
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, stencil: true, logarithmicDepthBuffer: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.xr.enabled = true;
@@ -86,45 +89,16 @@ fader.renderOrder = 1000;
 fader.visible = false;
 camera.add(fader);
 
-// Headset panel, low in view: where you are, the data credits (the licenses ask for
-// them) and the measurements this spike is for.
-const hud = (() => {
-  const c = document.createElement('canvas');
-  c.width = 1024;
-  c.height = 380;
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.64, 0.2375),
-    new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false }),
-  );
-  mesh.position.set(0, -0.42, -1);
-  mesh.rotation.x = -0.4;
-  mesh.renderOrder = 999;
-  mesh.visible = false;
-  camera.add(mesh);
-  let last = '';
-  return {
-    mesh,
-    draw(lines) {
-      const key = lines.join('\n');
-      if (key === last) return;
-      last = key;
-      const g = c.getContext('2d');
-      g.clearRect(0, 0, c.width, c.height);
-      g.fillStyle = 'rgba(12,13,18,0.82)';
-      g.beginPath();
-      g.roundRect(0, 0, c.width, c.height, 36);
-      g.fill();
-      lines.forEach((line, i) => {
-        g.fillStyle = i === 0 ? '#ffb020' : i === lines.length - 1 ? '#ffffff' : '#c9c4ba';
-        g.font = i === 0 ? '600 46px system-ui, sans-serif' : i === lines.length - 1 ? '22px system-ui, sans-serif' : '32px system-ui, sans-serif';
-        g.fillText(line, 36, 70 + i * 54, c.width - 72);
-      });
-      tex.needsUpdate = true;
-    },
-  };
-})();
+// Headset interface: places menu, controller lasers, wrist display (vrUi.js).
+const vrUi = createVrUi({
+  renderer,
+  rig,
+  camera,
+  places: PLACES,
+  credits: CREDITS,
+  onPick: (i) => (i === state.place && !state.visited ? fall() : goToPlace(i)),
+  onOrbit: () => backToOrbit(),
+});
 
 // ---------- state ----------
 const state = {
@@ -136,6 +110,7 @@ const state = {
   fadeTarget: 0,
   fadeDone: null,
   fps: 0,
+  menuIn: 0, // frames until the welcome menu opens (the headset pose needs a moment)
 };
 
 let tiles = null;
@@ -162,7 +137,7 @@ function start() {
 
   helsinki = createHelsinki(camera, renderer, params.get('hel') || undefined);
   scene.add(helsinki.tiles.group);
-  if (params.has('debug')) window.vrtorGeo = { THREE, tiles, helsinki, rig, state, camera };
+  if (params.has('debug')) window.vrtorGeo = { THREE, tiles, helsinki, rig, state, camera, vrUi };
 
   // Terrain doesn't draw where a photo mesh already did (helsinki.js marks the stencil).
   tiles.addEventListener('load-model', ({ scene }) => {
@@ -200,6 +175,7 @@ function placeAt(i, height) {
   rig.rotation.set(0, Math.PI - p.heading * D2R, 0);
   if (!renderer.xr.isPresenting) camera.rotation.x = pitchFor(height);
   updatePlaceButtons();
+  vrUi.setCurrent(i);
 }
 
 // On a flat screen, look down at the planet from orbit and level out near the ground.
@@ -243,12 +219,6 @@ function fall() {
 function backToOrbit() {
   if (!tiles) return;
   flyTo(ORBIT, 10);
-}
-
-// The A (or X) button: fall into the picked place, or once there, go to the next one.
-function primaryAction() {
-  if (state.visited) goToPlace(state.place + 1);
-  else fall();
 }
 
 // Keep the spot under you at the origin (see the note at the top).
@@ -337,17 +307,27 @@ function move(dt) {
       const [, , sx = 0, sy = 0] = gp.axes;
       if (source.handedness === 'left') {
         mx += sx; mz += sy;
-        if (edge(source, 4)) goToPlace(state.place - 1); // X
-        if (edge(source, 5)) backToOrbit(); // Y
+        const x = edge(source, 4), y = edge(source, 5);
+        if (x || y) vrUi.toggleMenu(); // X, Y
       } else {
         my -= Math.abs(sy) > 0.2 ? sy : 0;
         if (Math.abs(sx) > 0.7) {
           if (!turnLatch) snapTurn(-Math.sign(sx) * Math.PI / 6);
           turnLatch = true;
         } else if (Math.abs(sx) < 0.3) turnLatch = false;
-        if (edge(source, 4)) primaryAction(); // A
-        if (edge(source, 5)) backToOrbit(); // B
+        if (edge(source, 4)) vrUi.toggleMenu(); // A
+        if (edge(source, 5)) { vrUi.closeMenu(); backToOrbit(); } // B
       }
+    }
+    // Hold a trigger to fly where that controller points (down to descend, up to climb),
+    // faster the harder you pull.
+    const fp = vrUi.flyPointer();
+    if (fp) {
+      state.flight = null;
+      const agl = Math.max(rig.position.y - state.groundY, 1);
+      const speed = THREE.MathUtils.clamp(agl * 0.8, 4, 4_000_000) * fp.value;
+      fp.ray.getWorldDirection(_fwd).negate(); // a controller points down its -Z
+      rig.position.addScaledVector(_fwd, speed * dt);
     }
   } else {
     if (keys.has('KeyW') || keys.has('ArrowUp')) mz -= 1;
@@ -379,9 +359,8 @@ const sky = new THREE.Color(0x8db4e2);
 const space = new THREE.Color(0x000000);
 let lastNear = 0, lastFar = 0;
 function updateView(agl) {
-  // Clip planes that fit the height: a fixed pair either z-fights in orbit or
-  // clips the ground at street level.
-  const near = 2 ** Math.round(Math.log2(THREE.MathUtils.clamp(agl * 0.002, 0.05, 2000)));
+  // The far plane follows the horizon; the near one stays close (log depth, above).
+  const near = 0.05;
   const horizon = Math.sqrt(2 * 6_371_000 * agl) + agl;
   const far = 2 ** Math.ceil(Math.log2(Math.max(30_000, 2 * horizon)));
   if (near !== lastNear || far !== lastFar) {
@@ -424,6 +403,11 @@ renderer.setAnimationLoop(() => {
   const dt = Math.min(clock.getDelta(), 0.1);
   frames++;
   fpsClock += dt;
+
+  if (renderer.xr.isPresenting) {
+    if (state.menuIn > 0 && --state.menuIn === 0) vrUi.openMenu();
+    vrUi.update();
+  }
 
   if (tiles) {
     move(dt);
@@ -483,8 +467,12 @@ function updateReadout() {
   statsEl.textContent = `${where}\n${measures}`;
 
 
-  const action = state.visited ? `A: next place (${PLACES[(state.place + 1) % PLACES.length].name})` : `A: fall into ${p.name}`;
-  hud.draw([where, measures, `${action} · B: back to orbit · X: previous`, 'Left stick: fly · Right stick: up, down, turn', CREDITS]);
+  vrUi.setStatus([
+    where,
+    `${formatHeight(agl)} up · ${state.fps} fps`,
+    `${s.visible ?? '?'} ground tiles · ${kTris}k building tris`,
+    'Data: EOX · Mapzen · Overture/OSM · City of Helsinki',
+  ]);
 }
 
 // ---------- page ----------
@@ -528,14 +516,14 @@ renderer.xr.addEventListener('sessionstart', () => {
   session.updateTargetFrameRate?.(72).catch(() => {});
   camera.position.set(0, 0, 0);
   camera.rotation.set(0, 0, 0);
-  hud.mesh.visible = true;
+  state.menuIn = 20;
   for (const t of tiles ? [tiles, helsinki.tiles] : []) {
     t.deleteCamera(camera);
     t.setCamera(renderer.xr.getCamera());
   }
 });
 renderer.xr.addEventListener('sessionend', () => {
-  hud.mesh.visible = false;
+  vrUi.closeMenu();
   camera.position.set(0, EYE, 0);
   camera.rotation.set(0, 0, 0);
   for (const t of tiles ? [tiles, helsinki.tiles] : []) {

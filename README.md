@@ -51,11 +51,14 @@ npx wrangler kv key list --binding WAITLIST --remote -c apps/home/wrangler.jsonc
 
 ## Earth experiment (vrtor.io/geo)
 
-Unlisted spike: the whole planet in WebXR from open data only (no keys, no accounts). You
-start in orbit, fall into a place (A), fly around (left stick; right stick for height and snap
-turn), go back up (B). Speed grows with height. A panel shows fps, ground tiles, loading and
-building triangles; `?error=2` raises the terrain error target (fewer tiles) to compare
-quality against frame rate on a Quest.
+Unlisted spike: the whole planet in WebXR from open data only (no keys, no accounts). In the
+headset (`src/vrUi.js`) a places menu opens in front of you: point and pull the trigger to fall
+from orbit into a place. Out there, hold a trigger to fly where that controller points (faster
+the higher you are); left stick moves, right stick turns and goes up or down; A, X or Y reopens
+the menu, B goes back to orbit. The left wrist shows where you are, height, fps and triangle
+counts; `?error=2` raises the terrain error target (fewer tiles) to compare quality against
+frame rate on a Quest. Depth is logarithmic so the near plane can stay at 5 cm (hands and
+menus) while orbit doesn't z-fight.
 
 - Imagery: [Sentinel-2 cloudless 2016](https://s2maps.eu) by EOX, CC BY 4.0, about 10 m per
   pixel (later years are NonCommercial: don't switch layers).
