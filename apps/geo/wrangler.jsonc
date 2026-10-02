@@ -11,8 +11,6 @@
     "run_worker_first": true
   },
   // Reached only through the vrtor Worker's GEO service binding (vrtor.io/geo).
-  // GOOGLE_TILES_KEY is a secret (a browser key for the Map Tiles API, restricted to
-  // vrtor.io and localhost referrers): npx wrangler secret put GOOGLE_TILES_KEY -c apps/geo/wrangler.jsonc
   "workers_dev": false,
   "preview_urls": false,
   "observability": { "enabled": true }

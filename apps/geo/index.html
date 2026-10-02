@@ -9,7 +9,7 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 </head>
 <body>
-  <canvas id="scene" aria-label="3D scene: the whole Earth in photorealistic 3D, from orbit down to street level"></canvas>
+  <canvas id="scene" aria-label="3D scene: the whole Earth from open satellite imagery, terrain and building data, from orbit down to street level"></canvas>
 
   <header class="top">
     <a class="brand" href="/">VRtor<span>Earth</span></a>
@@ -29,10 +29,11 @@
   <nav class="bar" aria-label="Places">
     <div class="places"></div>
     <button class="btn" type="button" data-orbit>Back to orbit</button>
+    <a class="btn btn-walk" data-walk hidden>Walk it in detail</a>
     <p class="hint">Drag to look · W A S D to move · E / Q up and down</p>
   </nav>
 
-  <p class="attribution"><strong>Google</strong> <span class="attribution-data"></span></p>
+  <p class="attribution">Imagery: <a href="https://s2maps.eu">Sentinel-2 cloudless 2016 by EOX</a> (Copernicus Sentinel data 2016), CC BY 4.0 · Terrain: <a href="https://registry.opendata.aws/terrain-tiles/">Mapzen Terrain Tiles</a> · Buildings: <a href="https://overturemaps.org">Overture Maps</a>, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors</p>
 
   <script type="module" src="/src/main.js"></script>
 </body>

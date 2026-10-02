@@ -16,8 +16,8 @@ apps/mpc/        Machu Picchu (with visitors), Worker "vrtor-mpc"
 apps/apo/        Apollo 11: inside Columbia in lunar orbit, Worker "vrtor-apo"
 apps/fly/        Wright Flyer: the 1903 Flyer at Kill Devil Hills, Worker "vrtor-fly"
 apps/orca/       Orca: a killer whale skeleton, inside out, Worker "vrtor-orca"
-apps/geo/        Earth (unlisted experiment): Google Photorealistic 3D Tiles from orbit to street
-                 level (three.js + 3d-tiles-renderer, not Babylon), Worker "vrtor-geo"
+apps/geo/        Earth (unlisted experiment): open imagery, terrain and buildings from orbit to
+                 street level (three.js + 3d-tiles-renderer, not Babylon), Worker "vrtor-geo"
 packages/xr-shell/  shared WebXR pieces for every subject (Quest-tuned session setup,
                  teleport, comfort fade, frame-rate governor, floating info card)
 ```
@@ -51,20 +51,24 @@ npx wrangler kv key list --binding WAITLIST --remote -c apps/home/wrangler.jsonc
 
 ## Earth experiment (vrtor.io/geo)
 
-Unlisted spike: Google's Photorealistic 3D Tiles in WebXR. You start in orbit, fall into a city
-(A), fly around (left stick, right stick for height and snap turn), go back up (B). Speed grows
-with height. A panel shows fps, tiles shown/loading and the error target; `?error=20` changes the
-error target to compare quality against frame rate on a Quest.
+Unlisted spike: the whole planet in WebXR from open data only (no keys, no accounts). You
+start in orbit, fall into a place (A), fly around (left stick; right stick for height and snap
+turn), go back up (B). Speed grows with height. A panel shows fps, ground tiles, loading and
+building triangles; `?error=2` raises the terrain error target (fewer tiles) to compare
+quality against frame rate on a Quest.
 
+- Imagery: [Sentinel-2 cloudless 2016](https://s2maps.eu) by EOX, CC BY 4.0, about 10 m per
+  pixel (later years are NonCommercial: don't switch layers).
+- Terrain: [Terrain Tiles on AWS](https://registry.opendata.aws/terrain-tiles/) (Mapzen
+  Terrarium), drawn by 3d-tiles-renderer's `TerrariumMeshPlugin`.
+- Buildings: [Overture Maps](https://docs.overturemaps.org/examples/overture-tiles/) PMTiles
+  (ODbL, mostly OpenStreetMap), extruded per z14 tile in a worker (`src/buildingsWorker.js`)
+  below 4 km. The release date is in the URL there: bump it when Overture retires old ones.
+- All three are streamed straight from their public hosts; the licenses allow copying them to
+  R2 later. The credits must stay on screen (page footer and headset panel).
 - Built on three.js with [3d-tiles-renderer](https://github.com/NASA-AMMOS/3DTilesRendererJS): its
   Babylon adapter is still early (right-handed scenes only, box culling, no memory accounting), so
   presence and xr-shell are not wired in.
-- Needs a browser key for the Map Tiles API (restrict it to the `https://vrtor.io/*` and
-  `http://localhost:*/*` referrers and to the Map Tiles API), stored as a secret:
-  `npx wrangler secret put GOOGLE_TILES_KEY -c apps/geo/wrangler.jsonc`. Locally, put
-  `GOOGLE_TILES_KEY=...` in `apps/geo/.dev.vars`, or add `?key=...` to the URL.
-- Google's terms: the attribution must stay on screen (the page footer and the headset panel), and
-  tiles may not be cached or stored, so they can't move to R2.
 
 ## Visitors: seeing and talking to each other
 

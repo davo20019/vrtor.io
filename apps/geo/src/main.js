@@ -1,6 +1,9 @@
-// Earth (experiment): Google's Photorealistic 3D Tiles in WebXR. Start in orbit,
-// fall into a city, fly around it. A spike to measure how streamed globe data looks
-// and runs on a Quest, from orbit down to street level.
+// Earth (experiment): the whole planet from open data, in WebXR. Start in orbit, fall
+// into a city, fly around it. No keys, no accounts:
+//   - imagery: Sentinel-2 cloudless 2016 by EOX (CC BY 4.0), about 10 m per pixel
+//   - terrain: Terrain Tiles on AWS (Mapzen Terrarium; SRTM, GMTED2010, ETOPO1 and others)
+//   - buildings: Overture Maps footprints and heights (ODbL, mostly OpenStreetMap),
+//     extruded in buildings.js
 //
 // Precision: the tiles are in Earth-centred coordinates (millions of metres), too big
 // for the GPU's 32-bit floats. ReorientationPlugin moves the tiles so the spot you are
@@ -8,15 +11,16 @@
 // far enough away, so everything near you always has small coordinates.
 import './style.css';
 import * as THREE from 'three';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { TilesRenderer } from '3d-tiles-renderer';
-import {
-  GoogleCloudAuthPlugin,
-  GLTFExtensionsPlugin,
-  ReorientationPlugin,
-  TilesFadePlugin,
-} from '3d-tiles-renderer/plugins';
+import { ReorientationPlugin, TerrariumMeshPlugin, XYZTilesOverlay } from '3d-tiles-renderer/plugins';
 import { PLACES } from './places.js';
+import { createBuildings } from './buildings.js';
+
+const IMAGERY = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/{z}/{y}/{x}.jpg';
+const TERRAIN = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
+export const CREDITS =
+  'Imagery: Sentinel-2 cloudless 2016 by EOX (Copernicus Sentinel data 2016), CC BY 4.0 · ' +
+  'Terrain: Mapzen Terrain Tiles on AWS · Buildings: Overture Maps Foundation, © OpenStreetMap contributors (ODbL)';
 
 const D2R = Math.PI / 180;
 const ORBIT = 6_000_000; // metres above the ground: the whole Earth fills the view
@@ -40,7 +44,10 @@ renderer.xr.setFoveation(1);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color();
-scene.add(new THREE.HemisphereLight(0xffffff, 0x666666, 3));
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 2);
+sun.position.set(-0.5, 1, 0.3);
+scene.add(sun);
 
 // The rig is where your feet are; in the headset the camera moves inside it.
 const rig = new THREE.Group();
@@ -76,16 +83,16 @@ fader.renderOrder = 1000;
 fader.visible = false;
 camera.add(fader);
 
-// Headset panel, low in view: where you are, the Google attribution (required
-// whenever the tiles are on screen) and the measurements this spike is for.
+// Headset panel, low in view: where you are, the data credits (the licenses ask for
+// them) and the measurements this spike is for.
 const hud = (() => {
   const c = document.createElement('canvas');
   c.width = 1024;
-  c.height = 320;
+  c.height = 380;
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   const mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.64, 0.2),
+    new THREE.PlaneGeometry(0.64, 0.2375),
     new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false }),
   );
   mesh.position.set(0, -0.42, -1);
@@ -108,7 +115,7 @@ const hud = (() => {
       g.fill();
       lines.forEach((line, i) => {
         g.fillStyle = i === 0 ? '#ffb020' : i === lines.length - 1 ? '#ffffff' : '#c9c4ba';
-        g.font = i === 0 ? '600 46px system-ui, sans-serif' : '32px system-ui, sans-serif';
+        g.font = i === 0 ? '600 46px system-ui, sans-serif' : i === lines.length - 1 ? '22px system-ui, sans-serif' : '32px system-ui, sans-serif';
         g.fillText(line, 36, 70 + i * 54, c.width - 72);
       });
       tex.needsUpdate = true;
@@ -130,30 +137,18 @@ const state = {
 
 let tiles = null;
 let reorient = null;
+const buildings = createBuildings(scene);
 
 // ---------- tiles ----------
-async function start() {
-  let key = params.get('key');
-  if (!key) {
-    try {
-      key = (await (await fetch('config.json')).json()).tilesKey;
-    } catch {
-      key = null;
-    }
-  }
-  if (!key) {
-    loadingText.textContent =
-      'This experiment needs a Google Map Tiles API key, and none is set yet. ' +
-      '(npx wrangler secret put GOOGLE_TILES_KEY -c apps/geo/wrangler.jsonc)';
-    return;
-  }
-
-  const draco = new DRACOLoader().setDecoderPath(`${import.meta.env.BASE_URL}draco/`);
+function start() {
   const first = PLACES[0];
   tiles = new TilesRenderer();
-  tiles.registerPlugin(new GoogleCloudAuthPlugin({ apiToken: key, autoRefreshToken: true }));
-  tiles.registerPlugin(new GLTFExtensionsPlugin({ dracoLoader: draco }));
-  tiles.registerPlugin(new TilesFadePlugin());
+  tiles.registerPlugin(new TerrariumMeshPlugin({
+    url: TERRAIN,
+    maxZoom: 15,
+    overlay: new XYZTilesOverlay({ url: IMAGERY, levels: 15 }),
+    applyOverlayTexture: true,
+  }));
   reorient = new ReorientationPlugin({ lat: first.lat * D2R, lon: first.lon * D2R, height: 0 });
   tiles.registerPlugin(reorient);
   if (params.has('error')) tiles.errorTarget = Number(params.get('error'));
@@ -168,8 +163,7 @@ async function start() {
     console.warn('tiles load error', e);
     if (!loading.hidden || e.tile?.parent == null) {
       loading.hidden = false;
-      loadingText.textContent =
-        'Google refused the 3D tiles. The Map Tiles API key may be missing a referrer, the API may be off, or billing may not be set up.';
+      loadingText.textContent = 'The open map tiles did not load. Check the connection and reload.';
     }
   });
 
@@ -185,7 +179,14 @@ function placeAt(i, height) {
   state.groundY = p.ground;
   rig.position.set(0, p.ground + height, 0);
   rig.rotation.set(0, Math.PI - p.heading * D2R, 0);
+  if (!renderer.xr.isPresenting) camera.rotation.x = pitchFor(height);
   updatePlaceButtons();
+}
+
+// On a flat screen, look down at the planet from orbit and level out near the ground.
+// (In the headset you look wherever you like.)
+function pitchFor(agl) {
+  return agl > 500_000 ? -1.25 : agl > 20_000 ? -0.9 : -0.3;
 }
 
 // Fly (in log height, so the speed you see stays steady) to `agl` metres above the ground.
@@ -193,6 +194,8 @@ function flyTo(agl, duration) {
   state.flight = {
     from: Math.log10(Math.max(rig.position.y - state.groundY, 1)),
     to: Math.log10(agl),
+    pitchFrom: camera.rotation.x,
+    pitchTo: pitchFor(agl),
     t: 0,
     duration,
   };
@@ -245,6 +248,7 @@ function recenter() {
 
 // ---------- ground ----------
 const ray = new THREE.Raycaster();
+ray.firstHitOnly = true;
 const DOWN = new THREE.Vector3(0, -1, 0);
 let groundTick = 0;
 function probeGround() {
@@ -252,7 +256,7 @@ function probeGround() {
   if (agl > 40_000 || ++groundTick % 8) return;
   ray.set(_p.set(rig.position.x, rig.position.y + 2000, rig.position.z), DOWN);
   ray.far = agl + 6000;
-  const hit = ray.intersectObject(tiles.group, true)[0];
+  const hit = ray.intersectObject(tiles.group, true).sort((a, b) => a.distance - b.distance)[0];
   if (hit) state.groundY = hit.point.y;
 }
 
@@ -392,15 +396,6 @@ function formatHeight(m) {
   return `${Math.round(m)} m`;
 }
 
-let attributionText = '';
-function attributions() {
-  if (!tiles) return '';
-  return tiles
-    .getAttributions()
-    .filter((a) => a.type === 'string')
-    .map((a) => a.value)
-    .join(' ');
-}
 
 let frames = 0, fpsClock = 0;
 const clock = new THREE.Clock();
@@ -416,6 +411,7 @@ renderer.setAnimationLoop(() => {
       f.t = Math.min(f.t + dt / f.duration, 1);
       const s = f.t * f.t * (3 - 2 * f.t);
       rig.position.y = state.groundY + 10 ** (f.from + (f.to - f.from) * s);
+      if (!renderer.xr.isPresenting) camera.rotation.x = f.pitchFrom + (f.pitchTo - f.pitchFrom) * s;
       if (f.t === 1) state.flight = null;
     }
     probeGround();
@@ -435,6 +431,10 @@ renderer.setAnimationLoop(() => {
       tiles.setResolutionFromRenderer(camera, renderer);
     }
     tiles.update();
+    _inv.copy(tiles.group.matrixWorld).invert();
+    _p.copy(rig.position).applyMatrix4(_inv);
+    tiles.ellipsoid.getPositionToCartographic(_p, _carto);
+    buildings.update(tiles.group, _carto.lat, _carto.lon, agl);
   }
   updateFade(dt);
 
@@ -454,16 +454,13 @@ function updateReadout() {
   const agl = rig.position.y - state.groundY;
   const s = tiles.stats || {};
   const where = agl > 50_000 ? `Above ${p.name}` : `${p.name}, ${p.spot}`;
-  const measures = `${formatHeight(agl)} up · ${state.fps} fps · ${s.visible ?? '?'} tiles shown, ${(s.downloading ?? 0) + (s.parsing ?? 0)} loading · error ${tiles.errorTarget}`;
+  const kTris = Math.round(buildings.triangles / 1000);
+  const measures = `${formatHeight(agl)} up · ${state.fps} fps · ${s.visible ?? '?'} ground tiles, ${(s.downloading ?? 0) + (s.parsing ?? 0) + buildings.loading} loading · buildings ${kTris}k tris`;
   statsEl.textContent = `${where}\n${measures}`;
 
-  const next = attributions();
-  if (next !== attributionText) {
-    attributionText = next;
-    $('.attribution-data').textContent = next;
-  }
+
   const action = state.visited ? `A: next place (${PLACES[(state.place + 1) % PLACES.length].name})` : `A: fall into ${p.name}`;
-  hud.draw([where, measures, `${action} · B: back to orbit · X: previous`, 'Left stick: fly · Right stick: up, down, turn', `Google  ${attributionText}`]);
+  hud.draw([where, measures, `${action} · B: back to orbit · X: previous`, 'Left stick: fly · Right stick: up, down, turn', CREDITS]);
 }
 
 // ---------- page ----------
@@ -481,6 +478,9 @@ PLACES.forEach((p, i) => {
 });
 function updatePlaceButtons() {
   [...placesEl.children].forEach((b, i) => b.setAttribute('aria-pressed', String(i === state.place)));
+  const walk = $('[data-walk]');
+  walk.hidden = !PLACES[state.place].walk;
+  if (PLACES[state.place].walk) walk.href = PLACES[state.place].walk;
 }
 $('[data-orbit]').addEventListener('click', backToOrbit);
 
