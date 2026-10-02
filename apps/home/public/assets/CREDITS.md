@@ -19,12 +19,12 @@ Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 
 ## Space: Mars
 
-- `space/perseverance.glb`: "Mars 2020 Perseverance Rover", NASA 3D Resources, https://github.com/nasa/NASA-3D-Resources. NASA states these assets are free and without copyright. Courtesy NASA/JPL-Caltech. NASA does not endorse vrtor.
+- `space/perseverance.glb`: "Mars 2020 Perseverance Rover", NASA 3D Resources, https://github.com/nasa/NASA-3D-Resources. NASA states these assets are free and without copyright. Courtesy NASA/JPL-Caltech. NASA does not endorse VRtor.
 - `space/rock_07`, `space/moon_rock_03`, `space/ground/aerial_sand_*`: Poly Haven (https://polyhaven.com), CC0. Tinted for Mars.
 
 ## Taj Mahal
 
-- **Taj Mahal 3D Model** by **Dinendra Neyo (@NeyoZ)** — [original model](https://sketchfab.com/3d-models/taj-mahal-3d-model-1eb09052f6cd421caeaa6cb3204cb15d), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Served at `/taj/models/taj-mahal.glb`. Changes: hierarchy baked, square plinth normalized to approximately 95.4 metres, full geometry compressed with Draco (16-bit positions, 12-bit normals), placeholder colors replaced with marble and metal materials. No mesh decimation: all 409,419 triangles in the downloaded GLB are retained. Source is an artistic reconstruction, not a measured survey. Garden approach and educational overlays authored by vrtor.
+- **Taj Mahal 3D Model** by **Dinendra Neyo (@NeyoZ)** — [original model](https://sketchfab.com/3d-models/taj-mahal-3d-model-1eb09052f6cd421caeaa6cb3204cb15d), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Served at `/taj/models/taj-mahal.glb`. Changes: hierarchy baked, square plinth normalized to approximately 95.4 metres, full geometry compressed with Draco (16-bit positions, 12-bit normals), placeholder colors replaced with marble and metal materials. No mesh decimation: all 409,419 triangles in the downloaded GLB are retained. Source is an artistic reconstruction, not a measured survey. Garden approach and educational overlays authored by VRtor.
 - **Draco decoders** — Google Draco, Apache 2.0, copied from the existing Space experience. See [Draco license](https://github.com/google/draco/blob/main/LICENSE).
 - Educational references: [UNESCO Taj Mahal](https://whc.unesco.org/en/list/252/), [official architecture](https://tajmahal.gov.in/architecture.aspx), [official exteriors](https://tajmahal.gov.in/the-taj-exteriors.aspx), [official outlying buildings](https://tajmahal.gov.in/outlying-building.aspx).
 
@@ -42,4 +42,4 @@ Machu Picchu mountain colour: **Sentinel-2 cloudless 2016** by **EOX IT Services
 
 ## Wright Flyer
 
-- `cards/wright-flyer.jpg`: rendered from vrtor.io/fly, the Smithsonian National Air and Space Museum's 3D scan of the 1903 Wright Flyer (CC0), colored by vrtor. Sources: [`/fly/models/CREDITS.md`](/fly/models/CREDITS.md).
+- `cards/wright-flyer.jpg`: rendered from vrtor.io/fly, the Smithsonian National Air and Space Museum's 3D scan of the 1903 Wright Flyer (CC0), colored by VRtor. Sources: [`/fly/models/CREDITS.md`](/fly/models/CREDITS.md).

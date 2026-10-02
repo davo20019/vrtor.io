@@ -22,7 +22,7 @@ Data acquired, processed and distributed by CAST staff Snow Winters, Malcolm Wil
 
 All **4,064,071 triangles** in the published OBJ meshes are retained. These archives were already reduced by the provider; “full detail” here refers to these downloads, not the original unreduced survey. The linked archives are available from the blue map markers on the source page. The whole-site download is a PolyWorks point-cloud project, not a ready textured city mesh.
 
-## Adaptations by vrtor
+## Adaptations by VRtor
 
 - Converted OBJ to self-hosted GLB; converted the Temple of the Sun and Temple of the Condor millimetre coordinates to metres.
 - Centred each area independently, with no change to its proportions. Areas are **not** registered into a continuous whole-site reconstruction.

@@ -4,7 +4,7 @@
 
 The publisher identifies this [3D Warehouse model](https://3dwarehouse.sketchup.com/model/8f9b368b9bf996b8cf7954975c0b336f/Machu-Picchu-Peru-english-description) as its original source. Credit and links are retained; no institutional endorsement is implied.
 
-## Changes by vrtor
+## Changes by VRtor
 
 - Preserved all **32,759 triangles**; flattened the export hierarchy, centred the layout, and converted its coordinate scale by 0.01 for approximate human scale. The model is an architectural reconstruction, not a measured whole-site laser scan. Exact dimensions and present-day visitor routes are not verified.
 - Removed the original generic surface images and supplied illustrative stone, earth and vegetation colors with procedural mineral grain and a reusable normal/relief sample derived from CAST’s measured Main Temple geometry. These source-based surface cues replace the fabricated brick grid. Their placement and stone colors are illustrative; the whole model remains an architectural reconstruction.

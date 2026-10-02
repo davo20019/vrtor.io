@@ -1,4 +1,4 @@
-// Static Taj Mahal build, served through the vrtor home Worker's TAJ binding.
+// Static Taj Mahal build, served through the VRtor home Worker's TAJ binding.
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);

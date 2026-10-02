@@ -1,4 +1,4 @@
-// vrtor Apollo 11 (/apo): float beside the real command module Columbia in lunar orbit,
+// VRtor Apollo 11 (/apo): float beside the real command module Columbia in lunar orbit,
 // July 1969, then go inside. A guided tour goes around the outside, then in; pointing at any
 // glowing marker explains that spot on its own.
 // Flat screens: an orbit camera (inside, it turns in place) and an HTML card. Headset: you float

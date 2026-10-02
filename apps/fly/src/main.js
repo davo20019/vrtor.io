@@ -1,4 +1,4 @@
-// vrtor Wright Flyer (/fly): stand beside the real 1903 Wright Flyer on the sand at Kill Devil
+// VRtor Wright Flyer (/fly): stand beside the real 1903 Wright Flyer on the sand at Kill Devil
 // Hills, take a guided tour of how it works, lie where Orville lay, and watch the first flight.
 // Pointing at any glowing marker explains that spot on its own.
 // Flat screens: an orbit camera (at the pilot's place and the camera spot, it turns in place) and

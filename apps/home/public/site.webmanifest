@@ -1,6 +1,6 @@
 {
-  "name": "vrtor",
-  "short_name": "vrtor",
+  "name": "VRtor",
+  "short_name": "VRtor",
   "description": "Learn by doing in VR, right in your browser.",
   "start_url": "/",
   "display": "browser",

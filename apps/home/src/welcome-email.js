@@ -16,7 +16,7 @@ export function welcomeEmail(subject) {
   const promise = name
     ? `We'll send you one email when ${name} opens.`
     : "We'll send you one email each time a new subject opens.";
-  const title = "You're on the vrtor waitlist";
+  const title = "You're on the VRtor waitlist";
 
   const rows = OPEN.map(
     ([label, link, about]) => `
@@ -34,7 +34,7 @@ export function welcomeEmail(subject) {
     <tr><td align="center" style="padding:32px 16px">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#f7f9fb;border:1px solid #cfd8e1;border-radius:12px">
         <tr><td style="padding:32px 28px 8px">
-          <div style="font:700 22px/1 Arial,sans-serif;color:#0f1b2d">vrtor<span style="color:#5d6b80">.io</span></div>
+          <div style="font:700 22px/1 Arial,sans-serif;color:#0f1b2d">VRtor<span style="color:#5d6b80">.io</span></div>
         </td></tr>
         <tr><td style="padding:16px 28px 0">
           <h1 style="margin:0 0 12px;font:700 24px/1.3 Arial,sans-serif;color:#0f1b2d">${title}</h1>

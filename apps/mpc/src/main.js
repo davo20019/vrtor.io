@@ -13,9 +13,9 @@ let destination=null;
 let lesson=-1,phase='observe',feedback='',score=0,answered=new Set(),cardOpen=true,busy=true,walkView=true,people=false;
 const inXr=()=>!!rig?.inXr();
 const action=(label,onClick,primary=false)=>({label,onClick:()=>{if(!busy)onClick();},primary});
-const siteCredit='Model: Ministerio de Cultura Perú, CC BY 4.0. Stone relief: INC Peru, CAST (University of Arkansas), Cotsen Institute (UCLA), CC BY-NC 3.0. Adapted by vrtor; layout and scale approximate.';
+const siteCredit='Model: Ministerio de Cultura Perú, CC BY 4.0. Stone relief: INC Peru, CAST (University of Arkansas), Cotsen Institute (UCLA), CC BY-NC 3.0. Adapted by VRtor; layout and scale approximate.';
 const controls='Push the stick forward to teleport; left or right to turn. Trigger selects. A or X reopens this card; B or Y joins other visitors, then turns your mic on and off.';
-const credit='Survey: INC Peru, CAST (University of Arkansas) and Cotsen Institute (UCLA). CC BY-NC 3.0; adapted by vrtor.';
+const credit='Survey: INC Peru, CAST (University of Arkansas) and Cotsen Institute (UCLA). CC BY-NC 3.0; adapted by VRtor.';
 function content(){
   const area=AREAS[destination??world?.active??0];
   if(busy)return {kicker:'Preparing the survey',title:'Traveling…',body:`Loading ${area.name}. Each area keeps the published mesh geometry.`,fact:'',actions:[]};

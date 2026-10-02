@@ -7,7 +7,7 @@ the sand at Kill Devil Hills on the morning of December 17, 1903. Visitors walk 
 size, take a guided tour of how it works (wings, three-axis control, engine, chain drive,
 propellers, launch rail), lie where Orville lay, and watch the first flight replayed in front of
 them. It is the first subject about how machines work (the planned Mechanics area), and it meets
-the asset bar set for vrtor: a museum scan with a clear license.
+the asset bar set for VRtor: a museum scan with a clear license.
 
 Success: it opens at vrtor.io/fly on a flat screen, phone and Quest browser; the tour reads well
 and every fact traces to the Smithsonian's record or curators' articles; it holds frame rate on

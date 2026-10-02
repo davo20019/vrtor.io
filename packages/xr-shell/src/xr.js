@@ -1,4 +1,4 @@
-// The headset side of every vrtor subject: WebXR session setup tuned for Quest
+// The headset side of every VRtor subject: WebXR session setup tuned for Quest
 // (ported from Acento), teleport and snap turn on the floor, a comfort fade,
 // and moving the viewer for guided tours.
 //

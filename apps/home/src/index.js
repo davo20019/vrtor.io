@@ -118,7 +118,7 @@ async function handleWaitlist(request, env) {
   return json({ ok: true });
 }
 
-// Adds (or updates) the contact on the vrtor waitlist list in Brevo, with the subjects asked about.
+// Adds (or updates) the contact on the VRtor waitlist list in Brevo, with the subjects asked about.
 async function addToBrevo(env, email, subjects) {
   if (!env.BREVO_API_KEY) return;
   const res = await fetch('https://api.brevo.com/v3/contacts', {
@@ -141,7 +141,7 @@ async function sendWelcome(env, email, subject) {
     method: 'POST',
     headers: { 'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' },
     body: JSON.stringify({
-      sender: { name: 'vrtor', email: env.WELCOME_FROM },
+      sender: { name: 'VRtor', email: env.WELCOME_FROM },
       to: [{ email }],
       subject: title,
       htmlContent: html,

@@ -1,4 +1,4 @@
-// Static Machu Picchu build, served through the vrtor home Worker's MPC binding.
+// Static Machu Picchu build, served through the VRtor home Worker's MPC binding.
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);

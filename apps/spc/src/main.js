@@ -1,4 +1,4 @@
-// vrtor Space (/spc): stand next to NASA's Perseverance rover on Mars and
+// VRtor Space (/spc): stand next to NASA's Perseverance rover on Mars and
 // learn what each part does. A guided tour walks through the parts in order;
 // pointing at any part (or its marker) explains it on its own.
 // Flat screens: orbit camera and an HTML card. Headset: teleport, a floating
