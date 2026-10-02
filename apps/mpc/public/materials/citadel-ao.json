@@ -1,0 +1,11 @@
+{
+  "file": "citadel-ao.jpg",
+  "size": 4096,
+  "uv": "TEXCOORD_1 of citadel.glb",
+  "samples": 96,
+  "distance": 6.0,
+  "buriedFaces": 4063,
+  "neutral": 0.9,
+  "glbSha256": "5e5a709cdcb3d8fc1fd85335a6caae7bef9471287cb3956c0d4e0c9ee78fd880",
+  "adaptation": "Ambient occlusion baked in Blender Cycles from the connected architectural model alone. Illustrative shading; the surrounding terrain is not included."
+}

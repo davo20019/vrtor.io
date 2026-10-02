@@ -1,5 +1,5 @@
-import { ArcRotateCamera, Engine, UniversalCamera, Vector3 } from '@babylonjs/core';
-import { createCard, createPresence, createXr, mountPresenceControls, presenceCard, xrSupported } from '@vrtor/xr-shell';
+import { ArcRotateCamera, DefaultRenderingPipeline, Engine, UniversalCamera, Vector3 } from '@babylonjs/core';
+import { createCard, createPresence, createXr, mountPresenceControls, presenceCard, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { buildWorld, V } from './world.js';
 import { AREAS, SITE } from './areas.js';
 import { LESSONS } from './lesson.js';
@@ -38,10 +38,7 @@ function peopleAction(){
 }
 function poseNow(){
   if(busy||!world)return null;
-  if(inXr()){
-    const hand=side=>{const c=rig.xr.input.controllers.find(c=>c.inputSource.handedness===side);return (c?.grip??c?.pointer)?.getAbsolutePosition().clone();};
-    return {area:world.active,head:rig.headPosition(),forward:rig.camera.getDirection(Vector3.Forward()),left:hand('left'),right:hand('right')};
-  }
+  if(inXr())return xrPose(rig,world.active);
   return {area:world.active,head:walker.position,forward:walker.getDirection(Vector3.Forward())};
 }
 function answer(choice){
@@ -141,9 +138,13 @@ function restart(){if(busy)return;score=0;answered=new Set();go(0);}
 async function start(){
   world=await buildWorld(engine,p=>ui.pct.textContent=`${Math.round(p*100)}%`);scene=world.scene;
   camera=new ArcRotateCamera('orbit',0,1,25,V(0,2,0),scene);
-  camera.minZ=.04;camera.maxZ=16000;camera.lowerRadiusLimit=.45;camera.upperRadiusLimit=900;camera.lowerBetaLimit=.08;camera.upperBetaLimit=2.8;camera.wheelDeltaPercentage=.012;camera.pinchDeltaPercentage=.004;camera.panningSensibility=0;
-  walker=new UniversalCamera('walk',V(0,2,0),scene);walker.minZ=.06;walker.maxZ=16000;walker.angularSensibility=2200;walker.inertia=0;
+  camera.minZ=.04;camera.maxZ=32000;camera.lowerRadiusLimit=.45;camera.upperRadiusLimit=900;camera.lowerBetaLimit=.08;camera.upperBetaLimit=2.8;camera.wheelDeltaPercentage=.012;camera.pinchDeltaPercentage=.004;camera.panningSensibility=0;
+  walker=new UniversalCamera('walk',V(0,2,0),scene);walker.minZ=.06;walker.maxZ=32000;walker.angularSensibility=2200;walker.inertia=0;
   walker.keysUp=[];walker.keysDown=[];walker.keysLeft=[];walker.keysRight=[];
+  // Desktop and phone only: the headset camera keeps its own MSAA layer and per-material tone mapping.
+  const pipeline=new DefaultRenderingPipeline('sharp-view',false,scene,[camera,walker]);
+  pipeline.imageProcessingEnabled=false;pipeline.samples=engine.webGLVersion>1?4:1;pipeline.fxaaEnabled=pipeline.samples<2;
+  pipeline.sharpenEnabled=true;pipeline.sharpen.edgeAmount=.22;pipeline.sharpen.colorAmount=1;
   panel=createCard(scene,{name:'machu-lesson',height:.88});
   let refreshBar=()=>{};
   presence=createPresence(scene,{subject:'mpc',getPose:poseNow,onChange:state=>{
@@ -188,6 +189,10 @@ async function start(){
     camera.alpha+=da*k;camera.beta+=(flight.beta-camera.beta)*k;camera.radius+=(flight.radius-camera.radius)*k;
     if(Math.abs(da)<.001&&Vector3.Distance(camera.target,flight.target)<.01&&Math.abs(camera.radius-flight.radius)<.01)flight=null;
   });
+  // Hide the loading screen once the citadel and terrain shaders are compiled, so nothing pops in.
+  // Only these meshes: shared shell textures may stay unready, and a slow device must not hang here.
+  const shown=[...world.monument,...scene.meshes.filter(m=>m.name.startsWith('Andean'))],until=performance.now()+8000;
+  await new Promise(done=>{const check=()=>shown.every(m=>m.isReady(true))||performance.now()>until?done():setTimeout(check,100);check();});
   ui.loading.hidden=true;ui.hint.hidden=false;busy=false;
   ui.status.textContent='Connected citadel walkthrough';render();
 }

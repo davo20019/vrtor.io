@@ -14,12 +14,16 @@ The publisher identifies this [3D Warehouse model](https://3dwarehouse.sketchup.
 
 The primary experience uses this single connected model. The six detailed **CAST survey closeups** remain separate optional learning studies, retaining their [CC BY-NC 3.0 attribution and restrictions](./CREDITS.md). They are not geographically merged into this reconstruction.
 
-The elevation backdrop remains Mapzen Terrain Tiles, SRTM/GMTED2010 courtesy of USGS; see [survey and terrain credits](./CREDITS.md). To fit the connected model, the illustrative local join now flattens a 350 m radius and blends to the elevation relief by 600 m. Neither archaeological model is registered to that terrain.
+The elevation backdrop remains Mapzen Terrain Tiles, SRTM/GMTED2010 courtesy of USGS, now coloured with Sentinel-2 cloudless 2016 imagery by EOX (CC BY 4.0); see [survey and terrain credits](./CREDITS.md). To fit the connected model, the illustrative local join now flattens a 350 m radius and blends to the elevation relief by 600 m. Neither archaeological model is registered to that terrain.
 
 ## Survey-derived surface detail
 
 `../materials/survey-stone-normal.png` and `survey-stone-relief.png` are derived from the **Main Temple** laser mesh supplied by **Instituto Nacional de Cultura (Peru)**, **Center for Advanced Spatial Technologies (University of Arkansas)**, and **Cotsen Institute for Archaeology (UCLA)**, under **CC BY-NC 3.0**. [Full contributors, source archive and restrictions](./CREDITS.md). These adapted maps retain the noncommercial restriction; the Ministry architectural geometry separately remains CC BY 4.0.
 
 `../materials/survey-stone.json` records the source OBJ hash, 4 m × 1.4 m sample, projection, 100% measured coverage, and adaptations. Reproduce with `scripts/bake-machu-stone.py` and Blender. Plane removal, periodic boundary correction and scan-noise filtering produce a mipmapped surface normal; depth supplies illustrative cavity shading and tone. This is not measured color, added geometric detail, or a claim that every facade matches this sample. No photographs or AI-generated images are used.
+
+## Baked shading
+
+`../materials/citadel-ao.ktx2` (from `citadel-ao.jpg`) is ambient occlusion baked in Blender Cycles from this architectural model alone, onto a second UV set added to `citadel.glb` (`TEXCOORD_1`; geometry, normals and the 32,759 triangles are unchanged). Many source faces point into their walls, so both orientations are baked and the brighter kept; faces sealed behind other faces use a neutral value. `citadel-ao.json` records the GLB hash and settings. Regenerate with `scripts/bake-machu-ao.py` after `prepare-machu-site.py`, then `scripts/encode-machu-ktx2.py`. It is illustrative shading, not measured appearance; the terrain is not included.
 
 `citadel-grass.bin` contains 62,016 root positions verified against grass faces of the delivered architectural model. Short opaque 3D blades appear only in nine nearby 20 m tiles, with no alpha cards. They are illustrative vegetation, not a vegetation survey. Regenerate with `scripts/prepare-machu-grass.py`.

@@ -42,6 +42,12 @@ The connected walk also uses a reusable 4 m × 1.4 m Main Temple geometry sample
 
 ## Andean terrain backdrop
 
-Background heights are resampled from [Mapzen Terrain Tiles](https://registry.opendata.aws/terrain-tiles/), accessed 2026-10-01. **SRTM/GMTED2010 data courtesy of the U.S. Geological Survey**, via Mapzen. These source datasets are public domain; see the provider’s [attribution and source terms](https://github.com/tilezen/joerd/blob/master/docs/attribution.md). No satellite photographs are used.
+Background heights are resampled from [Mapzen Terrain Tiles](https://registry.opendata.aws/terrain-tiles/), accessed 2026-10-01. **SRTM/GMTED2010 data courtesy of the U.S. Geological Survey**, via Mapzen. These source datasets are public domain; see the provider’s [attribution and source terms](https://github.com/tilezen/joerd/blob/master/docs/attribution.md).
 
 `andes-height.bin` is a 513×513 grid over a 10 km square centred at approximately 13.1635°S, 72.5462°W, with heights relative to the centre elevation. `andes.json` records tile URLs, hashes, access date and processing. Produced by `scripts/prepare-machu-terrain.py` from Terrarium height tiles using the [documented encoding](https://github.com/tilezen/joerd/blob/master/docs/formats.md). Scene colors are illustrative; the central 350 m is flattened, blending to the resampled relief at 600 m. The independent survey meshes are not georeferenced to the terrain. This backdrop conveys the surrounding topography; it must not be presented as a measured registration of the archaeological structures or used for navigation.
+
+### Distant ranges and mountain colour
+
+`andes-far-height.bin` is a 257×257 grid over a 40 km square on the same centre and reference elevation, resampled from Terrarium zoom 12 tiles (same Mapzen/USGS sources). The scene removes its central 10 km square, where the finer grid is used.
+
+Mountain colour: **Sentinel-2 cloudless 2016** by **EOX IT Services GmbH** (contains modified Copernicus Sentinel data 2016), [s2maps.eu](https://s2maps.eu), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). `../materials/andes-near.jpg` (10 km, zoom 14) and `andes-far.jpg` (40 km, zoom 13), shipped as GPU-compressed `.ktx2` copies, are reprojected from Web Mercator to the local square, bilinearly resampled and brightened in the shader to a canopy-like albedo. Viewed from the ground, steep slopes show the stretching expected from overhead imagery. Within about 800 m of the citadel the imagery fades to the illustrative cover, since the reconstruction is not georeferenced. `andes-landscape.json` records tile URLs, hashes, access date and processing. Regenerate with `python3 scripts/prepare-machu-landscape.py`.
