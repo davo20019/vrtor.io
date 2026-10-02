@@ -7,6 +7,11 @@
 // person is 6 draw calls (head, eyes, mouth, body, two hands) plus their name tag,
 // all sharing one material. Faces drop out beyond FACE_DISTANCE, whole avatars beyond
 // DRAW_DISTANCE, and someone standing inside your head isn't drawn at all.
+//
+// An outfit dresses everyone for a subject: `{ suit }`, a mesh whose origin is the middle of its
+// neck ring (Apollo 11 loads Neil Armstrong's scanned suit), worn in place of the torso, with a
+// clear bubble helmet over the face so faces and talking stay visible. Every suit is an instance
+// of that one mesh, so a room full of them is a single draw call, plus one see-through helmet each.
 import {
   Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial, TransformNode, Vector3, VertexBuffer,
 } from '@babylonjs/core';
@@ -23,6 +28,10 @@ const TORSO = [
   [0, 0], [0.12, 0.015], [0.155, 0.1], [0.185, 0.3], [0.195, 0.39], [0.185, 0.45], [0.155, 0.505], [0.1, 0.535], [0, 0.545],
 ];
 const TORSO_HEIGHT = 0.545;
+/** The gloves the headset's tracked hands wear with a suit (the suit's own hang at its sides). */
+const GLOVE = new Color3(0.6, 0.58, 0.54);
+/** Eyes to the top of a suit's neck ring. */
+const SUIT_NECK = 0.19;
 
 // One material for every avatar in a scene; the color is in the vertices.
 const shared = new WeakMap();
@@ -39,6 +48,28 @@ function avatarMaterial(scene) {
   return m;
 }
 
+// The see-through helmet, also shared: one draw call per person on top of the six.
+const helmets = new WeakMap();
+function helmetMaterial(scene) {
+  let m = helmets.get(scene);
+  if (!m || m.isDisposed?.()) {
+    m = new StandardMaterial('helmet', scene);
+    m.diffuseColor = new Color3(0.75, 0.82, 0.9);
+    // Faint and lit from within a little, so it reads as glass against black space; the
+    // highlight sells the curve. The face shows through clearly.
+    m.emissiveColor = new Color3(0.3, 0.34, 0.4);
+    m.specularColor = new Color3(1, 1, 1);
+    m.specularPower = 128;
+    m.alpha = 0.14;
+    m.backFaceCulling = true;
+    // The face inside must never lose to the glass's depth.
+    m.disableDepthWrite = true;
+    m.freeze();
+    helmets.set(scene, m);
+  }
+  return m;
+}
+
 /** Paints `mesh` one color and bakes its transform, ready to merge. */
 function paint(mesh, color) {
   const n = mesh.getTotalVertices();
@@ -49,7 +80,8 @@ function paint(mesh, color) {
   return mesh;
 }
 
-export function createAvatar(scene, { id, name, color }) {
+export function createAvatar(scene, { id, name, color, outfit = null }) {
+  const suit = outfit?.suit ?? null;
   const tint = Color3.FromHexString(color);
   const light = Color3.Lerp(tint, Color3.White(), 0.55);
   const white = new Color3(1, 1, 1);
@@ -68,6 +100,8 @@ export function createAvatar(scene, { id, name, color }) {
   const merge = (name, parts) => {
     const mesh = Mesh.MergeMeshes(parts, true, false);
     mesh.name = name;
+    // Opaque: merged vertex colors would otherwise count as alpha and sort behind the helmet.
+    mesh.hasVertexAlpha = false;
     return mesh;
   };
   const sphere = (diameter, segments, [sx, sy, sz] = [1, 1, 1], [x, y, z] = [0, 0, 0]) => {
@@ -83,6 +117,13 @@ export function createAvatar(scene, { id, name, color }) {
   head.rotationQuaternion = Quaternion.Identity();
   const skull = finish(paint(sphere(0.26, 14, [1, 1.08, 0.98]), tint), head, true);
   skull.name = `person-${id}-skull`;
+  if (suit) {
+    const bubble = sphere(0.37, 16, [1, 1, 1], [0, 0.005, 0.005]);
+    bubble.name = `person-${id}-helmet`;
+    bubble.parent = head;
+    bubble.material = helmetMaterial(scene);
+    bubble.isPickable = false;
+  }
   const eyeParts = [];
   for (const side of [-1, 1]) {
     eyeParts.push(paint(sphere(0.058, 8, [1, 1, 0.55], [side * 0.05, 0, 0]), white));
@@ -96,10 +137,21 @@ export function createAvatar(scene, { id, name, color }) {
 
   // Torso with a chest badge, turned more slowly than the head, like a body.
   const torsoShape = MeshBuilder.CreateLathe('part', { shape: TORSO.map(([r, y]) => new Vector3(r, y, 0)), tessellation: 18 }, scene);
-  const body = finish(merge(`person-${id}-body`, [paint(torsoShape, tint), paint(sphere(0.11, 10, [1, 1, 0.35], [0, 0.34, 0.19]), light)]), root, true);
+  let body;
+  if (suit) {
+    torsoShape.dispose();
+    body = suit.createInstance(`person-${id}-suit`);
+    body.parent = root;
+    body.isPickable = true;
+    body.metadata = { presenceId: id };
+  } else {
+    body = finish(merge(`person-${id}-body`, [paint(torsoShape, tint), paint(sphere(0.11, 10, [1, 1, 0.35], [0, 0.34, 0.19]), light)]), root, true);
+  }
+  /** Eyes to the body's origin: the torso's base, or a suit's neck ring. */
+  const bodyDrop = suit ? SUIT_NECK : NECK + TORSO_HEIGHT;
 
   const hands = [-1, 1].map((side) => {
-    const hand = finish(paint(sphere(0.1, 8, [0.8, 0.65, 1.1]), light), root);
+    const hand = finish(paint(sphere(0.1, 8, [0.8, 0.65, 1.1]), suit ? GLOVE : light), root);
     hand.name = `person-${id}-hand`;
     hand.rotationQuaternion = Quaternion.Identity();
     hand.metadata.side = side;
@@ -209,7 +261,7 @@ export function createAvatar(scene, { id, name, color }) {
       head.position.copyFrom(cur.head);
       Quaternion.FromEulerAnglesToRef(-cur.pitch * 0.8, cur.yaw, 0, head.rotationQuaternion);
       const breath = Math.sin(time * 1.6) * 0.006;
-      body.position.set(cur.head.x, cur.head.y - NECK - TORSO_HEIGHT + breath, cur.head.z);
+      body.position.set(cur.head.x, cur.head.y - bodyDrop + breath, cur.head.z);
       body.rotation.y = cur.bodyYaw;
       tag.position.set(cur.head.x, cur.head.y + TAG_HEIGHT, cur.head.z);
 
@@ -225,6 +277,8 @@ export function createAvatar(scene, { id, name, color }) {
 
       Quaternion.FromEulerAnglesToRef(0, cur.bodyYaw, 0, yawQuat);
       hands.forEach((hand, i) => {
+        // A suit has its own gloves at its sides: separate hands show only when a headset tracks them.
+        setShown(hand, !suit || !!target.hands);
         if (target.hands) {
           Vector3.LerpToRef(cur.hands[i], target.hands[i], Math.min(1, k * 1.5), cur.hands[i]);
           hand.position.copyFrom(cur.hands[i]);

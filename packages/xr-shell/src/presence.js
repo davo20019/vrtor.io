@@ -37,9 +37,9 @@ const storeName = (name) => {
  * while you're between places: { area, head: Vector3 (eyes), forward: Vector3,
  * left?: Vector3, right?: Vector3 } (hands, in the headset). Positions are only
  * compared between people in the same `area`. `onChange(state)` fires whenever
- * what the UI shows changes.
+ * what the UI shows changes. `outfit` dresses everyone's avatar for the subject (see avatar.js).
  */
-export function createPresence(scene, { subject, getPose, onChange }) {
+export function createPresence(scene, { subject, getPose, onChange, outfit = null }) {
   const state = {
     status: 'connecting', // connecting | online | offline | off
     here: 0, // visible people, you included
@@ -177,7 +177,7 @@ export function createPresence(scene, { subject, getPose, onChange }) {
 
   function addPerson(p) {
     if (!state.joined || avatars.has(p.id) || p.id === state.me?.id) return;
-    const avatar = createAvatar(scene, p);
+    const avatar = createAvatar(scene, { ...p, outfit });
     avatars.set(p.id, avatar);
     if (p.p) avatar.setPose(p.p, true);
     if (state.voice) voice.addPeer(p.id);

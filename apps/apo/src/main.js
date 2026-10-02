@@ -8,6 +8,7 @@ import { createCard, createPresence, createXr, mountPresenceControls, presenceCa
 import { buildSpace, createSpaceScene } from './space.js';
 import { loadCapsule } from './capsule.js';
 import { attachFloat } from './float.js';
+import { loadSuit } from './suit.js';
 import { STOPS, WELCOME } from './stops.js';
 import './style.css';
 
@@ -91,7 +92,7 @@ function content(i) {
     return {
       kicker: 'Tour complete',
       title: 'You have been inside Columbia',
-      body: 'Float around it, go back in, or point at any glowing marker to read about it again. Three days after Collins wrote his note, Columbia splashed down in the Pacific with all three astronauts aboard.',
+      body: 'Float around it, go back in, or point at any glowing marker to read about it again. On July 24, 1969, Columbia splashed down in the Pacific with all three astronauts aboard.',
       fact: 'The scan: Smithsonian National Air and Space Museum. The Moon and Earth: NASA.',
       actions: [
         { label: 'Start over', onClick: () => go(0, true) },
@@ -305,9 +306,17 @@ async function start() {
   camera.alpha = Math.atan2(off.z, off.x);
   camera.beta = Math.acos(off.y / off.length());
 
+  // Visitors' suits load alongside; without one, visitors keep the usual figures.
+  const suit = await loadSuit(scene).catch((err) => {
+    console.warn('[apo] no spacesuit', err);
+    return null;
+  });
+
   let refreshBar = () => {};
   presence = createPresence(scene, {
     subject: 'apo',
+    // Everyone here wears Neil Armstrong's suit, with a clear helmet over their face (avatar.js).
+    outfit: suit ? { suit } : null,
     getPose: poseNow,
     onChange: (state) => {
       refreshBar(state);
