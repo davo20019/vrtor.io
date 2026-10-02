@@ -20,7 +20,7 @@
   <meta property="og:site_name" content="vrtor" />
   <meta property="og:url" content="https://vrtor.io/" />
   <meta property="og:title" content="vrtor: Learn by doing in VR, right in your browser" />
-  <meta property="og:description" content="Free 3D learning experiences in your headset's browser, with AI coaching where it helps. Start with Communication at vrtor.io/com." />
+  <meta property="og:description" content="Free 3D learning experiences in your headset's browser: walk Machu Picchu, study the Taj Mahal, explore the Perseverance rover on Mars, practice your English accent. AI coaching where it helps." />
   <meta property="og:image" content="https://vrtor.io/og-image.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -28,7 +28,7 @@
   <meta property="og:locale" content="en_US" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="vrtor: Learn by doing in VR, right in your browser" />
-  <meta name="twitter:description" content="Free 3D learning experiences in your headset's browser, with AI coaching where it helps. Start with Communication at vrtor.io/com." />
+  <meta name="twitter:description" content="Free 3D learning experiences in your headset's browser: walk Machu Picchu, study the Taj Mahal, explore the Perseverance rover on Mars, practice your English accent. AI coaching where it helps." />
   <meta name="twitter:image" content="https://vrtor.io/og-image.jpg" />
   <meta name="theme-color" content="#E9EEF2" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -58,22 +58,21 @@
       <div class="journey-sticky">
         <canvas class="journey-canvas" aria-hidden="true"></canvas>
         <div class="journey-fade" aria-hidden="true"></div>
-        <p class="journey-loading" role="status">Loading the café <span>0%</span></p>
+        <p class="journey-loading" role="status">Loading the subjects <span>0%</span></p>
 
         <div class="beat beat-intro on" data-beat="0,0.05">
           <h1 id="hero-title" class="hero-h1">Learn by doing in VR, right in your browser.</h1>
           <p class="eyebrow">In your headset's browser, go to</p>
           <p class="address">
-            <span class="sr-only">vrtor.io/com</span>
+            <span class="sr-only">vrtor.io/mpc</span>
             <span class="address-bar" aria-hidden="true">
-              <span class="host">vrtor.io/</span><span class="path" data-type="com"></span><span class="caret"></span>
+              <span class="host">vrtor.io/</span><span class="path" data-type="mpc"></span><span class="caret"></span>
             </span>
           </p>
           <p class="lede">Every subject is its own 3D experience, free to explore. No app store, nothing to install.</p>
           <div class="actions">
-            <a class="btn primary" href="/com">Try Communication</a>
+            <a class="btn primary" href="#subjects">Explore the subjects</a>
             <button class="btn ghost" type="button" data-enter-vr hidden>Walk through it in VR</button>
-            <a class="btn ghost" href="#subjects">See all subjects</a>
           </div>
           <p class="scroll-cue">Scroll through the catalog</p>
         </div>
@@ -115,7 +114,7 @@
           <h2>One address per subject.</h2>
           <p>Communication, Space, Taj Mahal and Machu Picchu are open today. Math and Nature are next.</p>
           <div class="actions">
-            <a class="btn primary" href="/com">Start with Communication</a>
+            <a class="btn primary" href="#subjects">Pick a subject</a>
             <a class="btn ghost" href="#waitlist">Get told when the next opens</a>
           </div>
         </div>
@@ -129,28 +128,6 @@
         <h2 id="subjects-title">What do you want to learn?</h2>
         <p>Each subject is three letters after vrtor.io/, so it's quick to type with a controller.</p>
       </div>
-
-      <article class="featured">
-        <div class="featured-media">
-          <img src="/assets/cards/communication-stage.jpg?v=2" alt="A speaker on stage in a keynote hall, seen from the audience" loading="lazy" width="1200" height="693" />
-        </div>
-        <div class="featured-body">
-          <p class="status"><span class="dot" aria-hidden="true"></span>Open now</p>
-          <h3>Communication</h3>
-          <code class="address-chip"><span>vrtor.io/</span>com</code>
-          <p class="featured-line">Practice the conversations that matter before they happen. People talk back, and an AI coach tells you what to change on the next take.</p>
-          <p class="ai-note"><span class="ai-badge">AI coach</span> Coaching runs on Acento; sign in there to use it.</p>
-          <ul class="topics" aria-label="Topics in Communication">
-            <li>Coffee chat</li>
-            <li>Job interview</li>
-            <li>Talk on stage</li>
-          </ul>
-          <div class="actions">
-            <a class="btn primary" href="/com">Open Communication</a>
-            <a class="btn ghost" href="#open">How to open it in a headset</a>
-          </div>
-        </div>
-      </article>
 
       <article class="featured">
         <div class="featured-media">
@@ -178,6 +155,28 @@
           <p class="ai-note"><span class="ai-badge">Visitors</span> Choose Join others to see who else is exploring and talk with them. Your mic stays off until you press Talk.</p>
           <ul class="topics" aria-label="Topics in Machu Picchu"><li>Inca stonework</li><li>Connected citadel</li><li>Four challenges</li><li>Explore with others</li></ul>
           <div class="actions"><a class="btn primary" href="/mpc/">Open Machu Picchu</a><a class="btn ghost" href="#open">Open in a headset</a></div>
+        </div>
+      </article>
+
+      <article class="featured">
+        <div class="featured-media">
+          <img src="/assets/cards/communication-stage.jpg?v=2" alt="A speaker on stage in a keynote hall, seen from the audience" loading="lazy" width="1200" height="693" />
+        </div>
+        <div class="featured-body">
+          <p class="status"><span class="dot" aria-hidden="true"></span>Open now</p>
+          <h3>Communication</h3>
+          <code class="address-chip"><span>vrtor.io/</span>com</code>
+          <p class="featured-line">Practice the conversations that matter before they happen. People talk back, and an AI coach tells you what to change on the next take.</p>
+          <p class="ai-note"><span class="ai-badge">AI coach</span> Communication is accent and speaking practice from Acento, one of the vrtor subjects. Sign in to Acento to use the coach.</p>
+          <ul class="topics" aria-label="Topics in Communication">
+            <li>Coffee chat</li>
+            <li>Job interview</li>
+            <li>Talk on stage</li>
+          </ul>
+          <div class="actions">
+            <a class="btn primary" href="/com">Open Communication</a>
+            <a class="btn ghost" href="#open">How to open it in a headset</a>
+          </div>
         </div>
       </article>
 
@@ -254,7 +253,7 @@
       </div>
       <ol class="step-list">
         <li><div><strong>Open the browser.</strong> On Quest, it's the globe icon in your app library.</div></li>
-        <li><div><strong>Type the subject's address.</strong> For example <code>vrtor.io/com</code>. Bookmark it so next time is one click.</div></li>
+        <li><div><strong>Type the subject's address.</strong> For example <code>vrtor.io/mpc</code> for Machu Picchu. Bookmark it so next time is one click.</div></li>
         <li><div><strong>Press Enter VR.</strong> Look around, and point with your controller at anything with a label.</div></li>
         <li><div><strong>Using Communication?</strong> Allow the microphone when asked. The coach listens and gives feedback between takes.</div></li>
         <li><div><strong>Want company?</strong> In Space, Taj Mahal or Machu Picchu, choose Join others (or press B or Y on the controller) to appear to other visitors. Your mic stays off until you choose Talk, voices fade with distance, and you can mute anyone just for you.</div></li>
@@ -276,7 +275,7 @@
 
   <footer class="foot">
     <span>vrtor.io</span>
-    <span>Communication is built with <a href="https://accent.learnenglishsounds.com/">Acento</a>. <a href="/assets/CREDITS.md">3D credits</a></span>
+    <span>The Communication subject is powered by <a href="https://accent.learnenglishsounds.com/">Acento</a>. <a href="/assets/CREDITS.md">3D credits</a></span>
     <span>Built by <a href="https://davidloor.com">David Loor</a></span>
   </footer>
 
