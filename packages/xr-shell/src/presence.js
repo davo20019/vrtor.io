@@ -1,19 +1,36 @@
 // Other people in the same subject, live: a head count for everyone, and for
-// those who choose to be visible, simple avatars and spatial voice (voice.js).
+// those who choose to be visible, avatars (avatar.js), spatial voice (voice.js),
+// a chime and a notice when people arrive or leave, and a name they can choose.
 // The server side is apps/home/src/presence.js.
 //
 // Nobody is visible or heard until they join; the mic stays off until they turn
 // it on. Tapping someone's avatar mutes them for you only.
-import {
-  Color3, DynamicTexture, Mesh, MeshBuilder, PointerEventTypes, Quaternion, StandardMaterial, TransformNode, Vector3,
-} from '@babylonjs/core';
+import { PointerEventTypes } from '@babylonjs/core';
+import { createAvatar } from './avatar.js';
+import { createToast } from './toast.js';
 import { createVoice } from './voice.js';
 
 const SEND_INTERVAL_MS = 100;
 /** Resend an unchanged pose this often, so late joiners and the room stay current. */
 const HEARTBEAT_MS = 2000;
 const RECONNECT_MS = [1000, 3000, 8000, 20000];
-const TAG_HEIGHT = 0.32;
+/** At most one arrival/departure chime this often, however many people come and go. */
+const CHIME_GAP_MS = 1500;
+const NAME_KEY = 'vrtor.presence.name';
+
+const storedName = () => {
+  try {
+    return localStorage.getItem(NAME_KEY) || '';
+  } catch {
+    return '';
+  }
+};
+const storeName = (name) => {
+  try {
+    if (name) localStorage.setItem(NAME_KEY, name);
+    else localStorage.removeItem(NAME_KEY);
+  } catch {}
+};
 
 /**
  * `subject` is the three-letter code. `getPose()` returns where you are now, or null
@@ -33,6 +50,7 @@ export function createPresence(scene, { subject, getPose, onChange }) {
     micLive: false, // you're making sound right now
     micError: '',
     me: null, // { id, name, color }
+    notice: null, // { text, n }: the latest arrival, departure or name change, to show briefly
   };
   const avatars = new Map();
   let ws = null;
@@ -42,6 +60,27 @@ export function createPresence(scene, { subject, getPose, onChange }) {
   let lastPose = '';
   let lastLevels = 0;
   let myArea = null;
+  let lastChime = 0;
+  let notices = 0;
+  /** A name asked for with setName() that the server hasn't answered yet. */
+  let pendingName = null;
+  /** The saved name sent with the last join: kept quietly if allowed. */
+  let joinName = null;
+  const toast = createToast(scene);
+
+  const inXr = () => scene.activeCamera?.getClassName() === 'WebXRCamera';
+
+  /** Shows a short notice (in HTML through onChange, and floating ahead in the headset). */
+  function notify(text, chime = null) {
+    state.notice = { text, n: ++notices };
+    const camera = scene.activeCamera;
+    if (inXr()) toast.show(text, camera, state.me?.color);
+    const now = performance.now();
+    if (chime !== null && now - lastChime > CHIME_GAP_MS) {
+      lastChime = now;
+      voice.chime(chime);
+    }
+  }
 
   const changed = () => onChange?.({ ...state, people: [...avatars.values()].map((a) => a.info()) });
 
@@ -99,10 +138,33 @@ export function createPresence(scene, { subject, getPose, onChange }) {
       state.online = msg.online;
     } else if (msg.t === 'peers') {
       for (const p of msg.peers) addPerson(p);
+      const n = msg.peers.length;
+      if (n) notify(`${n} ${n === 1 ? 'person is' : 'people are'} here with you`);
     } else if (msg.t === 'joined') {
+      if (!state.joined) return;
       addPerson(msg.peer);
+      notify(`${msg.peer.name} joined`, true);
     } else if (msg.t === 'left') {
+      const avatar = avatars.get(msg.id);
+      if (!avatar) return;
+      notify(`${avatar.name} left`, false);
       removePerson(msg.id);
+    } else if (msg.t === 'renamed') {
+      const avatar = avatars.get(msg.id);
+      if (!avatar) return;
+      notify(`${avatar.name} is now ${msg.name}`);
+      avatar.setName(msg.name);
+    } else if (msg.t === 'you') {
+      if (!state.me) return;
+      state.me.name = msg.name;
+      if (msg.rejected && (pendingName !== null || joinName)) {
+        // Not allowed (or taken): forget it so it isn't sent again, and say why.
+        storeName('');
+        notify(`That name can't be used. You're ${msg.name}.`);
+      } else if (pendingName !== null) {
+        notify(`You're now ${msg.name}`);
+      }
+      pendingName = joinName = null;
     } else if (msg.t === 'pose') {
       avatars.get(msg.id)?.setPose(msg.p);
       return; // positions don't change the UI
@@ -142,7 +204,9 @@ export function createPresence(scene, { subject, getPose, onChange }) {
   function sendJoin() {
     const pose = getPose();
     state.joined = true;
-    send({ t: 'join', p: pose ? encode(pose) : undefined });
+    const name = storedName();
+    joinName = name || null;
+    send({ t: 'join', p: pose ? encode(pose) : undefined, name: name || undefined });
   }
 
   scene.onBeforeRenderObservable.add(() => {
@@ -164,7 +228,7 @@ export function createPresence(scene, { subject, getPose, onChange }) {
     }
     const dt = Math.min(0.1, scene.getEngine().getDeltaTime() / 1000);
     for (const [id, avatar] of avatars) {
-      const visible = avatar.update(dt, myArea);
+      const visible = avatar.update(dt, myArea, voice.level(id), pose?.head);
       voice.setSource(id, avatar.headPosition, visible);
     }
     if (now - lastLevels > 120) {
@@ -197,7 +261,7 @@ export function createPresence(scene, { subject, getPose, onChange }) {
 
   connect();
 
-  return {
+  const api = {
     get state() {
       return state;
     },
@@ -229,154 +293,65 @@ export function createPresence(scene, { subject, getPose, onChange }) {
       } catch (e) {
         console.warn('[presence] mic unavailable', e);
         state.micOn = false;
-        state.micError = e?.name === 'NotAllowedError' ? 'Microphone access was blocked.' : 'No microphone was found.';
+        const blocked = e?.name === 'NotAllowedError';
+        // The headset browser may not be able to ask for the mic inside VR: allowing it once
+        // on the flat page (Talk before Enter VR) is remembered for this site.
+        state.micError = inXr()
+          ? 'The mic needs permission. Leave VR, tap Talk once to allow it, then come back.'
+          : blocked
+            ? 'Microphone access was blocked. Allow it in the browser’s site settings.'
+            : 'No microphone was found.';
+        if (inXr()) notify(blocked ? 'Mic blocked: allow it outside VR' : 'Mic unavailable');
       }
       changed();
     },
+    /**
+     * Headset controls: B or Y joins, then turns your mic on and off, with a notice
+     * floating ahead so you know which it is. `xr` is the WebXRDefaultExperience.
+     */
+    attachXr(xr) {
+      xr.input.onControllerAddedObservable.add((source) =>
+        source.onMotionControllerInitObservable.add((mc) => {
+          for (const id of ['b-button', 'y-button']) {
+            mc.getComponent(id)?.onButtonStateChangedObservable.add(async (c) => {
+              if (!c.changes.pressed?.current || state.status !== 'online') return;
+              if (!state.joined) {
+                api.join();
+                notify('You joined. Press B or Y again to talk.');
+              } else if (state.voice) {
+                await api.setMic(!state.micOn);
+                if (!state.micError) notify(state.micOn ? 'Mic on: others can hear you' : 'Mic off');
+              }
+            });
+          }
+        }),
+      );
+    },
+    /** Your name: as typed (kept for next time if the server allows it), or a new random one with `random`. */
+    setName(name, { random = false } = {}) {
+      if (state.status !== 'online') return;
+      if (random) {
+        storeName('');
+        pendingName = '';
+        send({ t: 'rename', random: true });
+        return;
+      }
+      const clean = String(name ?? '').replace(/\s+/g, ' ').trim().slice(0, 20);
+      if (!clean || clean === state.me?.name) return;
+      storeName(clean);
+      pendingName = clean;
+      send({ t: 'rename', name: clean });
+    },
     /** Voice connection states, for debugging. */
-    stats: () => voice.stats(),
+    stats: () => {
+      const pose = getPose();
+      const r = (v) => v && [v.x, v.y, v.z].map((n) => +n.toFixed(2));
+      return { ...voice.stats(), area: myArea, me: r(pose?.head), people: [...avatars].map(([id, a]) => ({ id, head: r(a.headPosition), drawn: a.drawn })) };
+    },
     /** Mutes or unmutes one person for you only; returns whether they're now muted. */
     toggleSilenced,
     /** Whether a picked mesh is part of someone's avatar (taps on it are handled here). */
     isAvatar: (mesh) => !!mesh?.metadata?.presenceId,
   };
-}
-
-// A person: head with a visor (so you can tell where they look), a body below it,
-// hands when they're in a headset, and a name tag that lights up while they talk.
-function createAvatar(scene, { id, name, color }) {
-  const root = new TransformNode(`person-${id}`, scene);
-  const tint = Color3.FromHexString(color);
-  const skin = new StandardMaterial(`person-${id}`, scene);
-  skin.diffuseColor = tint;
-  skin.emissiveColor = tint.scale(0.25);
-  skin.specularColor = new Color3(0.15, 0.15, 0.15);
-  const dark = new StandardMaterial(`person-${id}-visor`, scene);
-  dark.diffuseColor = new Color3(0.05, 0.06, 0.08);
-  dark.specularColor = new Color3(0.6, 0.6, 0.6);
-
-  const head = new TransformNode(`person-${id}-head`, scene);
-  head.parent = root;
-  head.rotationQuaternion = Quaternion.Identity();
-  const skull = MeshBuilder.CreateSphere(`person-${id}-skull`, { diameter: 0.24, segments: 12 }, scene);
-  skull.material = skin;
-  skull.parent = head;
-  const visor = MeshBuilder.CreateBox(`person-${id}-face`, { width: 0.18, height: 0.07, depth: 0.06 }, scene);
-  visor.material = dark;
-  visor.position.set(0, 0.01, 0.1);
-  visor.parent = head;
-
-  const body = MeshBuilder.CreateCapsule(`person-${id}-body`, { height: 1.2, radius: 0.17, tessellation: 12 }, scene);
-  body.material = skin;
-  body.parent = root;
-
-  const hands = [0, 1].map((i) => {
-    const hand = MeshBuilder.CreateSphere(`person-${id}-hand${i}`, { diameter: 0.09, segments: 8 }, scene);
-    hand.material = skin;
-    hand.parent = root;
-    hand.setEnabled(false);
-    return hand;
-  });
-
-  const tag = MeshBuilder.CreatePlane(`person-${id}-tag`, { width: 0.6, height: 0.15 }, scene);
-  tag.billboardMode = Mesh.BILLBOARDMODE_ALL;
-  tag.parent = root;
-  const tex = new DynamicTexture(`person-${id}-tag`, { width: 512, height: 128 }, scene, true);
-  tex.hasAlpha = true;
-  const tagMat = new StandardMaterial(`person-${id}-tag`, scene);
-  tagMat.diffuseTexture = tex;
-  tagMat.emissiveColor = Color3.White();
-  tagMat.disableLighting = true;
-  tagMat.useAlphaFromDiffuseTexture = true;
-  tagMat.backFaceCulling = false;
-  tag.material = tagMat;
-  tag.applyFog = false;
-
-  const pickable = [skull, visor, body, tag];
-  for (const m of [skull, visor, body, tag, ...hands]) {
-    m.isPickable = pickable.includes(m);
-    m.metadata = { presenceId: id };
-  }
-
-  let speaking = false;
-  let silenced = false;
-  const drawTag = () => {
-    const c = tex.getContext();
-    c.clearRect(0, 0, 512, 128);
-    c.fillStyle = speaking ? 'rgba(255,255,255,0.92)' : 'rgba(12,13,18,0.78)';
-    c.beginPath();
-    c.roundRect(4, 14, 504, 100, 50);
-    c.fill();
-    c.lineWidth = 6;
-    c.strokeStyle = color;
-    c.stroke();
-    c.font = '600 46px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
-    c.textAlign = 'center';
-    c.textBaseline = 'middle';
-    c.fillStyle = speaking ? '#111' : '#fff';
-    c.fillText(silenced ? `${name} · muted` : name, 256, 66, 470);
-    tex.update();
-  };
-  drawTag();
-
-  // Received poses are eased toward, so 10 updates a second look smooth.
-  const target = { area: null, head: new Vector3(), yaw: 0, pitch: 0, hands: null };
-  const cur = { head: new Vector3(), yaw: 0, pitch: 0, hands: [new Vector3(), new Vector3()] };
-  let placed = false;
-  root.setEnabled(false);
-
-  return {
-    headPosition: cur.head,
-    info: () => ({ id, name, color, silenced }),
-    setPose(p, snap = false) {
-      target.area = p[0];
-      target.head.set(p[1], p[2], p[3]);
-      target.yaw = p[4];
-      target.pitch = p[5];
-      target.hands = p.length >= 12 ? [new Vector3(p[6], p[7], p[8]), new Vector3(p[9], p[10], p[11])] : null;
-      if (snap || !placed) {
-        cur.head.copyFrom(target.head);
-        cur.yaw = target.yaw;
-        cur.pitch = target.pitch;
-        if (target.hands) target.hands.forEach((h, i) => cur.hands[i].copyFrom(h));
-        placed = true;
-      }
-    },
-    /** Moves toward the latest pose; returns whether they're visible (in your area). */
-    update(dt, area) {
-      const visible = placed && target.area === area;
-      root.setEnabled(visible);
-      if (!visible) return false;
-      const k = 1 - Math.exp(-dt * 12);
-      // A jump (teleport or a new area) snaps instead of sliding through walls.
-      if (Vector3.DistanceSquared(cur.head, target.head) > 9) cur.head.copyFrom(target.head);
-      else Vector3.LerpToRef(cur.head, target.head, k, cur.head);
-      cur.yaw += Math.atan2(Math.sin(target.yaw - cur.yaw), Math.cos(target.yaw - cur.yaw)) * k;
-      cur.pitch += (target.pitch - cur.pitch) * k;
-      head.position.copyFrom(cur.head);
-      Quaternion.FromEulerAnglesToRef(-cur.pitch, cur.yaw, 0, head.rotationQuaternion);
-      body.position.set(cur.head.x, cur.head.y - 0.85, cur.head.z);
-      body.rotation.y = cur.yaw;
-      tag.position.set(cur.head.x, cur.head.y + TAG_HEIGHT, cur.head.z);
-      hands.forEach((hand, i) => {
-        hand.setEnabled(!!target.hands);
-        if (!target.hands) return;
-        Vector3.LerpToRef(cur.hands[i], target.hands[i], Math.min(1, k * 1.5), cur.hands[i]);
-        hand.position.copyFrom(cur.hands[i]);
-      });
-      return true;
-    },
-    setSpeaking(on) {
-      speaking = on;
-      drawTag();
-    },
-    setSilenced(on) {
-      silenced = on;
-      drawTag();
-    },
-    dispose() {
-      root.dispose(false, true);
-      tex.dispose();
-    },
-  };
+  return api;
 }

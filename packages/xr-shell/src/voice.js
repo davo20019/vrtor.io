@@ -14,6 +14,13 @@ const ICE = [{ urls: 'stun:stun.cloudflare.com:3478' }];
 const REF_DISTANCE = 2;
 const MAX_DISTANCE = 30;
 const SPEAKING_LEVEL = 0.025;
+/**
+ * HRTF (sound placed around your head) costs real CPU on a headset per voice; the
+ * cheaper equal-power panning is used beyond this distance, where it's hard to tell
+ * apart. The gap between the two avoids flipping back and forth at the edge.
+ */
+const HRTF_NEAR = 8;
+const HRTF_FAR = 10;
 
 export function createVoice({ signal, onActivity }) {
   let ctx = null;
@@ -95,7 +102,7 @@ export function createVoice({ signal, onActivity }) {
       entry.gain = ctx.createGain();
       entry.gain.gain.value = 0;
       entry.panner = new PannerNode(ctx, {
-        panningModel: 'HRTF',
+        panningModel: 'equalpower',
         distanceModel: 'linear',
         refDistance: REF_DISTANCE,
         maxDistance: MAX_DISTANCE,
@@ -140,6 +147,8 @@ export function createVoice({ signal, onActivity }) {
     node[`${prefix}Y`].setTargetAtTime(v.y, t, 0.05);
     node[`${prefix}Z`].setTargetAtTime(-v.z, t, 0.05);
   };
+
+  const listener = { x: 0, y: 0, z: 0 };
 
   return {
     unlock,
@@ -200,6 +209,9 @@ export function createVoice({ signal, onActivity }) {
     isSilenced: (id) => silenced.has(id),
     /** Where you are: { head: Vector3, forward: Vector3 }. */
     setListener(head, forward) {
+      listener.x = head.x;
+      listener.y = head.y;
+      listener.z = head.z;
       if (!ctx?.listener.positionX) return;
       setXyz(ctx.listener, 'position', head);
       setXyz(ctx.listener, 'forward', forward);
@@ -212,7 +224,11 @@ export function createVoice({ signal, onActivity }) {
         entry.audible = audible;
         applyGain(id);
       }
-      if (entry.panner && head) setXyz(entry.panner, 'position', head);
+      if (!entry.panner || !head) return;
+      setXyz(entry.panner, 'position', head);
+      const d = Math.hypot(head.x - listener.x, head.y - listener.y, head.z - listener.z);
+      const model = d < HRTF_NEAR ? 'HRTF' : d > HRTF_FAR ? 'equalpower' : entry.panner.panningModel;
+      if (model !== entry.panner.panningModel) entry.panner.panningModel = model;
     },
     /** Polls voice levels; call a few times a second. */
     sampleLevels() {
@@ -225,6 +241,31 @@ export function createVoice({ signal, onActivity }) {
         }
       }
       return micAnalyser && !micMuted ? rms(micAnalyser) > SPEAKING_LEVEL : false;
+    },
+    /** How loud someone is right now (0..~0.7), for moving their mouth; 0 if you can't hear them. */
+    level(id) {
+      const entry = incoming.get(id);
+      return entry?.analyser && entry.audible && !silenced.has(id) ? rms(entry.analyser) : 0;
+    },
+    /** A soft two-note chime: rising when someone arrives, falling when they leave. */
+    chime(arriving) {
+      if (!ctx || ctx.state !== 'running') return;
+      const t = ctx.currentTime;
+      const out = ctx.createGain();
+      out.gain.value = 0.08;
+      out.connect(ctx.destination);
+      (arriving ? [660, 880] : [740, 554]).forEach((freq, i) => {
+        const osc = new OscillatorNode(ctx, { type: 'sine', frequency: freq });
+        const env = ctx.createGain();
+        const start = t + i * 0.12;
+        env.gain.setValueAtTime(0, start);
+        env.gain.linearRampToValueAtTime(1, start + 0.02);
+        env.gain.exponentialRampToValueAtTime(0.001, start + 0.45);
+        osc.connect(env).connect(out);
+        osc.start(start);
+        osc.stop(start + 0.5);
+      });
+      setTimeout(() => out.disconnect(), 1200);
     },
     /** Connection states, for debugging: { incoming: [{ id, state, audible, speaking }], outgoing: [...] }. */
     stats() {

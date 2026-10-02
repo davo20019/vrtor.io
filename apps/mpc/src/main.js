@@ -14,7 +14,7 @@ let lesson=-1,phase='observe',feedback='',score=0,answered=new Set(),cardOpen=tr
 const inXr=()=>!!rig?.inXr();
 const action=(label,onClick,primary=false)=>({label,onClick:()=>{if(!busy)onClick();},primary});
 const siteCredit='Model: Ministerio de Cultura Perú, CC BY 4.0. Stone relief: INC Peru, CAST (University of Arkansas), Cotsen Institute (UCLA), CC BY-NC 3.0. Adapted by vrtor; layout and scale approximate.';
-const controls='Push the stick forward to teleport; left or right to turn. Trigger selects. A or X reopens this card.';
+const controls='Push the stick forward to teleport; left or right to turn. Trigger selects. A or X reopens this card; B or Y joins other visitors, then turns your mic on and off.';
 const credit='Survey: INC Peru, CAST (University of Arkansas) and Cotsen Institute (UCLA). CC BY-NC 3.0; adapted by vrtor.';
 function content(){
   const area=AREAS[destination??world?.active??0];
@@ -30,8 +30,11 @@ function content(){
 }
 // In the headset the bar isn't visible, so visitors are a page of the card.
 function peopleAction(){
-  if(!inXr()||!presence||presence.state.status==='off')return [];
-  return [action(`People · ${presence.state.online||1}`,()=>{people=true;render();})];
+  if(!inXr()||!presence||presence.state.status!=='online')return [];
+  const s=presence.state,open=()=>{people=true;render();};
+  // One step to join from the walk card; B or Y does the same anywhere (presence.attachXr).
+  if(!s.joined)return [action(s.online>1?`Join ${s.online-1} here`:'Join others',()=>{presence.join();open();})];
+  return [action(`People · ${s.here}`,open)];
 }
 function poseNow(){
   if(busy||!world)return null;
@@ -161,6 +164,7 @@ async function start(){
       // The initial floor-aware pose already matches the active area.
       render();
     });
+    presence.attachXr(rig.xr);
     rig.xr.input.onControllerAddedObservable.add(source=>source.onMotionControllerInitObservable.add(mc=>{
       for(const id of ['a-button','x-button'])mc.getComponent(id)?.onButtonStateChangedObservable.add(c=>{if(c.changes.pressed?.current){cardOpen=true;render();}});
     }));

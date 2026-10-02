@@ -410,8 +410,3 @@ body {
   .xr-ready .card { top:110px; max-height:calc(100dvh - 320px); }
 }
 
-/* Visitors (xr-shell presenceUi.js) */
-.presence-controls { display: contents; }
-.presence-mic.live { box-shadow: 0 0 0 3px var(--accent); }
-.presence-note { margin: 0; font-size: 12px; color: var(--muted); background: var(--panel); padding: 8px 12px; border-radius: 99px; }
-.presence-note[hidden] { display: none; }

@@ -4,8 +4,8 @@
 //
 // Every socket starts as a watcher (it only gets the head count). Sending
 // { t: 'join' } makes it visible: it then receives everyone's poses and can
-// exchange voice signaling with other visible people. Names are assigned here,
-// never chosen by clients.
+// exchange voice signaling with other visible people. Everyone gets a random
+// name; a name people choose is only kept if it passes cleanName().
 //
 // Kill switches (wrangler vars, or the dashboard): PRESENCE = "off" refuses new
 // connections; VOICE = "off" stops relaying voice signaling. A deploy restarts
@@ -23,6 +23,31 @@ const ANIMALS = ['Condor', 'Llama', 'Alpaca', 'Vicuña', 'Puma', 'Viscacha', 'Hu
 const COLORS = ['#ffb020', '#5ec8f2', '#f2735e', '#8fd16a', '#c48cf2', '#f2d65e', '#5ef2c1', '#f28cc4', '#7aa2ff', '#ff8a3d', '#b5e655', '#e6e6e6'];
 
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+// Chosen names: 2 to 20 letters, digits, spaces and . ' -; nothing that poses as
+// staff, and no slurs or profanity, with look-alike digits and symbols read as letters.
+// Unambiguous words are refused anywhere (also with the letters spaced out); words
+// that also sit inside ordinary names (Scunthorpe, Cocktail) only as whole words.
+const NAME_CHARS = /^[\p{L}\p{N}][\p{L}\p{N} .'-]{1,19}$/u;
+const ANYWHERE = ['fuck', 'shit', 'nigg', 'faggot', 'whore', 'porn', 'hitler', 'nazi', 'retard', 'pendej', 'mierda'];
+const WORDS = [
+  'admin', 'administrator', 'mod', 'moderator', 'official', 'vrtor', 'staff', 'support', 'anthropic', 'claude',
+  'cunt', 'bitch', 'dick', 'cock', 'pussy', 'slut', 'sex', 'sexy', 'rape', 'fag', 'kike', 'spic', 'chink',
+  'tranny', 'puta', 'puto', 'verga', 'marica', 'maricon', 'culo', 'ass', 'asshole', 'penis', 'vagina',
+];
+const LOOKALIKES = { 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', 8: 'b', '@': 'a', $: 's', '!': 'i' };
+
+export function cleanName(raw) {
+  if (typeof raw !== 'string') return null;
+  const name = raw.normalize('NFKC').replace(/\s+/g, ' ').trim();
+  if (!NAME_CHARS.test(name)) return null;
+  const plain = [...name.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')].map((c) => LOOKALIKES[c] ?? c).join('');
+  const squashed = plain.replace(/[^a-z]/g, '');
+  if (ANYWHERE.some((word) => squashed.includes(word))) return null;
+  const words = plain.split(/[^a-z]+/).filter(Boolean);
+  if (words.some((w) => WORDS.includes(w) || WORDS.includes(w.replace(/e?s$/, '')))) return null;
+  return name;
+}
 
 /** Upgrades `request` into the first room instance of `code` with space. */
 export async function connectPresence(request, env, code) {
@@ -48,11 +73,7 @@ export class PresenceRoom extends DurableObject {
   async fetch() {
     if (this.ctx.getWebSockets().length >= ROOM_SIZE) return new Response('Full', { status: 409 });
     const [client, server] = Object.values(new WebSocketPair());
-    const taken = new Set(this.people().map((p) => p.name));
-    let name;
-    do name = `${pick(ADJECTIVES)} ${pick(ANIMALS)}`;
-    while (taken.has(name) && taken.size < 100);
-    const me = { id: crypto.randomUUID().slice(0, 8), name, color: pick(COLORS), joined: false, pose: null };
+    const me = { id: crypto.randomUUID().slice(0, 8), name: this.randomName(), color: pick(COLORS), joined: false, pose: null };
     this.ctx.acceptWebSocket(server);
     server.serializeAttachment(me);
     send(server, { t: 'hello', id: me.id, name: me.name, color: me.color, voice: this.env.VOICE !== 'off', size: ROOM_SIZE });
@@ -72,10 +93,20 @@ export class PresenceRoom extends DurableObject {
     if (msg.t === 'join' && !me.joined) {
       me.joined = true;
       me.pose = validPose(msg.p);
+      if (msg.name !== undefined) me.name = this.uniqueName(cleanName(msg.name), me.id) ?? me.name;
       ws.serializeAttachment(me);
+      send(ws, { t: 'you', name: me.name, rejected: msg.name !== undefined && me.name !== cleanName(msg.name) });
       send(ws, { t: 'peers', peers: this.people().filter((p) => p.id !== me.id).map(publicPerson) });
       this.broadcast({ t: 'joined', peer: publicPerson(me) }, ws);
       this.broadcastCount();
+    } else if (msg.t === 'rename') {
+      const wanted = msg.random ? this.randomName() : cleanName(msg.name);
+      const name = this.uniqueName(wanted, me.id);
+      send(ws, { t: 'you', name: name ?? me.name, rejected: !name });
+      if (!name || name === me.name) return;
+      me.name = name;
+      ws.serializeAttachment(me);
+      if (me.joined) this.broadcast({ t: 'renamed', id: me.id, name }, ws);
     } else if (msg.t === 'leave' && me.joined) {
       me.joined = false;
       me.pose = null;
@@ -110,6 +141,23 @@ export class PresenceRoom extends DurableObject {
     } catch {}
     if (me?.joined) this.broadcast({ t: 'left', id: me.id }, ws);
     this.broadcastCount(ws);
+  }
+
+  randomName() {
+    const taken = new Set(this.sockets().map((ws) => ws.deserializeAttachment()?.name));
+    let name;
+    do name = `${pick(ADJECTIVES)} ${pick(ANIMALS)}`;
+    while (taken.has(name) && taken.size < 100);
+    return name;
+  }
+
+  /** `name` if nobody else in the room has it, else with a number added; null for no name. */
+  uniqueName(name, id) {
+    if (!name) return null;
+    const taken = new Set(this.sockets().map((ws) => ws.deserializeAttachment()).filter((p) => p && p.id !== id).map((p) => p.name.toLowerCase()));
+    if (!taken.has(name.toLowerCase())) return name;
+    for (let n = 2; n < 100; n++) if (!taken.has(`${name} ${n}`.toLowerCase())) return `${name.slice(0, 17)} ${n}`;
+    return null;
   }
 
   allow(ws) {
