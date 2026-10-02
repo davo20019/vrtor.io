@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XH9FQG8X8F"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XH9FQG8X8F');
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Orca: a killer whale, inside out · VRtor</title>
+  <meta name="description" content="Walk around the real skeleton of an adult male killer whale, scanned by the University of Pisa's Natural History Museum, at full size. Learn how a whale is built, put its skin back on and hear orcas call, in a VR headset's browser or any web browser." />
+  <link rel="canonical" href="https://vrtor.io/orca/" />
+  <meta name="theme-color" content="#10161c" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:title" content="Orca: a killer whale, inside out · VRtor" />
+  <meta property="og:description" content="The real skeleton of a male killer whale at full size. Put its skin back on and hear orcas call. In VR, right in your browser." />
+  <meta property="og:image" content="https://vrtor.io/assets/cards/orca.jpg" />
+  <meta property="og:url" content="https://vrtor.io/orca/" />
+</head>
+<body>
+  <canvas id="scene" aria-label="3D scene: the skeleton of an adult male killer whale and a bottlenose dolphin in a museum gallery"></canvas>
+
+  <header class="top">
+    <a class="brand" href="/">VRtor<span>Orca</span></a>
+  </header>
+
+  <div class="loading" role="status">
+    <p>Opening the gallery…</p>
+    <p class="loading-pct">0%</p>
+  </div>
+
+  <section class="card" aria-live="polite" hidden>
+    <button class="card-close" type="button" aria-label="Close card">×</button>
+    <p class="card-kicker"></p>
+    <h1 class="card-title"></h1>
+    <p class="card-body"></p>
+    <p class="card-fact"></p>
+    <div class="card-actions"></div>
+  </section>
+
+  <button class="vr-cta" type="button" data-enter-vr hidden>
+    <svg viewBox="0 0 32 20" width="40" height="25" aria-hidden="true"><path fill="currentColor" d="M4 0h24a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4h-6.2a3 3 0 0 1-2.6-1.6l-1.5-2.7a2 2 0 0 0-3.4 0l-1.5 2.7A3 3 0 0 1 10.2 18H4a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4Zm5 5.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm14 0a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/></svg>
+    <span class="vr-cta-text"><strong>Enter VR</strong><small>Stand beside it at full size</small></span>
+  </button>
+
+  <nav class="bar" aria-label="Controls">
+    <button class="btn" type="button" data-tour disabled>Tour</button>
+    <button class="btn" type="button" data-skin disabled>Put the skin back</button>
+    <button class="btn" type="button" data-listen aria-pressed="false" disabled>Hear orcas call</button>
+    <div class="presence-controls"></div>
+    <p class="hint" hidden>Drag to look around · scroll to zoom · click a glowing marker</p>
+  </nav>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

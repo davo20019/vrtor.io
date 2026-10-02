@@ -43,3 +43,7 @@ Machu Picchu mountain colour: **Sentinel-2 cloudless 2016** by **EOX IT Services
 ## Wright Flyer
 
 - `cards/wright-flyer.jpg`: rendered from vrtor.io/fly, the Smithsonian National Air and Space Museum's 3D scan of the 1903 Wright Flyer (CC0), colored by VRtor. Sources: [`/fly/models/CREDITS.md`](/fly/models/CREDITS.md).
+
+## Orca
+
+- `cards/orca.jpg`: rendered from vrtor.io/orca: the University of Pisa Natural History Museum's 3D scans of a killer whale (C 301) and a bottlenose dolphin (C 281), CC BY-SA 4.0, adapted by vrtor; the orca's see-through body is drawn by vrtor. This image is shared under CC BY-SA 4.0. Sources: [`/orca/models/CREDITS.md`](/orca/models/CREDITS.md).

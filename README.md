@@ -15,6 +15,7 @@ apps/taj/        Taj Mahal, Worker "vrtor-taj"
 apps/mpc/        Machu Picchu (with visitors), Worker "vrtor-mpc"
 apps/apo/        Apollo 11: inside Columbia in lunar orbit, Worker "vrtor-apo"
 apps/fly/        Wright Flyer: the 1903 Flyer at Kill Devil Hills, Worker "vrtor-fly"
+apps/orca/       Orca: a killer whale skeleton, inside out, Worker "vrtor-orca"
 packages/xr-shell/  shared WebXR pieces for every subject (Quest-tuned session setup,
                  teleport, comfort fade, frame-rate governor, floating info card)
 ```

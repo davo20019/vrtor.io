@@ -1,5 +1,5 @@
 // Short links: vrtor.io/<code> opens that subject's WebXR app.
-// Codes are three letters (quick to type with a controller); the full word works too.
+// Codes are three or four letters (quick to type with a controller); the full word works too.
 // A subject is one of:
 //   - `service`: its own Worker in this repo (apps/<code>), served right here at
 //     vrtor.io/<code>/ through that service binding (see wrangler.jsonc)
@@ -12,6 +12,7 @@ const TAJ = { name: 'Taj Mahal', code: 'taj', service: 'TAJ' };
 const SPACE = { name: 'Space', code: 'spc', service: 'SPC' };
 const APOLLO = { name: 'Apollo 11', code: 'apo', service: 'APO' };
 const FLYER = { name: 'Wright Flyer', code: 'fly', service: 'FLY' };
+const ORCA = { name: 'Orca', code: 'orca', service: 'ORCA' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
 const NATURE = { name: 'Nature' };
@@ -48,6 +49,13 @@ export const SUBJECTS = {
   wrightflyer: FLYER,
   kittyhawk: FLYER,
   'kitty-hawk': FLYER,
+
+  orca: ORCA,
+  orcas: ORCA,
+  'killer-whale': ORCA,
+  killerwhale: ORCA,
+  whale: ORCA,
+  whales: ORCA,
 
   mec: MECHANICS,
   mechanics: MECHANICS,

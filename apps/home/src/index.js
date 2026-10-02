@@ -26,7 +26,7 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
     // A WebSocket upgrade (status 101) can't be copied into a new Response, so it skips withHeaders.
-    const presence = url.pathname.match(/^\/api\/presence\/([a-z]{3})$/);
+    const presence = url.pathname.match(/^\/api\/presence\/([a-z]{3,4})$/);
     if (presence && SUBJECTS[presence[1]]?.service) return connectPresence(request, env, presence[1]);
     return withHeaders(await route(request, env, url), url);
   },

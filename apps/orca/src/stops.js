@@ -1,0 +1,117 @@
+// The tour. Positions are in each skeleton's own frame (metres, glTF axes: +Z toward the snout,
+// +Y up, the lowest bone at y = 0, -X is the visitors' side of the orca): `at` is what the stop
+// is about, `eye` where the viewer's eyes go, `look` where they look if not at `at`. `animal` is
+// the skeleton the positions belong to (the orca unless it says otherwise). `action` adds a
+// button: `skin` puts the orca's body back on, `listen` plays the recording.
+
+export const WELCOME = {
+  kicker: 'University of Pisa · Natural History Museum',
+  title: 'The orca, inside out',
+  body: 'This is the real skeleton of an adult male killer whale, scanned in 3D by the University of Pisa’s Natural History Museum and shown at full size. Walk around it, find out how a whale is built, put its skin back on, and hear orcas calling to each other.',
+  fact: 'Start the tour, or point at any glowing marker.',
+};
+
+export const STOPS = [
+  {
+    id: 'orca',
+    marker: false,
+    title: 'The biggest dolphin',
+    at: [-1.2, 0.5, 0.2],
+    eye: [-8.0, 1.35, -2.6],
+    body: 'Killer whales are the largest members of the dolphin family. Adult males like this one grow 6 to 8 metres long and weigh more than 6 tonnes. The small skeleton beside it is a bottlenose dolphin, the species most people picture when they hear “dolphin”.',
+    fact: 'This skeleton is about 6.3 m long. In life, with its tail flukes, the whale was close to 7 m.',
+  },
+  {
+    id: 'teeth',
+    title: 'Teeth for gripping',
+    at: [-0.225, 0.625, 2.909],
+    eye: [-1.25, 0.8, 3.75],
+    body: 'An orca has about 10 to 14 big, cone-shaped teeth on each side of each jaw, and they interlock when the mouth closes. Orcas don’t chew: the teeth grip and tear, and smaller prey is swallowed whole.',
+    fact: 'The largest teeth are about 10 cm long, most of each one rooted in the jaw.',
+  },
+  {
+    id: 'nose',
+    title: 'A nose on top of the head',
+    at: [-0.132, 1.156, 2.364],
+    eye: [-1.45, 0.85, 2.9],
+    body: 'Over millions of years, the nostrils of the whales’ ancestors moved from the tip of the snout to the top of the head. The bony openings are here, just in front of the high back of the skull. A single blowhole sits above them, so an orca can breathe with only the top of its head out of the water.',
+    fact: 'Toothed whales such as orcas have one blowhole. Baleen whales, like the humpback and the blue whale, have two.',
+  },
+  {
+    id: 'melon',
+    title: 'Seeing with sound',
+    at: [-0.103, 0.8, 2.844],
+    eye: [-1.4, 0.95, 3.4],
+    body: 'The broad, dished bones of the upper snout carried the melon, a rounded lens of fat in front of the blowhole. Orcas make clicks in their nasal passages, the melon focuses them into a beam, and the echoes tell them where prey is, even in dark or murky water.',
+    fact: 'This is echolocation. Bats do the same in air.',
+  },
+  {
+    id: 'jaw',
+    title: 'Hearing through the jaw',
+    at: [-0.27, 0.5, 2.42],
+    eye: [-1.5, 0.65, 2.45],
+    body: 'The back of the lower jaw is wide, thin-walled bone. In life it is filled with a channel of fat that carries the returning echoes straight to the ears, which sit just behind it, held loosely away from the rest of the skull.',
+    fact: 'Separate ears let an orca tell which way a sound comes from underwater, where sound travels about four times faster than in air.',
+  },
+  {
+    id: 'neck',
+    title: 'Almost no neck',
+    at: [-0.133, 1.016, 1.998],
+    eye: [-1.6, 0.85, 1.6],
+    body: 'A fast swimmer needs a stiff, streamlined front end. The orca has seven neck vertebrae, the same number as you and a giraffe, but they are pressed into thin discs, and the first ones are fused together, so the head barely turns.',
+    fact: 'Nearly every mammal has seven neck vertebrae, whatever the length of its neck.',
+  },
+  {
+    id: 'flipper',
+    title: 'A hand inside the flipper',
+    at: [-0.591, 0.215, 1.11],
+    eye: [-1.7, 0.55, 0.6],
+    body: 'Under the skin of each flipper are the bones of an arm: a short upper arm bone, two forearm bones, wrist bones and fingers, with extra joints in the longest ones. Whales descend from four-legged land mammals, and the hand is still there, short, flat and stiff, for steering.',
+    fact: 'Whales’ closest living relatives on land are hippos.',
+  },
+  {
+    id: 'ribs',
+    title: 'A chest that folds',
+    at: [-0.476, 0.688, 0.769],
+    eye: [-1.75, 0.75, 0.0],
+    body: 'Many of the ribs join the breastbone loosely, or not at all. As an orca dives, the water pressure squeezes its chest and its lungs collapse, pushing air out of the parts where gas passes into the blood. That helps protect it from the bends.',
+    fact: 'Orcas usually hunt near the surface, but they have been recorded diving deeper than 700 metres.',
+  },
+  {
+    id: 'backbone',
+    title: 'Built to swim up and down',
+    at: [-0.184, 1.134, -0.602],
+    eye: [-1.8, 0.95, -1.4],
+    body: 'The tall spines on top of the backbone, and the shorter ones beneath it, anchor the huge muscles that drive the tail. Whales swim by beating the tail up and down, not side to side like a fish: their running ancestors flexed their backs that way, and whales kept the motion.',
+    fact: 'There is no hip joint and no leg: just two small pelvic bones, left floating in the muscle of the belly.',
+  },
+  {
+    id: 'tail',
+    title: 'No bones in the fin or flukes',
+    at: [-0.041, 0.455, -3.083],
+    eye: [-1.6, 0.7, -3.9],
+    look: [-0.1, 0.8, -1.8],
+    action: 'skin',
+    body: 'The backbone ends in small blocks that ran into the middle of the tail. The tail flukes themselves have no bone in them, and neither does the orca’s tall dorsal fin: both are tough, fibrous tissue. That’s why a skeleton has neither. Put the skin back on to see them.',
+    fact: 'A male’s dorsal fin can grow 1.8 m tall; a female’s is about half that and curved.',
+  },
+  {
+    id: 'dolphin',
+    animal: 'dolphin',
+    title: 'Same plan, smaller',
+    at: [0.015, 0.409, 0.944],
+    eye: [-1.2, 0.75, 2.1],
+    body: 'This bottlenose dolphin skeleton, also from the Pisa museum, has the same parts in the same places: the nose on top of the skull, a hand in each flipper, a flattened neck, and a tail that ends in small blocks of bone. Orcas and bottlenose dolphins are close relatives in the same family.',
+    fact: 'This dolphin was about 2.6 m long; the orca, more than twice as long, was over twenty times as heavy.',
+  },
+  {
+    id: 'listen',
+    marker: false,
+    title: 'Listen to orcas',
+    at: [-0.1, 0.9, 1.2],
+    eye: [-4.8, 0.9, 6.2],
+    action: 'listen',
+    body: 'These are real orca calls, recorded by the U.S. National Park Service on an underwater microphone near the mouth of Glacier Bay, Alaska, most likely from a family of resident killer whales. Each family has its own set of calls, a dialect the calves learn from their mothers.',
+    fact: 'Resident orcas in the North Pacific stay with their mothers all their lives, sons included.',
+  },
+];
