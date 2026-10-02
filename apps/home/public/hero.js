@@ -1,6 +1,6 @@
 // Hero backdrop: a few calm 3D scenes that dissolve into each other, one screen tall.
 // Café (Communication) -> keynote hall (Communication) -> Perseverance on Mars (Space), then around again.
-// Desktop and phones get it (lighter on phones); headset browsers skip it entirely (see index.html).
+// Desktop and phones get it at full quality; headset browsers skip it entirely (see index.html).
 // Asset sources and licenses: /assets/CREDITS.md.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -32,17 +32,16 @@ const canvas = document.querySelector('.hero-canvas');
 const loading = document.querySelector('.hero-loading');
 const caption = document.querySelector('.hero-caption');
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const light = window.matchMedia('(pointer: coarse)').matches; // phones and tablets
 const saveData = navigator.connection?.saveData === true;
 
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: !light, powerPreference: light ? 'low-power' : 'high-performance' });
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 } catch {
   hero.classList.add('no-webgl');
   throw new Error('WebGL unavailable; the hero shows without 3D.');
 }
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, light ? 1.5 : 1.75));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -246,7 +245,7 @@ async function buildMars() {
   const sun = new THREE.DirectionalLight(0xfff0dc, 3.2);
   sun.position.set(-8, 10, 6);
   sun.castShadow = true;
-  sun.shadow.mapSize.setScalar(light ? 1024 : 2048);
+  sun.shadow.mapSize.setScalar(2048);
   Object.assign(sun.shadow.camera, { left: -8, right: 8, top: 8, bottom: -8, near: 1, far: 80 });
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.02;
@@ -256,7 +255,7 @@ async function buildMars() {
   const maps = await Promise.all(['diff', 'nor', 'rough'].map((k) => texLoader.loadAsync(`${A}space/ground/aerial_sand_${k}_1k.jpg`)));
   for (const t of maps) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(40, 40); t.anisotropy = 8; }
   maps[0].colorSpace = THREE.SRGBColorSpace;
-  const segs = light ? 120 : 220;
+  const segs = 220;
   const geo = new THREE.PlaneGeometry(220, 220, segs, segs);
   geo.rotateX(-Math.PI / 2);
   const p = geo.attributes.position;
@@ -286,9 +285,9 @@ async function buildMars() {
 
   // Scanned rocks, tinted to Martian basalt.
   const rockSrc = [shadowed((await load(A + 'space/rock_07/rock_07.gltf')).scene)];
-  if (!light) rockSrc.push(shadowed((await load(A + 'space/moon_rock_03/moon_rock_03.gltf')).scene));
+  rockSrc.push(shadowed((await load(A + 'space/moon_rock_03/moon_rock_03.gltf')).scene));
   const rand = mulberry32(11);
-  for (let i = 0; i < (light ? 36 : 70); i++) {
+  for (let i = 0; i < 70; i++) {
     const r = rockSrc[i % rockSrc.length].clone();
     r.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); o.material.color = new THREE.Color(0xb07050); } });
     const ang = rand() * Math.PI * 2, dist = 4 + rand() * rand() * 40;
@@ -299,7 +298,7 @@ async function buildMars() {
   }
 
   // A little dust in the air, catching the sun.
-  const count = light ? 200 : 400;
+  const count = 400;
   const dg = new THREE.BufferGeometry();
   const dp = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) dp.set([(rand() - 0.5) * 30, rand() * 4, (rand() - 0.5) * 30], i * 3);
@@ -344,7 +343,7 @@ function progress(e) {
 
 // ---------- Dissolve: during a change, both scenes render live offscreen and are blended ----------
 // Offscreen targets skip the renderer's tone mapping and sRGB output, so the blend applies them per scene.
-const rtOpts = { type: THREE.HalfFloatType, samples: light ? 0 : 4 };
+const rtOpts = { type: THREE.HalfFloatType, samples: 4 } // MSAA, so the dissolve is as smooth-edged as the normal view;
 const rtA = new THREE.WebGLRenderTarget(1, 1, rtOpts), rtB = new THREE.WebGLRenderTarget(1, 1, rtOpts);
 const blendMat = new THREE.ShaderMaterial({
   uniforms: { a: { value: rtA.texture }, b: { value: rtB.texture }, acesA: { value: 0 }, acesB: { value: 0 }, k: { value: 0 } },
