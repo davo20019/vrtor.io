@@ -5,3 +5,4 @@ export { FrameRateGovernor } from './frameRate.js';
 export { createPresence } from './presence.js';
 export { mountPresenceControls, presenceCard, presenceSummary } from './presenceUi.js';
 export { orbitPose, xrPose } from './pose.js';
+export { ROOMS, continueInVr, roomsCard } from './rooms.js';

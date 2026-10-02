@@ -4,7 +4,7 @@
 // Flat screens: orbit camera and an HTML card. Headset: teleport, a floating
 // card, and the tour moves you to each part.
 import { ArcRotateCamera, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
-import { createCard, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, xrPose, xrSupported } from '@vrtor/xr-shell';
+import { createCard, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { createMarsScene, buildMars, freezeShadows } from './mars.js';
 import { loadRover } from './rover.js';
 import { PARTS, WELCOME } from './parts.js';
@@ -56,6 +56,8 @@ let index = -1;
 let cardOpen = true;
 /** The headset card is showing the visitors page. */
 let people = false;
+/** The headset card is showing the other rooms. */
+let rooms = false;
 let presence = null;
 let ground = null;
 
@@ -64,6 +66,12 @@ const XR_HOWTO = 'Point and pull the trigger to choose. Push the thumbstick forw
 
 function content(i) {
   const n = rover.stops.length;
+  if (rooms) {
+    return roomsCard('spc', rig, (label, onClick, primary = false) => ({ label, onClick, primary }), () => {
+      rooms = false;
+      render();
+    });
+  }
   if (people && presence) {
     return presenceCard(presence, (label, onClick, primary = false) => ({ label, onClick, primary }), () => {
       people = false;
@@ -115,8 +123,16 @@ function toggleSound() {
 
 // In the headset the bar isn't visible: its buttons are a strip under the card.
 function tools() {
-  if (people) return [];
-  return [{ label: soundOn ? 'Sound on' : 'Sound off', onClick: toggleSound }];
+  if (people || rooms) return [];
+  return [{ label: soundOn ? 'Sound on' : 'Sound off', onClick: toggleSound }, { label: 'Change room', onClick: openRooms }];
+}
+
+/** In the headset, the card's page of other rooms to go to. */
+function openRooms() {
+  rooms = true;
+  people = false;
+  cardOpen = true;
+  render();
 }
 
 // In the headset the bar isn't visible, so visitors are a page of the card.
@@ -146,6 +162,7 @@ async function go(i, travel = false) {
   index = i;
   cardOpen = true;
   people = false;
+  rooms = false;
   const stop = rover.stops[i] ?? null;
   rover.select(stop);
   if (travel && stop) {
@@ -158,6 +175,7 @@ async function go(i, travel = false) {
 function close() {
   cardOpen = false;
   people = false;
+  rooms = false;
   rover.select(null);
   render();
 }
@@ -338,6 +356,7 @@ async function start() {
     });
   }
 
+  continueInVr(rig, ui.vr);
   ui.loading.hidden = true;
   ui.hint.hidden = false;
   render();

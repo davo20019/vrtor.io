@@ -6,6 +6,8 @@ import {
   mountPresenceControls,
   orbitPose,
   presenceCard,
+  roomsCard,
+  continueInVr,
   xrPose,
   xrSupported,
 } from "@vrtor/xr-shell";
@@ -43,7 +45,9 @@ let lesson = -1,
   cardOpen = true,
   view = 0,
   study = false,
-  people = false;
+  people = false,
+  // The headset card is showing the other rooms.
+  rooms = false;
 const inXr = () => !!rig?.inXr();
 const action = (label, onClick, primary = false) => ({
   label,
@@ -53,6 +57,11 @@ const action = (label, onClick, primary = false) => ({
 const controls =
   "Push the stick forward to teleport; left or right to turn. Point and pull the trigger to choose. A or X reopens the lesson; B or Y joins other visitors, then turns your mic on and off.";
 function content() {
+  if (rooms)
+    return roomsCard("taj", rig, action, () => {
+      rooms = false;
+      render();
+    });
   if (people && presence)
     return presenceCard(presence, action, () => {
       people = false;
@@ -129,13 +138,21 @@ function content() {
 }
 // In the headset the bar isn't visible: its buttons are a strip under the card.
 function tools() {
-  if (people) return [];
+  if (people || rooms) return [];
   const list = [
     action("Next viewpoint", () => travel((view + 1) % VIEWS.length).then(render)),
   ];
   // The lighting investigation has its own button.
   if (!(lesson === 3 && phase !== "question" && phase !== "answered")) list.push(action("Change light", changeLight));
+  list.push(action("Change room", openRooms));
   return list;
+}
+// In the headset, the card's page of other rooms to go to.
+function openRooms() {
+  rooms = true;
+  people = false;
+  cardOpen = true;
+  render();
 }
 // In the headset the bar isn't visible, so visitors are a page of the card.
 function peopleAction() {
@@ -191,6 +208,7 @@ async function go(i) {
   phase = "observe";
   feedback = "";
   cardOpen = true;
+  rooms = false;
   study = false;
   world.study(false);
   if (i < LESSONS.length && i >= 0) await travel(LESSONS[i].view);
@@ -204,6 +222,7 @@ function restart() {
 function close() {
   cardOpen = false;
   people = false;
+  rooms = false;
   render();
 }
 function toggleStudy() {
@@ -366,6 +385,7 @@ async function start() {
     )
       flight = null;
   });
+  continueInVr(rig, ui.vr);
   ui.loading.hidden = true;
   ui.hint.hidden = false;
   ui.learn.disabled = ui.view.disabled = ui.light.disabled = false;

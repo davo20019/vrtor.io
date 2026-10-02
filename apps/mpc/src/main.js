@@ -1,5 +1,5 @@
 import { ArcRotateCamera, DefaultRenderingPipeline, Engine, UniversalCamera, Vector3 } from '@babylonjs/core';
-import { createCard, createPresence, createXr, mountPresenceControls, presenceCard, xrPose, xrSupported } from '@vrtor/xr-shell';
+import { createCard, createPresence, createXr, mountPresenceControls, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { buildWorld, V } from './world.js';
 import { AREAS, SITE } from './areas.js';
 import { LESSONS } from './lesson.js';
@@ -10,7 +10,7 @@ const engine=new Engine($('#scene'),true,{xrCompatible:true,stencil:true},true);
 let world,scene,camera,walker,panel,rig,flight,sitePose,presence;
 const keys=new Set();
 let destination=null;
-let lesson=-1,phase='observe',feedback='',score=0,answered=new Set(),cardOpen=true,busy=true,walkView=true,people=false;
+let lesson=-1,phase='observe',feedback='',score=0,answered=new Set(),cardOpen=true,busy=true,walkView=true,people=false,rooms=false;
 const inXr=()=>!!rig?.inXr();
 const action=(label,onClick,primary=false)=>({label,onClick:()=>{if(!busy)onClick();},primary});
 const siteCredit='Model: Ministerio de Cultura Perú, CC BY 4.0. Stone relief: INC Peru, CAST (University of Arkansas), Cotsen Institute (UCLA), CC BY-NC 3.0. Adapted by VRtor; layout and scale approximate.';
@@ -19,6 +19,7 @@ const credit='Survey: INC Peru, CAST (University of Arkansas) and Cotsen Institu
 function content(){
   const area=AREAS[destination??world?.active??0];
   if(busy)return {kicker:'Preparing the survey',title:'Traveling…',body:`Loading ${area.name}. Each area keeps the published mesh geometry.`,fact:'',actions:[]};
+  if(rooms)return roomsCard('mpc',rig,action,()=>{rooms=false;render();});
   if(people&&presence)return presenceCard(presence,action,()=>{people=false;render();});
   if(lesson<0&&world.active===SITE)return {kicker:'World wonders · 02 · Connected walkthrough',title:'Walk through Machu Picchu',body:'Explore the paths, terraces and courts of the citadel in one connected architectural model. Close this card to look around freely. The detailed survey closeups are available through Learn.',fact:`${inXr()?controls:'Drag to look. Use WASD or the arrow keys to walk. Click a path to travel farther. On a phone, hold the movement arrows.'}\n${siteCredit}`,actions:[action('Start walking',()=>{walkView=true;if(!inXr()&&scene.activeCamera!==walker)frameArea(true);close();},true),action('Learn',restart),...peopleAction()]};
   if(lesson<0)return {kicker:`World wonders · 02 · ${world.active+1} / 6`,title:area.name,body:`${area.detail}. Explore six laser-scanned spaces at Machu Picchu, or follow four short investigations. These are separate survey areas, with gaps in coverage.`,fact:inXr()?`${controls}\n${credit}`:credit,actions:[action('Explore',close),action('Next area',()=>visit((world.active+1)%6)),action('Learn',restart,true)]};
@@ -56,7 +57,7 @@ function render(){
   if(inXr()){
     ui.card.hidden=true;
     if(!cardOpen){panel.hide();return;}
-    if(!onSite&&!busy&&!people)data.actions.push(action('Back to walk',()=>{walkView=true;visit(SITE);}));
+    if(!onSite&&!busy&&!people&&!rooms)data.actions.push(action('Back to walk',()=>{walkView=true;visit(SITE);}));
     if(new URLSearchParams(location.search).has('xrdebug'))data.kicker=rig.stats();
     panel.setContent({...data,tools:tools(),onClose:close});
     const f=rig.headForward(),a=-.45;
@@ -69,8 +70,8 @@ function render(){
   ui.actions.replaceChildren(...data.actions.map(a=>{const b=document.createElement('button');b.type='button';b.className=a.primary?'btn btn-primary':'btn';b.textContent=a.label;b.disabled=busy;b.addEventListener('click',a.onClick);return b;}));
 }
 // In the headset the bar isn't visible: its buttons are a strip under the card (the view switch is for flat screens only).
-function tools(){if(busy||people)return [];return lesson===2&&phase!=='question'&&phase!=='answered'?[]:[action('Change light',changeLight)];}
-function close(){cardOpen=false;people=false;render();if(!inXr())$('#scene').focus({preventScroll:true});}
+function tools(){if(busy||people||rooms)return [];const room=action('Change room',()=>{rooms=true;people=false;cardOpen=true;render();});return lesson===2&&phase!=='question'&&phase!=='answered'?[room]:[action('Change light',changeLight),room];}
+function close(){cardOpen=false;people=false;rooms=false;render();if(!inXr())$('#scene').focus({preventScroll:true});}
 function changeLight(){ui.light.textContent=world.daylight();render();}
 function frameArea(walk=walkView){
   const s=world.stop();
@@ -128,13 +129,13 @@ async function travel(i){
 }
 async function visit(i){
   if(busy)return;
-  lesson=-1;phase='observe';feedback='';await travel(i);render();
+  lesson=-1;phase='observe';feedback='';rooms=false;await travel(i);render();
 }
 async function go(i){
   if(busy)return;
   // Commit the lesson only after its area loads, so failures remain retryable.
   if(i<LESSONS.length&&!(await travel(LESSONS[i].view)))return;
-  lesson=i;phase='observe';feedback='';cardOpen=true;render();
+  lesson=i;phase='observe';feedback='';cardOpen=true;rooms=false;render();
 }
 function restart(){if(busy)return;score=0;answered=new Set();go(0);}
 async function start(){
@@ -195,6 +196,7 @@ async function start(){
   // Only these meshes: shared shell textures may stay unready, and a slow device must not hang here.
   const shown=[...world.monument,...scene.meshes.filter(m=>m.name.startsWith('Andean'))],until=performance.now()+8000;
   await new Promise(done=>{const check=()=>shown.every(m=>m.isReady(true))||performance.now()>until?done():setTimeout(check,100);check();});
+  continueInVr(rig,ui.vr);
   ui.loading.hidden=true;ui.hint.hidden=false;busy=false;
   ui.status.textContent='Connected citadel walkthrough';render();
 }

@@ -4,7 +4,7 @@
 // Flat screens: an orbit camera (inside, it turns in place) and an HTML card. Headset: you float
 // (no floor in orbit), a floating card, and the tour moves you to each stop.
 import { ArcRotateCamera, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
-import { createCard, createPresence, createXr, mountPresenceControls, presenceCard, xrPose, xrSupported } from '@vrtor/xr-shell';
+import { createCard, createPresence, createXr, mountPresenceControls, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { buildSpace, createSpaceScene } from './space.js';
 import { loadCapsule } from './capsule.js';
 import { attachFloat } from './float.js';
@@ -62,6 +62,8 @@ let index = -1;
 let cardOpen = true;
 /** The headset card is showing the visitors page. */
 let people = false;
+/** The headset card is showing the other rooms. */
+let rooms = false;
 let presence = null;
 
 const inXr = () => !!rig?.inXr();
@@ -69,6 +71,12 @@ const XR_HOWTO = 'Point and pull the trigger to choose. Left thumbstick: float w
 
 function content(i) {
   const n = capsule.stops.length;
+  if (rooms) {
+    return roomsCard('apo', rig, (label, onClick, primary = false) => ({ label, onClick, primary }), () => {
+      rooms = false;
+      render();
+    });
+  }
   if (people && presence) {
     return presenceCard(presence, (label, onClick, primary = false) => ({ label, onClick, primary }), () => {
       people = false;
@@ -93,7 +101,7 @@ function content(i) {
       kicker: 'Tour complete',
       title: 'You have been inside Columbia',
       body: 'Float around it, go back in, or point at any glowing marker to read about it again. On July 24, 1969, Columbia splashed down in the Pacific with all three astronauts aboard.',
-      fact: 'The scan: Smithsonian National Air and Space Museum. The Moon and Earth: NASA.',
+      fact: 'The scan: Smithsonian National Air and Space Museum. The Moon and Earth: NASA. The stars: the Yale Bright Star Catalogue, with the planets where they were on July 20, 1969.',
       actions: [
         { label: 'Start over', onClick: () => go(0, true) },
         { label: 'Close', primary: true, onClick: close },
@@ -142,6 +150,7 @@ async function go(i, travel = false) {
   index = i;
   cardOpen = true;
   people = false;
+  rooms = false;
   const stop = capsule.stops[i] ?? null;
   capsule.select(stop);
   if (travel && stop) {
@@ -158,6 +167,7 @@ async function go(i, travel = false) {
 function close() {
   cardOpen = false;
   people = false;
+  rooms = false;
   capsule.select(null);
   render();
 }
@@ -214,8 +224,16 @@ function switchPlace() {
 
 // In the headset the bar isn't visible: its buttons are a strip under the card.
 function tools() {
-  if (people || !capsule) return [];
-  return [{ label: currentPlace() === 'inside' ? 'Go outside' : 'Go inside', onClick: switchPlace }];
+  if (people || rooms || !capsule) return [];
+  return [{ label: currentPlace() === 'inside' ? 'Go outside' : 'Go inside', onClick: switchPlace }, { label: 'Change room', onClick: openRooms }];
+}
+
+/** In the headset, the card's page of other rooms to go to. */
+function openRooms() {
+  rooms = true;
+  people = false;
+  cardOpen = true;
+  render();
 }
 
 /** Inside or outside, from where the viewer is now. */
@@ -383,6 +401,7 @@ async function start() {
     });
   }
 
+  continueInVr(rig, ui.vr);
   ui.loading.hidden = true;
   ui.hint.hidden = false;
   render();

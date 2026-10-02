@@ -4,7 +4,7 @@
 // Flat screens: an orbit camera (at the pilot's place and the camera spot, it turns in place) and
 // an HTML card. Headset: walk and teleport on the sand, a floating card, the tour moves you.
 import { ArcRotateCamera, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
-import { createCard, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, xrPose, xrSupported } from '@vrtor/xr-shell';
+import { createCard, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { buildWorld, createScene } from './world.js';
 import { loadFlyer } from './flyer.js';
 import { createOutfit } from './outfit.js';
@@ -59,6 +59,8 @@ let index = -1;
 let cardOpen = true;
 /** The headset card is showing the visitors page. */
 let people = false;
+/** The headset card is showing the other rooms. */
+let rooms = false;
 let presence = null;
 /** Seen the first flight at least once. */
 let watched = false;
@@ -69,6 +71,12 @@ const flightIndex = () => STOPS.findIndex((s) => s.action === 'fly');
 
 function content(i) {
   const n = flyer.stops.length;
+  if (rooms) {
+    return roomsCard('fly', rig, (label, onClick, primary = false) => ({ label, onClick, primary }), () => {
+      rooms = false;
+      render();
+    });
+  }
   if (people && presence) {
     return presenceCard(presence, (label, onClick, primary = false) => ({ label, onClick, primary }), () => {
       people = false;
@@ -116,9 +124,18 @@ function content(i) {
 
 // In the headset the bar isn't visible: its buttons are a strip under the card.
 function tools() {
+  if (people || rooms) return [];
   // The flight's own stop already has its button.
-  if (people || index === flightIndex()) return [];
-  return [{ label: 'Watch the first flight', onClick: watchFlight }];
+  if (index === flightIndex()) return [{ label: 'Change room', onClick: openRooms }];
+  return [{ label: 'Watch the first flight', onClick: watchFlight }, { label: 'Change room', onClick: openRooms }];
+}
+
+/** In the headset, the card's page of other rooms to go to. */
+function openRooms() {
+  rooms = true;
+  people = false;
+  cardOpen = true;
+  render();
 }
 
 // In the headset the bar isn't visible, so visitors are a page of the card.
@@ -146,6 +163,7 @@ async function go(i, travel = false) {
   index = i;
   cardOpen = true;
   people = false;
+  rooms = false;
   const stop = flyer.stops[i] ?? null;
   flyer.select(stop);
   if (travel && stop) {
@@ -161,6 +179,7 @@ async function go(i, travel = false) {
 function close() {
   cardOpen = false;
   people = false;
+  rooms = false;
   flyer.select(null);
   render();
 }
@@ -390,6 +409,7 @@ async function start() {
     });
   }
 
+  continueInVr(rig, ui.vr);
   ui.loading.hidden = true;
   ui.hint.hidden = false;
   ui.tour.disabled = ui.fly.disabled = false;

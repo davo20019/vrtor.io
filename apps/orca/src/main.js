@@ -4,7 +4,7 @@
 // Flat screens: an orbit camera and an HTML card. Headset: walk and teleport around the gallery,
 // a floating card, the tour moves you.
 import { ArcRotateCamera, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
-import { createCard, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, xrPose, xrSupported } from '@vrtor/xr-shell';
+import { createCard, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { buildWorld, createScene, HALL } from './world.js';
 import { loadAnimals } from './animals.js';
 import { STOPS, WELCOME } from './stops.js';
@@ -54,6 +54,8 @@ let index = -1;
 let cardOpen = true;
 /** The headset card is showing the visitors page. */
 let people = false;
+/** The headset card is showing the other rooms. */
+let rooms = false;
 let presence = null;
 
 const inXr = () => !!rig?.inXr();
@@ -94,6 +96,12 @@ function refreshButtons() {
 
 function content(i) {
   const n = animals.stops.length;
+  if (rooms) {
+    return roomsCard('orca', rig, (label, onClick, primary = false) => ({ label, onClick, primary }), () => {
+      rooms = false;
+      render();
+    });
+  }
   if (people && presence) {
     return presenceCard(presence, (label, onClick, primary = false) => ({ label, onClick, primary }), () => {
       people = false;
@@ -138,13 +146,22 @@ function content(i) {
 
 // In the headset the bar isn't visible: its buttons are a strip under the card.
 function tools() {
-  if (people) return [];
+  if (people || rooms) return [];
   // A stop that has the skin or the calls as its own button doesn't repeat it.
   const action = animals.stops[index]?.action;
   const list = [];
   if (action !== 'skin') list.push({ label: SKIN_LABEL[NEXT_SKIN[animals.skinMode]], onClick: nextSkin });
   if (action !== 'listen') list.push({ label: listening() ? 'Stop the calls' : 'Hear orcas call', onClick: toggleListen });
+  list.push({ label: 'Change room', onClick: openRooms });
   return list;
+}
+
+/** In the headset, the card's page of other rooms to go to. */
+function openRooms() {
+  rooms = true;
+  people = false;
+  cardOpen = true;
+  render();
 }
 
 // In the headset the bar isn't visible, so visitors are a page of the card.
@@ -172,6 +189,7 @@ async function go(i, travel = false) {
   index = i;
   cardOpen = true;
   people = false;
+  rooms = false;
   const stop = animals.stops[i] ?? null;
   animals.select(stop);
   if (travel && stop) {
@@ -187,6 +205,7 @@ async function go(i, travel = false) {
 function close() {
   cardOpen = false;
   people = false;
+  rooms = false;
   animals.select(null);
   render();
 }
@@ -385,6 +404,7 @@ async function start() {
     });
   }
 
+  continueInVr(rig, ui.vr);
   ui.loading.hidden = true;
   ui.hint.hidden = false;
   ui.tour.disabled = ui.skin.disabled = ui.listen.disabled = false;

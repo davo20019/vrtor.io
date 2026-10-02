@@ -94,6 +94,12 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
   body.paddingTop = px(18);
   const fact = text('fact', 32, '#ffd27a');
   fact.paddingTop = px(30);
+  // Choices: a grid of buttons under the text, two to a row (a list of places to go).
+  const grid = new StackPanel(`${name}-choices`);
+  grid.isVertical = true;
+  grid.width = px(textWidth);
+  grid.paddingTop = px(24);
+  stack.addControl(grid);
 
   const row = new StackPanel(`${name}-actions`);
   row.isVertical = false;
@@ -184,8 +190,8 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
       { mesh: plane, ui },
       { mesh: bar, ui: barUi },
     ],
-    /** { kicker, title, body, fact, actions: [{ label, primary, onClick }], tools?: (the same, in the strip), onClose? } */
-    setContent({ kicker: k = '', title: t = '', body: b = '', fact: f = '', actions = [], tools = [], onClose: close = null }) {
+    /** { kicker, title, body, fact, actions: [{ label, primary, onClick }], choices?, tools?: (the same, in a grid and in the strip), onClose? } */
+    setContent({ kicker: k = '', title: t = '', body: b = '', fact: f = '', actions = [], choices = [], tools = [], onClose: close = null }) {
       onClose = close;
       closeButton.isVisible = typeof close === 'function';
       kicker.width = px(textWidth - (closeButton.isVisible ? 84 : 0));
@@ -200,6 +206,16 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
       row.clearControls();
       for (const action of actions) {
         row.addControl(makeButton(`${name}-${action.label}`, action, action.primary ? 290 : 230));
+      }
+      grid.clearControls();
+      grid.isVisible = choices.length > 0;
+      for (let i = 0; i < choices.length; i += 2) {
+        const line = new StackPanel(`${name}-choices-${i}`);
+        line.isVertical = false;
+        line.height = px(104);
+        line.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+        for (const choice of choices.slice(i, i + 2)) line.addControl(makeButton(`${name}-choice-${choice.label}`, choice, textWidth / 2));
+        grid.addControl(line);
       }
       setTools(tools);
     },
