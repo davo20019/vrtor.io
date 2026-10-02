@@ -136,6 +136,17 @@ function content(i) {
   return { kicker: `Orca · ${i + 1} of ${n}`, title: stop.title, body: stop.body, fact: stop.fact, actions };
 }
 
+// In the headset the bar isn't visible: its buttons are a strip under the card.
+function tools() {
+  if (people) return [];
+  // A stop that has the skin or the calls as its own button doesn't repeat it.
+  const action = animals.stops[index]?.action;
+  const list = [];
+  if (action !== 'skin') list.push({ label: SKIN_LABEL[NEXT_SKIN[animals.skinMode]], onClick: nextSkin });
+  if (action !== 'listen') list.push({ label: listening() ? 'Stop the calls' : 'Hear orcas call', onClick: toggleListen });
+  return list;
+}
+
 // In the headset the bar isn't visible, so visitors are a page of the card.
 function peopleAction() {
   if (!inXr() || !presence || presence.state.status !== 'online') return [];
@@ -189,7 +200,7 @@ function render() {
   if (inXr()) {
     ui.card.hidden = true;
     if (!cardOpen) return card.hide();
-    card.setContent(data);
+    card.setContent({ ...data, tools: tools() });
     const head = rig.headPosition();
     const stop = animals.stops[index];
     let forward = rig.headForward();
@@ -321,7 +332,7 @@ async function start() {
     getPose: poseNow,
     onChange: (state) => {
       refreshBar(state);
-      if (inXr() && cardOpen && (people || index < 0)) card.setContent(content(index));
+      if (inXr() && cardOpen && (people || index < 0)) card.setContent({ ...content(index), tools: tools() });
     },
   });
   refreshBar = mountPresenceControls(presence, $('.presence-controls'));
@@ -344,7 +355,7 @@ async function start() {
     rig.camera.maxZ = 200;
     ui.vr.hidden = false;
     document.body.classList.add('xr-ready');
-    rig.mirrorPanel(card.panel, { interactive: true });
+    for (const panel of card.panels) rig.mirrorPanel(panel, { interactive: true });
     let framesSinceEnter = -1;
     rig.onChange((entered) => {
       document.body.classList.toggle('in-xr', entered);

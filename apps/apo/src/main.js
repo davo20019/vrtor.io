@@ -171,7 +171,7 @@ function render() {
   if (inXr()) {
     ui.card.hidden = true;
     if (!cardOpen) return card.hide();
-    card.setContent(data);
+    card.setContent({ ...data, tools: tools() });
     const head = rig.headPosition();
     const stop = capsule.stops[index];
     let forward = rig.headForward();
@@ -203,6 +203,19 @@ function render() {
       return b;
     }),
   );
+}
+
+/** Goes to the first stop on the other side of the hull. */
+function switchPlace() {
+  if (!capsule) return;
+  const want = currentPlace() === 'inside' ? 'outside' : 'inside';
+  go(capsule.stops.findIndex((s) => s.place === want), true);
+}
+
+// In the headset the bar isn't visible: its buttons are a strip under the card.
+function tools() {
+  if (people || !capsule) return [];
+  return [{ label: currentPlace() === 'inside' ? 'Go outside' : 'Go inside', onClick: switchPlace }];
 }
 
 /** Inside or outside, from where the viewer is now. */
@@ -321,7 +334,7 @@ async function start() {
     getPose: poseNow,
     onChange: (state) => {
       refreshBar(state);
-      if (inXr() && cardOpen && (people || index < 0)) card.setContent(content(index));
+      if (inXr() && cardOpen && (people || index < 0)) card.setContent({ ...content(index), tools: tools() });
     },
   });
   refreshBar = mountPresenceControls(presence, $('.presence-controls'));
@@ -340,7 +353,7 @@ async function start() {
     attachFloat(rig, scene, { center: capsule.center, range: 30 });
     ui.vr.hidden = false;
     document.body.classList.add('xr-ready');
-    rig.mirrorPanel(card.panel, { interactive: true });
+    for (const panel of card.panels) rig.mirrorPanel(panel, { interactive: true });
     let framesSinceEnter = -1;
     rig.onChange((entered) => {
       document.body.classList.toggle('in-xr', entered);
@@ -392,11 +405,7 @@ addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && cardOpen && !inXr()) close();
 });
 ui.tour.addEventListener('click', () => go(index >= 0 && index < (capsule?.stops.length ?? 0) ? index : 0, true));
-ui.place.addEventListener('click', () => {
-  if (!capsule) return;
-  const want = currentPlace() === 'inside' ? 'outside' : 'inside';
-  go(capsule.stops.findIndex((s) => s.place === want), true);
-});
+ui.place.addEventListener('click', switchPlace);
 
 engine.runRenderLoop(() => scene.render());
 window.addEventListener('resize', () => engine.resize());

@@ -105,6 +105,20 @@ function content(i) {
   return { kicker: `Part ${i + 1} of ${n}`, title: part.title, body: part.body, fact: part.fact, actions };
 }
 
+let soundOn = true;
+function toggleSound() {
+  soundOn = wind.toggle();
+  ui.sound.setAttribute('aria-pressed', String(soundOn));
+  ui.sound.textContent = soundOn ? 'Sound on' : 'Sound off';
+  if (inXr() && cardOpen) render();
+}
+
+// In the headset the bar isn't visible: its buttons are a strip under the card.
+function tools() {
+  if (people) return [];
+  return [{ label: soundOn ? 'Sound on' : 'Sound off', onClick: toggleSound }];
+}
+
 // In the headset the bar isn't visible, so visitors are a page of the card.
 function peopleAction() {
   if (!inXr() || !presence || presence.state.status !== 'online') return [];
@@ -159,7 +173,7 @@ function render() {
   if (inXr()) {
     ui.card.hidden = true;
     if (!cardOpen) return card.hide();
-    card.setContent(data);
+    card.setContent({ ...data, tools: tools() });
     const head = rig.headPosition();
     const stop = rover.stops[index];
     let forward = rig.headForward();
@@ -275,7 +289,7 @@ async function start() {
     onChange: (state) => {
       refreshBar(state);
       // Refresh the open headset card in place (render() would also move it).
-      if (inXr() && cardOpen && (people || index < 0)) card.setContent(content(index));
+      if (inXr() && cardOpen && (people || index < 0)) card.setContent({ ...content(index), tools: tools() });
     },
   });
   refreshBar = mountPresenceControls(presence, $('.presence-controls'));
@@ -292,7 +306,7 @@ async function start() {
     ui.vr.hidden = false;
     document.body.classList.add('xr-ready');
     // In the headset the card is its own compositor layer: text sampled once, at display resolution.
-    rig.mirrorPanel(card.panel, { interactive: true });
+    for (const panel of card.panels) rig.mirrorPanel(panel, { interactive: true });
     let framesSinceEnter = -1;
     rig.onChange((entered) => {
       document.body.classList.toggle('in-xr', entered);
@@ -347,11 +361,7 @@ addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && cardOpen && !inXr()) close();
 });
 ui.tour.addEventListener('click', () => go(index >= 0 && index < (rover?.stops.length ?? 0) ? index : 0, true));
-ui.sound.addEventListener('click', () => {
-  const on = wind.toggle();
-  ui.sound.setAttribute('aria-pressed', String(on));
-  ui.sound.textContent = on ? 'Sound on' : 'Sound off';
-});
+ui.sound.addEventListener('click', toggleSound);
 
 engine.runRenderLoop(() => scene.render());
 window.addEventListener('resize', () => engine.resize());

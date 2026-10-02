@@ -127,6 +127,16 @@ function content() {
     ],
   };
 }
+// In the headset the bar isn't visible: its buttons are a strip under the card.
+function tools() {
+  if (people) return [];
+  const list = [
+    action("Next viewpoint", () => travel((view + 1) % VIEWS.length).then(render)),
+  ];
+  // The lighting investigation has its own button.
+  if (!(lesson === 3 && phase !== "question" && phase !== "answered")) list.push(action("Change light", changeLight));
+  return list;
+}
 // In the headset the bar isn't visible, so visitors are a page of the card.
 function peopleAction() {
   if (!inXr() || !presence || presence.state.status !== "online") return [];
@@ -233,7 +243,7 @@ function render() {
     }
     if (new URLSearchParams(location.search).has("xrdebug"))
       data.kicker = rig.stats();
-    panel.setContent(data);
+    panel.setContent({ ...data, tools: tools() });
     // Keep the card slightly to the left of the monument, so it can be read and inspected together.
     const f = rig.headForward();
     const a = -0.45;
@@ -291,7 +301,7 @@ async function start() {
       refreshBar(state);
       // Refresh the open headset card in place (render() would also move it to where you look).
       if (inXr() && cardOpen && (people || lesson < 0))
-        panel.setContent(content());
+        panel.setContent({ ...content(), tools: tools() });
     },
   });
   refreshBar = mountPresenceControls(presence, $(".presence-controls"));
@@ -311,7 +321,7 @@ async function start() {
   if (rig) {
     ui.vr.hidden = false;
     document.body.classList.add("xr-ready");
-    rig.mirrorPanel(panel.panel, { interactive: true });
+    for (const p of panel.panels) rig.mirrorPanel(p, { interactive: true });
     let frames = -1;
     rig.onChange((entered) => {
       document.body.classList.toggle("in-xr", entered);

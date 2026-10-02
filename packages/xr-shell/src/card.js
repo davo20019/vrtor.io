@@ -1,5 +1,7 @@
 // A floating info card for the headset: kicker, title, text, an optional fact
-// and buttons, with a thin line to what it describes. On flat screens the
+// and buttons, with a thin line to what it describes. Under it, an optional
+// strip of tools: the headset's stand-in for the page's control bar, which
+// isn't visible in VR (play the flight, put the skin on, change the light). On flat screens the
 // subjects show the same content as an HTML card instead (crisper, and it
 // doesn't block the view).
 import { Color3, MeshBuilder, Vector3 } from '@babylonjs/core';
@@ -18,6 +20,35 @@ const PAD = 56;
 /** A layout size in texture pixels. */
 const px = (n) => `${n * TEX_SCALE}px`;
 const sz = (n) => n * TEX_SCALE;
+/** The tool strip's height (m) and its gap under the card. */
+const BAR_HEIGHT = 0.1;
+const BAR_GAP = 0.02;
+
+/** A rounded button that acts on release, and only for a press that began on it. */
+function makeButton(id, { label, primary, onClick }, width, fontSize = 34) {
+  const button = Button.CreateSimpleButton(id, label);
+  button.width = px(width);
+  button.height = px(92);
+  button.paddingLeft = px(16);
+  button.cornerRadius = sz(46);
+  button.thickness = primary ? 0 : sz(3);
+  button.color = primary ? '#14100a' : '#ffffff';
+  button.background = primary ? ACCENT : 'rgba(255,255,255,0.06)';
+  button.fontSize = sz(fontSize);
+  button.fontWeight = '600';
+  const idle = button.background;
+  button.onPointerEnterObservable.add(() => (button.background = primary ? '#ffc65a' : 'rgba(255,255,255,0.2)'));
+  button.onPointerOutObservable.add(() => (button.background = idle));
+  // Releasing over another button after the ray drifted must not trigger that one too.
+  let armed = false;
+  button.onPointerDownObservable.add(() => (armed = true));
+  button.onPointerUpObservable.add(() => {
+    if (!armed) return;
+    armed = false;
+    onClick();
+  });
+  return button;
+}
 
 export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } = {}) {
   const plane = MeshBuilder.CreatePlane(name, { width, height }, scene);
@@ -96,7 +127,35 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
   });
   bg.addControl(closeButton);
 
-  // A line from the card's lower edge to what it describes.
+  // The tool strip, hung under the card (it moves and hides with it).
+  const bar = MeshBuilder.CreatePlane(`${name}-bar`, { width, height: BAR_HEIGHT }, scene);
+  bar.renderingGroupId = 2;
+  bar.parent = plane;
+  bar.position.y = -(height / 2 + BAR_GAP + BAR_HEIGHT / 2);
+  bar.setEnabled(false);
+  const barTexHeight = Math.round((TEX_WIDTH * BAR_HEIGHT) / width);
+  const barUi = AdvancedDynamicTexture.CreateForMesh(bar, TEX_WIDTH * TEX_SCALE, barTexHeight * TEX_SCALE, true, false, true);
+  barUi.anisotropicFilteringLevel = 16;
+  const barBg = new Rectangle(`${name}-bar-bg`);
+  barBg.thickness = sz(3);
+  barBg.color = 'rgba(255,176,32,0.35)';
+  barBg.cornerRadius = sz(barTexHeight / 2);
+  barBg.background = 'rgba(12,13,18,0.94)';
+  barUi.addControl(barBg);
+  const toolRow = new StackPanel(`${name}-tools`);
+  toolRow.isVertical = false;
+  toolRow.height = px(92);
+  barBg.addControl(toolRow);
+  const setTools = (tools) => {
+    bar.setEnabled(tools.length > 0);
+    toolRow.clearControls();
+    // Each button as wide as its label needs, all of them within the strip.
+    const want = tools.map((t) => Math.max(200, t.label.length * 19 + 70));
+    const fit = Math.min(1, (TEX_WIDTH - 40) / want.reduce((a, b) => a + b, 0));
+    tools.forEach((tool, i) => toolRow.addControl(makeButton(`${name}-tool-${tool.label}`, tool, want[i] * fit, fit < 1 ? 30 : 34)));
+  };
+
+  // A line from the card's lower edge (or the strip's, under it) to what it describes.
   let line = null;
   const linePoints = [Vector3.Zero(), Vector3.Zero()];
   const drawLine = (target) => {
@@ -104,7 +163,8 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
       line?.setEnabled(false);
       return;
     }
-    const down = plane.getDirection(Vector3.Down()).scale(height / 2);
+    const below = bar.isEnabled() ? height / 2 + BAR_GAP + BAR_HEIGHT : height / 2;
+    const down = plane.getDirection(Vector3.Down()).scale(below);
     linePoints[0] = plane.getAbsolutePosition().add(down);
     linePoints[1] = target;
     line = MeshBuilder.CreateLines(`${name}-line`, { points: linePoints, updatable: true, instance: line ?? undefined }, scene);
@@ -119,8 +179,13 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
     mesh: plane,
     /** The mesh and its GUI texture, for compositing as a quad layer (see layers.js). */
     panel: { mesh: plane, ui },
-    /** { kicker, title, body, fact, actions: [{ label, primary, onClick }], onClose? } */
-    setContent({ kicker: k = '', title: t = '', body: b = '', fact: f = '', actions = [], onClose: close = null }) {
+    /** Both panels to composite: the card and its tool strip. */
+    panels: [
+      { mesh: plane, ui },
+      { mesh: bar, ui: barUi },
+    ],
+    /** { kicker, title, body, fact, actions: [{ label, primary, onClick }], tools?: (the same, in the strip), onClose? } */
+    setContent({ kicker: k = '', title: t = '', body: b = '', fact: f = '', actions = [], tools = [], onClose: close = null }) {
       onClose = close;
       closeButton.isVisible = typeof close === 'function';
       kicker.width = px(textWidth - (closeButton.isVisible ? 84 : 0));
@@ -134,30 +199,9 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
       fact.isVisible = !!f;
       row.clearControls();
       for (const action of actions) {
-        const button = Button.CreateSimpleButton(`${name}-${action.label}`, action.label);
-        button.width = action.primary ? px(290) : px(230);
-        button.height = px(92);
-        button.paddingLeft = px(16);
-        button.cornerRadius = sz(46);
-        button.thickness = action.primary ? 0 : sz(3);
-        button.color = action.primary ? '#14100a' : '#ffffff';
-        button.background = action.primary ? ACCENT : 'rgba(255,255,255,0.06)';
-        button.fontSize = sz(34);
-        button.fontWeight = '600';
-        const idle = button.background;
-        button.onPointerEnterObservable.add(() => (button.background = action.primary ? '#ffc65a' : 'rgba(255,255,255,0.2)'));
-        button.onPointerOutObservable.add(() => (button.background = idle));
-        // Acts on release, and only for a press that began on this button (releasing over
-        // another button after the ray drifted must not trigger that one too).
-        let armed = false;
-        button.onPointerDownObservable.add(() => (armed = true));
-        button.onPointerUpObservable.add(() => {
-          if (!armed) return;
-          armed = false;
-          action.onClick();
-        });
-        row.addControl(button);
+        row.addControl(makeButton(`${name}-${action.label}`, action, action.primary ? 290 : 230));
       }
+      setTools(tools);
     },
     /**
      * Puts the card `distance` metres in front of the head along `forward`

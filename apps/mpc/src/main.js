@@ -58,7 +58,7 @@ function render(){
     if(!cardOpen){panel.hide();return;}
     if(!onSite&&!busy&&!people)data.actions.push(action('Back to walk',()=>{walkView=true;visit(SITE);}));
     if(new URLSearchParams(location.search).has('xrdebug'))data.kicker=rig.stats();
-    panel.setContent({...data,onClose:close});
+    panel.setContent({...data,tools:tools(),onClose:close});
     const f=rig.headForward(),a=-.45;
     panel.place(rig.headPosition(),V(f.x*Math.cos(a)+f.z*Math.sin(a),0,-f.x*Math.sin(a)+f.z*Math.cos(a)));
     return;
@@ -68,6 +68,8 @@ function render(){
   ui.kicker.textContent=data.kicker;ui.title.textContent=data.title;ui.body.textContent=data.body;ui.fact.textContent=data.fact;ui.fact.hidden=!data.fact;
   ui.actions.replaceChildren(...data.actions.map(a=>{const b=document.createElement('button');b.type='button';b.className=a.primary?'btn btn-primary':'btn';b.textContent=a.label;b.disabled=busy;b.addEventListener('click',a.onClick);return b;}));
 }
+// In the headset the bar isn't visible: its buttons are a strip under the card (the view switch is for flat screens only).
+function tools(){if(busy||people)return [];return lesson===2&&phase!=='question'&&phase!=='answered'?[]:[action('Change light',changeLight)];}
 function close(){cardOpen=false;people=false;render();if(!inXr())$('#scene').focus({preventScroll:true});}
 function changeLight(){ui.light.textContent=world.daylight();render();}
 function frameArea(walk=walkView){
@@ -150,14 +152,14 @@ async function start(){
   presence=createPresence(scene,{subject:'mpc',getPose:poseNow,onChange:state=>{
     refreshBar(state);
     // Refresh the open headset card in place (render() would also move it to where you look).
-    if(inXr()&&cardOpen&&!busy&&(people||(lesson<0&&world.active===SITE)))panel.setContent({...content(),onClose:close});
+    if(inXr()&&cardOpen&&!busy&&(people||(lesson<0&&world.active===SITE)))panel.setContent({...content(),tools:tools(),onClose:close});
   }});
   refreshBar=mountPresenceControls(presence,$('.presence-controls'));refreshBar(presence.state);
   if(new URLSearchParams(location.search).has('xrdebug'))window.vrtorPresence=presence;
   frameArea(true);
   try{if(await xrSupported()){rig=await createXr(scene,{floorMeshes:world.floors,start:{get position(){return world.stop().stand;},get lookAt(){return world.stop().at;}}});}}catch(e){console.warn('[mpc] VR unavailable',e);}
   if(rig){
-    ui.vr.hidden=false;document.body.classList.add('xr-ready');rig.mirrorPanel(panel.panel,{interactive:true});
+    ui.vr.hidden=false;document.body.classList.add('xr-ready');for(const p of panel.panels)rig.mirrorPanel(p,{interactive:true});
     let frames=-1;
     rig.onChange(entered=>{document.body.classList.toggle('in-xr',entered);frames=entered?0:-1;if(!entered){frameArea();render();}});
     rig.xr.baseExperience.sessionManager.onXRFrameObservable.add(()=>{
