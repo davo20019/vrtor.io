@@ -98,6 +98,8 @@ const vrUi = createVrUi({
   credits: CREDITS,
   onPick: (i) => (i === state.place && !state.visited ? fall() : goToPlace(i)),
   onOrbit: () => backToOrbit(),
+  onGrab: (getRay) => grabStart(getRay),
+  onRelease: (getRay) => grabEnd(getRay),
 });
 
 // ---------- state ----------
@@ -111,6 +113,7 @@ const state = {
   fadeDone: null,
   fps: 0,
   menuIn: 0, // frames until the welcome menu opens (the headset pose needs a moment)
+  center: { lat: 0, lon: 0 }, // the spot (radians) at the local origin, under you
 };
 
 let tiles = null;
@@ -170,6 +173,9 @@ function placeAt(i, height) {
   state.place = i;
   state.visited = false;
   reorient.transformLatLonHeightToOrigin(p.lat * D2R, p.lon * D2R, 0);
+  state.center = { lat: p.lat * D2R, lon: p.lon * D2R };
+  grab = null;
+  spin = null;
   state.groundY = p.ground;
   rig.position.set(0, p.ground + height, 0);
   rig.rotation.set(0, Math.PI - p.heading * D2R, 0);
@@ -231,8 +237,93 @@ function recenter() {
   tiles.ellipsoid.getPositionToCartographic(_p, _carto);
   const dy = _carto.height - rig.position.y;
   reorient.transformLatLonHeightToOrigin(_carto.lat, _carto.lon, 0);
+  state.center = { lat: _carto.lat, lon: _carto.lon };
   rig.position.set(0, _carto.height, 0);
   state.groundY += dy;
+}
+
+// ---------- grabbing the Earth ----------
+// Squeeze a grip (or drag the mouse from high up) to grab the spot you point at, then
+// move: the Earth turns so that spot stays under your pointer. It works by moving which
+// spot is at the origin under you, so you stay upright; from orbit it spins the globe,
+// near the ground it pans the land. Let go mid-swing and it keeps spinning, slowing down.
+let grab = null; // { point: grabbed spot (Earth-centred), getRay, axis, speed }
+let spin = null; // { axis, speed } after letting go: radians per second about an Earth axis
+const _gray = new THREE.Ray();
+const _ghit = new THREE.Vector3();
+const _gcenter = new THREE.Vector3();
+const _gq = new THREE.Quaternion();
+const _gcarto = {};
+let grabEllipsoid = null;
+
+// Where a world-space ray meets the ground (the ellipsoid raised to the local ground
+// height), in Earth-centred coordinates; null when it points past the planet.
+function rayToGround(origin, dir, target) {
+  grabEllipsoid ??= tiles.ellipsoid.clone();
+  grabEllipsoid.radius.copy(tiles.ellipsoid.radius).addScalar(Math.max(state.groundY, 0));
+  _inv.copy(tiles.group.matrixWorld).invert();
+  _gray.origin.copy(origin).applyMatrix4(_inv);
+  _gray.direction.copy(dir).transformDirection(_inv);
+  return grabEllipsoid.intersectRay(_gray, target);
+}
+
+// Turn the Earth under you by `q` (a rotation of Earth-centred directions): the spot under
+// you moves by the inverse, i.e. you move over the surface by q.
+function rotateCenter(q) {
+  tiles.ellipsoid.getCartographicToPosition(state.center.lat, state.center.lon, 0, _gcenter);
+  _gcenter.applyQuaternion(q);
+  tiles.ellipsoid.getPositionToCartographic(_gcenter, _gcarto);
+  state.center.lat = THREE.MathUtils.clamp(_gcarto.lat, -1.5, 1.5);
+  state.center.lon = _gcarto.lon;
+  reorient.transformLatLonHeightToOrigin(state.center.lat, state.center.lon, 0);
+}
+
+function grabStart(getRay) {
+  if (!tiles) return;
+  const [o, d] = getRay();
+  const point = rayToGround(o, d, new THREE.Vector3());
+  if (!point) return; // pointing at the sky
+  grab = { point, getRay, axis: new THREE.Vector3(), speed: 0 };
+  spin = null;
+  state.flight = null;
+}
+
+function grabEnd(getRay) {
+  if (!grab || (getRay && grab.getRay !== getRay)) return;
+  // keep the swing going if it was quick enough to be a fling
+  if (grab.speed > 0.002) spin = { axis: grab.axis.clone(), speed: Math.min(grab.speed, 1) };
+  grab = null;
+}
+
+const _gu = new THREE.Vector3();
+const _gv = new THREE.Vector3();
+const _gaxis = new THREE.Vector3();
+function updateGrab(dt) {
+  if (grab) {
+    const [o, d] = grab.getRay();
+    // past the edge of the planet: hold still until the pointer comes back
+    if (!rayToGround(o, d, _ghit)) {
+      grab.speed = 0;
+      return;
+    }
+    // the rotation carrying the spot now under the pointer to the grabbed one
+    _gu.copy(_ghit).normalize();
+    _gv.copy(grab.point).normalize();
+    const angle = _gu.angleTo(_gv);
+    if (angle < 1e-9) return;
+    _gq.setFromUnitVectors(_gu, _gv);
+    rotateCenter(_gq);
+    // smoothed angular velocity, for the fling
+    _gaxis.crossVectors(_gu, _gv).normalize();
+    const k = Math.min(1, dt * 12);
+    grab.axis.lerp(_gaxis, k).normalize();
+    grab.speed += (angle / Math.max(dt, 1e-3) - grab.speed) * k;
+  } else if (spin) {
+    _gq.setFromAxisAngle(spin.axis, spin.speed * dt);
+    rotateCenter(_gq);
+    spin.speed *= Math.exp(-dt * 1.5);
+    if (spin.speed < 0.0005) spin = null;
+  }
 }
 
 // ---------- ground ----------
@@ -255,18 +346,34 @@ function probeGround() {
 const keys = new Set();
 addEventListener('keydown', (e) => keys.add(e.code));
 addEventListener('keyup', (e) => keys.delete(e.code));
+// Mouse: from high up, drag spins the globe (grab); near the ground, drag looks around.
 let drag = null;
+const mouseNdc = new THREE.Vector2();
+const mouseRay = new THREE.Raycaster();
+const mouseGetRay = () => {
+  mouseRay.setFromCamera(mouseNdc, camera);
+  return [mouseRay.ray.origin, mouseRay.ray.direction];
+};
+const setNdc = (e) => mouseNdc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
 canvas.addEventListener('pointerdown', (e) => {
-  drag = { x: e.clientX, y: e.clientY };
+  drag = { x: e.clientX, y: e.clientY, grab: rig.position.y - state.groundY > 20_000 };
   canvas.setPointerCapture(e.pointerId);
+  setNdc(e);
+  if (drag.grab) grabStart(mouseGetRay);
 });
 canvas.addEventListener('pointermove', (e) => {
   if (!drag || renderer.xr.isPresenting) return;
-  rig.rotation.y += (e.clientX - drag.x) * 0.004;
-  camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x + (e.clientY - drag.y) * 0.004, -1.5, 1.5);
-  drag = { x: e.clientX, y: e.clientY };
+  setNdc(e);
+  if (!drag.grab) {
+    rig.rotation.y += (e.clientX - drag.x) * 0.004;
+    camera.rotation.x = THREE.MathUtils.clamp(camera.rotation.x + (e.clientY - drag.y) * 0.004, -1.5, 1.5);
+  }
+  drag = { ...drag, x: e.clientX, y: e.clientY };
 });
-canvas.addEventListener('pointerup', () => (drag = null));
+canvas.addEventListener('pointerup', () => {
+  if (drag?.grab) grabEnd(mouseGetRay);
+  drag = null;
+});
 canvas.addEventListener('wheel', (e) => {
   state.flight = null;
   const agl = Math.max(rig.position.y - state.groundY, 1);
@@ -410,6 +517,7 @@ renderer.setAnimationLoop(() => {
   }
 
   if (tiles) {
+    updateGrab(dt);
     move(dt);
     if (state.flight) {
       const f = state.flight;
@@ -461,7 +569,12 @@ function updateReadout() {
   const p = PLACES[state.place];
   const agl = rig.position.y - state.groundY;
   const s = tiles.stats || {};
-  const where = agl > 50_000 ? `Above ${p.name}` : `${p.name}, ${p.spot}`;
+  // Once you've grabbed or flown more than 200 km away, say where you are instead.
+  const c = state.center;
+  const away = 6_371_000 * Math.acos(Math.min(1,
+    Math.sin(c.lat) * Math.sin(p.lat * D2R) + Math.cos(c.lat) * Math.cos(p.lat * D2R) * Math.cos(c.lon - p.lon * D2R)));
+  const coords = `${Math.abs(c.lat / D2R).toFixed(1)}°${c.lat >= 0 ? 'N' : 'S'}, ${Math.abs(c.lon / D2R).toFixed(1)}°${c.lon >= 0 ? 'E' : 'W'}`;
+  const where = away > 200_000 ? `Over ${coords}` : agl > 50_000 ? `Above ${p.name}` : `${p.name}, ${p.spot}`;
   const kTris = Math.round(buildings.triangles / 1000);
   const measures = `${formatHeight(agl)} up · ${state.fps} fps · ${s.visible ?? '?'} ground tiles, ${(s.downloading ?? 0) + (s.parsing ?? 0) + buildings.loading} loading · buildings ${kTris}k tris`;
   statsEl.textContent = `${where}\n${measures}`;

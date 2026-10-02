@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 
 const MENU_W = 1024;
-const MENU_H = 1024;
+const MENU_H = 1200;
 const MENU_SIZE = 0.9; // metres across
 const ACCENT = '#ffb020';
 
@@ -34,7 +34,7 @@ function roundRect(g, x, y, w, h, r, fill) {
   g.fill();
 }
 
-export function createVrUi({ renderer, rig, camera, places, credits, onPick, onOrbit }) {
+export function createVrUi({ renderer, rig, camera, places, credits, onPick, onOrbit, onGrab, onRelease }) {
   // ---------- controllers ----------
   const factory = new XRControllerModelFactory();
   const hands = {}; // handedness → { ray, grip, laser, source }
@@ -49,7 +49,19 @@ export function createVrUi({ renderer, rig, camera, places, credits, onPick, onO
     laser.visible = false;
     ray.add(laser);
     rig.add(ray, grip);
-    const hand = { ray, grip, laser, source: null };
+    const hand = { ray, grip, laser, source: null, grabbing: false };
+    // where this controller points, in world space (it points down its -Z)
+    const pos = new THREE.Vector3();
+    const dir = new THREE.Vector3();
+    hand.getRay = () => [ray.getWorldPosition(pos), ray.getWorldDirection(dir).negate()];
+    ray.addEventListener('squeezestart', () => {
+      hand.grabbing = true;
+      onGrab(hand.getRay);
+    });
+    ray.addEventListener('squeezeend', () => {
+      hand.grabbing = false;
+      onRelease(hand.getRay);
+    });
     ray.addEventListener('connected', (e) => {
       hand.source = e.data;
       hands[e.data.handedness] = hand;
@@ -112,6 +124,7 @@ export function createVrUi({ renderer, rig, camera, places, credits, onPick, onO
     g.font = '30px system-ui, sans-serif';
     [
       'Trigger: pick here · out there, hold it to fly where you point',
+      'Grip: grab the Earth and drag it (spin the globe from orbit)',
       'Left stick: move · Right stick: turn, and up or down',
       'A, X or Y: this menu · B: back to orbit',
     ].forEach((line, i) => g.fillText(line, 54, legendY + i * 44, MENU_W - 108));
@@ -227,7 +240,7 @@ export function createVrUi({ renderer, rig, camera, places, credits, onPick, onO
         const trigger = hand.source?.gamepad?.buttons[0]?.value ?? 0;
         if (hand.suppress && trigger < 0.1) hand.suppress = false;
         const flying = trigger > 0.1 && !hand.suppress;
-        hand.laser.visible = menu.mesh.visible || flying;
+        hand.laser.visible = menu.mesh.visible || flying || hand.grabbing;
         hand.laser.scale.z = 3;
         if (!menu.mesh.visible) continue;
         raycaster.setFromXRController(hand.ray);
