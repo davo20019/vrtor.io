@@ -8,10 +8,13 @@
 // all sharing one material. Faces drop out beyond FACE_DISTANCE, whole avatars beyond
 // DRAW_DISTANCE, and someone standing inside your head isn't drawn at all.
 //
-// An outfit dresses everyone for a subject: `{ suit }`, a mesh whose origin is the middle of its
-// neck ring (Apollo 11 loads Neil Armstrong's scanned suit), worn in place of the torso, with a
-// clear bubble helmet over the face so faces and talking stay visible. Every suit is an instance
-// of that one mesh, so a room full of them is a single draw call, plus one see-through helmet each.
+// An outfit dresses everyone for a subject: `{ suit, helmet }`. `suit` is a mesh whose origin is
+// the middle of its neck ring, worn in place of the torso; `helmet` (optional) one whose origin is
+// at the wearer's eyes, facing +Z, worn in place of the face and turned with where they look.
+// Apollo 11 loads Neil Armstrong's scanned suit and helmet, gold visor down. Everyone wears
+// instances of the same meshes, so a room full of suits is one draw call (and helmets another).
+// Without a helmet, a clear bubble goes over the usual face. With the face hidden, the name tag
+// lighting up is what shows who's talking.
 import {
   Color3, DynamicTexture, Mesh, MeshBuilder, Quaternion, StandardMaterial, TransformNode, Vector3, VertexBuffer,
 } from '@babylonjs/core';
@@ -31,7 +34,7 @@ const TORSO_HEIGHT = 0.545;
 /** The gloves the headset's tracked hands wear with a suit (the suit's own hang at its sides). */
 const GLOVE = new Color3(0.6, 0.58, 0.54);
 /** Eyes to the top of a suit's neck ring. */
-const SUIT_NECK = 0.19;
+const SUIT_NECK = 0.14;
 
 // One material for every avatar in a scene; the color is in the vertices.
 const shared = new WeakMap();
@@ -82,6 +85,7 @@ function paint(mesh, color) {
 
 export function createAvatar(scene, { id, name, color, outfit = null }) {
   const suit = outfit?.suit ?? null;
+  const helmet = outfit?.helmet ?? null;
   const tint = Color3.FromHexString(color);
   const light = Color3.Lerp(tint, Color3.White(), 0.55);
   const white = new Color3(1, 1, 1);
@@ -115,25 +119,34 @@ export function createAvatar(scene, { id, name, color, outfit = null }) {
   const head = new TransformNode(`person-${id}-head`, scene);
   head.parent = root;
   head.rotationQuaternion = Quaternion.Identity();
-  const skull = finish(paint(sphere(0.26, 14, [1, 1.08, 0.98]), tint), head, true);
-  skull.name = `person-${id}-skull`;
-  if (suit) {
+  let eyes = null;
+  let mouth = null;
+  if (helmet) {
+    const worn = helmet.createInstance(`person-${id}-helmet`);
+    worn.parent = head;
+    worn.isPickable = true;
+    worn.metadata = { presenceId: id };
+  } else {
+    const skull = finish(paint(sphere(0.26, 14, [1, 1.08, 0.98]), tint), head, true);
+    skull.name = `person-${id}-skull`;
+    const eyeParts = [];
+    for (const side of [-1, 1]) {
+      eyeParts.push(paint(sphere(0.058, 8, [1, 1, 0.55], [side * 0.05, 0, 0]), white));
+      eyeParts.push(paint(sphere(0.03, 6, [1, 1, 0.6], [side * 0.05, -0.003, 0.013]), ink));
+    }
+    eyes = finish(merge(`person-${id}-eyes`, eyeParts), head);
+    eyes.position.set(0, 0.025, 0.105);
+    mouth = finish(paint(sphere(1, 8), ink), head);
+    mouth.position.set(0, -0.052, 0.118);
+    mouth.scaling.set(0.05, 0.008, 0.02);
+  }
+  if (suit && !helmet) {
     const bubble = sphere(0.37, 16, [1, 1, 1], [0, 0.005, 0.005]);
     bubble.name = `person-${id}-helmet`;
     bubble.parent = head;
     bubble.material = helmetMaterial(scene);
     bubble.isPickable = false;
   }
-  const eyeParts = [];
-  for (const side of [-1, 1]) {
-    eyeParts.push(paint(sphere(0.058, 8, [1, 1, 0.55], [side * 0.05, 0, 0]), white));
-    eyeParts.push(paint(sphere(0.03, 6, [1, 1, 0.6], [side * 0.05, -0.003, 0.013]), ink));
-  }
-  const eyes = finish(merge(`person-${id}-eyes`, eyeParts), head);
-  eyes.position.set(0, 0.025, 0.105);
-  const mouth = finish(paint(sphere(1, 8), ink), head);
-  mouth.position.set(0, -0.052, 0.118);
-  mouth.scaling.set(0.05, 0.008, 0.02);
 
   // Torso with a chest badge, turned more slowly than the head, like a body.
   const torsoShape = MeshBuilder.CreateLathe('part', { shape: TORSO.map(([r, y]) => new Vector3(r, y, 0)), tessellation: 18 }, scene);
@@ -141,6 +154,8 @@ export function createAvatar(scene, { id, name, color, outfit = null }) {
   if (suit) {
     torsoShape.dispose();
     body = suit.createInstance(`person-${id}-suit`);
+    // Turned by rotation.y below: a quaternion copied from the template would override it.
+    body.rotationQuaternion = null;
     body.parent = root;
     body.isPickable = true;
     body.metadata = { presenceId: id };
@@ -245,8 +260,8 @@ export function createAvatar(scene, { id, name, color, outfit = null }) {
         return here;
       }
       const near = distance < FACE_DISTANCE;
-      setShown(eyes, near);
-      setShown(mouth, near);
+      if (eyes) setShown(eyes, near);
+      if (mouth) setShown(mouth, near);
       time += dt;
       const k = 1 - Math.exp(-dt * 12);
       // A jump (teleport or a new area) snaps instead of sliding through walls.
@@ -268,11 +283,14 @@ export function createAvatar(scene, { id, name, color, outfit = null }) {
       // Blinks every few seconds; the mouth opens with their voice (only up close).
       if (near) {
         nextBlink -= dt;
-        eyes.scaling.y = nextBlink < 0.12 ? 0.15 : 1;
+        const blinking = nextBlink < 0.12;
         if (nextBlink < 0) nextBlink = 2.5 + Math.random() * 4;
         cur.mouth += (Math.min(1, level * 5) - cur.mouth) * (1 - Math.exp(-dt * 25));
-        mouth.scaling.y = 0.008 + cur.mouth * 0.035;
-        mouth.scaling.x = 0.05 - cur.mouth * 0.012;
+        if (eyes) {
+          eyes.scaling.y = blinking ? 0.15 : 1;
+          mouth.scaling.y = 0.008 + cur.mouth * 0.035;
+          mouth.scaling.x = 0.05 - cur.mouth * 0.012;
+        }
       }
 
       Quaternion.FromEulerAnglesToRef(0, cur.bodyYaw, 0, yawQuat);
@@ -312,3 +330,4 @@ export function createAvatar(scene, { id, name, color, outfit = null }) {
     },
   };
 }
+

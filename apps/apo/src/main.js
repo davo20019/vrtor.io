@@ -8,7 +8,7 @@ import { createCard, createPresence, createXr, mountPresenceControls, presenceCa
 import { buildSpace, createSpaceScene } from './space.js';
 import { loadCapsule } from './capsule.js';
 import { attachFloat } from './float.js';
-import { loadSuit } from './suit.js';
+import { loadOutfit } from './suit.js';
 import { STOPS, WELCOME } from './stops.js';
 import './style.css';
 
@@ -306,8 +306,8 @@ async function start() {
   camera.alpha = Math.atan2(off.z, off.x);
   camera.beta = Math.acos(off.y / off.length());
 
-  // Visitors' suits load alongside; without one, visitors keep the usual figures.
-  const suit = await loadSuit(scene).catch((err) => {
+  // What visitors wear; without it, they keep the usual figures.
+  const outfit = await loadOutfit(scene).catch((err) => {
     console.warn('[apo] no spacesuit', err);
     return null;
   });
@@ -315,8 +315,8 @@ async function start() {
   let refreshBar = () => {};
   presence = createPresence(scene, {
     subject: 'apo',
-    // Everyone here wears Neil Armstrong's suit, with a clear helmet over their face (avatar.js).
-    outfit: suit ? { suit } : null,
+    // Everyone here wears Neil Armstrong's suit and helmet, gold visor down (avatar.js).
+    outfit,
     getPose: poseNow,
     onChange: (state) => {
       refreshBar(state);
