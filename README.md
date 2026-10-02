@@ -2,7 +2,7 @@
 
 Free 3D learning experiences, one per subject, that open in a headset's web browser.
 Each subject has a short address (`vrtor.io/mpc`) because typing with a VR controller
-is painful. In Space, Taj Mahal and Machu Picchu, visitors can also see and talk to each other (see Visitors below).
+is painful. In every 3D subject, visitors can also see and talk to each other (see Visitors below).
 
 ## Stack
 
@@ -14,6 +14,7 @@ apps/spc/        Space: Perseverance on Mars (Babylon.js WebXR, Vite), Worker "v
 apps/taj/        Taj Mahal, Worker "vrtor-taj"
 apps/mpc/        Machu Picchu (with visitors), Worker "vrtor-mpc"
 apps/apo/        Apollo 11: inside Columbia in lunar orbit, Worker "vrtor-apo"
+apps/fly/        Wright Flyer: the 1903 Flyer at Kill Devil Hills, Worker "vrtor-fly"
 packages/xr-shell/  shared WebXR pieces for every subject (Quest-tuned session setup,
                  teleport, comfort fade, frame-rate governor, floating info card)
 ```

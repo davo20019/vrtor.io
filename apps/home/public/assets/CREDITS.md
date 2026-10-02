@@ -39,3 +39,7 @@ Learning references: [UNESCO](https://whc.unesco.org/en/list/274/), [Ministry of
 Machu Picchu mountain backdrop: [Mapzen Terrain Tiles](https://registry.opendata.aws/terrain-tiles/), SRTM/GMTED2010 data courtesy of the U.S. Geological Survey. Public-domain source data; [provider attribution](https://github.com/tilezen/joerd/blob/master/docs/attribution.md). Heights resampled out to 20 km, local join modified; archaeological meshes are not georeferenced to this backdrop. Tile URLs and processing recorded in `/mpc/models/andes.json`.
 
 Machu Picchu mountain colour: **Sentinel-2 cloudless 2016** by **EOX IT Services GmbH** (contains modified Copernicus Sentinel data 2016), [s2maps.eu](https://s2maps.eu), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Reprojected, resampled and brightened; within about 800 m of the citadel it fades to illustrative cover. Tile URLs and processing recorded in `/mpc/models/andes-landscape.json`.
+
+## Wright Flyer
+
+- `cards/wright-flyer.jpg`: rendered from vrtor.io/fly, the Smithsonian National Air and Space Museum's 3D scan of the 1903 Wright Flyer (CC0), colored by vrtor. Sources: [`/fly/models/CREDITS.md`](/fly/models/CREDITS.md).

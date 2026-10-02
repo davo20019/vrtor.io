@@ -8,8 +8,8 @@
   ],
   "scripts": {
     "dev": "node scripts/dev.js",
-    "build": "npm run build -w @vrtor/spc && npm run build -w @vrtor/taj && npm run build -w @vrtor/mpc && npm run build -w @vrtor/apo",
-    "deploy": "npm run deploy -w @vrtor/spc && npm run deploy -w @vrtor/taj && npm run deploy -w @vrtor/mpc && npm run deploy -w @vrtor/apo && npm run deploy -w @vrtor/home"
+    "build": "npm run build -w @vrtor/spc && npm run build -w @vrtor/taj && npm run build -w @vrtor/mpc && npm run build -w @vrtor/apo && npm run build -w @vrtor/fly",
+    "deploy": "npm run deploy -w @vrtor/spc && npm run deploy -w @vrtor/taj && npm run deploy -w @vrtor/mpc && npm run deploy -w @vrtor/apo && npm run deploy -w @vrtor/fly && npm run deploy -w @vrtor/home"
   },
   "devDependencies": {
     "wrangler": "^4.145.0"

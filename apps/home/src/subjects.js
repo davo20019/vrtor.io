@@ -11,6 +11,7 @@ const MACHU = { name: 'Machu Picchu', code: 'mpc', service: 'MPC' };
 const TAJ = { name: 'Taj Mahal', code: 'taj', service: 'TAJ' };
 const SPACE = { name: 'Space', code: 'spc', service: 'SPC' };
 const APOLLO = { name: 'Apollo 11', code: 'apo', service: 'APO' };
+const FLYER = { name: 'Wright Flyer', code: 'fly', service: 'FLY' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
 const NATURE = { name: 'Nature' };
@@ -39,6 +40,15 @@ export const SUBJECTS = {
   apollo: APOLLO,
   apollo11: APOLLO,
   'apollo-11': APOLLO,
+
+  fly: FLYER,
+  flyer: FLYER,
+  wright: FLYER,
+  'wright-flyer': FLYER,
+  wrightflyer: FLYER,
+  kittyhawk: FLYER,
+  'kitty-hawk': FLYER,
+
   mec: MECHANICS,
   mechanics: MECHANICS,
   mat: MATH,

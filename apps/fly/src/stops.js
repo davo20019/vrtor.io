@@ -1,0 +1,120 @@
+// The tour of the Wright Flyer. Positions are in the Smithsonian scan's own frame (centimetres,
+// glTF axes: +Z is forward, toward the elevator; +X is the pilot's left; the sand is at y = -106):
+// `at` is what the stop is about (from the curators' annotations), `eye` where the viewer's eyes
+// go, `look` where they look if not at `at`, `inPlace` turns the flat-screen camera around the eye. Text follows the Smithsonian's record and the curators'
+// articles by Peter Jakab (National Air and Space Museum).
+
+export const WELCOME = {
+  kicker: 'Kill Devil Hills · December 17, 1903',
+  title: 'The first airplane',
+  body: 'This is the real 1903 Wright Flyer, scanned by the Smithsonian, standing at full size on the sand where it first flew. Walk around it, find out how it works, lie where Orville lay, then watch it take off.',
+  fact: 'Start the tour, or point at any glowing marker.',
+};
+
+export const STOPS = [
+  {
+    id: 'flyer',
+    marker: false,
+    title: 'Four years to get here',
+    at: [0, 20, 30],
+    eye: [760, 59, 980],
+    body: 'Wilbur and Orville Wright, bicycle makers from Dayton, Ohio, started on the "problem of flight" in 1899. Kites, then three gliders flown off these dunes, then a wind tunnel of their own: by 1903 they had better data on wings than anyone. This is the machine they built with it.',
+    fact: 'The scan comes from the Smithsonian. The colors are ours, matched to the materials the curators describe.',
+  },
+  {
+    id: 'wings',
+    title: 'Muslin over spruce and ash',
+    at: [-520, -64, 40],
+    eye: [-430, 59, 330],
+    body: 'The wings are a frame of spruce spars and ash ribs inside a cover of fine, unbleached muslin. The ribs slip into pockets sewn inside the fabric and are not rigidly fastened: the frame "floats" in its cover, which makes the wing strong but able to flex.',
+    fact: 'The muslin, a brand called Pride of the West, has 107 threads per inch. No varnish or paint: it would only have added weight.',
+  },
+  {
+    id: 'warping',
+    title: 'Twisting the wings',
+    at: [-219, -43, -85],
+    eye: [-340, 59, -400],
+    body: 'To keep the wings level, or bank into a turn, the pilot twisted the back edges of the wingtips in opposite directions. One side gets more lift than the other and the Flyer rolls. Cables and pulleys like this one, part of it bicycle chain, pull the tips up and down.',
+    fact: 'Airplanes still control roll this way, with hinged ailerons instead of a twisting wing.',
+  },
+  {
+    id: 'elevator',
+    title: 'The elevator out front',
+    at: [15, 46, 257],
+    eye: [270, 59, 500],
+    body: 'This double surface ahead of the wings controls climb and descent. Tilting it up or down shifts where the lift acts on the airplane, so the nose rises or falls. The pilot worked it with a hand lever, linked by a wooden rod to this chain and pulley.',
+    fact: 'A control surface ahead of the wings is called a canard. Some fighter jets and small airplanes still use one.',
+  },
+  {
+    id: 'cradle',
+    // The flat-screen camera turns in place here, at the prone pilot's eyes.
+    inPlace: true,
+    title: 'Lie where Orville lay',
+    at: [60.6, -29.3, -11.1],
+    eye: [60, -10, 75],
+    look: [40, -5, 300],
+    body: 'The pilot flew lying flat on the lower wing, hips in this padded cradle. Swinging the hips to one side warped the wings and turned the rudder in the same motion; the left hand held the elevator lever. You are at his eye height now, looking over the elevator.',
+    fact: 'In a headset, kneel or sit to feel it. Wilbur won the coin toss on December 14, but his first try stalled after three seconds; Orville had the next turn.',
+  },
+  {
+    id: 'engine',
+    title: 'Twelve horsepower',
+    at: [-40.4, -8.6, -12.6],
+    eye: [-235, 59, 85],
+    body: 'No carmaker could supply an engine light and strong enough, so the brothers designed their own: four cylinders, gasoline, about 12 horsepower. Their bicycle shop mechanic, Charles Taylor, built many of its parts. It sits right of center to balance the pilot on the left.',
+    fact: 'The crankcase is cast aluminum, unusual in 1903. A small magneto, not a battery and coil, made the spark, and cooling water came from a reservoir on the strut above. It was not a radiator: the water did not circulate.',
+  },
+  {
+    id: 'chains',
+    title: 'Bicycle chains',
+    at: [-46.9, -12.7, -57.2],
+    eye: [-60, 75, -300],
+    look: [0, 20, -60],
+    body: 'The engine turns the two propellers through chains and sprockets, straight from the brothers’ bicycle shop. Metal tubes guide the chains out to the propellers. One chain is crossed in a figure eight, so the two propellers spin in opposite directions and their twisting forces cancel out.',
+    fact: 'The sprockets also gear the propellers down, so they turn slower than the engine.',
+  },
+  {
+    id: 'propellers',
+    title: 'Propellers are wings that spin',
+    at: [170.7, 54, -191.7],
+    eye: [430, 75, -640],
+    body: 'Nobody knew how to design an air propeller. The Wrights realized it is a wing turning in a circle: shaped like one, it makes "lift" pointing forward, which is thrust. They used their own wind tunnel data to shape these, then carved them by hand from two layers of spruce.',
+    fact: 'Tested today, their efficiency comes close to modern propellers. The tips are wrapped in fabric to keep the wood from splitting.',
+  },
+  {
+    id: 'rudder',
+    title: 'Three ways to turn',
+    at: [15.8, 122.6, -324.9],
+    look: [15, 40, -325],
+    eye: [-230, 59, -660],
+    body: 'An airplane can roll, pitch and yaw: tip its wings, raise or lower its nose, swing its nose left or right. The Wrights were the first to control all three. This movable rudder handles yaw; wires and triangular levers called bellcranks tie it to the hip cradle, so it moves with the wing warping.',
+    fact: 'Every airplane since flies with three-axis control.',
+  },
+  {
+    id: 'launch',
+    title: 'No wheels',
+    at: [88.9, -93, 192],
+    eye: [310, 59, 420],
+    body: 'Wheels would have sunk in the sand. The Flyer sits on a small dolly that rolls on two bicycle wheel hubs along a 60 ft rail of two-by-fours, laid end to end into the wind. Once it lifted off, the dolly stayed behind; the Flyer came down on these skids.',
+    fact: 'The brothers called the rail the "Grand Junction Railroad".',
+  },
+  {
+    id: 'anemometer',
+    title: 'Measuring the flight',
+    at: [22.9, 2.7, 33.1],
+    eye: [150, 59, 200],
+    body: 'This small anemometer, made by the French firm Richard, recorded how far the Flyer traveled through the air. With a stopwatch for the time, the brothers could work out its airspeed: they were testing, not just flying.',
+    fact: 'The first flight lasted 12 seconds and covered 120 ft (36.6 m) over the ground, flying into a wind of over 20 mph (about 35 km/h).',
+  },
+  {
+    id: 'first-flight',
+    marker: false,
+    title: 'December 17, 1903, 10:35 am',
+    at: [0, 60, 450],
+    eye: [-1400, 59, 1400],
+    body: 'You are standing about where John T. Daniels, from the lifesaving station nearby, waited at Orville’s camera. Orville lies on the wing; Wilbur runs alongside, steadying a wingtip. Daniels squeezed the shutter as the Flyer lifted off, the first photograph he had ever taken, and one of the most famous ever made.',
+    fact: 'There were four flights that day. The last, with Wilbur flying, went 852 ft (260 m) in 59 seconds. Then a gust flipped the Flyer over on the sand. It never flew again.',
+    action: 'fly',
+    inPlace: true,
+  },
+];
