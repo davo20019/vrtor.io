@@ -35,12 +35,11 @@ code { font-family: var(--mono); font-size: 0.92em; }
 .skip { position: absolute; left: -999px; top: 8px; background: var(--ink); color: var(--fog); padding: 8px 12px; }
 .skip:focus { left: 8px; }
 
-/* Header floats over the lobby */
+/* Header floats over the hero */
 .top {
   position: absolute; top: 0; left: 0; right: 0; z-index: 3;
   max-width: none;
   padding-inline: max(var(--gutter), calc((100% - var(--max)) / 2 + var(--gutter)));
-  background: linear-gradient(to bottom, rgba(233, 238, 242, 0.92), rgba(233, 238, 242, 0));
   max-width: var(--max); margin: 0 auto; padding: 20px var(--gutter);
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
@@ -53,33 +52,45 @@ code { font-family: var(--mono); font-size: 0.92em; }
 .top nav a { color: var(--ink); text-decoration: none; font-size: 0.95rem; }
 .top nav a:hover { color: var(--boundary); }
 
-/* Journey: a tall scroll track with a sticky 3D view; text beats fade in over it */
-.journey { position: relative; height: 900vh; background: var(--fog); }
-.journey-sticky {
-  position: sticky; top: 0; height: 100svh; min-height: 560px; overflow: hidden; isolation: isolate;
+/* Hero: one screen, a calm 3D backdrop (the rover on Mars) behind a glass panel */
+.hero {
+  position: relative; height: 100svh; min-height: 560px; max-height: 1100px; overflow: hidden; isolation: isolate;
   display: flex; flex-direction: column; justify-content: center;
   padding: 88px max(var(--gutter), calc((100% - var(--max)) / 2 + var(--gutter))) 56px;
+  background: radial-gradient(120% 80% at 70% 60%, #e2c2a0 0%, #ead8c6 35%, var(--fog) 75%);
 }
-.journey-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; display: block; }
-.journey-fade { position: absolute; inset: 0; z-index: -1; background: var(--fog); opacity: 0; pointer-events: none; }
-.journey:not(.is-ready) .journey-sticky {
-  background: radial-gradient(120% 80% at 70% 60%, #d7deea 0%, var(--fog) 60%);
+.hero-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; display: block;
+  opacity: 0; transition: opacity 1.2s ease;
 }
-.journey-loading {
+.hero.is-ready .hero-canvas { opacity: 1; }
+/* Headsets and browsers without WebGL: a quiet backdrop instead of the scene */
+.hero.no-3d, .hero.no-webgl { background: radial-gradient(120% 80% at 70% 60%, #d7deea 0%, var(--fog) 60%); }
+.hero.no-3d .hero-canvas, .hero.no-webgl .hero-canvas, .hero.no-3d .hero-caption, .hero.no-webgl .hero-caption { display: none; }
+.hero-loading {
   position: absolute; right: var(--gutter); bottom: 20px; margin: 0;
   font: 400 0.85rem/1 var(--mono); color: var(--muted);
 }
-
-.beat {
-  position: absolute; left: max(var(--gutter), calc((100% - var(--max)) / 2 + var(--gutter)));
-  max-width: min(34rem, calc(100% - 2 * var(--gutter)));
-  opacity: 0; transform: translateY(16px); pointer-events: none;
-  transition: opacity 0.45s ease, transform 0.45s ease;
+.hero-caption {
+  position: absolute; right: max(var(--gutter), calc((100% - var(--max)) / 2 + var(--gutter))); bottom: 24px;
+  padding: 8px 14px; border-radius: 999px; font-size: 0.85rem; color: var(--ink); text-decoration: none;
+  background: rgba(247, 249, 251, 0.72); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.9); transition: opacity 0.4s ease;
 }
-.beat.on { opacity: 1; transform: none; pointer-events: auto; }
+.hero:not(.is-ready) .hero-caption, .hero-caption.swap { opacity: 0; }
+/* A soft fade under the header so the wordmark and links read over any scene */
+.hero::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 120px; z-index: 0; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(233, 238, 242, 0.85), rgba(233, 238, 242, 0));
+}
+.hero-panel, .hero-caption, .hero-loading { position: relative; z-index: 1; }
+.hero-caption, .hero-loading { position: absolute; }
+.hero-caption span { margin-left: 6px; font-family: var(--mono); color: var(--boundary); }
+.hero-caption:hover span { text-decoration: underline; }
 
-/* Glass panels: the same frosted look a headset UI uses */
-.beat-intro, .beat-card, .beat-end {
+/* Glass panel: the same frosted look a headset UI uses */
+.hero-panel {
+  max-width: min(34rem, 100%);
   padding: clamp(18px, 2.4vw, 28px);
   background: rgba(247, 249, 251, 0.72);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
@@ -88,17 +99,6 @@ code { font-family: var(--mono); font-size: 0.92em; }
   border-radius: 28px;
   box-shadow: 0 30px 60px -36px rgba(15, 27, 45, 0.5);
 }
-.beat-intro { top: clamp(88px, 14vh, 140px); }
-.beat-card { bottom: clamp(56px, 10vh, 96px); max-width: min(28rem, calc(100% - 2 * var(--gutter))); }
-.beat-end { top: 50%; transform: translateY(calc(-50% + 16px)); }
-.beat-end.on { transform: translateY(-50%); }
-.beat-card h2, .beat-end h2 { font-size: clamp(1.375rem, 2.6vw, 1.875rem); }
-.beat-card > p, .beat-end > p { margin: 10px 0 0; }
-.when { margin: 0 0 8px !important; font: 600 0.85rem/1 var(--mono); color: var(--boundary); text-transform: uppercase; letter-spacing: 0.04em; }
-
-
-.scroll-cue { margin: 18px 0 0; font-size: 0.9rem; color: var(--muted); }
-.scroll-cue::after { content: " \2193"; color: var(--boundary); }
 
 .hero-h1 { margin: 0 0 18px; font: 700 clamp(1.5rem, 2.6vw, 2.125rem)/1.15 var(--display); letter-spacing: -0.02em; }
 .eyebrow { margin: 0 0 10px; color: var(--muted); font-size: 0.95rem; }
@@ -129,25 +129,6 @@ code { font-family: var(--mono); font-size: 0.92em; }
   background: var(--line); color: var(--ink); font-size: 0.7rem; letter-spacing: 0.04em;
 }
 .status-pill.live { background: var(--live); }
-.stops { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; padding: 0; }
-.stops li {
-  padding: 6px 12px; border-radius: 999px; font-size: 0.875rem;
-  border: 1px solid var(--line); background: var(--panel); color: var(--muted);
-  transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-.stops li.on { background: var(--ink); border-color: var(--ink); color: var(--fog); }
-.card-link {
-  display: inline-block; margin-top: 16px; padding: 0; border: 0; background: none; cursor: pointer;
-  font: 700 1rem/1.4 var(--body); color: var(--ink); text-decoration: underline;
-  text-decoration-color: var(--boundary); text-underline-offset: 4px; text-decoration-thickness: 2px;
-}
-.card-link:hover { color: var(--boundary); }
-
-/* Without WebGL: show the beats as a plain stacked story */
-.journey.no-webgl { height: auto; }
-.no-webgl .journey-sticky { position: static; height: auto; display: grid; gap: 16px; }
-.no-webgl .beat { position: static; opacity: 1; transform: none; pointer-events: auto; }
-.no-webgl .journey-loading { display: none; }
 
 /* Buttons */
 .btn {
@@ -193,7 +174,7 @@ h3 { margin: 0; font: 700 1.375rem/1.2 var(--display); letter-spacing: -0.01em; 
 .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 4px rgba(255, 176, 32, 0.25); }
 
 .coming-title { margin: clamp(40px, 6vw, 64px) 0 16px; font-size: 1.125rem; color: var(--muted); font-family: var(--body); font-weight: 700; letter-spacing: 0; }
-.coming { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.coming { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .tile { display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
 .tile img, .tile .blueprint { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
 .tile .blueprint {
@@ -276,40 +257,24 @@ h3 { margin: 0; font: 700 1.375rem/1.2 var(--display); letter-spacing: -0.01em; 
   .address-bar { border-radius: 18px; }
 }
 
-/* Phones: every panel becomes a compact sheet at the bottom so the 3D scene keeps the top of the screen */
+/* Phones: the panel becomes a compact sheet at the bottom so the rover keeps the top of the screen */
 @media (max-width: 760px) {
-  .journey-sticky { padding: 64px 12px 12px; }
-  .beat, .beat-intro, .beat-card, .beat-end {
-    top: auto; bottom: 12px; left: 12px; right: 12px; max-width: none;
-    padding: 14px 16px 16px; border-radius: 20px;
-    background: rgba(247, 249, 251, 0.86);
-  }
-  .beat-end, .beat-end.on { transform: none; }
-  .beat { transform: translateY(12px); transition-duration: 0.25s; }
-  .beat.on { transform: none; }
+  .hero { justify-content: flex-end; padding: 64px 12px 12px; }
+  .hero-panel { max-width: none; padding: 14px 16px 16px; border-radius: 20px; background: rgba(247, 249, 251, 0.86); }
   .hero-h1 { font-size: 1.3rem; margin-bottom: 10px; }
   .eyebrow { margin-bottom: 6px; font-size: 0.8rem; }
   .address-bar { font-size: 1.45rem; padding: 0.18em 0.4em; }
   .lede { display: none; }
-  .scroll-cue { margin-top: 10px; font-size: 0.8rem; }
   .actions { gap: 8px; margin-top: 12px; }
-  .beat .btn { min-height: 40px; padding: 0 14px; font-size: 0.875rem; }
-  .beat-intro .actions a[href="#subjects"] { display: none; }
-  .beat-card h2, .beat-end h2 { font-size: 1.2rem; }
-  .beat-card > p:not(.when), .beat-end > p {
-    margin-top: 6px; font-size: 0.875rem; line-height: 1.45;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .when { font-size: 0.72rem !important; }
-  .stops { margin-top: 10px; gap: 6px; }
-  .stops li { padding: 4px 10px; font-size: 0.78rem; }
-  .card-link { margin-top: 10px; font-size: 0.9rem; }
-  .journey-loading { bottom: auto; top: 70px; right: 16px; }
+  .hero .btn { min-height: 44px; padding: 0 16px; font-size: 0.9rem; }
+  .hero .btn.ghost { display: none; }
+  .hero-caption { top: 64px; bottom: auto; right: 12px; font-size: 0.75rem; padding: 6px 10px; }
+  .hero-loading { bottom: auto; top: 70px; right: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .beat { transition: none; }
+  .hero-canvas, .hero-caption { transition: none; }
   .caret { animation: none; }
   .btn { transition: none; }
 }

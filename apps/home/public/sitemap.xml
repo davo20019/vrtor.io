@@ -7,8 +7,6 @@
     <image:image><image:loc>https://vrtor.io/og-image.jpg</image:loc></image:image>
     <image:image><image:loc>https://vrtor.io/assets/cards/communication-stage.jpg</image:loc></image:image>
     <image:image><image:loc>https://vrtor.io/assets/cards/space.jpg</image:loc></image:image>
-    <image:image><image:loc>https://vrtor.io/assets/cards/math.jpg</image:loc></image:image>
-    <image:image><image:loc>https://vrtor.io/assets/cards/nature.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://vrtor.io/spc/</loc>

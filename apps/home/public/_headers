@@ -15,5 +15,3 @@
   Cache-Control: public, max-age=86400
 /assets/space/*
   Cache-Control: public, max-age=86400
-/assets/nature/*
-  Cache-Control: public, max-age=86400
