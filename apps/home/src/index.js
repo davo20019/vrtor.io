@@ -46,14 +46,20 @@ async function route(request, env, url) {
 
   const subject = SUBJECTS[slug];
   if (subject && !subject.url) {
-    // Coming soon: show it in the catalog.
-    return Response.redirect(new URL(`/#subjects`, url).toString(), 302);
+    // Coming soon: show it in the catalog, noting which link was typed (for analytics).
+    return Response.redirect(new URL(`/?from=${encodeURIComponent(slug)}#subjects`, url).toString(), 302);
   }
   if (subject?.url) {
     const target = new URL(subject.url);
-    // Carry through any query (e.g. ?xrdebug) and tag the visit as coming from vrtor.
+    // Carry through any query (e.g. ?xrdebug) and tag the visit as coming from vrtor,
+    // with UTM tags so the other site's analytics credits the short link instead of "direct".
     url.searchParams.forEach((v, k) => target.searchParams.set(k, v));
     if (!target.searchParams.has('ref')) target.searchParams.set('ref', 'vrtor');
+    if (!target.searchParams.has('utm_source')) {
+      target.searchParams.set('utm_source', 'vrtor.io');
+      target.searchParams.set('utm_medium', 'shortlink');
+      target.searchParams.set('utm_campaign', slug);
+    }
     return Response.redirect(target.toString(), 302);
   }
 

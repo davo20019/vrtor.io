@@ -203,6 +203,18 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
   const fade = createFade(scene, camera, (alpha) => panelLayers.setFade(alpha));
   const inXr = () => base.state === WebXRState.IN_XR;
 
+  // Analytics (the page's gtag, when it has one): time in the headset, per subject page.
+  let enteredAt = 0;
+  base.onStateChangedObservable.add((state) => {
+    if (state === WebXRState.IN_XR) {
+      enteredAt = performance.now();
+      window.gtag?.('event', 'enter_vr');
+    } else if (state === WebXRState.NOT_IN_XR && enteredAt) {
+      window.gtag?.('event', 'exit_vr', { vr_seconds: Math.round((performance.now() - enteredAt) / 1000) });
+      enteredAt = 0;
+    }
+  });
+
   return {
     xr,
     camera,
