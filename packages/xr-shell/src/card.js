@@ -4,7 +4,7 @@
 // isn't visible in VR (play the flight, put the skin on, change the light). On flat screens the
 // subjects show the same content as an HTML card instead (crisper, and it
 // doesn't block the view).
-import { Color3, MeshBuilder, Vector3 } from '@babylonjs/core';
+import { Color3, Matrix, MeshBuilder, Quaternion, Vector3 } from '@babylonjs/core';
 import { headsetNote } from './headsetLog.js';
 import { AdvancedDynamicTexture, Button, Control, Rectangle, StackPanel, TextBlock } from '@babylonjs/gui';
 
@@ -24,6 +24,8 @@ const sz = (n) => n * TEX_SCALE;
 /** The tool strip's height (m) and its gap under the card. */
 const BAR_HEIGHT = 0.1;
 const BAR_GAP = 0.02;
+/** How long the card takes to glide to a new place when it's already showing (s). */
+const GLIDE_SECONDS = 0.35;
 
 /** A rounded button that acts on release, and only for a press that began on it. */
 function makeButton(id, { label, primary, onClick }, width, fontSize = 34) {
@@ -59,6 +61,7 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
   const plane = MeshBuilder.CreatePlane(name, { width, height }, scene);
   // Group 2 draws after the world with its own depth: the card is never buried in the rover.
   plane.renderingGroupId = 2;
+  plane.rotationQuaternion = Quaternion.Identity();
   plane.setEnabled(false);
   const texHeight = Math.round((TEX_WIDTH * height) / width);
   const ui = AdvancedDynamicTexture.CreateForMesh(plane, TEX_WIDTH * TEX_SCALE, texHeight * TEX_SCALE, true, false, true);
@@ -106,14 +109,46 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
   grid.paddingTop = px(24);
   stack.addControl(grid);
 
-  const row = new StackPanel(`${name}-actions`);
-  row.isVertical = false;
-  row.height = px(120);
-  row.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-  row.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
-  row.paddingRight = px(PAD - 16);
-  row.paddingBottom = px(28);
-  bg.addControl(row);
+  // The buttons along the foot, right-aligned: one row, or two when they don't fit in one.
+  const rows = new StackPanel(`${name}-actions`);
+  rows.isVertical = true;
+  rows.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+  rows.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
+  rows.paddingRight = px(PAD - 16);
+  rows.paddingBottom = px(28);
+  bg.addControl(rows);
+  const ROW_WIDTH = TEX_WIDTH - 2 * (PAD - 16);
+  /** A button as wide as its label needs. */
+  const wantWidth = (a) => Math.max(a.primary ? 250 : 200, a.label.length * 19 + 80);
+  const setActions = (actions) => {
+    rows.clearControls();
+    const want = actions.map(wantWidth);
+    const total = want.reduce((x, y) => x + y, 0);
+    // Two rows split where the widths even out; the second row holds the last (primary) ones.
+    let split = actions.length;
+    if (total > ROW_WIDTH && actions.length > 1) {
+      let acc = 0;
+      split = 1;
+      for (let i = 0; i < actions.length - 1; i++) {
+        acc += want[i];
+        if (acc <= total / 2) split = i + 1;
+      }
+    }
+    const groups = [actions.slice(0, split), actions.slice(split)].filter((g) => g.length);
+    rows.height = px(groups.length * 104 + 12);
+    let k = 0;
+    for (const group of groups) {
+      const widths = want.slice(k, k + group.length);
+      k += group.length;
+      const fit = Math.min(1, ROW_WIDTH / widths.reduce((x, y) => x + y, 0));
+      const line = new StackPanel(`${name}-actions-${k}`);
+      line.isVertical = false;
+      line.height = px(104);
+      line.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
+      group.forEach((action, i) => line.addControl(makeButton(`${name}-${action.label}`, action, widths[i] * fit, fit < 0.9 ? 30 : 34)));
+      rows.addControl(line);
+    }
+  };
 
   const closeButton = Button.CreateSimpleButton(`${name}-close`, '×');
   closeButton.width = px(84);
@@ -186,6 +221,21 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
     line.setEnabled(true);
   };
 
+  // Moving an open card: it glides there in its parent's frame (so a card riding in a moving
+  // vehicle glides with it), its line following.
+  let glide = null;
+  let lineTarget = null;
+  scene.onBeforeRenderObservable.add(() => {
+    if (!glide) return;
+    glide.t = Math.min(1, glide.t + scene.getEngine().getDeltaTime() / 1000 / GLIDE_SECONDS);
+    const e = glide.t * glide.t * (3 - 2 * glide.t);
+    Vector3.LerpToRef(glide.p0, glide.p1, e, plane.position);
+    Quaternion.SlerpToRef(glide.q0, glide.q1, e, plane.rotationQuaternion);
+    if (glide.t >= 1) glide = null;
+    plane.computeWorldMatrix(true);
+    drawLine(lineTarget);
+  });
+
   return {
     mesh: plane,
     /** The mesh and its GUI texture, for compositing as a quad layer (see layers.js). */
@@ -208,10 +258,7 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
       body.text = b;
       fact.text = f;
       fact.isVisible = !!f;
-      row.clearControls();
-      for (const action of actions) {
-        row.addControl(makeButton(`${name}-${action.label}`, action, action.primary ? 290 : 230));
-      }
+      setActions(actions);
       grid.clearControls();
       grid.isVisible = choices.length > 0;
       for (let i = 0; i < choices.length; i += 2) {
@@ -227,20 +274,38 @@ export function createCard(scene, { width = 0.8, height = 0.56, name = 'card' } 
     /**
      * Puts the card `distance` metres in front of the head along `forward`
      * (flattened), a little below the eyes, turned to face the viewer, with its
-     * line to `target` (or none).
+     * line to `target` (or none). A card already showing glides there unless `glide` is false.
+     * Positions are in the world; a card with a parent stays in the parent's frame.
      */
-    place(head, forward, target = null, { distance = 1.15, drop = 0.18 } = {}) {
-      const f = new Vector3(forward.x, 0, forward.z).normalize();
+    place(head, forward, target = null, { distance = 1.15, drop = 0.18, glide: smooth = true } = {}) {
+      const f = new Vector3(forward.x, 0, forward.z);
+      if (f.lengthSquared() < 1e-6) f.set(0, 0, 1);
+      f.normalize();
       const pos = head.add(f.scale(distance));
       pos.y = head.y - drop;
-      plane.position.copyFrom(pos);
       // A plane shows its front to -Z: point +Z away from the viewer.
-      plane.lookAt(pos.add(f));
+      const rot = Quaternion.RotationYawPitchRoll(Math.atan2(f.x, f.z), 0, 0);
+      if (plane.parent) {
+        const inv = Matrix.Invert(plane.parent.computeWorldMatrix(true));
+        Vector3.TransformCoordinatesToRef(pos, inv, pos);
+        const parentRot = new Quaternion();
+        inv.decompose(undefined, parentRot);
+        parentRot.multiplyToRef(rot, rot);
+      }
+      lineTarget = target;
+      if (smooth && plane.isEnabled()) {
+        glide = { t: 0, p0: plane.position.clone(), p1: pos, q0: plane.rotationQuaternion.clone(), q1: rot };
+        return;
+      }
+      glide = null;
+      plane.position.copyFrom(pos);
+      plane.rotationQuaternion.copyFrom(rot);
       plane.computeWorldMatrix(true);
       plane.setEnabled(true);
       drawLine(target);
     },
     hide() {
+      glide = null;
       plane.setEnabled(false);
       line?.setEnabled(false);
     },

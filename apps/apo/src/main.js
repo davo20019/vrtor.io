@@ -4,7 +4,7 @@
 // Flat screens: an orbit camera (inside, it turns in place) and an HTML card. Headset: you float
 // (no floor in orbit), a floating card, and the tour moves you to each stop.
 import { ArcRotateCamera, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
-import { createCard, createPresence, createXr, mountPresenceControls, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
+import { createCard, createMenuControls, createPresence, createXr, mountPresenceControls, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { EARTH_DIR, buildSpace, createSpaceScene } from './space.js';
 import { loadCapsule } from './capsule.js';
 import { attachFloat } from './float.js';
@@ -67,7 +67,7 @@ let rooms = false;
 let presence = null;
 
 const inXr = () => !!rig?.inXr();
-const XR_HOWTO = 'Point and pull the trigger to choose. Left thumbstick: float where you look. Right thumbstick: turn, or rise and sink. A or X brings this card back; B or Y joins other visitors, then turns your mic on and off.';
+const XR_HOWTO = 'Point and pull the trigger to choose. Left thumbstick: float where you look. Right thumbstick: turn, or rise and sink. A or X opens and closes this card; B or Y joins other visitors, then turns your mic on and off.';
 
 function content(i) {
   const n = capsule.stops.length;
@@ -385,19 +385,14 @@ async function start() {
       render();
     });
     presence.attachXr(rig.xr);
-    // A or X: bring the card back in front of you.
-    rig.xr.input.onControllerAddedObservable.add((source) => {
-      source.onMotionControllerInitObservable.add((mc) => {
-        for (const id of ['a-button', 'x-button']) {
-          mc.getComponent(id)?.onButtonStateChangedObservable.add((c) => {
-            if (c.changes.pressed?.current) {
-              cardOpen = true;
-              capsule.select(capsule.stops[index] ?? null);
-              render();
-            }
-          });
-        }
-      });
+    // A, X or the menu button: the card in front of you, or away when it's already there.
+    createMenuControls(scene, rig, card, {
+      open: () => {
+        cardOpen = true;
+        capsule.select(capsule.stops[index] ?? null);
+        render();
+      },
+      close,
     });
   }
 

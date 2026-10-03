@@ -1,5 +1,5 @@
 // The headset side of every VRtor subject: WebXR session setup tuned for Quest
-// (ported from Acento), teleport and snap turn on the floor, a comfort fade,
+// (ported from Acento), teleport and snap turn on the floor, walking with the left stick (walk.js), a comfort fade,
 // and moving the viewer for guided tours.
 //
 // Sharpness, in order of effect:
@@ -24,6 +24,7 @@ import { createPanelLayers, quadLayersSupported } from './layers.js';
 import { PressAim } from './pressAim.js';
 import { chooseEyeBufferScale, eyeBufferMemory } from './eyeBuffer.js';
 import { AdaptiveResolution } from './resolution.js';
+import { enableWalking } from './walk.js';
 import { headsetLogging, headsetNote, startHeadsetLog } from './headsetLog.js';
 
 /** Eye-buffer scale over the browser's default known to work on a Quest 3 (Acento ships it). */
@@ -78,9 +79,9 @@ function viewportScalingSupported() {
  * `floorMeshes` are where teleport can land; `start` is where the viewer
  * stands on entering ({ position: Vector3 on the floor, lookAt: Vector3 }).
  * `maxResolution` caps the eye buffer for heavy scenes; `foveation` sets the default
- * edge softening. For comparing on the headset: `?fov=0..1`, `?res=1..1.5` pins the resolution.
+ * edge softening. `walk: false` leaves the left stick to teleport as well (no thumbstick walking). For comparing on the headset: `?fov=0..1`, `?res=1..1.5` pins the resolution.
  */
-export async function createXr(scene, { floorMeshes = [], start = null, maxResolution = MAX_RESOLUTION_SCALE, foveation = FOVEATION } = {}) {
+export async function createXr(scene, { floorMeshes = [], start = null, maxResolution = MAX_RESOLUTION_SCALE, foveation = FOVEATION, walk = true } = {}) {
   if (!(await xrSupported())) return null;
 
   const fovParam = numberParam('fov');
@@ -99,7 +100,9 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
     outputCanvasOptions: { canvasOptions },
     // Both hands point and click. Otherwise a press with the other controller only switches to it.
     pointerSelectionOptions: { enablePointerSelectionOnAllControllers: true },
+    // Teleport and snap turn on the right stick; the left one walks (walk.js).
     teleportationOptions: {
+      forceHandedness: walk ? 'right' : undefined,
       defaultTargetMeshOptions: { teleportationFillColor: ACCENT, teleportationBorderColor: '#ffffff' },
     },
   });
@@ -242,6 +245,7 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
 
   const fade = createFade(scene, camera, (alpha) => panelLayers.setFade(alpha));
   const inXr = () => base.state === WebXRState.IN_XR;
+  if (walk) enableWalking(scene, xr, { floorMeshes, inXr });
 
   // Analytics (the page's gtag, when it has one): time in the headset, per subject page.
   let enteredAt = 0;

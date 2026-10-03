@@ -2,6 +2,7 @@
 export { createXr, xrSupported, RESOLUTION_SCALE, MAX_RESOLUTION_SCALE, FOVEATION } from './xr.js';
 export { faceViewer } from './billboard.js';
 export { createCard } from './card.js';
+export { createMenuControls } from './menu.js';
 export { FrameRateGovernor } from './frameRate.js';
 export { createPresence } from './presence.js';
 export { mountPresenceControls, presenceCard, presenceSummary } from './presenceUi.js';

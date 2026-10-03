@@ -4,7 +4,7 @@
 // Flat screens: an orbit camera (at the pilot's place and the camera spot, it turns in place) and
 // an HTML card. Headset: walk and teleport on the sand, a floating card, the tour moves you.
 import { ArcRotateCamera, Engine, PointerEventTypes, Vector3 } from '@babylonjs/core';
-import { createCard, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
+import { createCard, createMenuControls, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { buildWorld, createScene } from './world.js';
 import { loadFlyer } from './flyer.js';
 import { createOutfit } from './outfit.js';
@@ -66,7 +66,7 @@ let presence = null;
 let watched = false;
 
 const inXr = () => !!rig?.inXr();
-const XR_HOWTO = 'Point and pull the trigger to choose. Push the thumbstick forward to teleport across the sand; left or right to turn. A or X brings this card back; B or Y joins other visitors, then turns your mic on and off.';
+const XR_HOWTO = 'Point and pull the trigger to choose. Left stick: walk across the sand. Right stick: forward to teleport, left or right to turn. A or X opens and closes this card; B or Y joins other visitors, then turns your mic on and off.';
 const flightIndex = () => STOPS.findIndex((s) => s.action === 'fly');
 
 function content(i) {
@@ -393,19 +393,15 @@ async function start() {
       render();
     });
     presence.attachXr(rig.xr);
-    // A or X: bring the card back in front of you.
-    rig.xr.input.onControllerAddedObservable.add((source) => {
-      source.onMotionControllerInitObservable.add((mc) => {
-        for (const id of ['a-button', 'x-button']) {
-          mc.getComponent(id)?.onButtonStateChangedObservable.add((c) => {
-            if (c.changes.pressed?.current && !flyer.flying) {
-              cardOpen = true;
-              flyer.select(flyer.stops[index] ?? null);
-              render();
-            }
-          });
-        }
-      });
+    // A, X or the menu button: the card in front of you, or away when it's already there.
+    createMenuControls(scene, rig, card, {
+      open: () => {
+        if (flyer.flying) return;
+        cardOpen = true;
+        flyer.select(flyer.stops[index] ?? null);
+        render();
+      },
+      close,
     });
   }
 

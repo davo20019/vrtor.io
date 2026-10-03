@@ -23,7 +23,7 @@
   <meta property="og:url" content="https://vrtor.io/cyb/" />
 </head>
 <body>
-  <canvas id="scene" aria-label="3D scene: a stainless steel pickup truck parked on a plaza"></canvas>
+  <canvas id="scene" aria-label="3D scene: a stainless steel pickup truck on a turntable in a showroom"></canvas>
 
   <header class="top">
     <a class="brand" href="/">VRtor<span>Cybertruck</span></a>
@@ -49,11 +49,9 @@
   </button>
 
   <nav class="bar" aria-label="Controls">
-    <button class="btn" type="button" data-seat="driver" disabled>Driver's seat</button>
-    <button class="btn" type="button" data-seat="rear" disabled>Back seat</button>
-    <button class="btn" type="button" data-seat="outside" disabled>Step out</button>
-    <button class="btn" type="button" data-covers disabled>Wheel covers</button>
-    <p class="hint" hidden>Drag to look around · scroll to zoom</p>
+    <button class="btn btn-primary" type="button" data-menu disabled hidden>Menu</button>
+    <div class="presence-controls"></div>
+    <p class="hint" hidden>Drag to look around · scroll to zoom · M for the menu</p>
   </nav>
 
   <script type="module" src="/src/main.js"></script>

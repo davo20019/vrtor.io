@@ -1,6 +1,7 @@
 import { ArcRotateCamera, Engine, Vector3 } from "@babylonjs/core";
 import {
   createCard,
+  createMenuControls,
   createPresence,
   createXr,
   mountPresenceControls,
@@ -55,7 +56,7 @@ const action = (label, onClick, primary = false) => ({
   primary,
 });
 const controls =
-  "Push the stick forward to teleport; left or right to turn. Point and pull the trigger to choose. A or X reopens the lesson; B or Y joins other visitors, then turns your mic on and off.";
+  "Left stick: walk. Right stick: forward to teleport, left or right to turn. Point and pull the trigger to choose. A or X opens and closes the lesson; B or Y joins other visitors, then turns your mic on and off.";
 function content() {
   if (rooms)
     return roomsCard("taj", rig, action, () => {
@@ -355,17 +356,14 @@ async function start() {
       else render();
     });
     presence.attachXr(rig.xr);
-    rig.xr.input.onControllerAddedObservable.add((source) =>
-      source.onMotionControllerInitObservable.add((mc) => {
-        for (const id of ["a-button", "x-button"])
-          mc.getComponent(id)?.onButtonStateChangedObservable.add((c) => {
-            if (c.changes.pressed?.current) {
-              cardOpen = true;
-              render();
-            }
-          });
-      }),
-    );
+    // A, X or the menu button: the card in front of you, or away when it's already there.
+    createMenuControls(scene, rig, panel, {
+      open: () => {
+        cardOpen = true;
+        render();
+      },
+      close,
+    });
   }
   scene.onBeforeRenderObservable.add(() => {
     if (!flight || inXr()) return;

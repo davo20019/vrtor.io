@@ -1,5 +1,5 @@
 import { ArcRotateCamera, DefaultRenderingPipeline, Engine, UniversalCamera, Vector3 } from '@babylonjs/core';
-import { createCard, createPresence, createXr, mountPresenceControls, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
+import { createCard, createMenuControls, createPresence, createXr, mountPresenceControls, presenceCard, roomsCard, continueInVr, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { buildWorld, V } from './world.js';
 import { AREAS, SITE } from './areas.js';
 import { LESSONS } from './lesson.js';
@@ -14,7 +14,7 @@ let lesson=-1,phase='observe',feedback='',score=0,answered=new Set(),cardOpen=tr
 const inXr=()=>!!rig?.inXr();
 const action=(label,onClick,primary=false)=>({label,onClick:()=>{if(!busy)onClick();},primary});
 const siteCredit='Model: Ministerio de Cultura Perú, CC BY 4.0. Stone relief: INC Peru, CAST (University of Arkansas), Cotsen Institute (UCLA), CC BY-NC 3.0. Adapted by VRtor; layout and scale approximate.';
-const controls='Push the stick forward to teleport; left or right to turn. Trigger selects. A or X reopens this card; B or Y joins other visitors, then turns your mic on and off.';
+const controls='Left stick: walk. Right stick: forward to teleport, left or right to turn. Trigger selects. A or X opens and closes this card; B or Y joins other visitors, then turns your mic on and off.';
 const credit='Survey: INC Peru, CAST (University of Arkansas) and Cotsen Institute (UCLA). CC BY-NC 3.0; adapted by VRtor.';
 function content(){
   const area=AREAS[destination??world?.active??0];
@@ -169,9 +169,8 @@ async function start(){
       render();
     });
     presence.attachXr(rig.xr);
-    rig.xr.input.onControllerAddedObservable.add(source=>source.onMotionControllerInitObservable.add(mc=>{
-      for(const id of ['a-button','x-button'])mc.getComponent(id)?.onButtonStateChangedObservable.add(c=>{if(c.changes.pressed?.current){cardOpen=true;render();}});
-    }));
+    // A, X or the menu button: the card in front of you, or away when it's already there.
+    createMenuControls(scene,rig,panel,{open:()=>{cardOpen=true;render();},close});
   }
   scene.onBeforeRenderObservable.add(()=>{
     if(!inXr()&&!busy&&scene.activeCamera===walker){
