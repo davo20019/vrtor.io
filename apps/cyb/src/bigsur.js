@@ -2,7 +2,7 @@
 // from US open data by scripts/prepare-cyb-bigsur.py: three nested squares of ground under aerial
 // photos (finest round the road), a 2 m strip of lidar ground either side of the road, the road
 // itself with its lines painted on, and the Pacific.
-import { Color3, DynamicTexture, Mesh, MeshBuilder, StandardMaterial, Texture, TransformNode, VertexData } from '@babylonjs/core';
+import { Color3, DynamicTexture, ImageProcessingConfiguration, Mesh, MeshBuilder, StandardMaterial, Texture, TransformNode, VertexData } from '@babylonjs/core';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -22,7 +22,14 @@ export async function buildBigSur(scene, onProgress) {
     return new Float32Array(b);
   }));
   const root = new TransformNode('bigsur', scene);
-  const anisotropy = Math.min(8, scene.getEngine().getCaps().maxAnisotropy || 1);
+  const anisotropy = Math.min(16, scene.getEngine().getCaps().maxAnisotropy || 1);
+  // The photos are already as the eye saw them: the scene's ACES tone mapping would grey their
+  // whites and flatten their contrast, so they skip it.
+  const asPhotographed = new ImageProcessingConfiguration();
+  asPhotographed.toneMappingEnabled = false;
+  // Fine grain at the scale of grass and gravel, where a 60 cm photo pixel is all there is. It
+  // averages out to nothing in the distance (its small mipmaps are flat grey).
+  const grain = grainTexture(scene, anisotropy);
 
   const textures = {};
   const photoMaterial = (level) => {
@@ -33,9 +40,21 @@ export async function buildBigSur(scene, onProgress) {
     // The aerial photos already hold the day's light and shade, so they're shown as they are.
     const mat = new StandardMaterial(`bigsur-${level.name}`, scene);
     mat.disableLighting = true;
-    mat.diffuseColor = Color3.Black();
     mat.specularColor = Color3.Black();
-    mat.emissiveTexture = texture;
+    // Unlit: a white emissive passes the photo (as diffuse, so the grain below can work on it) straight through.
+    mat.diffuseColor = Color3.Black();
+    mat.emissiveColor = Color3.White();
+    mat.diffuseTexture = texture;
+    mat.imageProcessingConfiguration = asPhotographed;
+    if (level.name === 'l0') {
+      // One tile of grain every 3 m, over l0's photo (which the road's corridor shares).
+      mat.detailMap.isEnabled = true;
+      mat.detailMap.texture = grain;
+      mat.detailMap.diffuseBlendLevel = 0.4;
+      mat.detailMap.normalBlendLevel = 0;
+      grain.uScale = (level.x1 - level.x0) / 3;
+      grain.vScale = (level.z1 - level.z0) / 3;
+    }
     return mat;
   };
 
@@ -174,15 +193,26 @@ function roadMesh(scene, { px, py, pz, rx, rz }, half, anisotropy) {
   }
   const mesh = finish(scene, 'bigsur-road', positions, indices, uvs);
 
-  const W = 512, H = 512;
+  const W = 1024, H = 1024;
   const tex = new DynamicTexture('asphalt', { width: W, height: H }, scene, true);
   const ctx = tex.getContext();
   ctx.fillStyle = '#4a4a48';
   ctx.fillRect(0, 0, W, H);
-  for (let i = 0; i < 9000; i++) {                     // aggregate, so it reads as asphalt
-    const v = 55 + Math.floor(Math.random() * 45);
-    ctx.fillStyle = `rgb(${v},${v},${v - 2})`;
-    ctx.fillRect(Math.random() * W, Math.random() * H, 1.5, 1.5);
+  // Worn and fresher patches, a metre or two across, tiling with the 8 m repeat.
+  const patches = noiseCanvas(W, H, [[8, 0.6], [16, 0.4]]);
+  ctx.globalCompositeOperation = 'overlay';
+  ctx.globalAlpha = 0.35;
+  ctx.drawImage(patches, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1;
+  // Aggregate, 1 to 2 cm stones, light and dark, so it reads as asphalt up close.
+  for (let i = 0; i < 60000; i++) {
+    const v = Math.random() < 0.5 ? 40 + Math.floor(Math.random() * 25) : 85 + Math.floor(Math.random() * 60);
+    const r = 0.8 + Math.random() * 1.4;
+    const x = Math.random() * W, y = Math.random() * H;
+    ctx.fillStyle = `rgb(${v},${v},${v - 3})`;
+    // Drawn again across the top and bottom edge, so the 8 m repeat has no seam.
+    for (const dy of [0, -H, H]) ctx.fillRect(x, y + dy, r, r);
   }
   const mpx = (2 * half) / W;                          // metres per pixel across
   const stripe = (d, w, color) => {
@@ -194,17 +224,73 @@ function roadMesh(scene, { px, py, pz, rx, rz }, half, anisotropy) {
   stripe(0.1, 0.1, '#d9a91c');
   stripe(-3.65, 0.12, '#e8e6df');
   stripe(3.65, 0.12, '#e8e6df');
+  // The paint is worn through to the stones in places.
+  ctx.fillStyle = 'rgba(74,74,72,0.55)';
+  for (const d of [-0.1, 0.1, -3.65, 3.65]) {
+    for (let i = 0; i < 700; i++) {
+      const x = (d + half) / mpx + (Math.random() - 0.5) * 0.12 / mpx;
+      ctx.fillRect(x, Math.random() * H, 1 + Math.random() * 2, 1 + Math.random() * 2);
+    }
+  }
   // A darker band where tyres run, either side.
   ctx.fillStyle = 'rgba(20,20,20,0.12)';
   for (const d of [-2.7, -0.9, 0.9, 2.7]) ctx.fillRect((d + half) / mpx - 0.35 / mpx, 0, 0.7 / mpx, H);
   tex.update();
   tex.anisotropicFilteringLevel = anisotropy;
   tex.wrapU = Texture.CLAMP_ADDRESSMODE;
+  // A DynamicTexture clamps both ways unless told: without this every metre past the first 8 shows
+  // the texture's last row, stretched into streaks.
+  tex.wrapV = Texture.WRAP_ADDRESSMODE;
   const mat = new StandardMaterial('asphalt', scene);
   mat.diffuseTexture = tex;
   mat.specularColor = new Color3(0.06, 0.06, 0.06);
   mesh.material = mat;
   return mesh;
+}
+
+/**
+ * Tiling value noise on a canvas, grey around the middle: `octaves` are [cells across, weight].
+ * Cells wrap at the edges, so the canvas repeats without a seam.
+ */
+function noiseCanvas(w, h, octaves) {
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(w, h);
+  const sum = new Float32Array(w * h);
+  const fade = (t) => t * t * (3 - 2 * t);
+  for (const [cells, weight] of octaves) {
+    const grid = Float32Array.from({ length: cells * cells }, () => Math.random() * 2 - 1);
+    const at = (i, j) => grid[(j % cells) * cells + (i % cells)];
+    for (let y = 0; y < h; y++) {
+      const gy = (y / h) * cells, j = Math.floor(gy), ty = fade(gy - j);
+      for (let x = 0; x < w; x++) {
+        const gx = (x / w) * cells, i = Math.floor(gx), tx = fade(gx - i);
+        const top = at(i, j) + (at(i + 1, j) - at(i, j)) * tx;
+        const bottom = at(i, j + 1) + (at(i + 1, j + 1) - at(i, j + 1)) * tx;
+        sum[y * w + x] += (top + (bottom - top) * ty) * weight;
+      }
+    }
+  }
+  for (let k = 0; k < w * h; k++) {
+    const v = Math.max(0, Math.min(255, 128 + sum[k] * 90));
+    img.data[k * 4] = img.data[k * 4 + 1] = img.data[k * 4 + 2] = v;
+    img.data[k * 4 + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  return canvas;
+}
+
+/** The ground's close-up grain: clumps and tufts of 10 cm down to a centimetre (nothing larger, which would show the 3 m repeat), in the red channel. */
+function grainTexture(scene, anisotropy) {
+  const size = 512;
+  const tex = new DynamicTexture('bigsur-grain', { width: size, height: size }, scene, true);
+  tex.getContext().drawImage(noiseCanvas(size, size, [[32, 0.3], [64, 0.3], [128, 0.25], [256, 0.2]]), 0, 0);
+  tex.update(false);
+  tex.wrapU = tex.wrapV = Texture.WRAP_ADDRESSMODE;
+  tex.anisotropicFilteringLevel = anisotropy;
+  return tex;
 }
 
 function finish(scene, name, positions, indices, uvs) {

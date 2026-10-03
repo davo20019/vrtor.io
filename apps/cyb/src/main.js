@@ -419,6 +419,15 @@ function applyGlows() {
   for (const g of glows.ambient) g.mat.emissiveColor = color ? color.scale(Math.max(g.rest.r, g.rest.g, g.rest.b) || 1) : g.rest.clone();
 }
 
+/**
+ * The windows, which share one dark tinted material. From outside the tint is the truck's look; from a
+ * seat the eye has adjusted to it, so the view out is kept close to clear (a windscreen passes most light).
+ */
+let glass = null;
+function updateGlass() {
+  if (glass) glass.alpha = seat === 'outside' ? 1 : 0.35;
+}
+
 /** The screen's big button: start the ride from a seat, drive on after a stop, drive it again. */
 function screenAction() {
   if (seat === 'outside') return null;
@@ -536,6 +545,7 @@ function content() {
 }
 
 function render() {
+  updateGlass();
   const data = content();
   if (inXr()) {
     ui.card.hidden = true;
@@ -655,6 +665,7 @@ function applyWorld(to) {
 
 /** Teleport in the showroom, and on the road when you're standing on it (never out of a moving truck). */
 function updateTeleport() {
+  updateGlass();
   const teleport = rig?.xr.teleportation;
   if (!teleport) return;
   const roadFloors = ride.bigsur?.ground ?? [];
@@ -929,6 +940,7 @@ async function start() {
   screen.show(true);
   scene.onBeforeRenderObservable.add(() => screen.tick(engine.getDeltaTime() / 1000));
   setUpGlows();
+  glass = truck.root.getChildMeshes().find((m) => m.name === 'glass')?.material ?? null;
   setUpSeatSpots();
   for (const m of truck.root.getChildMeshes()) m.isPickable = doorTargets.has(m) || screen.meshes.includes(m);
   // The card draws over the cabin, so it's never lost inside the dash.
