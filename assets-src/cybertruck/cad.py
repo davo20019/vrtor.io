@@ -264,12 +264,27 @@ def mirror_part(p):
     base = on_plane(win, y=yb + 25, z=ZF - s)
     x1, x0 = MIRROR_HALF, MIRROR_HALF - 135
     y0, zc = yb + 45, ZF - s
-    side = [(zc + 165, y0), (zc + 150, y0 + 45), (zc + 60, y0 + 170), (zc + 20, y0 + 170), (zc - 165, y0 + 40), (zc - 165, y0)]
+    # The rear face is the glass, nearly vertical and about as tall as it is wide (dgRcedIkNOM-14, -31): the top
+    # falls from the peak to 130 mm at the back (spec: mirror height 130).
+    side = [(zc + 165, y0), (zc + 150, y0 + 45), (zc + 60, y0 + 170), (zc + 20, y0 + 170), (zc - 165, y0 + 130), (zc - 165, y0)]
     housing = side_prism(side, x0, x1)
     # front view: the top leans inward, so cut the top-inner edge off
-    housing = halfspace_cut(housing, np.array([x0, y0 + 170, zc]), np.array([-0.8, 0.6, 0.0]) / 1.0)
+    housing = halfspace_cut(housing, *MIRROR_CUT(x0, y0, zc))
     stalk = Box(x0 - base[0] + 40, 45, 90).moved(Location(((x0 + base[0]) / 2, y0 + 15, zc - 40)))
     return housing + stalk
+
+def MIRROR_CUT(x0, y0, zc, inset=0.0):
+    n = np.array([-0.8, 0.6, 0.0])
+    return np.array([x0, y0 + 170, zc]) - n * inset, n
+
+def mirror_glass_part(p):
+    """The left mirror's glass on the housing's rear face, inside a 10 mm black frame, 1.5 mm proud."""
+    s = p['a_pillar_s'] + 230
+    yb = p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (s - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
+    x1, x0 = MIRROR_HALF, MIRROR_HALF - 135
+    y0, zc = yb + 45, ZF - s
+    pane = Box(x1 - x0 - 20, 110, 2, align=(Align.MIN, Align.MIN, Align.CENTER)).moved(Location((x0 + 10, y0 + 10, zc - 165 - 1.5)))
+    return halfspace_cut(pane, *MIRROR_CUT(x0, y0, zc, inset=10.0))
 
 def wiper(p):
     """The single wiper, parked along the driver's (left) A-pillar on the windshield."""
@@ -548,6 +563,52 @@ def edge_wedge(p, ka, kb, reach):
 def c_wall():
     return CAB['wall']
 
+def rod(a, b, up, w, t):
+    """A strip from model point a to b, w wide and t thick, its thickness along `up` (made square to the strip):
+    piping, seams, webbing."""
+    a, b = np.asarray(a, float), np.asarray(b, float)
+    d = b - a
+    L = float(np.linalg.norm(d))
+    d /= L
+    y = np.asarray(up, float) - np.dot(up, d) * d
+    y /= np.linalg.norm(y)
+    x = np.cross(y, d)
+    pl = Plane(origin=tuple((a + b) / 2), x_dir=tuple(x), z_dir=tuple(d))
+    return Box(w, t, L).moved(Location(pl))
+
+def rods(pts, up, w, t):
+    """Strips along a polyline of model points, overlapping at the joints."""
+    return [rod(pts[i], pts[i + 1], up, w, t) for i in range(len(pts) - 1)]
+
+def inner_x(p, s, h, inset):
+    """The cabin wall's half-width at (s, h): the nearest left-side facet, moved in by inset."""
+    pl = planes(p)
+    xs = []
+    for k in ('side_l', 'tuck_l', 'window_l', 'sail_l'):
+        pt, n = pl[k]
+        if n[0] > 0.1:
+            xs.append(on_plane((pt - n * inset, n), y=h, z=Z(s))[0])
+    return min(xs)
+
+def pillow(a, b, normal, xc, half, sag, region):
+    """A padded crown on a flat face: the face runs from a to b in (s, h) at lateral centre xc; `normal` (s, h)
+    points out of it. Returns the part of `region` (the space in front of the face) inside a cylinder along
+    the face that stands `sag` mm proud on the centreline and meets the face `half` mm either side."""
+    R = (half ** 2 + sag ** 2) / (2 * sag)
+    a, b, nrm = np.asarray(a, float), np.asarray(b, float), np.asarray(normal, float)
+    nrm /= np.linalg.norm(nrm)
+    m = (a + b) / 2 - nrm * (R - sag)                  # the axis, behind the face
+    to3 = lambda q: np.array([xc, q[1], ZF - q[0]])
+    axis = to3(b) - to3(a)
+    L = float(np.linalg.norm(axis)) + 400
+    cyl = Cylinder(R, L).moved(Location(Plane(origin=tuple(to3(m)), z_dir=tuple(axis / np.linalg.norm(axis)))))
+    return cyl & region
+
+def crown_depth(xoff, half, sag):
+    """How far a pillow stands proud of its face at xoff from its centreline."""
+    R = (half ** 2 + sag ** 2) / (2 * sag)
+    return max(0.0, math.sqrt(max(R ** 2 - xoff ** 2, 0)) - (R - sag))
+
 def front_seat(xc, outboard):
     """One front seat at lateral centre xc: the shell is the intersection of its side and front outlines
     (manual-seats-170452D8 at 4.58 mm/px, manual-seats-71D65904), so every face is flat as on the real seat."""
@@ -560,16 +621,62 @@ def front_seat(xc, outboard):
     # The centre insert sits 45 mm behind the bolsters' front faces, between them, up to the shoulders.
     insert = SH([(2345, 760), (2470, 1225), (2470, 1250), (2100, 1250), (2100, 700), (2345, 700)], xc - 150, xc + 150)
     back = back - insert
+    # The side bolsters wrap round the shoulders: each bolster's front face turns in toward the occupant, its
+    # inner edge (at the insert) 25 mm behind its outer edge (dgRcedIkNOM-13, manual-seats-71D65904).
+    for sd in (1, -1):
+        A, B = V(xc + sd * 262, 760, 2300), V(xc + sd * 268, 1225, 2425)
+        C = V(xc + sd * 150, 760, 2300 + 25)
+        strip = SH([(2200, 700), (2600, 700), (2600, 1240), (2200, 1240)], min(xc + sd * 150, xc + sd * 280), max(xc + sd * 150, xc + sd * 280))
+        wedge = plane_cut(strip, A, B, C, V(xc + sd * 200, 990, 2150))       # the part in front of the turned face
+        back = back - wedge
+    # The insert is padded: a crown 15 mm proud on its centreline, meeting the face at the bolsters.
+    INS_SAG = 15.0
+    back = back + pillow((2345, 760), (2470, 1225), (-465, 125), xc, 150, INS_SAG, insert)
+    # The insert's seams (dgRcedIkNOM-13): a V from the shoulders down to the lumbar, then straight down.
+    def ins_s(h):                                        # the insert's face, 45 mm behind the bolsters
+        return 2345 + (h - 760) * 125 / 465
+    fwd = (0, math.sin(math.atan2(125, 465)), -math.cos(math.atan2(125, 465)))   # out of the insert's face, toward the front
+    for sd in (1, -1):
+        fw = lambda xo: crown_depth(xo, 150, INS_SAG) * 465 / math.hypot(125, 465)        # the crown, along s
+        seam = [V(xc + sd * 148, 1225, ins_s(1225) - fw(148)), V(xc + sd * 55, 1010, ins_s(1010) - fw(55)), V(xc + sd * 55, 770, ins_s(770) - fw(55))]
+        for r in rods(seam, fwd, 5, 8):
+            back = back - r
+    # The map pocket on the back (dgRcedIkNOM-37): a panel standing 10 mm off the back's rear face over its
+    # lower part, its top edge piped.
+    def rear_s(h):
+        return 2493 + (h - 812) * 133 / 504
+    out_n = np.array([504.0, -133.0]) / math.hypot(504, 133)                    # rearward, square to the back
+    pk = [(rear_s(830), 830), (rear_s(1180), 1180), (rear_s(1180) + out_n[0] * 12, 1180 + out_n[1] * 12),
+          (rear_s(830) + out_n[0] * 12, 830 + out_n[1] * 12)]
+    pocket = SH([(a - out_n[0] * 6, b - out_n[1] * 6) for a, b in pk[:2]] + pk[2:], xc - 215, xc + 215)
     cushion_side = [(1765, 645), (1765, 742), (1800, 760), (2300, 716), (2310, 645)]
     cushion_front = [(-262, 645), (262, 645), (266, 752), (228, 772), (196, 738), (-196, 738), (-228, 772), (-266, 752)]
     cushion = SH(cushion_side, xc - 300, xc + 300) & XH([(xc + x, h) for x, h in cushion_front], 1750, 2320)
+    # The cushion's centre is padded too: 14 mm proud between the side bolsters.
+    above = XH([(xc - 196, 737), (xc + 196, 737), (xc + 196, 800), (xc - 196, 800)], 1750, 2320) & SH(cushion_side, xc - 300, xc + 300)
+    cushion = cushion + pillow((1765, 738), (2300, 738), (0, 1), xc, 196, 14.0, above)
     base = SH([(1785, 646), (1800, 495), (2440, 485), (2470, 646)], xc - 250, xc + 250)
     stand = XS([(xc - 180, 1850), (xc + 180, 1850), (xc + 180, 2420), (xc - 180, 2420)], CAB['floor'] - 2, 488)
     knobs = []                                            # the three adjustment controls on the outboard side
     xo = xc + outboard * 251
     for s0, s1, h0, h1 in ((1880, 1940, 585, 600), (1955, 1972, 570, 610), (1980, 2010, 575, 605)):
         knobs.append(Box(10, h1 - h0, s1 - s0).moved(Location((xo + outboard * 3, (h0 + h1) / 2, Z((s0 + s1) / 2)))))
-    return {'seat': [back, cushion], 'seat_base': [base, stand], 'switch': knobs}
+    # Light grey piping along every bolster's outer edge (dgRcedIkNOM-13, -26, -45): up the back's front
+    # corners to the headrest, along the cushion's side bolsters, across the pocket's top.
+    def back_front_s(h):
+        return 2300 + (h - 760) * 125 / 465 if h <= 1225 else 2425 + (h - 1225) * 11 / 365
+    widths = [(760, 258), (1000, 262), (1150, 268), (1420, 185), (1560, 160)]
+    def half_w(h):
+        return float(np.interp(h, [a for a, _ in widths], [b for _, b in widths]))
+    piping = []
+    for sd in (1, -1):
+        pts = [V(xc + sd * (half_w(h) - 16), h, back_front_s(h) - 2 + (3.6 if h <= 1225 else 0)) for h in (775, 1000, 1150, 1225, 1420, 1555)]
+        piping += rods(pts, (0, 0, -1), 6, 6)
+        cpts = [V(xc + sd * 236, 770, 1795), V(xc + sd * 236, 728, 2280)]
+        piping += rods(cpts, (0, 1, 0), 6, 6)
+    tp = (rear_s(1180) + out_n[0] * 12, 1180 + out_n[1] * 12)
+    piping.append(rod(V(xc - 215, tp[1], tp[0]), V(xc + 215, tp[1], tp[0]), (0, 1, 0), 6, 6))
+    return {'seat': [back, cushion, pocket], 'seat_base': [base, stand], 'switch': knobs, 'piping': piping}
 
 def rear_bench(p):
     """Three places: two outboard and a narrower centre one whose lower back is the fold-down armrest
@@ -600,13 +707,20 @@ def rear_bench(p):
         hw_in = hw - 70
         if xc:                                             # outboard places: bolsters either side of a recessed insert
             q0, q1 = A + d * 20, A + d * ((hR + 540 - A[1]) / d[1])
-            back -= SH([tuple(q0 + nrm * 30), tuple(q1 + nrm * 30), tuple(q1 + [-200, 0]), tuple(q0 + [-200, 0])], xc - hw_in, xc + hw_in)
+            ins = SH([tuple(q0 + nrm * 30), tuple(q1 + nrm * 30), tuple(q1 + [-200, 0]), tuple(q0 + [-200, 0])], xc - hw_in, xc + hw_in)
+            back -= ins
+            back += pillow(tuple(q0 + nrm * 30), tuple(q1 + nrm * 30), tuple(-nrm), xc, hw_in, 14.0, ins)
         if xc == 0:                                        # the stowed armrest fills a slot in the centre back
             slot_lo, slot_hi = A[1] + 5, A[1] + 420
             pa, pb = A + d * ((slot_lo - A[1]) / d[1]), A + d * ((slot_hi - A[1]) / d[1])
             slot = SH([tuple(pa + [-60, 0]), tuple(pb + [-60, 0]), tuple(pb + nrm * 75), tuple(pa + nrm * 75)], -153, 153)
             back = back - slot
-            arm = SH([tuple(pa + [-60, 2]), tuple(pb + [-60, -2]), tuple(pb + nrm * 74 + [0, -2]), tuple(pa + nrm * 74 + [0, 2])], -150, 150)
+            # Folded down onto the centre cushion, as in manual-interior-E5BB028D, with its two cupholders
+            # (rounded hexagons) near the front. 105 thick, so it folds up into the 110 mm back.
+            cush_top = hR - 26
+            arm = SH([(sR + 60, cush_top), (sR - 360, cush_top), (sR - 360, cush_top + 90), (sR - 345, cush_top + 105), (sR + 60, cush_top + 105)], -150, 150)
+            for xh in (-62, 62):
+                arm = arm - XS(ngon(xh, sR - 290, 44, 6, math.pi / 6), cush_top + 40, cush_top + 120)
             out['armrest_r'].append(arm)
         out['seat'].append(back)
         cush = SH([(sR - 430, hR - 130), (sR - 430, hR - 28), (sR - 400, hR - 18), (sR + 90, hR - 45), (sR + 100, hR - 130)],
@@ -783,8 +897,10 @@ def interior(p):
     rs = se + 7                                          # the surround stands 7 mm proud of the rear face
     out['rear_vents'] = SH([(se - 5, 760), (rs, 760), (rs, 935), (se - 5, 935)], -125, 125)
     out['rear_screen'] = SH([(rs - 1, 783), (rs + 1, 783), (rs + 1, 900), (rs - 1, 900)], -104, 104)
+    # Two USB-C ports under the rear screen's surround (manual-interior-E5BB028D, item 3): dark slots 9 x 3.5.
+    out['usb'] = Compound([SH([(se - 4, 741), (se + 1.5, 741), (se + 1.5, 744.5), (se - 4, 744.5)], xu - 4.5, xu + 4.5) for xu in (-22, 22)])
     # ---- seats
-    seats = {'seat': [], 'seat_base': [], 'switch': []}
+    seats = {'seat': [], 'seat_base': [], 'switch': [], 'piping': []}
     for sx in (1, -1):
         for k, v in front_seat(sx * c['seat_x'], sx).items():
             seats[k] += v
@@ -795,6 +911,35 @@ def interior(p):
     out['seat_base'] = Compound(seats['seat_base'])
     out['seat_knobs'] = Compound(seats['switch'])
     out['rear_armrest'] = Compound(rear['armrest_r'])
+    out['piping'] = Compound(seats['piping'])
+    # ---- seat belts. Front: the D-ring on its height adjuster on the B-pillar (manual-seatbelts-0EF5959F), the
+    # belt hanging down the pillar's trim to the retractor at its foot (-25FB8DBC), the buckle on a stalk inboard
+    # of the cushion (-F460CA2E). Rear outboard: from the cab's back wall at the shoulder down beside the cushion;
+    # the buckles between the places. Heights of the D-ring and anchors: guesses from those pictures.
+    belts, hw = [], []
+    sb = p['seam_2']
+    hR = rear_h_point(p)
+    sR = c['h_rear'][0]
+    for sd in (1, -1):
+        xr = lambda h, inset: sd * (inner_x(p, sb, h, c['wall'] + inset))
+        top, foot = 1330.0, 470.0
+        hw.append(rod(V(xr(top + 50, 46), top + 50, sb), V(xr(top - 40, 46), top - 40, sb), (sd, 0, 0), 44, 10))       # adjuster plate
+        hw.append(rod(V(xr(top, 50), top, sb), V(xr(top - 30, 50), top - 30, sb), (sd, 0, 0), 56, 14))                  # D-ring
+        belts += rods([V(xr(h, 52), h, sb) for h in (top - 20, 1150, 900, foot + 70)], (sd, 0, 0), 48, 2.5)
+        hw.append(rod(V(xr(foot + 60, 75), foot + 60, sb), V(xr(foot - 30, 75), foot - 30, sb), (sd, 0, 0), 80, 50))    # retractor
+        # rear outboard: shoulder anchor on the back wall, down beside the cushion
+        xa = sd * 640
+        sa = c['cab_rear_s'] - 30
+        belts += rods([V(xa, hR + 560, sa), V(sd * 700, hR + 200, sa - 10), V(sd * 712, hR - 20, sR + 80)], (0, 0, -1), 48, 2.5)
+        hw.append(rod(V(xa, hR + 600, sa + 2), V(xa, hR + 540, sa + 2), (0, 0, -1), 60, 16))
+    for xc in (c['seat_x'], -c['seat_x']):                # front buckles, on the console side of each seat
+        xi = xc - math.copysign(285, xc)
+        hw.append(rod(V(xi, 600, 2240), V(xi, 700, 2215), (1, 0, 0), 28, 22))                  # stalk
+        hw.append(rod(V(xi, 700, 2215), V(xi, 775, 2196), (1, 0, 0), 34, 22))                  # buckle
+    for xb in (-215, -160, 160, 215):                    # rear buckles, between the places
+        hw.append(rod(V(xb, hR - 40, sR + 70), V(xb, hR + 30, sR + 50), (1, 0, 0), 30, 20))
+    out['belts'] = Compound(belts)
+    out['belt_hw'] = Compound(hw)
     # ---- doors: each door's trim rides on it
     for d in ('f', 'r'):
         for sx, side_k in ((1, 'l'), (-1, 'r')):
@@ -815,6 +960,12 @@ def interior(p):
         rails.append(band & sband(s0, s1) & edge_wedge(p, ka, kb, reach))
     head = Compound(beams + rails)
     out['headliner'] = fixed(head & Box(2400, 2400, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, c['dash_h'] + 40, 0))))
+    # The tweeter grilles on the A-pillars, a little above the dash (dgRcedIkNOM-14): a patch of the pillar trim's
+    # surface 2.5 mm proud. Its size and height: guesses from that frame.
+    tw = []
+    for kb in ('window_l', 'window_r'):
+        tw.append(ceiling_band(p, 21.5, 24) & edge_wedge(p, 'roof', kb, 45) & sband(1460, 1540))
+    out['tweeters'] = fixed(Compound(tw))
     # B-pillar trim between the doors (fixed), the cab's back wall above the rear seat.
     b0, b1 = p['seam_2'] - PILLAR_HALF + 2, p['seam_2'] + PILLAR_HALF - 2
     bpil = SH([(b0, c['floor']), (b1, c['floor']), (b1, 2000), (b0, 2000)], -1300, 1300) & (hull(p, inset=c['wall'] - 3) - hull(p, inset=c['wall'] + 40))
@@ -830,8 +981,35 @@ def interior(p):
     oc = [np.array([30, hy + 30, Z(h0 + 60)]), np.array([-30, hy + 30, Z(h0 + 60)]), np.array([-136, 1490, Z(1578)]), np.array([136, 1490, Z(1578)])]
     ocp = Wire.make_polygon([tuple(q) for q in oc], close=True)
     nrm = np.cross(oc[1] - oc[0], oc[2] - oc[0]); nrm /= np.linalg.norm(nrm)
-    out['overhead'] = extrude(Face(ocp), amount=24, dir=tuple(nrm if nrm[1] > 0 else -nrm))
+    up_n = nrm if nrm[1] > 0 else -nrm
+    # That plate is the mirror mount's light grey housing. In front of it (dash render, zoomed): a dark strip
+    # down from the header with the drive-mode buttons (P R N D, the hazard light above them), the pod with
+    # the cabin camera at its foot, and two thin arms from the header's ends meeting the strip: the V.
+    out['overhead'] = extrude(Face(ocp), amount=24, dir=tuple(up_n))
+    # On the housing's cabin-side face (it lies along the windshield glass, so it's seen at a grazing angle).
+    top_mid, bot_mid = (oc[0] + oc[1]) / 2, (oc[2] + oc[3]) / 2
+    top_c = top_mid - up_n * 4
+    bot_c = bot_mid + (top_mid - bot_mid) * 0.12 - up_n * 4
+    strip = rod(top_c, bot_c, -up_n, 78, 16)
+    pod = rod(bot_c + (top_c - bot_c) * 0.02, bot_c - (top_c - bot_c) / np.linalg.norm(top_c - bot_c) * 55, -up_n, 92, 30)
+    out['overhead_strip'] = strip + pod
+    keys = []
+    dirv = (bot_c - top_c) / np.linalg.norm(bot_c - top_c)
+    for i in range(5):                                   # hazard light, then P R N D, down the strip
+        q = top_c + dirv * (30 + 22 * i) - up_n * 9
+        keys.append(rod(q - dirv * 5, q + dirv * 5, -up_n, 12, 3))
+    lens = bot_c + dirv * 30 - up_n * 26
+    keys.append(rod(lens - dirv * 9, lens + dirv * 9, -up_n, 18, 4))
+    out['overhead_keys'] = Compound(keys)
+    hx = roof_inner_h(p, h0 + 5, c['wall'] + 26)
+    arms = []
+    for sd in (1, -1):
+        a0 = np.array([sd * 235, hx, Z(h0 + 5)])
+        a1 = top_c + dirv * 60 + np.array([sd * 36, 0, 0])
+        arms.append(rod(a0, a1, -up_n, 18, 14))
+    out['overhead_arms'] = Compound(arms)
     out['rear_mirror'] = Box(195, 50, 28).moved(Location((0, 1489, Z(1621)))) + Box(26, 40, 26).moved(Location((0, 1525, Z(1600))))
+    out['mirror_glass'] = Box(187, 42, 2).moved(Location((0, 1489, Z(1621 + 14.6))))     # its face, toward the cabin: bright in the dash render
     # ---- floor: carpet over the cabin floor, mats on it, pedals (brake outboard of the accelerator, x
     # measured in the dash render; their depth along the truck is a guess).
     out['carpet'] = (Box(2400, 12, c['cab_rear_s'] - 1170, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((0, c['floor'] + 0.5, Z(1170)))) & inner) - well
@@ -994,6 +1172,9 @@ if __name__ == '__main__':
     mirrors_rest, mirror_pieces = split_doors(both_sides(mirror_part(p)), regions)     # the mirrors ride on the front doors
     for k, piece in mirror_pieces.items():
         save(piece, f'door_{k}_mirror')
+    _, glass_pieces = split_doors(both_sides(mirror_glass_part(p)), regions)
+    for k, piece in glass_pieces.items():
+        save(piece, f'door_{k}_mirrorglass')
     if mirrors_rest is not None and mirrors_rest.volume > 1:
         save(mirrors_rest, 'mirrors')
     save(wiper(p), 'wiper')
@@ -1003,7 +1184,8 @@ if __name__ == '__main__':
         if name.startswith('door_'):                     # door_<k>_<part>: rides on door k
             save(part, f'door_{name[5:7]}_int_{name[8:]}', tolerance=2.5, angular=0.7)
         else:
-            save(part, f'int_{name}', tolerance=2.5, angular=0.7)     # flat facets; coarse tessellation keeps the few round parts cheap
+            fine = name in ('seats_front', 'seats_rear')       # their padded crowns are shallow curves: 4.6 degrees a facet
+            save(part, f'int_{name}', tolerance=1.0 if fine else 2.5, angular=0.08 if fine else 0.7)     # flat facets; coarse tessellation keeps the few round parts cheap
     for name, part in details(p).items():
         save(part, f'det_{name}')
 

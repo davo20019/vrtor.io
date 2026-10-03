@@ -94,7 +94,8 @@
    "only": [
     "int_seats_front",
     "int_seat_base",
-    "int_seat_knobs"
+    "int_seat_knobs",
+    "int_piping"
    ],
    "photo": "../../refs/tesla/manual-seats-GUID-71D65904-C61E-4286-8B8F-A5DC3FAAA8A8-online-en-US.png"
   },
@@ -230,7 +231,9 @@
    "hide": [
     "int_seats_front",
     "int_seat_base",
-    "int_seat_knobs"
+    "int_seat_knobs",
+    "int_piping",
+    "int_belt_hw"
    ],
    "photo": "../../refs/tesla/manual-childseats-GUID-FF29F441-07AE-43C8-A674-5275AFDEB1A5-online-en-US.png"
   }

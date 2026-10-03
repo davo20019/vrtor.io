@@ -279,6 +279,47 @@ Shapes taken from pictures, sizes partly guessed:
   line, white block (45 deg upper chamfer, front face 10 mm proud of the lip, lower chamfer), dark lower
   dash, glovebox groove on the passenger side (B379A2C2). The face depths and the glovebox outline: **guess**.
 
+- Front seat details (dgRcedIkNOM-13, -26, -37, -45): light grey piping along the back's front corners and the
+  cushion's side bolsters, the insert's V seams (shoulders to the lumbar, then straight down), the map pocket on
+  the back's rear face (830 to 1,180 high, 430 wide, 12 proud) with its piped top edge. Positions read from the
+  frames: **guess** to within a few cm.
+- Rear centre armrest folded down (manual-interior-E5BB028D): 420 long, 300 wide, 105 thick, two rounded
+  hexagonal cupholders 290 ahead of the rear H-point's s. Thickness chosen so it folds into the 110 mm back.
+- Seat belts (manual-seatbelts-0EF5959F, -25FB8DBC, -F460CA2E): front D-ring on its adjuster on the B-pillar at
+  1,330, the belt down the pillar trim to the retractor at 470, buckles on stalks inboard of the front cushions;
+  rear outboard belts from the back wall at the shoulder down beside the cushion, four buckles between the
+  places. All heights and anchor points: **guess** from the pictures.
+
+- Padded inserts: the front backs' and cushions' centre panels and the rear outboard backs' inserts are crowned
+  (a cylinder along the panel standing 14 to 15 mm proud on its centreline, meeting the face at the bolsters),
+  so the bolsters still stand forward of them. The crown height: **guess**; the real panels are visibly domed in
+  dgRcedIkNOM-13 and the manual's seat renders.
+- Overhead console (manual-interior-CC015C4E, zoomed): the light grey mirror-mount housing lying along the
+  windshield glass (the plate measured before), a dark strip 78 wide down its face from the header with the
+  hazard light and P R N D, the camera pod at its foot, and two thin grey arms from the header 235 mm either side
+  to the strip (the V). The rear-view mirror's face is reflective (bright in the render). Strip width, arm ends
+  and key spacing scaled from the 195 mm mirror in the same picture: **guess** to about 10 mm.
+
+- Front seat bolsters turn in toward the occupant: each one's front face slopes from its outer edge back 25 mm
+  to the insert (dgRcedIkNOM-13, manual-seats-71D65904). The 25 mm: **guess**.
+- Tweeter grilles on both A-pillars, 1,460 to 1,540 back, 2.5 mm proud of the trim (dgRcedIkNOM-14); two USB-C
+  ports under the rear screen's surround, 44 apart at 743 high (manual-interior-E5BB028D, item 3). Sizes and
+  positions: **guess** from those pictures.
+- The dash shelf is a fine woven finish like carbon fibre (dgRcedIkNOM-14), drawn as a 2 x 2 basket of 4 mm
+  blocks; the pillars, header and visors stay suede.
+- Coat hooks: no picture shows them, so none are modelled.
+
+### Materials and light (2026-10-03, third pass)
+
+- Seats and armrests pebbled leather, the dash top, pillars and headliner suede (78 grey, lighter than before:
+  the frames show mid-grey), carpet with pile: drawn normal maps tiling every 250 mm (textures.py).
+- Padded and moulded parts have rounded edges (assemble.py, ROUND: 24 mm on the seats, 28 on the white dash
+  block, 14 on armrests and the door's white panel).
+- The cabin's light is baked in Cycles (an even white sky through the windows, direct and bounced) into one
+  2,048 px map on a second UV set, exported as the occlusion map. Stored as sqrt(light / 0.45): a surface getting
+  45% of the open sky shows at full brightness, the median cabin surface (9%) at 0.45, a footwell at 0.15. The
+  app (apps/cyb main.js) applies it to its lights as well as its reflections.
+
 ### Still guesses
 
 - Rear H-point s (3,150): set so the 21 deg backrest fits against the cab's back wall (cab_rear_s 3,700,

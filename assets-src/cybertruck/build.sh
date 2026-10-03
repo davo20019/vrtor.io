@@ -7,7 +7,8 @@ cd "$(dirname "$0")"
 .venv/bin/python cad.py
 .venv/bin/python textures.py
 blender -b --factory-startup --python assemble.py 2>&1 | grep -E 'Error|assemble:'
+# --prune-attributes false: the mirror glass has no texture in the model, but the app draws its live view on its UVs.
 npx -y @gltf-transform/cli optimize out/cybertruck.glb out/cybertruck.glb \
   --compress meshopt --texture-compress webp --texture-size 2048 --simplify false \
-  --flatten false --join false --instance false
+  --flatten false --join false --instance false --palette false --prune-attributes false
 ls -l out/cybertruck.glb

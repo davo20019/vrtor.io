@@ -66,22 +66,29 @@ M = {
     'glass': material('glass_tinted', srgb(8, 9, 10), 0.04, alpha=0.3),      # see-through, so the cabin shows and a visitor inside sees out
     'cabin': material('cabin_charcoal', srgb(38, 38, 40), 0.85),
     'trim_white': material('trim_white', srgb(222, 222, 216), 0.5),
-    'dash_top': material('dash_suede', srgb(48, 48, 50), 0.95),
+    # The dash top and pillars are mid-grey suede in the walkaround frames (dgRcedIkNOM-14, -30, -31), not charcoal.
+    'dash_top': material('dash_suede', srgb(78, 78, 80), 0.97, normal_map=PARTS / 'suede_normal.png', normal_strength=0.5),
     'ambient': material('ambient_light', srgb(240, 240, 255), 0.3, emit=(0.85, 0.9, 1.0), emit_strength=3.0),
-    'seat': material('seat_black', srgb(30, 30, 31), 0.55),
+    'seat': material('seat_black', srgb(30, 30, 31), 0.5, normal_map=PARTS / 'leather_normal.png', normal_strength=0.6),
     'yoke': material('yoke_black', srgb(22, 22, 22), 0.45),
     'screen': material('screen_off', srgb(6, 7, 8), 0.08),
     'bezel': material('screen_bezel', srgb(15, 15, 15), 0.4),
     'console': material('console_grey', srgb(70, 70, 72), 0.6),
     'screen_on': material('screen_on', (1, 1, 1), 0.12, emit=(1, 1, 1), emit_strength=0.0, image=PARTS / 'screen.png'),
-    'armrest': material('armrest_grey', srgb(52, 52, 54), 0.6),
+    'armrest': material('armrest_grey', srgb(52, 52, 54), 0.55, normal_map=PARTS / 'leather_normal.png', normal_strength=0.5),
     'switch': material('switch_grey', srgb(150, 150, 152), 0.35),
+    'piping': material('seat_piping', srgb(176, 176, 174), 0.45),          # the light grey piping on the seats (dgRcedIkNOM-13)
+    'belt': material('belt_webbing', srgb(34, 34, 36), 0.8),
+    # The shelf in front of the driver is a fine woven finish, like carbon fibre (dgRcedIkNOM-14), not suede.
+    'dash_shelf': material('dash_weave', srgb(70, 70, 72), 0.75, normal_map=PARTS / 'weave_normal.png', normal_strength=0.7),
+    'overhead': material('mirror_mount_grey', srgb(118, 118, 120), 0.6),
+    'mirror_glass': material('mirror_glass', srgb(235, 235, 235), 0.04, metallic=1.0),    # the mirror mount's housing, light grey in the dash render
     'grille': material('speaker_grille', srgb(28, 28, 30), 0.9),
     'pedal': material('pedal_metal', srgb(140, 140, 142), 0.35, metallic=1.0),
     'silver': material('satin_silver', srgb(168, 168, 170), 0.35, metallic=0.6),
-    'carpet': material('carpet_black', srgb(20, 20, 21), 1.0),
+    'carpet': material('carpet_black', srgb(26, 26, 27), 1.0, normal_map=PARTS / 'carpet_normal.png', normal_strength=0.8),
     'door_dark': material('door_panel_dark', srgb(34, 34, 36), 0.7),
-    'mat': material('floor_mat', srgb(24, 24, 25), 0.95),
+    'mat': material('floor_mat', srgb(30, 30, 31), 0.95, normal_map=PARTS / 'carpet_normal.png', normal_strength=0.5),
     'pillar': material('pillar_black', srgb(14, 14, 15), 0.45),
     'door_button': material('door_button', srgb(10, 10, 11), 0.15),
     'marker_amber': material('marker_amber', srgb(230, 120, 20), 0.2, emit=(1.0, 0.45, 0.05), emit_strength=0.5),
@@ -173,13 +180,15 @@ lr = stl('light_rear', M['light_r'])
 clad = stl('cladding', M['clad'])
 mirrors = stl('mirrors', M['mirror'], smooth_angle=30) if (PARTS / 'mirrors.stl').exists() else None
 wiper = stl('wiper', M['wiper'])
-INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_top', 'dash_face': 'console', 'dash_vent': 'grille', 'ambient': 'ambient',
+INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': 'console', 'dash_vent': 'grille', 'ambient': 'ambient',
             'dash_white': 'trim_white', 'dash_lower': 'armrest', 'screen_bezel': 'bezel', 'screen': 'screen_on', 'screen_stand': 'bezel',
             'yoke': 'yoke', 'yoke_chin': 'silver', 'yoke_pods': 'bezel', 'yoke_keys': 'pedal',
             'console': 'console', 'chargers': 'screen', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
             'seats_front': 'seat', 'seats_rear': 'seat', 'seat_base': 'armrest', 'seat_knobs': 'switch', 'rear_armrest': 'seat',
             'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
-            'overhead': 'yoke', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'pedals': 'pedal',
+            'overhead': 'overhead', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'pedals': 'pedal',
+            'piping': 'piping', 'belts': 'belt', 'belt_hw': 'bezel',
+            'overhead_strip': 'bezel', 'overhead_keys': 'switch', 'overhead_arms': 'overhead', 'mirror_glass': 'mirror_glass', 'tweeters': 'grille', 'usb': 'screen',
             # on the doors (door_<k>_int_<name>)
             'armrest': 'armrest', 'door_lower': 'door_dark', 'switch_pod': 'bezel', 'switch': 'door_button', 'open': 'door_button',
             'cap': 'pillar', 'grilles': 'grille'}
@@ -205,7 +214,7 @@ for k in GEO['doors']:
     o.name = o.data.name = f'btn_{k}'
     button_parts.append(o)
 # Doors: everything that swings with each door, by the part's material.
-DOOR_PARTS = {'steel': 'steel', 'glass': 'glass', 'mirror': 'mirror'}
+DOOR_PARTS = {'steel': 'steel', 'glass': 'glass', 'mirror': 'mirror', 'mirrorglass': 'mirror_glass'}
 door_parts = {}
 for k in GEO['doors']:
     door_parts[k] = []
@@ -221,6 +230,22 @@ for k in GEO['doors']:
         if suffix == 'int_open':
             o.name = o.data.name = f'open_{k}'          # the door-open button on the inside handle
         door_parts[k].append(o)
+
+def face_uv(o):
+    """UVs spanning a flat pane seen from behind: u across it along +x, v up."""
+    xs = [v.co.x for v in o.data.vertices]; ys = [v.co.y for v in o.data.vertices]
+    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+    bm = bmesh.new(); bm.from_mesh(o.data)
+    uvl = bm.loops.layers.uv.verify()
+    for f in bm.faces:
+        for l in f.loops:
+            l[uvl].uv = ((l.vert.co.x - x0) / (x1 - x0), (l.vert.co.y - y0) / (y1 - y0))
+    bm.to_mesh(o.data); bm.free()
+
+# The mirrors' glass: the app shows a live view behind each (apps/cyb), on these UVs.
+for o in [*cabin_parts, *[q for v in door_parts.values() for q in v]]:
+    if o.name.endswith('mirror_glass') or o.name.endswith('mirrorglass'):
+        face_uv(o)
 
 # ---------------------------------------------------------------- wheels
 
@@ -293,6 +318,139 @@ for t in templates:
     bpy.data.objects.remove(t)
 
 root.scale = (0.001,) * 3
+bpy.context.view_layer.update()
+
+# ---------------------------------------------------------------- the cabin: rounded edges, baked light
+# Padded and moulded parts get rounded edges (width in mm; only creases sharper than 25 degrees), with
+# hardened normals so their flat faces stay flat. Then the light each cabin surface gets through the glass
+# from an even sky (direct and bounced) is baked into one texture, exported as the glTF occlusion map on a
+# second UV set: the app multiplies its lights by it, so corners, footwells and the underside of the roof
+# go dark and the faces open to the windows stay bright, as in the real cabin.
+ROUND = {'seats_front': 24, 'seats_rear': 24, 'rear_armrest': 14, 'dash_white': 28, 'console': 10, 'seat_base': 8,
+         'dash_top': 6, 'dash_lower': 6, 'dash_face': 4, 'yoke': 5, 'visors': 8, 'screen_bezel': 3, 'overhead': 6,
+         'armrest': 14, 'door_lower': 6, 'trim_white': 14, 'cap': 6}
+NO_BAKE = ('screen', 'rear_screen', 'ambient', 'chargers', 'open', 'switch', 'mirror_glass')
+
+def part_key(o):
+    n = o.name
+    if n.startswith('open_'):
+        return 'open'
+    return n.split('_int_', 1)[1] if '_int_' in n else n[4:] if n.startswith('int_') else n
+
+def round_edges(o, width):
+    for m in list(o.modifiers):          # smooth-by-angle would mark the rounded edges sharp again; hardened normals shade instead
+        o.modifiers.remove(m)
+    mod = o.modifiers.new('round', 'BEVEL')
+    mod.width = width
+    mod.segments = 3
+    mod.limit_method = 'ANGLE'
+    mod.angle_limit = math.radians(25)
+    mod.harden_normals = True
+    mod.use_clamp_overlap = True
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.context.view_layer.objects.active = o
+    o.select_set(True)
+    bpy.ops.object.modifier_apply(modifier=mod.name)
+
+def gltf_output():
+    g = bpy.data.node_groups.get('glTF Material Output')
+    if not g:
+        g = bpy.data.node_groups.new('glTF Material Output', 'ShaderNodeTree')
+        g.interface.new_socket('Occlusion', in_out='INPUT', socket_type='NodeSocketFloat')
+        g.nodes.new('NodeGroupInput')
+    return g
+
+def bake_cabin(objs, hide, size=2048):
+    for o in objs:
+        if not o.data.uv_layers:         # the exporter numbers UV sets in order: the light map must be the second
+            box_uv(o, tile_mm=250)       # the leather, suede and carpet maps tile every 250 mm
+        o.data.uv_layers[0].active_render = True
+        o.data.uv_layers.new(name='light')
+        o.data.uv_layers.active = o.data.uv_layers['light']
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in objs:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = objs[0]
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.004, area_weight=0.0, scale_to_bounds=False)
+    bpy.ops.uv.pack_islands(shape_method='CONCAVE', margin_method='FRACTION', margin=0.002, rotate=True)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    img = bpy.data.images.new('cabin_light', size, size, float_buffer=True)
+    img.colorspace_settings.name = 'Non-Color'
+    copies = {}
+    for o in objs:                       # the cabin's own copies of its materials: others (outside, buttons) have no light map
+        for slot in o.material_slots:
+            m = slot.material
+            if m.name not in copies:
+                c = m.copy()
+                c.name = f'{m.name}_cabin'
+                nt = c.node_tree
+                uvn = nt.nodes.new('ShaderNodeUVMap'); uvn.uv_map = 'light'
+                t = nt.nodes.new('ShaderNodeTexImage'); t.image = img; t.name = 'cabin_light'
+                nt.links.new(uvn.outputs['UV'], t.inputs['Vector'])
+                for n in nt.nodes:
+                    n.select = False
+                t.select = True
+                nt.nodes.active = t
+                copies[m.name] = c
+            slot.material = copies[m.name]
+    sc = bpy.context.scene
+    world = bpy.data.worlds.new('bake_sky'); world.use_nodes = True
+    world.node_tree.nodes['Background'].inputs['Color'].default_value = (1, 1, 1, 1)
+    world.node_tree.nodes['Background'].inputs['Strength'].default_value = 1.0
+    sc.world = world
+    sc.render.engine = 'CYCLES'
+    sc.cycles.samples = 512
+    try:
+        sc.cycles.device = 'GPU'
+        prefs = bpy.context.preferences.addons['cycles'].preferences
+        prefs.compute_device_type = 'METAL'
+        prefs.get_devices()
+        for d in prefs.devices:
+            d.use = True
+    except Exception:
+        pass
+    for o in hide:                       # the light comes in through the windows; the screens and strips don't light it
+        o.hide_render = True
+    bpy.ops.object.bake(type='DIFFUSE', pass_filter={'DIRECT', 'INDIRECT'}, margin=8, use_clear=True)
+    for o in hide:
+        o.hide_render = False
+    # As light it's right but too dark to show: inside a cabin the eye adapts. Faces getting 45% of the open
+    # sky become 1, the rest follow a square root, so a footwell (1%) stays at 0.15 and the median face (9%) 0.45.
+    import numpy as np
+    a = np.array(img.pixels[:]).reshape(size, size, 4)
+    # The bake's sampling noise, smoothed within each piece (blurred light over blurred coverage, so the
+    # empty space round a piece doesn't darken its edges).
+    light = a[:, :, 0].copy()
+    cover = (light > 1e-6).astype(float)         # the bake sets alpha everywhere; empty space stays exactly 0
+    def blur(x, r=3, sigma=1.6):
+        k = np.exp(-np.arange(-r, r + 1) ** 2 / (2 * sigma ** 2)); k /= k.sum()
+        for axis in (0, 1):
+            x = sum(np.roll(x, i - r, axis=axis) * k[i] for i in range(2 * r + 1))
+        return x
+    smooth = np.where(cover > 0, blur(light * cover) / np.maximum(blur(cover), 1e-4), 0)
+    a[:, :, :3] = np.minimum(1.0, np.sqrt(np.maximum(smooth, 0) / 0.45))[:, :, None]
+    a[:, :, 3] = 1.0
+    a = a.reshape(-1, 4)
+    img.pixels[:] = a.ravel()
+    img.filepath_raw = str(PARTS / 'cabin_light.png')
+    img.file_format = 'PNG'
+    img.save()
+    for c in copies.values():            # exported as the occlusion map, from the second UV set
+        nt = c.node_tree
+        sep = nt.nodes.new('ShaderNodeSeparateColor')
+        nt.links.new(nt.nodes['cabin_light'].outputs['Color'], sep.inputs['Color'])
+        out = nt.nodes.new('ShaderNodeGroup'); out.node_tree = gltf_output()
+        nt.links.new(sep.outputs['Red'], out.inputs['Occlusion'])
+
+inside_parts = cabin_parts + [o for o in all_door_parts if '_int_' in o.name or o.name.startswith('open_')]
+for o in inside_parts:
+    w = ROUND.get(part_key(o))
+    if w:
+        round_edges(o, w)
+bake_cabin([o for o in inside_parts if part_key(o) not in NO_BAKE],
+           [o for o in bpy.context.scene.objects if o.type == 'MESH' and ('glass' in o.name or part_key(o) in ('ambient', 'screen', 'rear_screen', 'chargers'))])
 
 bpy.ops.export_scene.gltf(filepath=str(OUT / 'cybertruck.glb'), export_format='GLB',
                           export_cameras=False, export_lights=False, export_apply=True,

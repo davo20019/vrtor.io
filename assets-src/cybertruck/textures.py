@@ -88,3 +88,46 @@ for i in range(9):
     d.rounded_rectangle([x, int(0.905 * SH * k), x + 38 * k, int(0.905 * SH * k) + 38 * k], radius=8 * k, fill=(190, 192, 196))
 img.resize((SW, SH), Image.LANCZOS).save(OUT / 'screen.png')
 print('textures: wrote screen.png')
+
+# Cabin surfaces, all tiling over 250 mm (the cabin parts' first UV set, box-projected per face):
+# pebbled leather on the seats and armrests, suede on the dash top, pillars and headliner, carpet on the floor.
+def tiling_noise(size, cell, seed):
+    """Smooth noise that wraps at the edges: random values on a grid of `cell` px, upsampled with wrap."""
+    r = np.random.default_rng(seed)
+    n = size // cell
+    g = r.normal(0, 1, (n, n))
+    g = np.tile(g, (3, 3))
+    big = np.array(Image.fromarray(((g * 40 + 128).clip(0, 255)).astype(np.uint8)).resize((size * 3, size * 3), Image.BICUBIC), dtype=np.float32)
+    return big[size:2 * size, size:2 * size] - 128
+
+def normal_wrapped(h, strength):
+    h = h.astype(np.float32) / 255.0
+    gx = (np.roll(h, -1, 1) - np.roll(h, 1, 1)) / 2
+    gy = (np.roll(h, -1, 0) - np.roll(h, 1, 0)) / 2
+    n = np.dstack([-gx * strength, gy * strength, np.ones_like(h)])
+    n /= np.linalg.norm(n, axis=2, keepdims=True)
+    return Image.fromarray(((n * 0.5 + 0.5) * 255).astype(np.uint8))
+
+C = 1024                                           # 4 px per mm over the 250 mm tile
+# Leather: pebbles about 1.2 mm across with a softer 6 mm undulation.
+peb = tiling_noise(C, 4, 11) + 0.5 * tiling_noise(C, 2, 12)
+peb = np.sign(peb) * np.abs(peb) ** 0.7 * 6
+leather = (128 + peb + 0.6 * tiling_noise(C, 32, 13)).clip(0, 255)
+normal_wrapped(leather, 2.2).save(OUT / 'leather_normal.png')
+# Suede: fine fibres, no pattern.
+suede = (128 + 1.2 * tiling_noise(C, 2, 21) + 0.6 * tiling_noise(C, 8, 22)).clip(0, 255)
+normal_wrapped(suede, 1.4).save(OUT / 'suede_normal.png')
+# Carpet: loop pile, about 2 mm, deep.
+pile = (128 + 2.5 * tiling_noise(C, 8, 31) + 1.5 * tiling_noise(C, 4, 32)).clip(0, 255)
+normal_wrapped(pile, 4.0).save(OUT / 'carpet_normal.png')
+print('textures: wrote leather_normal.png, suede_normal.png, carpet_normal.png')
+
+# The dash shelf's weave (dgRcedIkNOM-14): a 2 x 2 basket of 4 mm blocks, threads 2 mm apart, alternating
+# direction block by block, like carbon fibre. 16 px blocks divide the 1024 px tile, so it wraps cleanly.
+yy, xx = np.mgrid[0:C, 0:C]
+block = ((xx // 16) + (yy // 16)) % 2
+along_x = 0.5 + 0.5 * np.cos(2 * np.pi * yy / 8)
+along_y = 0.5 + 0.5 * np.cos(2 * np.pi * xx / 8)
+weave = np.where(block == 0, along_x, along_y) * 70 + 90 + 0.4 * tiling_noise(C, 4, 41)
+normal_wrapped(weave.clip(0, 255), 2.0).save(OUT / 'weave_normal.png')
+print('textures: wrote weave_normal.png')

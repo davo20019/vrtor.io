@@ -160,3 +160,39 @@ Remaining differences (seen in review/interior/r5):
 - No seat belts, A-pillar tweeter grille, coat hooks or USB ports.
 - Headset test of this pass: not yet done (the page loads in a headless browser without errors, 120 fps
   on the desktop, doors open with their trim).
+
+## Third pass: light, rounding, materials, seat details (2026-10-03)
+
+After the first headset test the cabin looked crude. In the app it was lit evenly everywhere (sky light, sun and
+probe don't know the cabin is enclosed) and every part was a sharp-edged flat colour, so blocks read as
+silhouettes. Fixed:
+
+- **Baked light** (assemble.py, `bake_cabin`): Cycles DIFFUSE bake, direct and indirect, from a white sky with
+  the glass hidden, 512 samples, into one 2,048 map on a `light` UV set (smart project, packed concave, 38%
+  coverage), smoothed within each island (blurred light over blurred coverage, so the empty space round an island
+  doesn't darken its edges) and remapped by a square root. Exported as the glTF occlusion map; the app sets
+  `ambientTextureImpactOnAnalyticalLights = 1` so it dims the sun and sky light too.
+- **Rounded edges** on padded and moulded parts (Bevel, 3 segments, 25 degree limit, hardened normals; the
+  smooth-by-angle modifier is removed first or it marks the bevels sharp again).
+- **Materials** from the walkaround frames: leather, suede, carpet normal maps (textures.py); the dash top
+  lighter. `gltf-transform optimize` now runs with `--palette false`: the palette step merged textured materials
+  and renamed the glass, so the app's see-through-from-inside rule stopped finding it.
+- **Seats**: piping, V seams, the map pocket; the rear armrest down with cupholders; seat belts.
+
+Budget: 30,721 triangles (limit 60,000), GLB 1.74 MB (limit 3 MB; the normal maps and the light map are most of it).
+
+Then: padded crowns on the seat inserts (cushions and backs, front and rear; their parts are tessellated at
+4.6 degrees a facet so the curve survives), and the overhead console's V (strip with the drive-mode keys, camera
+pod, arms) on the mirror-mount housing, with a reflective mirror face. Review: review/interior/r7 and the
+dash render pair. The strip was first built through a point 22 mm inside the housing and vanished; it is now
+placed on the housing's cabin-side face.
+
+Budget: 32,941 triangles, GLB 1.77 MB.
+
+Then: the front seats' bolsters turned in toward the occupant, tweeter grilles on the A-pillars, the rear USB-C
+ports, the dash shelf's woven finish (review/interior/r9). 33,405 triangles, GLB 1.94 MB.
+
+Remaining differences (before the bolster pass):
+the housing reads thinner than in the dash render because the windshield header sits about 20 px lower in our
+render of that camera (the header measurement may be slightly off); no coat hooks, USB ports or tweeter grille.
+Headset test of this pass: not yet done.
