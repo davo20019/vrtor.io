@@ -1,0 +1,366 @@
+{
+  "glb": "out/cybertruck.glb",
+  "glbFrame": "y-up",
+  "frontFrameMm": 6200,
+  "threeQuarter": [
+    0.2,
+    0.06,
+    0.16
+  ],
+  "environment": "sky",
+  "expectMm": {
+    "_all": [
+      2413.3,
+      null,
+      5682.9
+    ],
+    "steel": [
+      null,
+      1536.8,
+      null
+    ]
+  },
+  "expectAxes": true,
+  "toleranceMm": 10,
+  "budget": {
+    "triangles": 60000,
+    "glbKB": 3072,
+    "texturePx": 2048
+  },
+  "exposure": 0,
+  "_expectMm": "_all height is not checked: the tyres reach 15 mm (the squash) below the ground, as round tyres can't flatten; the roof height is checked on the steel shell (bottom at the 257 clearance)",
+  "fit": {
+    "solid": "fit_parts",
+    "viewDark": "VIEW_DARK",
+    "landmarks": "landmarks",
+    "centreMm": [
+      0,
+      900,
+      0
+    ],
+    "tessellation": [
+      3.0,
+      0.3
+    ],
+    "iouWeightMm": 1000,
+    "darkWeightMm": 300,
+    "workPx": 1200,
+    "params": {
+      "nose_h": [
+        880,
+        1020
+      ],
+      "face_rake": [
+        0,
+        150
+      ],
+      "bumper_f_h": [
+        420,
+        600
+      ],
+      "cowl_s": [
+        950,
+        1400
+      ],
+      "cowl_h": [
+        1300,
+        1500
+      ],
+      "apex_s": [
+        2200,
+        2600
+      ],
+      "tail_h": [
+        1250,
+        1420
+      ],
+      "belt_h_front": [
+        1050,
+        1250
+      ],
+      "belt_h_rear": [
+        1180,
+        1380
+      ],
+      "tuck": [
+        20,
+        120
+      ],
+      "flare_proud": [
+        15,
+        60
+      ],
+      "nose_flat_half": [
+        600,
+        900
+      ],
+      "corner_s": [
+        80,
+        350
+      ],
+      "shoulder_drop": [
+        30,
+        160
+      ],
+      "roof_half": [
+        560,
+        760
+      ],
+      "tail_half": [
+        880,
+        1000
+      ],
+      "arch_top_h": [
+        900,
+        1060
+      ],
+      "arch_top_half": [
+        250,
+        380
+      ],
+      "arch_knee_h": [
+        560,
+        760
+      ],
+      "arch_foot_half": [
+        520,
+        660
+      ],
+      "flare_band": [
+        50,
+        110
+      ],
+      "bumper_r_h": [
+        520,
+        680
+      ],
+      "bumper_r_out": [
+        20,
+        120
+      ],
+      "a_pillar_s": [
+        1300,
+        1550
+      ],
+      "c_pillar_s": [
+        3450,
+        3750
+      ],
+      "win_margin": [
+        20,
+        80
+      ],
+      "rocker_h": [
+        60,
+        160
+      ],
+      "bumper_f_bot": [
+        280,
+        400
+      ],
+      "squash": [
+        5,
+        30
+      ]
+    },
+    "photos": [
+      {
+        "name": "c059-left",
+        "photo": "refs/web/c059-side-L.jpg",
+        "view": [
+          5,
+          -90,
+          0
+        ],
+        "search": {
+          "pitch": [
+            -3,
+            12,
+            3
+          ],
+          "yaw": [
+            -100,
+            -80,
+            5
+          ]
+        },
+        "mask": {
+          "method": "grabcut",
+          "rect": [
+            250,
+            950,
+            3350,
+            2000
+          ],
+          "ground": [
+            [
+              721,
+              1980
+            ],
+            [
+              2647,
+              1964
+            ]
+          ],
+          "refine": true
+        },
+        "landmarks": {
+          "wheel_fl": [
+            721,
+            1744
+          ],
+          "wheel_rl": [
+            2647,
+            1728
+          ],
+          "contact_fl": [
+            721,
+            1970
+          ],
+          "contact_rl": [
+            2647,
+            1945
+          ]
+        },
+        "parts": "left",
+        "dark": {
+          "valueMax": 60
+        }
+      },
+      {
+        "name": "c003-right",
+        "photo": "refs/web/c003-side-R.jpg",
+        "view": [
+          3,
+          90,
+          0
+        ],
+        "search": {
+          "pitch": [
+            -3,
+            12,
+            3
+          ],
+          "yaw": [
+            80,
+            100,
+            5
+          ]
+        },
+        "mask": {
+          "method": "grabcut",
+          "rect": [
+            30,
+            1080,
+            3760,
+            2380
+          ],
+          "ground": [
+            [
+              837,
+              2350
+            ],
+            [
+              3371,
+              2337
+            ]
+          ],
+          "refine": true
+        },
+        "landmarks": {
+          "wheel_fr": [
+            3371,
+            2027
+          ],
+          "wheel_rr": [
+            837,
+            2040
+          ],
+          "contact_fr": [
+            3371,
+            2315
+          ],
+          "contact_rr": [
+            837,
+            2328
+          ]
+        },
+        "parts": "right",
+        "dark": {
+          "valueMax": 60
+        }
+      },
+      {
+        "name": "c150-front",
+        "photo": "refs/web/c150-front.jpg",
+        "view": [
+          5,
+          0,
+          0
+        ],
+        "search": {
+          "pitch": [
+            -3,
+            12,
+            3
+          ],
+          "yaw": [
+            -6,
+            6,
+            3
+          ]
+        },
+        "mask": {
+          "method": "grabcut",
+          "rect": [
+            700,
+            560,
+            2150,
+            1780
+          ],
+          "ground": [
+            [
+              700,
+              1762
+            ],
+            [
+              2150,
+              1762
+            ]
+          ],
+          "refine": true
+        },
+        "landmarks": {
+          "lightbar": [
+            1423,
+            1162
+          ]
+        },
+        "parts": "front",
+        "dark": {
+          "valueMax": 60
+        }
+      }
+    ],
+    "landmarkWeight": 5,
+    "rideOffset": {
+      "fixed": [
+        "tyre_",
+        "wheel_",
+        "contact_"
+      ],
+      "range": [
+        -60,
+        150
+      ]
+    },
+    "_rideOffset": "Tesla's heights: Entry/Exit -55, Low -40, Medium 0, High +60, Very High +100, Extract +150 mm (Owner's Manual)",
+    "cameraHeightMm": [
+      300,
+      3000
+    ],
+    "maxShapeEvals": 600,
+    "rounds": 3,
+    "_dark": "black plastic, tyres and glass read V < 40 in every photo, steel V > 90 even in shade; Otsu split the steel itself (it reflects dark sky and shade), so a fixed limit"
+  }
+}

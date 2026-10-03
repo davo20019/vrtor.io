@@ -1,0 +1,81 @@
+{
+  "center": {
+    "lat": 46.6868,
+    "lon": 7.858,
+    "lv95": [
+      2632081,
+      1170705
+    ]
+  },
+  "levels": [
+    {
+      "name": "l4",
+      "extent": 256000,
+      "size": 257,
+      "heights": "l4.bin",
+      "texture": "l4.ktx2",
+      "heightSource": "terrarium",
+      "imagery": "eox",
+      "elevationRange": [
+        119.8,
+        4520.0
+      ]
+    },
+    {
+      "name": "l3",
+      "extent": 64000,
+      "size": 513,
+      "heights": "l3.bin",
+      "texture": "l3.ktx2",
+      "heightSource": "terrarium",
+      "imagery": "swissimage",
+      "elevationRange": [
+        435.3,
+        4099.0
+      ]
+    },
+    {
+      "name": "l2",
+      "extent": 16000,
+      "size": 513,
+      "heights": "l2.bin",
+      "texture": "l2.ktx2",
+      "heightSource": "terrarium",
+      "imagery": "swissimage",
+      "elevationRange": [
+        542.4,
+        2396.2
+      ]
+    },
+    {
+      "name": "l1",
+      "extent": 4000,
+      "size": 257,
+      "heights": "l1.bin",
+      "texture": "l1.ktx2",
+      "heightSource": "alti",
+      "imagery": "swissimage",
+      "elevationRange": [
+        557.6,
+        1579.6
+      ]
+    },
+    {
+      "name": "l0",
+      "extent": 1000,
+      "size": 257,
+      "heights": "l0.bin",
+      "texture": "l0.ktx2",
+      "heightSource": "alti",
+      "imagery": "swissimage",
+      "elevationRange": [
+        560.2,
+        842.5
+      ]
+    }
+  ],
+  "referenceElevation": 568.21,
+  "format": "heights: little-endian float32 metres above the landing; rows south to north, columns west to east. texture: north at the top.",
+  "credit": "Terrain and imagery \u00a9 swisstopo (swissALTI3D, SWISSIMAGE). Distant relief: Mapzen Terrain Tiles (SRTM/GMTED2010, USGS). Distant imagery: Sentinel-2 cloudless 2016 by EOX IT Services GmbH (contains modified Copernicus Sentinel data 2016), CC BY 4.0.",
+  "accessed": "2026-10-02"
+}

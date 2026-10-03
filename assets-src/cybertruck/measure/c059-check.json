@@ -1,0 +1,103 @@
+{
+  "_": "Check of scripts/3d/measure.py against Tesla's published Entry/Exit numbers (height 1738.8, clearance 202.0): references are the wheels only (Tesla's wheelbase, track, tyre size; squash 15.5 fitted).",
+  "photo": "../refs/web/c059-side-L.jpg",
+  "refs": {
+    "front centre": {
+      "px": [
+        721,
+        1744
+      ],
+      "mm": [
+        886,
+        423.75,
+        1817.5
+      ]
+    },
+    "rear centre": {
+      "px": [
+        2647,
+        1728
+      ],
+      "mm": [
+        886,
+        423.75,
+        -1817.5
+      ]
+    },
+    "front top": {
+      "px": [
+        721,
+        1510
+      ],
+      "mm": [
+        1028.5,
+        863.0,
+        1817.5
+      ]
+    },
+    "rear top": {
+      "px": [
+        2647,
+        1503
+      ],
+      "mm": [
+        1028.5,
+        863.0,
+        -1817.5
+      ]
+    },
+    "front contact": {
+      "px": [
+        721,
+        1970
+      ],
+      "mm": [
+        1028.5,
+        0.0,
+        1817.5
+      ]
+    },
+    "rear contact": {
+      "px": [
+        2647,
+        1945
+      ],
+      "mm": [
+        1028.5,
+        0.0,
+        -1817.5
+      ]
+    }
+  },
+  "queries": {
+    "roof peak": {
+      "px": [
+        1512,
+        1048
+      ],
+      "plane": {
+        "x": 607.5
+      }
+    },
+    "sill bottom": {
+      "px": [
+        1900,
+        1832
+      ],
+      "plane": {
+        "x": 942
+      }
+    }
+  },
+  "expect": {
+    "roof peak": {
+      "y": 1738.8,
+      "tol": 15
+    },
+    "sill bottom": {
+      "y": 247.0,
+      "tol": 15
+    }
+  },
+  "_expect": "roof peak: Tesla's Entry/Exit height (the fit found this truck kneeling at Entry). sill bottom: the model's rocker bottom at Entry height (302 at Medium minus 55); Tesla's 202 clearance is the lowest point, not the sill."
+}

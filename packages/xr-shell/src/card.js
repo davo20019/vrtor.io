@@ -5,6 +5,7 @@
 // subjects show the same content as an HTML card instead (crisper, and it
 // doesn't block the view).
 import { Color3, MeshBuilder, Vector3 } from '@babylonjs/core';
+import { headsetNote } from './headsetLog.js';
 import { AdvancedDynamicTexture, Button, Control, Rectangle, StackPanel, TextBlock } from '@babylonjs/gui';
 
 const ACCENT = '#ffb020';
@@ -41,8 +42,12 @@ function makeButton(id, { label, primary, onClick }, width, fontSize = 34) {
   button.onPointerOutObservable.add(() => (button.background = idle));
   // Releasing over another button after the ray drifted must not trigger that one too.
   let armed = false;
-  button.onPointerDownObservable.add(() => (armed = true));
+  button.onPointerDownObservable.add(() => {
+    armed = true;
+    headsetNote('card button down', { button: id });
+  });
   button.onPointerUpObservable.add(() => {
+    headsetNote('card button up', { button: id, armed });
     if (!armed) return;
     armed = false;
     onClick();

@@ -1,0 +1,152 @@
+{
+  "units": "metres",
+  "frame": "glTF y-up: the truck stands on y = 0 with its up on +y, its front on +z and its left side on +x; origin midway between the axles",
+  "wheels": {
+    "fl": {
+      "centre": [
+        0.886,
+        0.42373000000000005,
+        1.8175000000000001
+      ]
+    },
+    "fr": {
+      "centre": [
+        -0.886,
+        0.42373000000000005,
+        1.8175000000000001
+      ]
+    },
+    "rl": {
+      "centre": [
+        0.886,
+        0.42373000000000005,
+        -1.8175000000000001
+      ]
+    },
+    "rr": {
+      "centre": [
+        -0.886,
+        0.42373000000000005,
+        -1.8175000000000001
+      ]
+    }
+  },
+  "spin": {
+    "nodes": [
+      "wheel_fl",
+      "wheel_fr",
+      "wheel_rl",
+      "wheel_rr"
+    ],
+    "axis": [
+      1,
+      0,
+      0
+    ],
+    "note": "wheel_*.rotation.x += distance_m / 0.424 (rolling radius 0.424 m; positive rolls forward)"
+  },
+  "steer": {
+    "nodes": [
+      "steer_fl",
+      "steer_fr",
+      "steer_rl",
+      "steer_rr"
+    ],
+    "axis": [
+      0,
+      1,
+      0
+    ],
+    "note": "steer_*.rotation.y = angle; pivot is the vertical line through the wheel centre (the real kingpin axis is not published). Rear steer limits are not published either."
+  },
+  "covers": {
+    "nodes": [
+      "cover_fl",
+      "cover_fr",
+      "cover_rl",
+      "cover_rr"
+    ],
+    "note": "aero covers: set visible = false to show the bare rims"
+  },
+  "lights": {
+    "front": "light_front (emissive white)",
+    "rear": "light_rear (emissive red, low)"
+  },
+  "material": "brushed stainless is metallic: the scene needs environment lighting",
+  "seatEyes": {
+    "driver": [
+      0.39,
+      1.411,
+      0.4358000000000002
+    ],
+    "passenger": [
+      -0.39,
+      1.411,
+      0.4358000000000002
+    ],
+    "rear": [
+      0.0,
+      1.3576962926192477,
+      -0.5141999999999999
+    ]
+  },
+  "doors": {
+    "fl": {
+      "node": "door_fl",
+      "hinge": [
+        0.94192,
+        0.9,
+        1.1928000000000003
+      ],
+      "openDeg": -65,
+      "buttons": [
+        "btn_fl",
+        "open_fl"
+      ],
+      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
+    },
+    "fr": {
+      "node": "door_fr",
+      "hinge": [
+        -0.94192,
+        0.9,
+        1.1928000000000003
+      ],
+      "openDeg": 65,
+      "buttons": [
+        "btn_fr",
+        "open_fr"
+      ],
+      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
+    },
+    "rl": {
+      "node": "door_rl",
+      "hinge": [
+        0.94192,
+        0.9,
+        0.024800000000000183
+      ],
+      "openDeg": -65,
+      "buttons": [
+        "btn_rl",
+        "open_rl"
+      ],
+      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
+    },
+    "rr": {
+      "node": "door_rr",
+      "hinge": [
+        -0.94192,
+        0.9,
+        0.024800000000000183
+      ],
+      "openDeg": 65,
+      "buttons": [
+        "btn_rr",
+        "open_rr"
+      ],
+      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
+    }
+  },
+  "cabin": "node \"cabin\": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); the glass is see-through (alpha 0.3)"
+}

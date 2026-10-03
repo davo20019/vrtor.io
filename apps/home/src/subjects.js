@@ -15,6 +15,10 @@ const FLYER = { name: 'Wright Flyer', code: 'fly', service: 'FLY' };
 const ORCA = { name: 'Orca', code: 'orca', service: 'ORCA' };
 // Unlisted experiment: Google's photorealistic Earth in VR (apps/geo).
 const EARTH = { name: 'Earth', code: 'geo', service: 'GEO' };
+// A skydive over Interlaken from swisstopo data (apps/jump).
+const JUMP = { name: 'Parachute', code: 'jump', service: 'JUMP' };
+// Unlisted test: a full-size Cybertruck built with the build-3d-model skill (apps/cyb).
+const CYB = { name: 'Cybertruck', code: 'cyb', service: 'CYB' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
 const NATURE = { name: 'Nature' };
@@ -61,6 +65,12 @@ export const SUBJECTS = {
 
   geo: EARTH,
   earth: EARTH,
+
+  jump: JUMP,
+
+  cyb: CYB,
+  cybertruck: CYB,
+  truck: CYB,
 
   mec: MECHANICS,
   mechanics: MECHANICS,

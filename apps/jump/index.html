@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XH9FQG8X8F"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XH9FQG8X8F');
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Parachute: jump over Interlaken · VRtor</title>
+  <meta name="description" content="Sit in the open door of a helicopter 4,000 m above Interlaken and jump. Fly your body in freefall, pull at 1,500 m, steer a ram-air canopy over the Swiss Alps mapped in 3D by swisstopo, and flare to land on the target. In a VR headset's browser or any web browser." />
+  <link rel="canonical" href="https://vrtor.io/jump/" />
+  <meta name="theme-color" content="#10161c" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:title" content="Parachute: jump over Interlaken · VRtor" />
+  <meta property="og:description" content="Jump from a helicopter over the Swiss Alps, fly freefall and steer your canopy down to the target. In VR, right in your browser." />
+  <meta property="og:image" content="https://vrtor.io/assets/cards/parachute.jpg" />
+  <meta property="og:url" content="https://vrtor.io/jump/" />
+</head>
+<body>
+  <canvas id="scene" aria-label="3D scene: Interlaken and the Bernese Alps seen from above"></canvas>
+
+  <header class="top">
+    <a class="brand" href="/">VRtor<span>Parachute</span></a>
+    <p class="readout" aria-live="off"></p>
+  </header>
+
+  <div class="loading" role="status">
+    <p>Climbing above Interlaken…</p>
+    <p class="loading-pct">0%</p>
+  </div>
+
+  <section class="card" aria-live="polite" hidden>
+    <h1 class="card-title"></h1>
+    <p class="card-body"></p>
+    <p class="card-fact"></p>
+    <div class="card-actions"></div>
+  </section>
+
+  <nav class="bar" aria-label="Controls">
+    <button class="btn btn-primary" type="button" data-action>Jump</button>
+    <button class="btn" type="button" data-enter-vr hidden>Enter VR</button>
+    <p class="hint"></p>
+  </nav>
+
+  <p class="credit">Terrain, imagery and buildings © swisstopo · distant relief Mapzen/USGS · horizon imagery Sentinel-2 cloudless 2016 by EOX (CC BY 4.0) · helicopter "EC135" by NG (CC BY 4.0, modified) · people Microsoft Rocketbox (MIT)</p>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

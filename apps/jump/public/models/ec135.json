@@ -1,0 +1,25 @@
+{
+  "credit": "Helicopter: \"EC135\" by NG (sketchfab.com/XRTL), CC BY 4.0, modified. People: Microsoft Rocketbox (MIT).",
+  "source": "https://sketchfab.com/3d-models/ec135-09f99c980291406a9b2afffb90e7ad02",
+  "rotor": [
+    0,
+    3.672,
+    0
+  ],
+  "rotorRadius": 5.1,
+  "floor": [
+    0.54,
+    1.023,
+    0.655
+  ],
+  "sill": [
+    0.803,
+    1.023,
+    0.655
+  ],
+  "step": [
+    0.83,
+    0.443,
+    0.655
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "vertices": 138364,
+  "triangles": 286798,
+  "buildings": 3020,
+  "radius": 1200,
+  "layout": "int16 x4 positions (decimetres, local; 4th unused) | uint8 x4 wall colour | uint32 x3 indices",
+  "source": "https://3d.geo.admin.ch/ch.swisstopo.swissbuildings3d.3d/v1/20251121/tileset.json",
+  "credit": "Buildings: swissBUILDINGS3D \u00a9 swisstopo",
+  "accessed": "2026-10-02"
+}

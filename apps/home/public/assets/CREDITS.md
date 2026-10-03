@@ -47,3 +47,7 @@ Machu Picchu mountain colour: **Sentinel-2 cloudless 2016** by **EOX IT Services
 ## Orca
 
 - `cards/orca.jpg`: rendered from vrtor.io/orca: the University of Pisa Natural History Museum's 3D scans of a killer whale (C 301) and a bottlenose dolphin (C 281), CC BY-SA 4.0, adapted by vrtor; the orca's see-through body is drawn by vrtor. This image is shared under CC BY-SA 4.0. Sources: [`/orca/models/CREDITS.md`](/orca/models/CREDITS.md).
+
+## Parachute
+
+- `cards/parachute.jpg`: rendered from vrtor.io/jump. Terrain, aerial imagery and buildings © swisstopo (free geodata, OGD); distant relief Mapzen/USGS; horizon imagery Sentinel-2 cloudless 2016 by EOX (CC BY 4.0). The canopy and harness are drawn by vrtor; the jumper is a Microsoft Rocketbox avatar (MIT), repainted. The helicopter in the app is "EC135" by NG (sketchfab.com/XRTL), CC BY 4.0, modified.

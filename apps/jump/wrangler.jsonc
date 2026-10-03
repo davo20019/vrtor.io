@@ -1,0 +1,17 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "vrtor-jump",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none",
+    "run_worker_first": true
+  },
+  // Reached only through the vrtor Worker's JUMP service binding (vrtor.io/jump).
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": true }
+}

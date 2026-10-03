@@ -13,7 +13,10 @@
 //     head, which makes people sick, so smooth motion comes before sharpness
 //   - rendering starts at the size known to keep up and only grows while frames are clean
 //   - text panels composited as WebXR quad layers, sampled once at display
-//     resolution instead of through the eye buffer (layers.js); `?layers=0` turns them off
+//     resolution instead of through the eye buffer (layers.js), only with `?layers=1` for now:
+//     on a Quest 3 the composited card sat a few centimetres off the card the controllers
+//     click (worse as you move your head), so buttons missed. Cards draw in the scene until
+//     that is fixed.
 import { Color3, MeshBuilder, Ray, StandardMaterial, Vector3, WebXRState } from '@babylonjs/core';
 import { WebXRWebGLLayerWrapper } from '@babylonjs/core/XR/webXRWebGLLayer.js';
 import { FrameRateGovernor } from './frameRate.js';
@@ -21,6 +24,7 @@ import { createPanelLayers, quadLayersSupported } from './layers.js';
 import { PressAim } from './pressAim.js';
 import { chooseEyeBufferScale, eyeBufferMemory } from './eyeBuffer.js';
 import { AdaptiveResolution } from './resolution.js';
+import { headsetLogging, headsetNote, startHeadsetLog } from './headsetLog.js';
 
 /** Eye-buffer scale over the browser's default known to work on a Quest 3 (Acento ships it). */
 export const RESOLUTION_SCALE = 1.25;
@@ -114,7 +118,8 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
     sessionManager._setBaseLayerWrapper(new WebXRWebGLLayerWrapper(baseLayer));
     session.updateRenderState({ ...rest, layers: [baseLayer] });
   };
-  const useQuadLayers = new URLSearchParams(location.search).get('layers') !== '0' && quadLayersSupported();
+  // Off unless asked for: see the note at the top (composited cards didn't line up with their clickable meshes).
+  const useQuadLayers = new URLSearchParams(location.search).get('layers') === '1' && quadLayersSupported();
   // What each controller points at, for the cursor drawn on panels composited as layers.
   const rays = new WeakMap();
   const pointerHits = () => {
@@ -130,6 +135,24 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
     return hits;
   };
   const panelLayers = createPanelLayers(scene, sessionManager, pointerHits);
+
+  // The controller rays pick with the scene's pointer-move test when it has one, and Babylon makes
+  // that test as soon as a mouse or the headset browser's laser moves over the page (aiming at
+  // Enter VR does it). Its test only takes meshes with pointer-move events, which the cards'
+  // panels don't have, so every ray went straight through them and no button could be pressed.
+  // In the headset the rays take anything visible and pickable; the page's own test comes back after.
+  let pagePredicate;
+  base.onStateChangedObservable.add((state) => {
+    if (state === WebXRState.IN_XR) {
+      pagePredicate = scene.pointerMovePredicate;
+      scene.pointerMovePredicate = (mesh) => mesh.isPickable && mesh.isVisible && mesh.isEnabled();
+    } else if (state === WebXRState.NOT_IN_XR) {
+      scene.pointerMovePredicate = pagePredicate;
+    }
+  });
+
+  // On the dev host, what the hands and pointers do goes to the dev machine's log (headsetLog.js).
+  if (headsetLogging) reportPointers(scene, xr);
 
   // A press clicks what the ray hit as the trigger pull began, not where the pull has tipped it
   // by the time it counts as pressed (pressAim.js).
@@ -267,13 +290,18 @@ export async function createXr(scene, { floorMeshes = [], start = null, maxResol
     async exit() {
       if (inXr()) await base.exitXRAsync();
     },
-    /** Fades out, optionally swaps the scene while hidden, moves the viewer to `position` facing `lookAt`, and fades back in. */
-    async moveTo(position, lookAt, whileHidden) {
+    /**
+     * Fades out, optionally swaps the scene while hidden, moves the viewer to `position` facing
+     * `lookAt`, and fades back in. `position` is the floor under you, your eyes your own height
+     * above it; or exactly `eyeHeight` above it when that's given (the headset may not know your
+     * height yet just after you enter).
+     */
+    async moveTo(position, lookAt, whileHidden, { eyeHeight } = {}) {
       if (!inXr()) return;
       await fade.to(1, 180);
       try {
         await whileHidden?.();
-        camera.position.y = (position.y || 0) + camera.realWorldHeight;
+        camera.position.y = (position.y || 0) + (eyeHeight ?? camera.realWorldHeight);
         camera.position.x = position.x;
         camera.position.z = position.z;
         camera.setTarget(lookAt);
@@ -335,4 +363,46 @@ function createFade(scene, camera, onChange) {
       });
     },
   };
+}
+
+/** Dev-only: each controller or hand that connects, each trigger press, what its ray hit, and the scene's pointer events. */
+function reportPointers(scene, xr) {
+  startHeadsetLog();
+  xr.input.onControllerAddedObservable.add((source) => {
+    const input = source.inputSource;
+    headsetNote('input added', { hand: input.handedness, profiles: input.profiles, tracked: !!input.hand, id: source.uniqueId });
+    source.onMotionControllerInitObservable.add((mc) => {
+      headsetNote('motion controller', { hand: mc.handedness, profile: mc.profileId, components: mc.getComponentIds() });
+      const main = mc.getMainComponent();
+      main?.onButtonStateChangedObservable.add((c) => {
+        if (!c.changes.pressed) return;
+        const hit = xr.pointerSelection?.getMeshUnderPointer(source.uniqueId);
+        headsetNote(c.pressed ? 'trigger down' : 'trigger up', { hand: mc.handedness, hit: hit?.name ?? null, picking: !!xr.pointerSelection });
+        if (!c.pressed || hit) return;
+        // Nothing hit: where the ray goes, where the cards are, and what an unfiltered pick finds.
+        const ray = new Ray(Vector3.Zero(), Vector3.Forward());
+        source.getWorldPointerRayToRef(ray);
+        const v = (p) => p && [+p.x.toFixed(2), +p.y.toFixed(2), +p.z.toFixed(2)];
+        const panels = scene.meshes.filter((m) => /card|bar/.test(m.name)).map((m) => {
+          const own = ray.intersectsMesh(m);
+          return { name: m.name, enabled: m.isEnabled(), visible: m.isVisible, pickable: m.isPickable, at: v(m.getAbsolutePosition()), layerMask: m.layerMask, group: m.renderingGroupId, rayHits: own.hit, distance: own.hit ? +own.distance.toFixed(2) : null };
+        });
+        const any = scene.pickWithRay(ray, () => true);
+        const predicate = scene.pointerMovePredicate;
+        headsetNote('miss detail', {
+          origin: v(ray.origin), direction: v(ray.direction), head: v(xr.baseExperience.camera.globalPosition),
+          anyHit: any?.pickedMesh?.name ?? null, anyDistance: any?.hit ? +any.distance.toFixed(2) : null,
+          predicate: predicate ? String(predicate).slice(0, 90) : null, panels,
+        });
+      });
+    });
+  });
+  xr.input.onControllerRemovedObservable.add((source) => headsetNote('input removed', { hand: source.inputSource.handedness, id: source.uniqueId }));
+  scene.onPointerObservable.add((info) => {
+    if (info.event?.pointerType !== 'xr') return;
+    const kinds = { 1: 'down', 2: 'up', 4: 'move', 16: 'pick', 32: 'tap' };
+    const kind = kinds[info.type];
+    if (!kind || kind === 'move') return;
+    headsetNote(`pointer ${kind}`, { mesh: info.pickInfo?.pickedMesh?.name ?? null, id: info.event.pointerId });
+  });
 }

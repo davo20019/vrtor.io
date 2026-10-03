@@ -1,0 +1,268 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "cameras": {
+  "dash_manual": {
+   "measure": "../../measure/int/dash-cam.camera.json",
+   "photo": "../../refs/tesla/manual-interior-GUID-CC015C4E-DAD0-4235-9D66-AE0EB87D4452-online-en-US.png"
+  },
+  "driver": {
+   "eye": [
+    390,
+    1411,
+    436
+   ],
+   "look": [
+    300,
+    1150,
+    1700
+   ],
+   "fovDeg": 90,
+   "size": [
+    1200,
+    800
+   ]
+  },
+  "driver_door": {
+   "eye": [
+    390,
+    1411,
+    436
+   ],
+   "look": [
+    1400,
+    950,
+    700
+   ],
+   "fovDeg": 90,
+   "size": [
+    1200,
+    800
+   ]
+  },
+  "rear": {
+   "eye": [
+    0,
+    1391,
+    -664
+   ],
+   "look": [
+    0,
+    1000,
+    1500
+   ],
+   "fovDeg": 90,
+   "size": [
+    1200,
+    800
+   ]
+  },
+  "yoke": {
+   "eye": [
+    390,
+    1411,
+    436
+   ],
+   "look": [
+    390,
+    1150,
+    1013
+   ],
+   "fovDeg": 40,
+   "size": [
+    900,
+    600
+   ],
+   "photo": "../../refs/tesla/manual-steering-GUID-E2AF1DEC-41E5-4927-97BC-5737F8958D75-online-en-US.png"
+  },
+  "seat34": {
+   "eye": [
+    -1600,
+    1500,
+    1545.8000000000002
+   ],
+   "look": [
+    -390,
+    950,
+    445.8000000000002
+   ],
+   "fovDeg": 55,
+   "size": [
+    380,
+    694
+   ],
+   "only": [
+    "int_seats_front",
+    "int_seat_base",
+    "int_seat_knobs"
+   ],
+   "photo": "../../refs/tesla/manual-seats-GUID-71D65904-C61E-4286-8B8F-A5DC3FAAA8A8-online-en-US.png"
+  },
+  "console": {
+   "eye": [
+    1300,
+    1650,
+    -254.19999999999982
+   ],
+   "look": [
+    0,
+    750,
+    695.8000000000002
+   ],
+   "fovDeg": 45,
+   "size": [
+    760,
+    718
+   ],
+   "only": [
+    "int_console",
+    "int_chargers",
+    "int_rear_vents",
+    "int_rear_screen"
+   ],
+   "photo": "../../refs/tesla/manual-storage-GUID-34C29DB3-42A3-4A63-83C1-8A86DD862C02-online-en-US.png"
+  },
+  "rear_console": {
+   "eye": [
+    -250,
+    1250,
+    -500
+   ],
+   "look": [
+    0,
+    800,
+    100
+   ],
+   "fovDeg": 55,
+   "size": [
+    900,
+    700
+   ],
+   "photo": "../../refs/tesla/manual-interior-GUID-E5BB028D-00FF-4BA0-99DF-B470197B55EF-online-en-US.png"
+  },
+  "side_cut": {
+   "eye": [
+    2600,
+    1000,
+    600
+   ],
+   "look": [
+    0,
+    1000,
+    600
+   ],
+   "fovDeg": 60,
+   "size": [
+    1400,
+    800
+   ],
+   "hide": [
+    "door_fl",
+    "door_rl",
+    "steel",
+    "glass",
+    "det_",
+    "mirrors",
+    "cladding",
+    "body"
+   ]
+  },
+  "seat_side": {
+   "eye": [
+    4500,
+    1000,
+    715.8000000000002
+   ],
+   "look": [
+    390,
+    1000,
+    715.8000000000002
+   ],
+   "fovDeg": 25,
+   "size": [
+    760,
+    624
+   ],
+   "only": [
+    "int_seats_front",
+    "int_seat_base",
+    "int_yoke",
+    "int_console",
+    "int_pedals",
+    "int_screen"
+   ],
+   "photo": "../../refs/tesla/manual-seats-GUID-170452D8-B65F-4C4C-896E-443E3350A2B8-online-en-US.png"
+  },
+  "door_driver": {
+   "eye": [
+    -150,
+    1300,
+    395.8000000000002
+   ],
+   "look": [
+    900,
+    1000,
+    745.8000000000002
+   ],
+   "fovDeg": 75,
+   "size": [
+    960,
+    540
+   ],
+   "photo": "../../refs/video/frames/dgRcedIkNOM-17.jpg"
+  },
+  "rear_bench": {
+   "eye": [
+    -150,
+    1550,
+    745.8000000000002
+   ],
+   "look": [
+    0,
+    850,
+    -654.1999999999998
+   ],
+   "fovDeg": 65,
+   "size": [
+    760,
+    612
+   ],
+   "hide": [
+    "int_seats_front",
+    "int_seat_base",
+    "int_seat_knobs"
+   ],
+   "photo": "../../refs/tesla/manual-childseats-GUID-FF29F441-07AE-43C8-A674-5275AFDEB1A5-online-en-US.png"
+  }
+ },
+ "lights": [
+  {
+   "at": [
+    0,
+    1650,
+    900
+   ],
+   "watts": 150,
+   "size": 800
+  },
+  {
+   "at": [
+    0,
+    1650,
+    -500
+   ],
+   "watts": 120,
+   "size": 800
+  },
+  {
+   "at": [
+    0,
+    900,
+    1300
+   ],
+   "watts": 40,
+   "size": 400
+  }
+ ],
+ "exposure": 0.8
+}

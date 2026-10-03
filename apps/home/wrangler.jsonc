@@ -23,7 +23,9 @@
     { "binding": "APO", "service": "vrtor-apo" },
     { "binding": "FLY", "service": "vrtor-fly" },
     { "binding": "ORCA", "service": "vrtor-orca" },
-    { "binding": "GEO", "service": "vrtor-geo" }
+    { "binding": "GEO", "service": "vrtor-geo" },
+    { "binding": "JUMP", "service": "vrtor-jump" },
+    { "binding": "CYB", "service": "vrtor-cyb" }
   ],
   // Live presence and voice for the subjects (src/presence.js). Set either to "off" to switch it off.
   // BREVO_LIST_ID: the "vrtor waitlist" list (folder vrtor). BREVO_API_KEY is a secret: wrangler secret put BREVO_API_KEY

@@ -24,6 +24,11 @@
     <image:image><image:loc>https://vrtor.io/assets/cards/taj-mahal.jpg</image:loc></image:image>
   </url>
   <url>
+    <loc>https://vrtor.io/jump/</loc>
+    <lastmod>2026-10-02</lastmod>
+    <image:image><image:loc>https://vrtor.io/assets/cards/parachute.jpg</image:loc></image:image>
+  </url>
+  <url>
     <loc>https://vrtor.io/mpc/</loc>
     <lastmod>2026-10-01</lastmod>
     <image:image><image:loc>https://vrtor.io/assets/cards/machu-picchu.jpg</image:loc></image:image>

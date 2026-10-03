@@ -1,0 +1,32 @@
+{
+  "_": "Check of measure.py's fitted-camera mode on c003. The wheel centre (not on the body) lands within 4 mm of its height. The roof peak measures 1819.7 at the fit's ride offset (-60), so the truck in this photo actually sits 34 mm below Medium (about Tesla's Low): the fit's per-photo ride offset can be 20 to 30 mm off; measure it from the roof peak when heights matter.",
+  "photo": "../refs/web/c003-side-R.jpg",
+  "camera": "../fit/c003-right/camera.json",
+  "queries": {
+    "front wheel centre": {
+      "px": [
+        3371,
+        2027
+      ],
+      "plane": {
+        "x": -886
+      },
+      "body": false
+    },
+    "roof peak": {
+      "px": [
+        2300,
+        1106
+      ],
+      "plane": {
+        "x": -607.5
+      }
+    }
+  },
+  "expect": {
+    "front wheel centre": {
+      "y": 423.75,
+      "tol": 25
+    }
+  }
+}
