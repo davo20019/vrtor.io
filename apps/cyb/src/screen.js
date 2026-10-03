@@ -9,6 +9,7 @@
 // (radio.js) and the volume. Each opens its panel over the map.
 // Our own drawing in the spirit of the maker's screen, not a copy of it.
 import { Color3, DynamicTexture, StandardMaterial, Texture } from '@babylonjs/core';
+import { drawLoader } from './loader.js';
 import { createRadio } from './radio.js';
 
 const W = 1024, H = 576;
@@ -33,10 +34,11 @@ const ORIGIN = { x: 0, y: 0, z: 0, heading: 0 };
 /**
  * controls(): the Controls panel's tiles, from the scene: [{ label, value, onClick, disabled }].
  * action(): the screen's one big button over the map ({ label, onClick, disabled }), or null.
+ * loading(): while the ride loads, { progress (0 to 1), detail }, drawn over the map (loader.js); else null.
  * onChange(): something on the screen changed that the scene may care about (the fan, say).
  * The back seat's small screen (int_rear_screen) shows the radio and the climate, and takes taps too.
  */
-export function createScreen(scene, screenMesh, { controls = () => [], action = () => null, onChange = () => {} } = {}) {
+export function createScreen(scene, screenMesh, { controls = () => [], action = () => null, loading = () => null, onChange = () => {} } = {}) {
   const front = surface(scene, screenMesh, 'cyb-screen', W, H);
   const rear = surface(scene, scene.getMeshByName('int_rear_screen'), 'cyb-rear-screen', RW, RH);
   const surfaces = [front, rear].filter((s) => s.mesh);
@@ -67,6 +69,7 @@ export function createScreen(scene, screenMesh, { controls = () => [], action = 
 
   function drawFront() {
     const { ctx } = front;
+    const wait = ride ? null : loading();
     const hit = front.hit;
     front.hits = [];
     ctx.save();
@@ -79,11 +82,12 @@ export function createScreen(scene, screenMesh, { controls = () => [], action = 
       drawMap(ctx, state, plan, road, here, road.map);
     } else {
       drawView(ctx, PARKED, null, ORIGIN);
-      drawParkedMap(ctx);
+      if (wait) drawWait(ctx, wait);
+      else drawParkedMap(ctx);
     }
     drawClock(ctx, ride ? 'America/Los_Angeles' : undefined);
     const big = action();
-    if (big && !ui.panel) drawAction(ctx, big, hit, ui);
+    if (big && !ui.panel && !wait) drawAction(ctx, big, hit, ui);
     if (ui.panel === 'radio') drawRadioPanel(ctx, radio, hit, ui);
     if (ui.panel === 'climate') drawClimatePanel(ctx, ui, hit);
     if (ui.panel === 'controls') drawControlsPanel(ctx, [...controls(), display()], hit, ui);
@@ -151,10 +155,14 @@ export function createScreen(scene, screenMesh, { controls = () => [], action = 
       }
       dirty = true;
     },
-    /** Each frame: redrawn ten times a second on the road, once a second parked (the clock), and on a tap. */
+    /** Something the screen shows from the scene changed (the loading's progress): drawn next frame. */
+    refresh() {
+      dirty = true;
+    },
+    /** Each frame: redrawn ten times a second on the road, 20 while it loads, once a second parked (the clock), and on a tap. */
     tick(dt) {
       since += dt;
-      if (!dirty && since < (ride ? 0.1 : 1)) return;
+      if (!dirty && since < (ride ? 0.1 : loading() ? 0.05 : 1)) return;
       // A panel left open closes by itself, so it doesn't hide the map for the whole ride.
       if (ui.panel && performance.now() - lastTap > PANEL_SECONDS * 1000) ui.panel = null;
       const full = dirty || since >= 1;
@@ -457,6 +465,27 @@ function drawAction(ctx, { label, onClick, disabled }, hit, ui) {
   ctx.fillText(label, x + 78, y + h / 2 + 9, w - 96);
   ctx.restore();
   if (!disabled) hit(x, y, w, h, 'action', onClick);
+}
+
+/** While the ride loads, over the map: the truck on its way down the coast, and how far the download has got. */
+function drawWait(ctx, { progress, detail }) {
+  ctx.save();
+  ctx.fillStyle = '#f1eee8';
+  ctx.fillRect(MX, 0, MW, MH);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = INK;
+  ctx.font = `700 30px ${FONT}`;
+  ctx.fillText('Getting Highway 1 ready', MX + 36, 120);
+  ctx.fillStyle = MUTED;
+  ctx.font = `500 20px ${FONT}`;
+  ctx.fillText(`${Math.round(progress * 100)}%${detail ? ` · ${detail}` : ''}`, MX + 36, 154);
+  drawLoader(ctx, MX, 180, MW, 240, { progress, t: performance.now() / 1000, theme: 'light' });
+  ctx.fillStyle = MUTED;
+  ctx.font = `500 16px ${FONT}`;
+  ctx.fillText('Bixby Creek Bridge', MX + 24, 452);
+  ctx.textAlign = 'right';
+  ctx.fillText(DESTINATION, W - 24, 452);
+  ctx.restore();
 }
 
 /** Parked, the map has nowhere to go: a quiet grid and where you are. */

@@ -15,6 +15,8 @@ import {
   DirectionalLight,
   DynamicTexture,
   Engine,
+  FreeCamera,
+  Frustum,
   HemisphericLight,
   ImageProcessingConfiguration,
   KhronosTextureContainer2,
@@ -47,9 +49,10 @@ import {
   xrPose,
   xrSupported,
 } from '@vrtor/xr-shell';
-import { buildBigSur } from './bigsur.js';
+import { buildBigSur, fetchBigSur } from './bigsur.js';
 import { createDrive } from './drive.js';
 import { createScreen } from './screen.js';
+import { createLoaderStrip, drawLoader } from './loader.js';
 import { createShowroom } from './showroom.js';
 import './style.css';
 
@@ -74,6 +77,7 @@ const ui = {
   body: $('.card-body'),
   fact: $('.card-fact'),
   actions: $('.card-actions'),
+  art: $('.card-art'),
   vr: $('[data-enter-vr]'),
   menu: $('[data-menu]'),
   hint: $('.hint'),
@@ -98,6 +102,12 @@ scene.onNewMaterialAddedObservable.add((m) => { m.useLogarithmicDepth = true; })
 /** Behind the showroom's walls (seen only from outside it); on the road the haze. */
 const SHOWROOM_CLEAR = Color4.FromColor3(Color3.FromHexString('#1b1e22'));
 scene.clearColor = SHOWROOM_CLEAR;
+// Fog is always on, thin to nothing in the showroom: switching it on for the coast would recompile
+// every material in the scene on the ride's first frame.
+const FOG_BIGSUR = 0.00004;
+scene.fogMode = Scene.FOGMODE_EXP2;
+scene.fogColor = HAZE;
+scene.fogDensity = 0;
 scene.ambientColor = new Color3(0.3, 0.3, 0.32);
 const ip = scene.imageProcessingConfiguration;
 ip.toneMappingEnabled = true;
@@ -210,6 +220,11 @@ async function loadTruck() {
   for (const n of [...container.transformNodes, ...container.meshes]) n.computeWorldMatrix(true);
   for (const m of container.meshes) {
     if (m.getTotalVertices() > 0) shadows.addShadowCaster(m, false);
+  }
+  // The cabin's baked light (assemble.py) comes as each cabin material's occlusion map: it dims the sun and
+  // the sky light too, not just the reflections, so the cabin is shaded as the real one is.
+  for (const mat of container.materials) {
+    if (mat.ambientTexture) mat.ambientTextureImpactOnAnalyticalLights = 1;
   }
   // The json is in glTF's frame; the loader's root turns that into Babylon's.
   // In the truck's own frame (the pose node's), wherever the pose stands now.
@@ -386,6 +401,85 @@ scene.onPointerObservable.add((info) => {
   else screen?.tap(pick);
 });
 
+// ---------------------------------------------------------------- mirrors
+
+/**
+ * The rear-view and door mirrors show what's behind: a small camera at each glass looks back, and its picture is
+ * drawn on the glass (the model's mirror_glass and door_f*_mirrorglass carry UVs across each pane). A render
+ * target draws every mesh it's given, so each mirror is given only what's inside its own view; and they take
+ * turns, one a frame, only while you're in a seat: about a fifth of a second view's cost, not three.
+ */
+const MIRRORS = [
+  // name, picture size, vertical field of view, and how far it's turned out from straight back (radians, + to the truck's left)
+  // The cab's back wall is solid in the model, so the rear-view looks down a little, at the back seats and whoever sits there.
+  { name: 'int_mirror_glass', w: 448, h: 100, fov: 0.2, out: 0, down: 0.1 },
+  { name: 'door_fl_mirrorglass', w: 224, h: 224, fov: 0.36, out: 0.14, down: 0.06 },
+  { name: 'door_fr_mirrorglass', w: 224, h: 224, fov: 0.36, out: -0.14, down: 0.06 },
+];
+const mirrors = [];
+let mirrorTurn = 0;
+const asDrawn = new ImageProcessingConfiguration();
+asDrawn.toneMappingEnabled = false;
+
+function setUpMirrors(byName) {
+  const skip = new Set();
+  for (const spec of MIRRORS) {
+    const glass = byName(spec.name);
+    if (!glass?.getTotalVertices?.()) continue;
+    skip.add(glass);
+    const cam = new FreeCamera(`${spec.name}-cam`, Vector3.Zero(), scene, false);
+    cam.fov = spec.fov;
+    cam.minZ = 0.05;
+    cam.maxZ = FAR;                                  // the scene's far: every material writes logarithmic depth by it
+    const rtt = new RenderTargetTexture(`${spec.name}-view`, { width: spec.w, height: spec.h }, scene, false);
+    rtt.activeCamera = cam;
+    rtt.refreshRate = 1;
+    rtt.clearColor = scene.clearColor;
+    const planes = Frustum.GetPlanes(Matrix.Identity());
+    rtt.renderListPredicate = (m) => m.isEnabled() && m.isVisible && !skip.has(m) && m.renderingGroupId === 0 && m.name !== 'xr-fade' && m.isInFrustum(planes);
+    rtt.onBeforeRenderObservable.add(() => {
+      rtt.clearColor = scene.clearColor;
+      Frustum.GetPlanesToRef(cam.getTransformationMatrix(true), planes);
+    });
+    const mat = new StandardMaterial(`${spec.name}-mat`, scene);
+    mat.disableLighting = true;
+    mat.diffuseColor = Color3.Black();
+    mat.specularColor = Color3.Black();
+    // The texture is added to the emissive colour, so that stays black; the level dims it instead (a mirror
+    // gives back a little less than it gets). The picture was tone-mapped when it was drawn: not again here.
+    mat.emissiveColor = Color3.Black();
+    mat.emissiveTexture = rtt;
+    rtt.level = 0.92;
+    rtt.wrapV = Texture.WRAP_ADDRESSMODE;            // the panes' v runs down: turn the picture the right way up
+    rtt.vScale = -1;
+    mat.imageProcessingConfiguration = asDrawn;
+    glass.material = mat;
+    mirrors.push({ spec, glass, cam, rtt });
+  }
+}
+
+/** Each frame: one mirror's camera moves to its glass, looking back from the truck, and it draws. */
+scene.onBeforeRenderObservable.add(() => {
+  const list = scene.customRenderTargets;
+  for (const m of mirrors) {
+    const i = list.indexOf(m.rtt);
+    if (i >= 0) list.splice(i, 1);
+  }
+  if (!mirrors.length || seat === 'outside') return;
+  const m = mirrors[mirrorTurn++ % mirrors.length];
+  const world = pose.computeWorldMatrix(true);
+  const back = Vector3.TransformNormal(new Vector3(0, 0, -1), world).normalize();
+  const up = Vector3.TransformNormal(Vector3.Up(), world).normalize();
+  const turn = Quaternion.RotationAxis(up, -m.spec.out);
+  const dir = back.applyRotationQuaternion(turn);
+  dir.addInPlace(up.scale(-m.spec.down)).normalize();
+  const at = m.glass.getBoundingInfo().boundingBox.centerWorld;
+  m.cam.position.copyFrom(at).addInPlace(dir.scale(0.03));
+  m.cam.upVector.copyFrom(up);
+  m.cam.setTarget(at.add(dir));
+  list.push(m.rtt);
+});
+
 // ---------------------------------------------------------------- the centre screen
 
 /** The touchscreen (screen.js): on from the start, parked in the showroom, the road and map on the ride. */
@@ -432,7 +526,7 @@ function updateGlass() {
 function screenAction() {
   if (seat === 'outside') return null;
   if (ride.world === 'showroom') return { label: 'Start self-driving', onClick: startRide };
-  if (ride.world === 'loading') return { label: 'Getting the road ready…', disabled: true };
+  if (ride.world === 'loading') return null;
   const st = ride.drive.state;
   if (st.done) return { label: 'Drive it again', onClick: againRide };
   if (st.paused) return { label: ride.drive.stopped ? 'Drive on' : 'Stopping…', disabled: !ride.drive.stopped, onClick: driveOn };
@@ -484,6 +578,8 @@ function eyeOf(name) {
 
 async function sitIn(name) {
   if (ride.world === 'loading') return;
+  // In a seat the ride is one tap away: its download starts now, so it's often ready by then.
+  if (name !== 'outside') fetchRide();
   if (name === 'outside' && ride.world === 'bigsur') return stepOutOnRoad();
   seat = name;
   updateTeleport();
@@ -563,6 +659,7 @@ function render() {
   ui.body.textContent = data.body;
   ui.fact.textContent = data.fact ?? '';
   ui.fact.hidden = !data.fact;
+  ui.art.hidden = !data.loader;
   ui.actions.replaceChildren(
     ...data.actions.map((a) => {
       const b = document.createElement('button');
@@ -618,20 +715,109 @@ scene.onBeforeRenderObservable.add(() => {
 
 // ---------------------------------------------------------------- the self-driving ride
 
-/** world: showroom, loading or bigsur. Big Sur loads the first time a ride is asked for. */
-const ride = { world: 'showroom', bigsur: null, drive: null, loading: null, progress: 0, error: null, lastMs: 0, afterStop: null };
+/**
+ * world: showroom, loading or bigsur. Big Sur downloads once you take a seat (or ask for the ride),
+ * and is built the first time a ride is asked for. bytes: the download so far; built: 0 to 1.
+ */
+const ride = { world: 'showroom', bigsur: null, drive: null, fetching: null, loading: null, bytes: { loaded: 0, total: 0 }, built: 0, shown: -1, error: null, lastMs: 0, afterStop: null };
+
+/** The whole wait as 0 to 1: the download is most of it, building the rest. */
+function rideProgress() {
+  const { loaded, total } = ride.bytes;
+  return 0.85 * (total ? loaded / total : 0) + 0.15 * ride.built;
+}
+
+/** How much of the download has come, in MB, once its size is known. */
+function downloadDetail() {
+  const { loaded, total } = ride.bytes;
+  if (!total) return '';
+  return loaded < total ? `${(loaded / 1e6).toFixed(1)} of ${(total / 1e6).toFixed(1)} MB` : 'building the road';
+}
+
+/** The headset's loader, over the card (loader.js). */
+let loaderStrip = null;
+let loaderDrawn = 0;
+/**
+ * While the ride loads: the truck driving down the coast over the card (the headset's, or the page's),
+ * and the real truck's light bar and cabin strips breathing, as if it's waking up.
+ */
+scene.onBeforeRenderObservable.add(() => {
+  const loading = ride.world === 'loading';
+  if (!loading) {
+    if (loaderDrawn) {
+      loaderDrawn = 0;
+      loaderStrip?.hide();
+      applyGlows();
+    }
+    return;
+  }
+  const now = performance.now();
+  // 30 times a second is plenty for the drawing.
+  if (now - loaderDrawn < 33) return;
+  loaderDrawn = now;
+  const progress = rideProgress();
+  if (inXr() && card.visible) loaderStrip?.show(progress);
+  else loaderStrip?.hide();
+  if (!inXr() && !ui.card.hidden && !ui.art.hidden) {
+    const c = ui.art;
+    const dpr = Math.min(2, devicePixelRatio || 1);
+    const w = Math.round(c.clientWidth * dpr), h = Math.round(c.clientHeight * dpr);
+    if (c.width !== w || c.height !== h) Object.assign(c, { width: w, height: h });
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+    drawLoader(ctx, 0, 0, w, h, { progress, t: now / 1000 });
+  }
+  const breath = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin((now / 1000) * 3));
+  for (const g of glows.lights) g.mat.emissiveColor = g.rest.scale(breath);
+  for (const g of glows.ambient) g.mat.emissiveColor = (AMBIENT[glows.colour].color ?? g.rest).scale(breath);
+});
+
+/** The card and the screen follow the loading, a percent at a time. */
+function showProgress() {
+  screen?.refresh();
+  const pct = Math.round(rideProgress() * 100);
+  if (ride.world !== 'loading' || pct === ride.shown) return;
+  ride.shown = pct;
+  if (cardOpen) render();
+}
+
+function fetchRide() {
+  ride.fetching ??= fetchBigSur((bytes) => {
+    ride.bytes = bytes;
+    showProgress();
+  }).catch((err) => {
+    ride.fetching = null;
+    throw err;
+  });
+  // A download started early that fails is tried again when the ride is asked for.
+  ride.fetching.catch(() => {});
+  return ride.fetching;
+}
 
 function loadBigSur() {
-  ride.loading ??= buildBigSur(scene, (f) => {
-    ride.progress = f;
-    render();
-  }).then((world) => {
+  ride.loading ??= fetchRide().then((files) => buildBigSur(scene, files, (f) => {
+    ride.built = f;
+    showProgress();
+  })).then((world) => {
     ride.bigsur = world;
     // Made in the showroom, while the truck stands unturned on the turntable: the yoke and screen are measured there.
     ride.drive = createDrive(scene, { pose, truckInfo: truck.info, nodes: truck.byName, screen, road: world.road });
     return world;
   });
   return ride.loading;
+}
+
+/** Resolves on the first frame the coast's meshes are all ready to draw, or after 3 s regardless. */
+function coastReady() {
+  const meshes = ride.bigsur.root.getChildMeshes();
+  const t0 = performance.now();
+  return new Promise((resolve) => {
+    const obs = scene.onAfterRenderObservable.add(() => {
+      if (performance.now() - t0 < 3000 && !meshes.every((m) => m.isReady(true))) return;
+      scene.onAfterRenderObservable.remove(obs);
+      resolve();
+    });
+  });
 }
 
 /** Shows one world or the other: the showroom, or the coast with its haze and afternoon sun. */
@@ -643,9 +829,7 @@ function applyWorld(to) {
   sky.setEnabled(big);
   scene.clearColor = big ? Color4.FromColor3(HAZE) : SHOWROOM_CLEAR;
   sky.material.emissiveTexture = big ? skyTextures.bigsur : skyTextures.plaza;
-  scene.fogMode = big ? Scene.FOGMODE_EXP2 : Scene.FOGMODE_NONE;
-  scene.fogColor = HAZE;
-  scene.fogDensity = 0.00004;
+  scene.fogDensity = big ? FOG_BIGSUR : 0;
   if (big) ride.drive.reset();
   else ride.drive.park();
   const toSun = big ? TO_SUN_BIGSUR : TO_SUN;
@@ -658,29 +842,32 @@ function applyWorld(to) {
   // The steel reflects whichever world it's in.
   probe.position = pose.position.add(new Vector3(0, 1, 0));
   probe.renderList.length = 0;
-  probe.renderList.push(...(big ? [sky, ...ride.bigsur.root.getChildMeshes()] : showroom.envMeshes));
+  probe.renderList.push(...(big ? [sky, ...ride.bigsur.root.getChildMeshes().filter((m) => !m.isBlocked)] : showroom.envMeshes));
   probe.cubeTexture.resetRefreshCounter();
   updateTeleport();
 }
+
+/** Which world's floors teleport lands on now. */
+let teleportFloors = 'showroom';
 
 /** Teleport in the showroom, and on the road when you're standing on it (never out of a moving truck). */
 function updateTeleport() {
   updateGlass();
   const teleport = rig?.xr.teleportation;
   if (!teleport) return;
-  const roadFloors = ride.bigsur?.ground ?? [];
-  if (ride.world === 'bigsur') {
-    for (const m of showroom.floors) teleport.removeFloorMesh(m);
-    for (const m of roadFloors) teleport.addFloorMesh(m);
-  } else {
-    for (const m of roadFloors) teleport.removeFloorMesh(m);
-    for (const m of showroom.floors) teleport.addFloorMesh(m);
+  // Swapped only when the world changes: adding a floor it already has would list it twice.
+  const want = ride.world === 'bigsur' ? 'road' : 'showroom';
+  if (want !== teleportFloors) {
+    const [out, into] = want === 'road' ? [showroom.floors, ride.bigsur.ground] : [ride.bigsur?.ground ?? [], showroom.floors];
+    for (const m of out) teleport.removeFloorMesh(m);
+    for (const m of into) teleport.addFloorMesh(m);
+    teleportFloors = want;
   }
   if (ride.world === 'bigsur' && seat !== 'outside') teleport.detach();
   else teleport.attach();
 }
 
-/** Moves the viewer into `name`'s seat (or outside) after `change` runs, behind a fade in the headset. */
+/** Moves the viewer into `name`'s seat (or outside) after `change` runs (and settles), behind a fade in the headset. */
 async function arrive(name, change) {
   if (inXr()) {
     // Worked out while the view is dark, after the change: the truck may have moved by then.
@@ -693,12 +880,12 @@ async function arrive(name, change) {
       feet.y -= name === 'outside' ? OUTSIDE.eye.y : rig.camera.realWorldHeight || 1.6;
       look.copyFrom(e.look);
     };
-    await rig.moveTo(feet, look, () => {
-      change?.();
+    await rig.moveTo(feet, look, async () => {
+      await change?.();
       where();
     });
   } else {
-    change?.();
+    await change?.();
     const { eye, look } = eyeOf(name);
     flyTo(eye, look, name !== 'outside');
     // Straight there, no glide across the map.
@@ -716,24 +903,33 @@ async function startRide() {
   if (seat === 'outside') await sitIn('driver');
   ride.world = 'loading';
   ride.error = null;
+  ride.shown = -1;
   cardOpen = true;
   render();
   try {
     await loadBigSur();
   } catch (err) {
     console.error('[cyb] Big Sur could not load', err);
-    ride.world = 'showroom';
     ride.loading = null;
+    ride.built = 0;
+    if (ride.world !== 'loading') return;
+    ride.world = 'showroom';
     ride.error = 'Big Sur could not load. Try again.';
     render();
     return;
   }
+  // Cancelled while it loaded: it's kept, for the next time.
+  if (ride.world !== 'loading') return;
   // It won't drive with a door open.
   if (anyDoorOpen()) {
     setDoorsAll(false);
     await new Promise((r) => setTimeout(r, DOOR_SECONDS * 1000 + 100));
   }
-  await arrive(seat, () => applyWorld('bigsur'));
+  await arrive(seat, async () => {
+    applyWorld('bigsur');
+    // Behind the fade, until the coast draws complete (it was prepared ahead, so this is short).
+    await coastReady();
+  });
   cardOpen = !inXr();
   render();
   setTimeout(() => {
@@ -741,6 +937,13 @@ async function startRide() {
     ride.drive.start(performance.now() / 1000);
     render();
   }, 1500);
+}
+
+/** Back to the showroom while it loads; the loading carries on, for the next time. */
+function cancelRide() {
+  if (ride.world !== 'loading') return;
+  ride.world = 'showroom';
+  render();
 }
 
 /** Stops the truck in its lane, then runs `then` (open a door, step out). */
@@ -859,7 +1062,18 @@ function rideContent() {
   const kicker = 'Self-driving ride · Highway 1, Big Sur';
   const closeAction = inXr() ? [{ label: 'Close', onClick: close }] : [];
   if (ride.world === 'loading') {
-    return { kicker, title: 'Getting the road ready', body: `Loading 5 km of the Big Sur coast: ${Math.round(ride.progress * 100)}%`, actions: [] };
+    const { loaded, total } = ride.bytes;
+    const downloading = !total || loaded < total;
+    return {
+      kicker,
+      title: `Getting the road ready · ${Math.round(rideProgress() * 100)}%`,
+      body: downloading
+        ? `Downloading 5 km of the Big Sur coast: its ground and aerial photos${total ? `, ${downloadDetail()}` : ''}. It’s only downloaded once.`
+        : 'Building the road, the hills and the sea. Nearly there.',
+      fact: 'The ride starts by itself when it’s ready.',
+      actions: [{ label: 'Cancel', onClick: cancelRide }],
+      loader: true,
+    };
   }
   const st = ride.drive.state;
   const doorAction = { label: anyDoorOpen() ? 'Close doors' : 'Open doors', onClick: () => setDoorsAll(!anyDoorOpen()) };
@@ -936,8 +1150,13 @@ async function start() {
   truck = await loadTruck();
   // Only the door buttons take the pointer: from a seat, the dash and yoke would catch every press
   // meant for the card.
-  screen = createScreen(scene, truck.byName('int_screen'), { controls: screenControls, action: screenAction });
+  screen = createScreen(scene, truck.byName('int_screen'), {
+    controls: screenControls,
+    action: screenAction,
+    loading: () => (ride.world === 'loading' ? { progress: rideProgress(), detail: downloadDetail() } : null),
+  });
   screen.show(true);
+  setUpMirrors(truck.byName);
   scene.onBeforeRenderObservable.add(() => screen.tick(engine.getDeltaTime() / 1000));
   setUpGlows();
   glass = truck.root.getChildMeshes().find((m) => m.name === 'glass')?.material ?? null;
@@ -945,6 +1164,7 @@ async function start() {
   for (const m of truck.root.getChildMeshes()) m.isPickable = doorTargets.has(m) || screen.meshes.includes(m);
   // The card draws over the cabin, so it's never lost inside the dash.
   for (const panel of card.panels) for (const m of [panel.mesh, ...panel.mesh.getChildMeshes()]) m.renderingGroupId = 1;
+  loaderStrip = createLoaderStrip(scene, card.panels[0].mesh);
   let refreshBar = () => {};
   presence = createPresence(scene, {
     subject: 'cyb',
@@ -969,7 +1189,8 @@ async function start() {
 
   try {
     if (await xrSupported()) {
-      rig = await createXr(scene, { floorMeshes: showroom.floors, start: { position: new Vector3(eye.x, 0, eye.z), lookAt: look } });
+      // A copy: teleport keeps the list it's given as its own and changes it (updateTeleport).
+      rig = await createXr(scene, { floorMeshes: [...showroom.floors], start: { position: new Vector3(eye.x, 0, eye.z), lookAt: look } });
     }
   } catch (err) {
     console.warn('[cyb] VR unavailable', err);
@@ -1039,4 +1260,4 @@ start().catch((err) => {
 });
 
 // For automated checks in a browser.
-window.__cyb = { scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };
+window.__cyb = { mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };
