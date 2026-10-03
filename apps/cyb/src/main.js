@@ -1,4 +1,4 @@
-// VRtor Cybertruck (/cyb, unlisted test subject): a full-size model of the stainless steel pickup,
+// VRtor Cybertruck (/cyb): a full-size model of the stainless steel pickup,
 // built in assets-src/cybertruck with the build-3d-model skill, parked on a plaza. Walk around it,
 // sit in the driver's seat or the back seat, and take the wheel covers off.
 // Flat screens: an orbit camera (in a seat it turns in place) and an HTML card. Headset: walk and
@@ -318,7 +318,7 @@ function content() {
   if (inXr()) actions.push({ label: 'Close', onClick: close });
   const where = seat === 'outside' ? 'Walk around it' : `In the ${SEATS[seat].label.toLowerCase()}`;
   return {
-    kicker: 'Test model · full size',
+    kicker: 'Full size',
     title: where,
     body: seat === 'outside'
       ? 'A full-size model of the stainless steel pickup, built from the maker’s published dimensions and photographs from every side. It has no door handles: press the small black button on the pillar behind a door to open it.'

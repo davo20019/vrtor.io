@@ -51,3 +51,7 @@ Machu Picchu mountain colour: **Sentinel-2 cloudless 2016** by **EOX IT Services
 ## Parachute
 
 - `cards/parachute.jpg`: rendered from vrtor.io/jump. Terrain, aerial imagery and buildings © swisstopo (free geodata, OGD); distant relief Mapzen/USGS; horizon imagery Sentinel-2 cloudless 2016 by EOX (CC BY 4.0). The canopy and harness are drawn by vrtor; the jumper is a Microsoft Rocketbox avatar (MIT), repainted. The helicopter in the app is "EC135" by NG (sketchfab.com/XRTL), CC BY 4.0, modified.
+
+## Cybertruck
+
+- `cards/cybertruck.jpg`: rendered from vrtor.io/cyb. The model is VRtor's own geometry, built from Tesla's published dimensions and Owner's Manual illustrations and measured against photos from Wikimedia Commons (credits in assets-src/cybertruck/refs/web/SOURCES.md, not shipped). No Tesla logos or wordmarks are reproduced. Cybertruck is a trademark of Tesla, Inc.; Tesla does not endorse VRtor.
