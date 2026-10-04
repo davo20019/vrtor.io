@@ -201,9 +201,13 @@ Headset test of this pass: not yet done.
 
 A headset screenshot showed the console as a flat slab with two separate 8-sided holes and the charger pads
 standing up from it like tombstones. Compared with the manual renders through cameras near theirs
-(`review/console/cams.json`; r1 to r3 beside `before`), it was rebuilt: a deep charger well with the pads
-lying on its sloped front wall, a rib between them and a lip at their foot; the cupholders joined into one
-pocket by a lower bridge, spread to three quarters of the width, with grip tabs on their side walls; a light
-grey rim round both; the lid 50 above the rim (was 22); the lower body narrowing below a crease, its front
-leaning back. Still different: the rim's exact shade, the side crease's step (ours is a taper), the cupholders'
-round lobes (ours are octagons).
+(`review/console/cams.json`; r1 to r6 beside `before`), it was rebuilt:
+- r1 to r3: a deep charger well with the pads lying on its sloped front wall, a rib between them and a lip at
+  their foot; the cupholders joined into one pocket over a lower bridge, with grip tabs.
+- r4: the real cupholders are chamfered octagons, not round (886D0FDA, read wrongly at first), 80 x 87 and
+  spread to 0.89 of the width. The top is an upper band in the white trim wrapping 60 down the sides; the dark
+  body steps in 10 under it (the crease). The lid is a thick box (0.38 of its width): 90 above the rim.
+- r5, r6: the cupholder pod sits right in front of the lid, and the well is about as long as the pod, so the
+  lid starts at 1,795 (was 1,880) and is about twice as long as wide, as in 34C29DB3.
+Still open: every console size scales from its width (+-146), a guess; no picture with known reference points
+shows it, so none is a solved measurement.

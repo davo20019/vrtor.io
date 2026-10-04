@@ -76,7 +76,6 @@ M = {
     'screen': material('screen_off', srgb(6, 7, 8), 0.08),
     'bezel': material('screen_bezel', srgb(15, 15, 15), 0.4),
     'console': material('console_grey', srgb(70, 70, 72), 0.6),
-    'console_rim': material('console_rim_grey', srgb(120, 120, 122), 0.5),      # the light grey rim round the chargers and cupholders (2298443C)
     'screen_on': material('screen_on', (1, 1, 1), 0.12, emit=(1, 1, 1), emit_strength=0.0, image=PARTS / 'screen.png'),
     'armrest': material('armrest_grey', srgb(52, 52, 54), 0.55, normal_map=PARTS / 'leather_normal.png', normal_strength=0.5),
     'switch': material('switch_grey', srgb(150, 150, 152), 0.35),
@@ -251,7 +250,7 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'yoke': 'yoke', 'yoke_pad': 'yoke', 'yoke_column': 'yoke', 'yoke_chin': 'silver', 'yoke_face': 'yoke_face',
             'yoke_pods': 'yoke_pod', 'yoke_trim': 'silver', 'yoke_keys': 'switch_key',
             'yoke_btn_signal_right': 'yoke_pod', 'yoke_btn_signal_left': 'yoke_pod', 'yoke_btn_high_beam': 'yoke_pod', 'yoke_btn_wiper': 'yoke_pod',
-            'console': 'console', 'console_rim': 'console_rim', 'charger_trim': 'console', 'chargers': 'screen', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
+            'console': 'console', 'console_rim': 'trim_white', 'charger_trim': 'console', 'chargers': 'screen', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
             'seats_front': 'seat', 'seats_rear': 'seat', 'seat_base': 'armrest', 'seat_knobs': 'switch', 'rear_armrest': 'seat',
             'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
             'overhead': 'overhead', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'pedals': 'pedal', 'pedal_grips': 'yoke', 'pedal_arms': 'tiedown',

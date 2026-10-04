@@ -315,8 +315,11 @@ render, both scaled to 318 mm): outline IoU 0.965, mean edge distance 1.6 mm, he
 | Rear backrest | 21 deg | manual-childseats-D8CE20B2, side view | 25 |
 | Door armrest face | w 700 (armrest), lower panel w 727 at hip height | hip room 1,453 | w 792 |
 | Door white panel crease | w 806 front, 790 rear | shoulder room 1,608 / 1,576 | flat panel |
-| Console proportions | tray 1,494 to 1,880 (charger well 1,514 to 1,680, cupholders at 1,765), lid 1,880 to 2,330, rear block to 2,600 | manual-storage-34C29DB3 (35% / 40% / 25%) | lid 1,696 to 2,084 |
-| Console top | light grey rim 918 high, 30 thick; charger well 785 deep with its front wall sloping back 34 deg, two pads 108 wide either side of an 8 mm rib, a lip at their foot; cupholders joined by a bridge 34 below the rim, centres +-72, 96 across, grip tabs on their side walls; lid 50 above the rim | manual-electronics-2298443C, -886D0FDA, manual-storage-34C29DB3, scaled from the console's height and width | flat top at 872 with two separate 8-sided holes, pads standing above it, lid 22 above the front |
+| Console proportions | tray 1,494 to 1,795 (charger well 1,514 to 1,665, cupholder pod to 1,795), lid 1,795 to 2,330, rear block to 2,600 | the well about as long as the pod (2298443C); the open lid about twice as long as wide (34C29DB3) | tray to 1,880, lid 1,880 to 2,330 (35/40/25 by eye) |
+| Console top | upper band in the white trim, rim 918, wrapping 60 down the sides the whole length; below it the dark body steps in 10 (+-136) and narrows to +-112 at the floor | 2298443C: the band against the console's front height; the step's shadow | light grey rim plate on the tray only, plain taper |
+| Console lid | top 90 above the rim (1,008) | 34C29DB3: the open lid's thickness is 0.38 of its width (~248) | 22, then 50 above the rim |
+| Cupholders | chamfered octagons 80 across, 87 along, chamfer 13, centres +-90, 15 ahead of the lid; bridge between them 34 below the rim; grip tabs on the side walls | 886D0FDA (near top-down): the pair spans 0.89 of the width; along-truck size corrected for the ~50 deg tilt | regular octagons r 48 at +-72 |
+| Charger well | front wall sloping 34 deg back, floor 785, back wall 18 thick ahead of the cupholders; two pads 108 wide either side of an 8 mm rib, a lip at their foot | 2298443C, 886D0FDA | pads standing above a flat top |
 | Rear screen | 208 x 117 (9.4 in), in a vent surround, centre 841 high | manual-electronics-D54DBA46, manual-interior-E5BB028D | 220 x 140 |
 
 Shapes taken from pictures, sizes partly guessed:
@@ -385,8 +388,9 @@ Shapes taken from pictures, sizes partly guessed:
   width, the B-pillar trim.
 - Pedal depth along the truck (the dash camera's error grows near the floor), their lean (brake 35, accelerator 40 deg),
   the brake arm's path inside the dash, floor mat outlines, carpet.
-- Console width (+-146), the charger pads' size and lean, the well's depth, the lid's height above the rim
-  (about 50 in 2298443C, through perspective) and the lower body's taper (+-112 at the floor).
+- Console width (+-146), on which every console size above is scaled; the charger pads' lean and the well's
+  depth; the lower body's taper (+-112 at the floor). No picture with known references shows the console, so
+  these are ratios in the manual renders, not solved measurements.
 - The yoke's depths: rim 30 deep and rounded 9 mm front and back (in assemble.py), pad 16 proud, pods 7,
   chin 9, scroll wheels 4. No picture shows the yoke edge-on closely enough to measure them.
 - The tweeter grille on the A-pillar, seat belts, the drive-mode selector and buttons on the overhead

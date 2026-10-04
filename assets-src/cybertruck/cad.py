@@ -1133,41 +1133,52 @@ def interior(p):
         out[f'yoke_btn_{k}'] = place(key)
     # ---- centre console (manual-storage-34C29DB3, -electronics-2298443C, -886D0FDA, -D54DBA46). Front to back:
     # a deep well holding the two wireless chargers (pads leaning back on its sloped front wall, a thin rib
-    # between them, a lip at their foot), the two cupholders joined into one pocket by a lower bridge, the
-    # armrest lid standing above them, the rear section, and the rear face with the rear screen in its vent
-    # surround. The well and the cupholders sit in a light grey rim that wraps over the top of the sides.
-    # Below a crease the body narrows to the floor and its front face leans back. Front measured at 1,494
-    # back, 918 high (dash camera); the rest scaled from the renders.
+    # between them, a lip at their foot), the two cupholders joined into one pocket over a lower bridge, the
+    # thick armrest lid, the rear section, and the rear face with the rear screen in its vent surround. An upper
+    # band in the white trim (2298443C) forms the top of the tray and wraps 60 down the sides the whole length;
+    # below it the dark body steps in 10 and narrows to the floor, its front face leaning back. Front measured at
+    # 1,494 back, 918 high (dash camera); the rest scaled from the renders (spec.md, "Console top").
     se = c['console_end_s']
-    lid0, lid1 = 1880.0, 2330.0                           # the proportions of manual-storage-34C29DB3: tray 35%, lid 40%, rear block 25%
-    rim_h, rim_t, crease = 918.0, 30.0, 700.0
-    ah = rim_h + 50                                       # the lid stands about 50 above the rim (2298443C, scaled by the console's height)
+    # The tray holds a charger well about as long as the cupholder pod (2298443C), and the lid is about twice as
+    # long as it is wide (34C29DB3, open): the lid starts 1,795 back, right behind the pod.
+    lid0, lid1 = 1795.0, 2330.0
+    rim_h, band, step = 918.0, 60.0, 10.0
+    crease = rim_h - band
+    ah = rim_h + 90                                       # the lid is a box 0.38 of its width thick (34C29DB3), sitting on the band
     side = [(1560, c['floor'] - 2), (1494, 690), (1494, rim_h), (lid0, rim_h), (lid0, ah), (lid1, ah), (lid1 + 15, ah + 12),
             (se, ah + 12), (se, 640), (se - 90, 560), (se - 120, c['floor'] - 2)]
-    frontl = [(-112, c['floor'] - 2), (112, c['floor'] - 2), (146, crease), (146, ah - 25), (124, ah), (-124, ah), (-146, ah - 25), (-146, crease)]
+    frontl = [(-112, c['floor'] - 2), (112, c['floor'] - 2), (146 - step, crease), (146, crease), (146, ah - 25), (124, ah),
+              (-124, ah), (-146, ah - 25), (-146, crease), (-146 + step, crease)]
     shell = SH(side, -160, 160) & XH(frontl, 1480, se + 10)
     # the charger well: its front wall slopes back 34 degrees from vertical from just under the rim to the floor
-    wf, wb, wfl, ww = 1514.0, 1680.0, 785.0, 124.0
+    wf, wfl, ww = 1514.0, 785.0, 124.0
     A, B = np.array([wf, 904.0]), np.array([1590.0, 790.0])
     d = (B - A) / np.linalg.norm(B - A)
     n = np.array([-d[1], d[0]])                           # normal pointing back and up, off the slope into the well
     if n[0] < 0:
         n = -n
+    # The cupholders are chamfered octagons, 80 across and 87 along the truck, their pair spanning 0.89 of the
+    # band's width (886D0FDA, near top-down, scaled by the console's width; the along-truck size unforeshortened
+    # by the view's ~50 degree tilt), right in front of the lid with a 15 wall. Between them the bridge, 34 below the rim.
+    cups_s, cup_x, ca, cb, cc = lid0 - 15 - 43.5, 90.0, 40.0, 43.5, 13.0
+    def octagon(xc):
+        return [(xc - ca + cc, cups_s - cb), (xc + ca - cc, cups_s - cb), (xc + ca, cups_s - cb + cc), (xc + ca, cups_s + cb - cc),
+                (xc + ca - cc, cups_s + cb), (xc - ca + cc, cups_s + cb), (xc - ca, cups_s + cb - cc), (xc - ca, cups_s - cb + cc)]
+    cups = Compound([XS(octagon(xc), 800, 1000) for xc in (-cup_x, cup_x)])
+    wb = cups_s - cb - 18                                 # the well's back wall, 18 thick, just ahead of the cupholders (886D0FDA)
+    bridge = XS([(-cup_x, cups_s - cb + cc), (cup_x, cups_s - cb + cc), (cup_x, cups_s + cb - cc), (-cup_x, cups_s + cb - cc)], rim_h - 34, 1000)
     well = SH([(wf, 1000), tuple(A), tuple(B), (B[0], wfl), (wb, wfl), (wb, 1000)], -ww, ww)
-    cups_s, cup_x, cup_r = 1765.0, 72.0, 48.0             # the pair spans three quarters of the rim's width (886D0FDA)
-    cups = Compound([XS(ngon(xc, cups_s, cup_r, 8, math.pi / 8), 800, 1000) for xc in (-cup_x, cup_x)])
-    bridge = XS([(-cup_x, cups_s - 30), (cup_x, cups_s - 30), (cup_x, cups_s + 30), (-cup_x, cups_s + 30)], rim_h - 34, 1000)
     hollow = well + cups + bridge
-    top = SH([(1480, rim_h - rim_t), (lid0 - 0.5, rim_h - rim_t), (lid0 - 0.5, rim_h + 1), (1480, rim_h + 1)], -200, 200)
+    top = SH([(1480, crease), (se + 20, crease), (se + 20, rim_h), (1480, rim_h)], -200, 200)
     con = shell - top - hollow
     con -= SH([(lid1 - 2, ah - 6), (lid1 + 2, ah - 6), (lid1 + 2, ah + 20), (lid1 - 2, ah + 20)], -200, 200)     # the lid's seam at its hinge
     out['console'] = con
-    # the rim: the top of the tray, light grey, with the grip tabs (small wedges) on each cup's inboard and outboard walls
+    # the band, with the grip tabs (small wedges) on each cup's inboard and outboard walls
     rim = (shell & top) - hollow
     tabs = []
     for xc in (-cup_x, cup_x):
         for sd in (-1, 1):
-            x0 = xc + sd * (cup_r - 4)
+            x0 = xc + sd * (ca - 0.5)
             tabs.append(XS([(x0, cups_s - 10), (x0, cups_s + 10), (x0 - sd * 13, cups_s)], rim_h - 70, rim_h - 36))
     out['console_rim'] = rim + Compound(tabs)
     # the pads, each 104 wide, lying on the slope; a rib between them and a lip at their foot
