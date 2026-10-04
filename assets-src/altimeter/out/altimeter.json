@@ -1,0 +1,18 @@
+{
+  "units": "metres; glTF frame: dial faces +y, 12 o'clock toward -z, origin at the case back centre",
+  "needle": {
+    "node": "needle",
+    "axis": [
+      0,
+      1,
+      0
+    ],
+    "radiansPerMetre": -0.0015707963267948967,
+    "note": "needle.rotation.y = altitude_m * radiansPerMetre (clockwise seen from the front)"
+  },
+  "caseSize": [
+    0.0635,
+    0.028,
+    0.0635
+  ]
+}

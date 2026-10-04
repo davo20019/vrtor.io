@@ -1,0 +1,76 @@
+{
+  "glb": "out/altimeter.glb",
+  "ref": "refs/FOT-5.jpg",
+  "refCentrePx": [
+    742,
+    978
+  ],
+  "refPxPerMm": 9.76,
+  "frontFrameMm": 75,
+  "expectMm": {
+    "case": [
+      63.5,
+      63.5,
+      28.0
+    ]
+  },
+  "toleranceMm": 1.0,
+  "budget": {
+    "triangles": 10000,
+    "glbKB": 500,
+    "texturePx": 1024
+  },
+  "exposure": -0.7,
+  "_exposure": "stops; set so a neutral in the photo (here the dial cream) matches the render",
+  "fit": {
+    "photo": "refs/FOT-5.jpg",
+    "solid": "case_solid",
+    "hsv": [
+      [
+        0,
+        60,
+        35
+      ],
+      [
+        25,
+        255,
+        255
+      ]
+    ],
+    "params": {
+      "corner": [
+        3,
+        12
+      ],
+      "corner_round": [
+        0.5,
+        6
+      ],
+      "front_round": [
+        0.5,
+        6
+      ]
+    },
+    "_params": "only what a front photo can see; the side scoops are not constrained by it",
+    "landmark": {
+      "point": [
+        0,
+        0,
+        22.5
+      ],
+      "hsv": [
+        [
+          0,
+          0,
+          150
+        ],
+        [
+          180,
+          55,
+          255
+        ]
+      ],
+      "_": "dial centre: cream, low saturation"
+    }
+  }
+}

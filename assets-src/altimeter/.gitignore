@@ -1,0 +1,9 @@
+.venv/
+parts/
+review/*/front.png
+review/*/three_quarter.png
+review/*/side.png
+fit/target.png
+fit/log.txt
+refs/video/*.mp4
+evidence/
