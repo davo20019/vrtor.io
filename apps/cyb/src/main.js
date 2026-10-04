@@ -1268,6 +1268,30 @@ function updateTeleport() {
   else teleport.attach();
 }
 
+/**
+ * In a seat in the headset the eyes stay at the seat's eye point: sit down or stand up in the room after
+ * taking it (a drop or rise of more than EYE_DRIFT m, held for EYE_SETTLE s) and the view moves back to it,
+ * so you're never left down in the cushion or up through the roof. Leaning in to look at something is
+ * shorter or smaller than that and is left alone. `base` is the head's height in the room at the seat's eye.
+ */
+const EYE_DRIFT = 0.25;
+const EYE_SETTLE = 1.2;
+const eyeLevel = { base: 0, since: 0 };
+function keepEyeLevel() {
+  if (seat === 'outside') return void (eyeLevel.base = 0);
+  const h = rig.camera.realWorldHeight;
+  if (!h) return;
+  if (!eyeLevel.base) return void ((eyeLevel.base = h), (eyeLevel.since = 0));
+  const drift = h - eyeLevel.base;
+  if (Math.abs(drift) < EYE_DRIFT) return void (eyeLevel.since = 0);
+  const now = performance.now() / 1000;
+  if (!eyeLevel.since) eyeLevel.since = now;
+  if (now - eyeLevel.since < EYE_SETTLE) return;
+  rig.camera.position.y -= drift;
+  eyeLevel.base = h;
+  eyeLevel.since = 0;
+}
+
 /** Moves the viewer into `name`'s seat (or outside) after `change` runs (and settles), behind a fade in the headset. */
 async function arrive(name, change) {
   if (inXr()) {
@@ -1277,14 +1301,16 @@ async function arrive(name, change) {
     const where = () => {
       const e = eyeOf(name);
       feet.copyFrom(e.eye);
-      // Outside you stand on the ground at your own height; in a seat your eyes go to the seat's.
-      feet.y -= name === 'outside' ? OUTSIDE.eye.y : rig.camera.realWorldHeight || 1.6;
+      // Outside you stand on the ground at your own height; in a seat your eyes go exactly to the seat's
+      // (eyeHeight 0 below), whether you sit or stand in the room and whatever the headset knows of it yet.
+      if (name === 'outside') feet.y -= OUTSIDE.eye.y;
       look.copyFrom(e.look);
     };
     await rig.moveTo(feet, look, async () => {
       await change?.();
       where();
-    });
+    }, name === 'outside' ? {} : { eyeHeight: 0 });
+    eyeLevel.base = 0;
   } else {
     await change?.();
     const { eye, look } = eyeOf(name);
@@ -1623,7 +1649,9 @@ async function start() {
     // The ride steps first in each headset frame, before the camera takes its pose from the moved
     // reference space: done later, the head would trail the cabin by a frame (35 cm at 55 mph).
     rig.xr.baseExperience.sessionManager.onXRFrameObservable.add(() => {
-      if (inXr()) rideStep();
+      if (!inXr()) return;
+      rideStep();
+      keepEyeLevel();
     }, undefined, true);
     let framesSinceEnter = -1;
     rig.onChange((entered) => {
@@ -1634,6 +1662,8 @@ async function start() {
     rig.xr.baseExperience.sessionManager.onXRFrameObservable.add(() => {
       if (framesSinceEnter < 0 || ++framesSinceEnter < 6) return;
       framesSinceEnter = -1;
+      // The session starts you standing outside; already in a seat (or out on the road), you're put back there.
+      if (seat !== 'outside' || ride.world === 'bigsur') arrive(seat);
       cardOpen = true;
       render();
     });
