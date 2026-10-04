@@ -12,6 +12,7 @@ import {
   ArcRotateCamera,
   Color3,
   Color4,
+  Constants,
   DirectionalLight,
   DynamicTexture,
   Engine,
@@ -232,8 +233,15 @@ async function loadTruck() {
   }
   // The cabin's baked light (assemble.py) comes as each cabin material's occlusion map: it dims the sun and
   // the sky light too, not just the reflections, so the cabin is shaded as the real one is.
+  // The probe's cube map isn't prefiltered: brushed metal read its plain mips, which show as blocky steps
+  // wherever the surroundings change brightness. Filtering it per pixel blurs it smoothly, as a real
+  // brushed finish does; 8 samples is enough for it and cheap enough for Quest.
   for (const mat of container.materials) {
     if (mat.ambientTexture) mat.ambientTextureImpactOnAnalyticalLights = 1;
+    if (mat.metallic >= 0.5 && !mat.reflectionTexture) {
+      mat.realTimeFiltering = true;
+      mat.realTimeFilteringQuality = Constants.TEXTURE_FILTERING_QUALITY_LOW;
+    }
   }
   // The json is in glTF's frame; the loader's root turns that into Babylon's.
   // In the truck's own frame (the pose node's), wherever the pose stands now.

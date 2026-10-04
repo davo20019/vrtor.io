@@ -10,6 +10,11 @@ import { Color3, DynamicTexture, Mesh, MeshBuilder, StandardMaterial, Texture, T
 /** How high the turntable lifts the truck off the walkway. */
 export const PLINTH_TOP = 0.1;
 const PLINTH_R = 3.8;                 // the truck's corners (mirrors out) reach 3.1 m from its centre
+/**
+ * One tone for the walls and ceiling, near the floor's and just under the light over the truck, as in a
+ * photo studio: the steel reflects all of them, and any step in brightness between them shows on its faces.
+ */
+const HALL_TONE = '#e1e0dc';
 /** The soft light over the truck: across (x) and along (z), the truck being 2.4 m wide and 5.7 m long. */
 const CANOPY = { w: 6.4, d: 9.6 };
 const HALL = { x0: -10, x1: 16, z0: -11, z1: 11, h: 6 };
@@ -54,22 +59,22 @@ function canvasTexture(scene, name, w, h, draw, { mipmaps = true } = {}) {
  * faces look down at it, so a dark floor would show as dark doors. */
 function floorTexture(scene) {
   return canvasTexture(scene, 'showroom-floor', 512, 512, (ctx, w, h) => {
-    ctx.fillStyle = '#bdbbb6';
+    ctx.fillStyle = '#cac8c3';
     ctx.fillRect(0, 0, w, h);
     // Soft cloudiness, then a fine speckle, so it reads as ground and polished stone, not paint.
     for (let i = 0; i < 90; i++) {
-      const v = 178 + Math.floor(Math.random() * 22);
+      const v = 192 + Math.floor(Math.random() * 22);
       ctx.fillStyle = `rgba(${v},${v - 1},${v - 4},0.12)`;
       ctx.beginPath();
       ctx.arc(Math.random() * w, Math.random() * h, 20 + Math.random() * 70, 0, Math.PI * 2);
       ctx.fill();
     }
     for (let i = 0; i < 3000; i++) {
-      const v = 158 + Math.floor(Math.random() * 60);
+      const v = 172 + Math.floor(Math.random() * 60);
       ctx.fillStyle = `rgb(${v},${v - 1},${v - 4})`;
       ctx.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5);
     }
-    ctx.strokeStyle = '#9d9b96';            // the saw cut between bays
+    ctx.strokeStyle = '#aeaca7';            // the saw cut between bays
     ctx.lineWidth = 2;
     ctx.strokeRect(0, 0, w, h);
   });
@@ -154,6 +159,8 @@ export function createShowroom(scene) {
   floorTex.vScale = D / 2;
   floorTex.anisotropicFilteringLevel = 4;
   const floorMat = flat(scene, 'showroom-floor', '#ffffff', { specular: 0.22, power: 90 });
+  // Lifted to the walls' tone, so the line where they meet doesn't show as a step across the steel.
+  floorMat.emissiveColor = new Color3(0.18, 0.18, 0.18);
   floorMat.diffuseTexture = floorTex;
   const floor = MeshBuilder.CreateGround('showroom-floor', { width: W, height: D }, scene);
   floor.position.set(cx, 0, cz);
@@ -165,8 +172,9 @@ export function createShowroom(scene) {
 
   // ---- walls, facing in (one-sided, so from outside the hall you look in through them). Plain and evenly
   // lit, no panel seams: the steel's sides reflect them, and seams would show as lines down the doors.
-  const wallMat = flat(scene, 'showroom-wall', '#e4e3df', { specular: 0.02 });
-  wallMat.emissiveColor = new Color3(0.2, 0.2, 0.2);     // light bouncing round a white room
+  // Lit by wall washers, not the sun: all four walls the same tone, wherever the sun is set. Under the sun
+  // the wall facing away from it went dark grey, and the truck's rear quarters showed it as a dark patch.
+  const wallMat = glow(scene, 'showroom-wall', HALL_TONE);
   const wall = (name, len, pos, rotY) => {
     const m = plane(scene, name, len, h, wallMat, root, pos, rotY);
     envMeshes.push(m);
@@ -193,8 +201,7 @@ export function createShowroom(scene) {
   ]) plane(scene, `showroom-skirt-${name}`, len, 0.12, skirtMat, root, pos, rotY);
 
   // ---- ceiling: pale, so the hood and roof (which face it) read as bright steel
-  const ceilMat = flat(scene, 'showroom-ceiling', '#d9d9d6', { specular: 0 });
-  ceilMat.emissiveColor = new Color3(0.42, 0.42, 0.41);
+  const ceilMat = glow(scene, 'showroom-ceiling', HALL_TONE);
   const ceiling = MeshBuilder.CreatePlane('showroom-ceiling', { width: W, height: D }, scene);
   ceiling.rotation.x = -Math.PI / 2;
   ceiling.position.set(cx, h, cz);
@@ -251,7 +258,7 @@ export function createShowroom(scene) {
   // ---- the parts space: an empty low plinth, its edge marked, and a stand saying what's coming. Light
   // grey like the turntable: the truck's right side looks straight at it, and a dark one shows as a dark
   // band along the doors.
-  const partsMat = flat(scene, 'showroom-parts', '#bcbcb8', { specular: 0.2 });
+  const partsMat = flat(scene, 'showroom-parts', '#a9a8a4', { specular: 0.05 });
   const parts = MeshBuilder.CreateBox('showroom-parts', { width: PARTS.w, height: PARTS.h, depth: PARTS.d }, scene);
   parts.position.set(PARTS.x, PARTS.h / 2, PARTS.z);
   parts.material = partsMat;
@@ -260,7 +267,7 @@ export function createShowroom(scene) {
   envMeshes.push(parts);
   // A dashed outline on its top: a space kept, not yet filled.
   const outlineTex = canvasTexture(scene, 'showroom-parts-top', 512, 1024, (ctx, w, hh) => {
-    ctx.fillStyle = '#bcbcb8';
+    ctx.fillStyle = '#a9a8a4';
     ctx.fillRect(0, 0, w, hh);
     ctx.strokeStyle = '#e0a12c';
     ctx.lineWidth = 8;
@@ -299,8 +306,10 @@ export function createShowroom(scene) {
   back.isPickable = false;
 
   // ---- the doorway to the self-driving ride, straight ahead of the truck
-  // A recess behind the opening (dark, a little light at the far end), a lit frame and the sign above.
-  const recessMat = flat(scene, 'showroom-recess', '#121417', { specular: 0 });
+  // A lit recess behind the opening, a closed roller door at its far end, a lit frame and the sign. Light,
+  // like a lit loading bay, and in the steel's reflection: it's straight ahead of the truck, and a dark
+  // opening there showed as a dark smudge on the body.
+  const recessMat = glow(scene, 'showroom-recess', '#b4b5b2');
   recessMat.backFaceCulling = false;
   const recessDepth = 1.5;
   const recessParts = [
@@ -316,15 +325,16 @@ export function createShowroom(scene) {
     m.rotation.set(rx, ry, 0);
     m.parent = root;
     m.isPickable = false;
+    envMeshes.push(m);
   }
   // The far end: a closed roller door with daylight under and round it.
   const rollerTex = canvasTexture(scene, 'showroom-roller', 256, 256, (ctx, w, hh) => {
-    ctx.fillStyle = '#6d7277';
+    ctx.fillStyle = '#b7babd';
     ctx.fillRect(0, 0, w, hh);
     for (let y = 0; y < hh; y += 16) {
-      ctx.fillStyle = '#5a5f64';
+      ctx.fillStyle = '#a2a6aa';
       ctx.fillRect(0, y, w, 3);
-      ctx.fillStyle = '#80858a';
+      ctx.fillStyle = '#c9ccce';
       ctx.fillRect(0, y + 3, w, 2);
     }
   });
@@ -332,8 +342,9 @@ export function createShowroom(scene) {
   roller.position.set(0, DOOR.h / 2, z1 + recessDepth);
   const rollerMat = flat(scene, 'showroom-roller', '#ffffff', { specular: 0.1 });
   rollerMat.diffuseTexture = rollerTex;
-  rollerMat.emissiveColor = new Color3(0.08, 0.08, 0.09);
+  rollerMat.emissiveColor = new Color3(0.3, 0.3, 0.3);
   roller.material = rollerMat;
+  envMeshes.push(roller);
   roller.parent = root;
   roller.isPickable = false;
   // Daylight showing under the door.
@@ -366,7 +377,8 @@ export function createShowroom(scene) {
   sign.material = glow(scene, 'showroom-track-sign', '#ffffff', trackSign);
   sign.parent = root;
   sign.isPickable = false;
-  envMeshes.push(sign);
+  // Not in the steel's reflection: it's dark, straight ahead, and blurred it showed as a smudge on the body.
+  // The steel shows the lit roller door behind it instead.
   // Two lines on the floor from the turntable to the doorway: the way the truck goes out.
   const laneMat = flat(scene, 'showroom-lane', '#e9e7e1', { specular: 0.1 });
   for (const x of [-DOOR.w / 2 + 0.4, DOOR.w / 2 - 0.4]) {
