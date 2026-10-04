@@ -98,10 +98,12 @@ P.update(bumper_r_h=650.0, bumper_r_bot=490.0)
 BED['gate_bottom'] = 692.0
 REAR = dict(
     upper_out=(917.0, 877.0),        # the upper tier's rear face: half-width at its top and at its bottom (outer ends fall inward)
-    pocket_half=330.0, pocket_depth=186.0, pocket_floor=526.0,     # the plate pocket: plate wall 186 in from the rear face
+    pocket_half=330.0, pocket_depth=186.0, pocket_floor=500.0,     # the plate pocket: plate wall 186 in from the rear face; its floor
+                                     # at the wall under the plate's foot (c069: the step's far edge, 499), its rear lip 526
     lower=(657.0, 624.0, 370.0), lower_set=40.0,  # lower tier: half-width at its top (490) and bottom, its bottom; set in (guess)
     hitch=(0.0, 435.0, 64.0),        # receiver mouth: x, centre height, size (c069 62 x 68 on the rear face; a 2.5 in tube)
-    reverse=(147.0, 276.0, 590.0, 610.0),          # reverse lamps on the pocket wall either side of the plate: x from, to, h from, to
+    reverse=(156.0, 276.0, 590.0, 610.0),          # reverse lamps on the pocket wall either side of the plate: x from (c069 147, at the plate's edge), to, h from, to
+    plate=(581.5, 305.0, 152.0),     # the licence plate on the pocket wall: centre height (c069: 506 to 657), US size
     band_bot=1205.0, band_top_gap=8.0,              # the smoked band: bottom; its top under the face's top edge
     strip=(1280.0, 1299.0),          # tail strip: bottom, top (c006 lit; c069 shows its top edge as a line at 1,299)
     cap_x=806.0,                     # end caps from here out (c069: the seam at 801; band_half)
@@ -443,6 +445,9 @@ def cladding_parts(p):
     out['bumper_r'] = br + low
     out['rear_hitch'] = Box(hs - 2, hs - 2, 2).moved(Location((hx, hh, zl + 58)))       # the receiver's dark inside
     r0, r1, h0, h1 = R['reverse']
+    ph_c, pw_, ph_ = R['plate']
+    plate = Box(pw_, ph_, 2.0).moved(Location((0, ph_c, zt + pd - 2.0)))         # 1 mm off the wall
+    out['rear_plate'] = fillet(plate.edges().filter_by(Axis.Z), radius=10.0)
     out['rear_reverse'] = Compound([Box(r1 - r0, h1 - h0, 3, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((sx * (r0 + r1) / 2, h0, zt + pd + 0.5)))
                                     for sx in (1, -1)])
     return out
@@ -646,8 +651,11 @@ def panels(p):
     # rear_lights), and the black strip under the tailgate down to the bumper, which holds the red lamps.
     out['band_r'] = (band_outline(p), pl['rear'][1], 8, 1.0, 'band')
     zt = ZR + p['bumper_r_out']
-    y0, y1 = p['bumper_r_h'] + 2, BED['gate_bottom'] - 3
-    out['band_low'] = ([np.array(q) for q in ((-BW + 6, y1, zt), (BW - 6, y1, zt), (BW - 6, y0, zt), (-BW + 6, y0, zt))], pl['rear'][1], 8, 1.0, 'band')
+    y0, y1, ph = p['bumper_r_h'] + 2, BED['gate_bottom'] - 3, REAR['pocket_half'] + 3
+    for side, sx in (('l', 1), ('r', -1)):          # either side of the pocket, which runs up to the tailgate
+        q = [(ph, y1), (BW - 6, y1), (BW - 6, y0), (ph, y0)]
+        q = [np.array([sx * x, y, zt]) for x, y in q]
+        out['band_low_' + side] = (q if sx > 0 else q[::-1], pl['rear'][1], 8, 1.0, 'band')
     return out
 
 def band_outline(p):
@@ -699,7 +707,7 @@ VIEW_DARK = {
              'tyre_fl', 'tyre_rl', 'mirror_l', 'well_f_l', 'well_r_l'],
     'front': ['bumper_f', 'windshield', 'side_glass_l', 'side_glass_r', 'flare_f_l', 'flare_f_r', 'tyre_fl', 'tyre_fr',
               'mirror_l', 'mirror_r'],
-    'rear': ['bumper_r', 'tonneau', 'tonneau_bay', 'tonneau_rail_l', 'tonneau_rail_r', 'band_r', 'band_low', 'rear_glass', 'flare_r_l', 'flare_r_r', 'tyre_rl', 'tyre_rr'],
+    'rear': ['bumper_r', 'tonneau', 'tonneau_bay', 'tonneau_rail_l', 'tonneau_rail_r', 'band_r', 'band_low_l', 'band_low_r', 'rear_glass', 'flare_r_l', 'flare_r_r', 'tyre_rl', 'tyre_rr'],
 }
 VIEW_DARK['right'] = ['flare_f_r', 'flare_r_r', 'rocker_r', 'bumper_f', 'bumper_r', 'side_glass_r', 'windshield', 'rear_glass',
                       'tyre_fr', 'tyre_rr', 'mirror_r', 'well_f_r', 'well_r_r']
@@ -2039,6 +2047,9 @@ if __name__ == '__main__':
     for name, (pts, n, depth, inset, kind) in panels(p).items():
         body, panel = recess(body, inner if inset == 1.0 else hull(p, inset=inset), pts, n, depth)
         groups[kind].append(panel)
+    # The plate pocket runs up under the tailgate: the plate's top (657) stands above the bumper's (c069, c006).
+    zt, ph, pd = ZR + p['bumper_r_out'], REAR['pocket_half'], REAR['pocket_depth']
+    body = body - Box(2 * ph, BED['gate_bottom'] - 2 - (p['bumper_r_h'] - 10), ZR + pd - zt + 2, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(Location((0, p['bumper_r_h'] - 10, zt - 1)))
 
     # The bed, under the tonneau's bay: its liner, lights, the slats' tracks along the bay's edges (on the
     # pocket floor, under the slats), the slats and the path they run on, and the switch on the left sail.
@@ -2109,6 +2120,7 @@ if __name__ == '__main__':
     save(cp['bumper_f_lens'], 'front_camera_lens', tolerance=0.3, angular=0.3)
     save(cp['rear_hitch'], 'rear_hitch')
     save(cp['rear_reverse'], 'light_reverse')
+    save(cp['rear_plate'], 'rear_plate', tolerance=0.3, angular=0.3)
     mirrors_rest, mirror_pieces = split_doors(both_sides(mirror_part(p)), regions)     # the mirrors ride on the front doors
     # Two-tone, as on the truck (c003, dgRcedIkNOM-04): a satin grey cap over the black base and arm, split at
     # the base's top.

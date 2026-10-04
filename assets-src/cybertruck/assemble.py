@@ -128,6 +128,8 @@ M = {
     'light_cap': material('light_rear_cap', srgb(22, 6, 6), 0.1),
     'light_low': material('light_rear_low', srgb(120, 14, 12), 0.15, emit=(1, 0.04, 0.02), emit_strength=0.5),
     'light_rev': material('light_reverse', srgb(150, 150, 154), 0.1),
+    # Virginia's standard plate, personalised BELLA (textures.py); printed, not lit
+    'plate': material('licence_plate', (1, 1, 1), 0.4, image=PARTS / 'plate.png'),
     'mirror': material('mirror_black', srgb(20, 20, 21), 0.35),
     'mirror_cap': material('mirror_cap_grey', srgb(78, 80, 84), 0.4),     # the door mirrors' satin grey cap (c003, dgRcedIkNOM-04)
     'wiper': material('wiper_black', srgb(18, 18, 18), 0.6),
@@ -212,6 +214,7 @@ lf = stl('light_front', M['light_w'])
 rear_parts = [stl('rear_band', M['band']), stl('light_rear_l', M['light_r']), stl('light_rear_r', M['light_r']),
               stl('light_cap_l', M['light_cap']), stl('light_cap_r', M['light_cap']), stl('light_low', M['light_low']),
               stl('light_reverse', M['light_rev']), stl('rear_hitch', M['intake'])]
+M['plate'].node_tree.nodes['Principled BSDF'].inputs['Emission Strength'].default_value = 0.0
 clad = stl('cladding', M['clad'])
 intake = stl('intake_back', M['intake'])
 intake_grille = stl('intake_grille', M['grille'])
@@ -270,6 +273,9 @@ lid = stl('lid_liner', M['bed_floor']); box_uv(lid, tile_mm=800)
 hinged['bedlid'] = [lid, stl('lid_under', M['bed']), stl('lid_grip', M['door_button'])]
 plate = stl('outlet_plate', M['outlets']); planar_uv(plate, (2, 1))
 bed_parts.append(plate)
+licence = stl('rear_plate', M['plate'], smooth_angle=10)
+planar_uv(licence, (0, 1), flip_u=True)             # seen from behind, the truck's left (+x) is the plate's left
+rear_parts.append(licence)
 cover_panel = stl('outlet_cover', M['bed'])
 cover_panel.name = cover_panel.data.name = 'outlet_cover_panel'      # the node is 'outlet_cover'
 hinged['outlet_cover'] = [cover_panel]

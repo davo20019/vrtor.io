@@ -290,8 +290,9 @@ the pocket is 2.2 plates wide (c069 2.4, c080 seen at an angle).
 | Bumper top at the rear face | 650 (649 at the corner, 645 at the body) | the side fit's 679 read the black strip under the gate as bumper |
 | Black strip under the tailgate | 650 to 692 | holds the red lamps, 690 to 810 out, 658 to 690 high |
 | Upper tier rear face | 917 out at the top, 877 at its bottom, 490 | a facet cut back from the corner chamfer (c006 shows it) |
-| Plate pocket | +-330, floor (the step) 526, back wall 186 in | the plate 506 to 657 |
-| Reverse lamps | 147 to 276 out, 590 to 610 high, on the pocket wall | white lenses either side of the plate (InsideEVs; c069) |
+| Plate pocket | +-330, back wall 186 in, its floor 500 at the wall (the step's rear lip 526) | open up to the tailgate's lower edge: the plate, 506 to 657, stands above the bumper's top |
+| Licence plate | 305 x 152, centred, 1 mm off the pocket wall | Virginia's standard plate, personalised BELLA (David's choice), drawn in textures.py to the DMV specimen's proportions (Commons "Virginia 2016 License Plate.jpg", public domain): VIRGINIA in blue serif capitals, the characters a condensed blue serif, the tourism line with its heart and Virginia.org under them; no decals (Virginia dropped them in 2017). Fonts are macOS's Times New Roman Bold and Gill Sans, near but not the plate's own |
+| Reverse lamps | 147 (built 156, clear of the plate) to 276 out, 590 to 610 high, on the pocket wall | white lenses either side of the plate (InsideEVs; c069) |
 | Lower tier | 657 out at 490, 624 at its bottom, 370 | set in 40: a guess (c006 shows it in, not by how much) |
 | Hitch | centre 435 high | |
 | Smoked band | 1,205 to the face's top edge (1,311 at the centre) | end caps from 806 out (seam at 801) |

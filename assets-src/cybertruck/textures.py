@@ -5,7 +5,7 @@ tyre's sidewall lettering and the tailgate badge are left out.
 """
 from pathlib import Path
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 OUT = Path(__file__).parent / 'parts'
 OUT.mkdir(exist_ok=True)
@@ -221,3 +221,69 @@ arrow(-98.1, 25.3, 1); arrow(-104.0, 9.8, -1); high_beam(-74.2, 27.8); four_way(
 hexagon(74.2, 27.8); gauge(71.2, 14.3); wiper(98.1, 25.3); mic(104.0, 9.8)
 img.resize((YW, YH), Image.LANCZOS).save(OUT / 'yoke_icons.png')
 print('textures: wrote yoke_icons.png')
+
+# The licence plate: Virginia's standard design (the DMV's specimen, Commons "Virginia 2016 License Plate.jpg",
+# public domain), personalised BELLA, 305 x 152 (4 px/mm). White with an embossed rim; VIRGINIA in blue serif
+# capitals across the top; the characters tall condensed blue serifs, embossed; the tourism line and Virginia.org
+# under them. No decals: Virginia stopped issuing them in 2017. Fonts are macOS's, drawn to the specimen's
+# proportions (fractions of the plate below).
+PLATE_TEXT = 'BELLA'
+PW, PH, SS = 1220, 610, 2
+W2, H2 = PW * SS, PH * SS
+FONTS = Path('/System/Library/Fonts')
+img = Image.new('RGB', (W2, H2), (240, 242, 244))
+d = ImageDraw.Draw(img)
+BLUE, INK, RED = (30, 72, 158), (26, 26, 28), (200, 24, 40)
+d.rounded_rectangle([0.012 * W2, 0.022 * H2, 0.988 * W2, 0.978 * H2], radius=0.03 * H2, outline=(214, 216, 220), width=int(0.008 * H2))
+
+def mask(text, font):
+    g = Image.new('L', (font.size * (len(text) + 2), font.size * 2))
+    ImageDraw.Draw(g).text((font.size // 2, font.size // 4), text, font=font, fill=255)
+    return g.crop(g.getbbox())
+
+def line(text, font, box, color):
+    """A line of text fitted into box (x0, y0, x1, y1, fractions), centred; returns its pixel box."""
+    m = mask(text, font)
+    x0, y0, x1, y1 = box[0] * W2, box[1] * H2, box[2] * W2, box[3] * H2
+    k = min((x1 - x0) / m.width, (y1 - y0) / m.height)
+    m = m.resize((round(m.width * k), round(m.height * k)), Image.LANCZOS)
+    at = (round((x0 + x1 - m.width) / 2), round(y1 - m.height))
+    img.paste(color, at, m)
+    return at[0], at[1], m.width, m.height, k
+
+def characters(text, font, box, color, squeeze, gap, emboss):
+    """The registration: each character its own glyph, the box's height, narrowed by squeeze (the plate's die
+    is a condensed serif), spaced by gap and centred; pressed in, so a soft shadow under and right of each."""
+    x0, y0, x1, y1 = box[0] * W2, box[1] * H2, box[2] * W2, box[3] * H2
+    h = y1 - y0
+    ms = [mask(ch, font) for ch in text]
+    ws = [m.width * h / m.height * squeeze for m in ms]
+    x = (x0 + x1) / 2 - (sum(ws) + gap * W2 * (len(ms) - 1)) / 2
+    for m, w in zip(ms, ws):
+        m = m.resize((round(w), round(h)), Image.LANCZOS)
+        sh = m.filter(ImageFilter.GaussianBlur(emboss * 0.6))
+        img.paste((150, 152, 158), (round(x + emboss), round(y0 + emboss)), sh)
+        img.paste(color, (round(x), round(y0)), m)
+        x += w + gap * W2
+
+serif = ImageFont.truetype(str(FONTS / 'Supplemental' / 'Times New Roman Bold.ttf'), 300)
+line("VIRGINIA", serif, (0.27, 0.10, 0.73, 0.235), BLUE)
+characters(PLATE_TEXT, serif, (0.06, 0.30, 0.94, 0.75), BLUE, squeeze=0.43, gap=0.02, emboss=0.006 * H2)
+sans = ImageFont.truetype(str(FONTS / 'Supplemental' / 'GillSans.ttc'), 200, index=4)
+slogan = 'VIRGINIA IS FOR LOVERS'
+x, y, w, h, k = line(slogan, sans, (0.25, 0.80, 0.75, 0.855), INK)
+# the O of LOVERS is a red heart
+pre = sans.getbbox('VIRGINIA IS FOR L')[2] - sans.getbbox('V')[0]
+o = sans.getbbox('O')
+ox0, ox1 = x + pre * k, x + (pre + o[2] - o[0]) * k + 4
+d.rectangle([ox0, y - 2, ox1, y + h + 2], fill=(240, 242, 244))
+hx, hy, hr = (ox0 + ox1) / 2, y + h * 0.5, h * 0.5
+d.ellipse([hx - hr, hy - hr, hx, hy], fill=RED)
+d.ellipse([hx, hy - hr, hx + hr, hy], fill=RED)
+d.polygon([(hx - hr * 0.98, hy - hr * 0.42), (hx + hr * 0.98, hy - hr * 0.42), (hx, hy + hr * 1.0)], fill=RED)
+line('Virginia.org', ImageFont.truetype(str(FONTS / 'Supplemental' / 'GillSans.ttc'), 200, index=0), (0.585, 0.875, 0.745, 0.93), INK)
+for fx, fy in ((0.21, 0.12), (0.79, 0.12), (0.21, 0.875), (0.79, 0.875)):         # the mounting screws
+    r = 0.022 * H2
+    d.ellipse([fx * W2 - r, fy * H2 - r, fx * W2 + r, fy * H2 + r], fill=(120, 122, 126), outline=(90, 92, 96), width=3)
+img.resize((PW, PH), Image.LANCZOS).save(OUT / 'plate.png')
+print('textures: wrote plate.png')
