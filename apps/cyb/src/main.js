@@ -53,6 +53,7 @@ import {
 } from '@vrtor/xr-shell';
 import { buildBigSur, fetchBigSur } from './bigsur.js';
 import { createDrive } from './drive.js';
+import { createYokeControls } from './yoke.js';
 import { createScreen } from './screen.js';
 import { createLoaderStrip, drawLoader } from './loader.js';
 import { createShowroom } from './showroom.js';
@@ -739,6 +740,7 @@ function hover(key) {
   canvas.style.cursor = key && !inXr() ? 'pointer' : '';
 }
 
+let yokeActive = false;
 let screenHeld = false;
 function letGoOfScreen(pick) {
   screenHeld = false;
@@ -750,19 +752,21 @@ scene.onPointerObservable.add((info) => {
   const key = doorTargets.get(pick?.pickedMesh) ?? null;
   const xrPointer = info.event?.pointerType === 'xr';
   const sitTo = seatTargets.get(pick?.pickedMesh) ?? null;
+  const yokeKey = yokeControls?.targets.get(pick?.pickedMesh) ?? null;
   if (info.type === PointerEventTypes.POINTERMOVE) {
     hover(key);
     hoverSpot(sitTo ? pick.pickedMesh : null);
+    yokeControls?.hover(yokeKey);
     // The centre screen's buttons light up under the pointer too.
     const onScreen = screen?.hover(pick) ?? false;
-    if (!inXr()) canvas.style.cursor = key || sitTo || onScreen ? 'pointer' : '';
+    if (!inXr()) canvas.style.cursor = key || sitTo || yokeKey || onScreen ? 'pointer' : '';
     return;
   }
   // The screens' buttons go on down and up, not on Babylon's tap, which a press longer than a moment or
   // a finger that slides a few pixels never makes. While one is held, the view doesn't turn under it.
   if (!xrPointer && info.type === PointerEventTypes.POINTERDOWN) {
     if (screenHeld) letGoOfScreen(null);               // an up that never came (the pointer cancelled)
-    if (!key && !sitTo && screen?.down(pick)) {
+    if (!key && !sitTo && !yokeKey && screen?.down(pick)) {
       screenHeld = true;
       camera.inputs.attached.pointers?.detachControl();
     }
@@ -775,7 +779,8 @@ scene.onPointerObservable.add((info) => {
   }
   const press = (xrPointer && info.type === PointerEventTypes.POINTERDOWN) || (!xrPointer && info.type === PointerEventTypes.POINTERTAP);
   if (!press) return;
-  if (key?.startsWith('tonneau:')) tonneauPress(key.slice(8));
+  if (yokeKey) yokeControls.press(yokeKey);
+  else if (key?.startsWith('tonneau:')) tonneauPress(key.slice(8));
   else if (key === 'tailgate:open') setTailgate(true);
   else if (key?.startsWith('hinge:')) hingePress(key.slice(6));
   else if (key === 'window:driver') windowPress(driverKey(pick));
@@ -868,8 +873,10 @@ scene.onBeforeRenderObservable.add(() => {
 
 /** The touchscreen (screen.js): on from the start, parked in the showroom, the road and map on the ride. */
 let screen = null;
+/** The yoke's horn, turn signals and high beam (yoke.js), live in the driver's seat. */
+let yokeControls = null;
 /** The light bar front and back, and the cabin's ambient strips: their materials and how they glow. */
-const glows = { lights: [], ambient: [], lightsOn: true, colour: 0 };
+const glows = { lights: [], ambient: [], lightsOn: true, highBeam: false, colour: 0 };
 const AMBIENT = [
   { name: 'White', color: null },
   { name: 'Amber', color: new Color3(1, 0.55, 0.12) },
@@ -887,12 +894,13 @@ function setUpGlows() {
     return { mat: m.material, rest: m.material.emissiveColor?.clone() ?? Color3.White() };
   };
   const meshes = (name) => truck.root.getChildMeshes().filter((m) => m.name === name || m.name.startsWith(`${name}_primitive`));
-  glows.lights = ['light_front', 'light_rear'].flatMap(meshes).map(own).filter(Boolean);
+  glows.lights = ['light_front', 'light_rear'].flatMap((n) => meshes(n).map(own).filter(Boolean).map((g) => ({ ...g, front: n === 'light_front' })));
   glows.ambient = truck.root.getChildMeshes().filter((m) => /(^|_)int_ambient/.test(m.name)).map(own).filter(Boolean);
 }
 
 function applyGlows() {
-  for (const g of glows.lights) g.mat.emissiveColor = glows.lightsOn ? g.rest.clone() : Color3.Black();
+  // High beam (the yoke's key): the light bar brighter.
+  for (const g of glows.lights) g.mat.emissiveColor = glows.lightsOn ? g.rest.scale(g.front && glows.highBeam ? 1.8 : 1) : Color3.Black();
   const { color } = AMBIENT[glows.colour];
   for (const g of glows.ambient) g.mat.emissiveColor = color ? color.scale(Math.max(g.rest.r, g.rest.g, g.rest.b) || 1) : g.rest.clone();
 }
@@ -1023,7 +1031,9 @@ function content() {
     title: where,
     body: seat === 'outside'
       ? 'Built from the maker’s dimensions and photos. No door handles: press the black button on the pillar behind a door, then step in where it says Sit here. The cover over the bed rolls into its canister: use the switch on the left by the tail light, or Controls on the touchscreen. Its third key drops the tailgate; inside are the outlets and a compartment under the floor.'
-      : 'The dash shelf, the yoke, the touchscreen and the glass roof. Tap Start self-driving on the screen for 5 km of Highway 1 in Big Sur.',
+      : seat === 'driver'
+        ? 'The dash shelf, the yoke, the touchscreen and the glass roof. Press the yoke’s centre pad for the horn; the keys on its left pod work the turn signals and the high beam. Tap Start self-driving on the screen for 5 km of Highway 1 in Big Sur.'
+        : 'The dash shelf, the yoke, the touchscreen and the glass roof. Tap Start self-driving on the screen for 5 km of Highway 1 in Big Sur.',
     fact: inXr()
       ? menuFact
       : '5.68 m long, 2.03 m wide without its mirrors, 1.79 m high, on 35-inch tyres.',
@@ -1540,8 +1550,8 @@ async function start() {
     tonneau: +tonneau.u.toFixed(2), tailgate: +(hinged.tailgate?.t ?? 0).toFixed(2),
     doorsOpen: Object.entries(doors).filter(([, d]) => d.target > 0.5).map(([k]) => k).join(',') }));
   truck = await loadTruck();
-  // Only the door buttons take the pointer: from a seat, the dash and yoke would catch every press
-  // meant for the card.
+  // Only the door buttons, the screens and (from the driver's seat) the yoke's controls take the pointer:
+  // the rest of the dash would catch presses meant for the card.
   screen = createScreen(scene, truck.byName('int_screen'), {
     controls: screenControls,
     action: screenAction,
@@ -1551,9 +1561,25 @@ async function start() {
   setUpMirrors(truck.byName);
   scene.onBeforeRenderObservable.add(() => screen.tick(engine.getDeltaTime() / 1000));
   setUpGlows();
+  yokeControls = createYokeControls(scene, truck.byName, truck.info, {
+    onHighBeam: (on) => {
+      glows.highBeam = on;
+      if (on) glows.lightsOn = true;               // the high beam brings the lights on with it
+      applyGlows();
+      if (cardOpen) render();
+    },
+  });
   glass = truck.root.getChildMeshes().find((m) => m.name === 'glass')?.material ?? null;
   setUpSeatSpots();
   for (const m of truck.root.getChildMeshes()) m.isPickable = doorTargets.has(m) || screen.meshes.includes(m);
+  if (yokeControls) {
+    yokeControls.active = false;
+    scene.onBeforeRenderObservable.add(() => {
+      yokeControls.tick(engine.getDeltaTime() / 1000);
+      const driving = seat === 'driver';
+      if (driving !== yokeActive) yokeControls.active = yokeActive = driving;
+    });
+  }
   // The card draws over the cabin, so it's never lost inside the dash.
   for (const panel of card.panels) for (const m of [panel.mesh, ...panel.mesh.getChildMeshes()]) m.renderingGroupId = 1;
   loaderStrip = createLoaderStrip(scene, card.panels[0].mesh);
@@ -1652,4 +1678,4 @@ start().catch((err) => {
 });
 
 // For automated checks in a browser.
-window.__cyb = { mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, tonneauPress, tonneau, hinged, setTailgate, hingePress, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };
+window.__cyb = { get yoke() { return yokeControls; }, mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, tonneauPress, tonneau, hinged, setTailgate, hingePress, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };

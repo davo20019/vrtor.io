@@ -3866,5 +3866,40 @@
     "lights": "bed_lights",
     "note": "path is [z, y] in metres on the centreline, arc its length from the first point. Opening by u metres puts slat i at arc closedArc[i] + u, with x = 0 and its rotation about +x so its +z follows the path forward (rotation.x = atan2(-dy, dz)). travel opens it fully. The switch is on the left sail by the tail light: open, close, tailgate (front to back). bed_lights: the LED strips along the bed walls."
   },
+  "yoke": {
+    "parts": [
+      "int_yoke",
+      "int_yoke_pad",
+      "int_yoke_chin",
+      "int_yoke_face",
+      "int_yoke_pods",
+      "int_yoke_trim",
+      "int_yoke_keys",
+      "int_yoke_btn_signal_right",
+      "int_yoke_btn_signal_left",
+      "int_yoke_btn_high_beam"
+    ],
+    "column": "int_yoke_column",
+    "controls": {
+      "horn": [
+        "int_yoke_pad",
+        "int_yoke_face"
+      ],
+      "signal_right": [
+        "int_yoke_btn_signal_right"
+      ],
+      "signal_left": [
+        "int_yoke_btn_signal_left"
+      ],
+      "high_beam": [
+        "int_yoke_btn_high_beam"
+      ]
+    },
+    "signals": {
+      "left": "det_marker_amber_l",
+      "right": "det_marker_amber_r"
+    },
+    "note": "parts turn together about the column; the column stays. controls: press the centre pad for the horn (manual, Steering: \"press and hold the center pad\"); the left pod's keys are the turn signals (right above, left below) and the high beam, each its own mesh over its printed symbol. signals: the amber corner lamps (lower lamp strip ends) on each side, which blink with that turn signal"
+  },
   "cabin": "node \"cabin\": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); the glass is see-through (alpha 0.3)"
 }

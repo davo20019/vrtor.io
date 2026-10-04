@@ -247,6 +247,7 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'dash_white': 'trim_white', 'dash_lower': 'armrest', 'screen_bezel': 'bezel', 'screen': 'screen_on', 'screen_stand': 'bezel',
             'yoke': 'yoke', 'yoke_pad': 'yoke', 'yoke_column': 'yoke', 'yoke_chin': 'silver', 'yoke_face': 'yoke_face',
             'yoke_pods': 'yoke_pod', 'yoke_trim': 'silver', 'yoke_keys': 'switch_key',
+            'yoke_btn_signal_right': 'yoke_pod', 'yoke_btn_signal_left': 'yoke_pod', 'yoke_btn_high_beam': 'yoke_pod',
             'console': 'console', 'chargers': 'screen', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
             'seats_front': 'seat', 'seats_rear': 'seat', 'seat_base': 'armrest', 'seat_knobs': 'switch', 'rear_armrest': 'seat',
             'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
@@ -281,7 +282,7 @@ for o in cabin_parts:                    # printed symbols: the texture spans it
             q = l.vert.co - c0
             l[uvl].uv = (q.dot(u) / w + 0.5, q.dot(v) / h + 0.5)
     bm.to_mesh(o.data); bm.free()
-DETAILS = {'pillars': 'pillar', 'lamp_lower': 'lamp_lower', 'marker_amber': 'marker_amber', 'marker_red': 'marker_red'}
+DETAILS = {'pillars': 'pillar', 'lamp_lower': 'lamp_lower', 'marker_amber_l': 'marker_amber', 'marker_amber_r': 'marker_amber', 'marker_red': 'marker_red'}
 detail_parts = [stl(f'det_{n}', M[m], smooth_angle=20) for n, m in DETAILS.items()]
 # The outside door-release buttons, one object each (btn_fl...), so the app can tell which was pressed.
 button_parts = []
@@ -424,7 +425,8 @@ bpy.context.view_layer.update()
 ROUND = {'seats_front': 24, 'seats_rear': 24, 'rear_armrest': 14, 'dash_white': 28, 'console': 10, 'seat_base': 8,
          'dash_top': 6, 'dash_lower': 6, 'dash_face': 4, 'yoke': 9, 'yoke_column': 5, 'visors': 8, 'screen_bezel': 3, 'overhead': 6,
          'armrest': 14, 'door_lower': 6, 'trim_white': 14, 'cap': 6}
-NO_BAKE = ('screen', 'rear_screen', 'ambient', 'chargers', 'open', 'switch', 'mirror_glass')
+NO_BAKE = ('screen', 'rear_screen', 'ambient', 'chargers', 'open', 'switch', 'mirror_glass',
+           'yoke_btn_signal_right', 'yoke_btn_signal_left', 'yoke_btn_high_beam')     # the yoke's keys: baked alone they came out darker than the pod round them
 
 def part_key(o):
     n = o.name
@@ -579,6 +581,13 @@ info = {
                 'buttons': {'open': 'btn_tonneau_open', 'close': 'btn_tonneau_close', 'tailgate': 'btn_tailgate'},
                 'lights': 'bed_lights',
                 'note': 'path is [z, y] in metres on the centreline, arc its length from the first point. Opening by u metres puts slat i at arc closedArc[i] + u, with x = 0 and its rotation about +x so its +z follows the path forward (rotation.x = atan2(-dy, dz)). travel opens it fully. The switch is on the left sail by the tail light: open, close, tailgate (front to back). bed_lights: the LED strips along the bed walls.'},
+    'yoke': {'parts': ['int_yoke', 'int_yoke_pad', 'int_yoke_chin', 'int_yoke_face', 'int_yoke_pods', 'int_yoke_trim', 'int_yoke_keys',
+                       'int_yoke_btn_signal_right', 'int_yoke_btn_signal_left', 'int_yoke_btn_high_beam'],
+             'column': 'int_yoke_column',
+             'controls': {'horn': ['int_yoke_pad', 'int_yoke_face'], 'signal_right': ['int_yoke_btn_signal_right'],
+                          'signal_left': ['int_yoke_btn_signal_left'], 'high_beam': ['int_yoke_btn_high_beam']},
+             'signals': {'left': 'det_marker_amber_l', 'right': 'det_marker_amber_r'},
+             'note': 'parts turn together about the column; the column stays. controls: press the centre pad for the horn (manual, Steering: "press and hold the center pad"); the left pod\'s keys are the turn signals (right above, left below) and the high beam, each its own mesh over its printed symbol. signals: the amber corner lamps (lower lamp strip ends) on each side, which blink with that turn signal'},
     'cabin': 'node "cabin": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); the glass is see-through (alpha 0.3)',
 }
 (OUT / 'cybertruck.json').write_text(json.dumps(info, indent=2))

@@ -49,7 +49,7 @@ export function createDrive(scene, { pose, truckInfo, nodes, screen, road, windo
   /** How far each tyre has rolled (m): in a turn the outside ones go further. */
   const rolled = { fl: 0, fr: 0, rl: 0, rr: 0 };
 
-  const yoke = yokePivot(scene, nodes);
+  const yoke = yokePivot(scene, nodes, truckInfo?.yoke?.parts);
   const audio = createCabinSound();
   let lastRear = 0;
 
@@ -233,8 +233,8 @@ export function createDrive(scene, { pose, truckInfo, nodes, screen, road, windo
 }
 
 /** The yoke and what's on it turn about the column: the axis is the yoke's own face normal. */
-function yokePivot(scene, nodes) {
-  const parts = ['int_yoke', 'int_yoke_pad', 'int_yoke_chin', 'int_yoke_face', 'int_yoke_pods', 'int_yoke_trim', 'int_yoke_keys'].map((n) => nodes(n)).filter((m) => m?.getTotalVertices?.() > 0);
+function yokePivot(scene, nodes, names = ['int_yoke', 'int_yoke_pad', 'int_yoke_chin', 'int_yoke_face', 'int_yoke_pods', 'int_yoke_trim', 'int_yoke_keys']) {
+  const parts = names.map((n) => nodes(n)).filter((m) => m?.getTotalVertices?.() > 0);
   if (!parts.length) return null;
   const main = parts[0];
   main.parent?.computeWorldMatrix(true);

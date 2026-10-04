@@ -891,6 +891,8 @@ def rear_bench(p):
 
 YOKE_OUTLINE = json.loads((HERE / 'measure/yoke/outline.json').read_text())
 YOKE_WHEELS = (-85.2, 16.0)                                   # scroll wheel centres at +-85.2, 16 high (left one measured)
+# The left pod's keys the app works (icon centres, as drawn in textures.py): right and left turn signals, high beam.
+YOKE_KEYS = {'signal_right': (-98.1, 25.3), 'signal_left': (-104.0, 9.8), 'high_beam': (-74.2, 27.8)}
 
 def yoke_parts():
     """The yoke, built facing +z (toward the driver) around its centre, x to the driver's right: the outer
@@ -956,7 +958,10 @@ def yoke_parts():
         drum = extrude(Face(Wire.make_polygon([(0, y, z) for y, z in knurl], close=True)).moved(Location((-8, 0, 0))), amount=16, dir=(1, 0, 0))
         drum = drum.moved(Location((cx, cy, T + 4))) & Sphere(7.1).moved(Location((cx, cy, T + 4)))
         wheels.append(drum)
-    return plate, pad, chin, face, Compound(pods), Compound(trims), Compound(wheels)
+    # Each key the app works: a 0.3 mm patch over its symbol, carrying the same texture, so it can glow alone.
+    keys = {k: poly([(x - 4.5, y - 3.8), (x + 4.5, y - 3.8), (x + 4.5, y + 3.8), (x - 4.5, y + 3.8)], 1.5, T + 7.05, T + 7.35)
+            for k, (x, y) in YOKE_KEYS.items()}
+    return plate, pad, chin, face, Compound(pods), Compound(trims), Compound(wheels), keys
 
 def yoke_place(s):
     """From the yoke's own frame (yoke_parts) to the cabin: turned to face the driver, tilted, on the column."""
@@ -1072,7 +1077,7 @@ def interior(p):
     # ---- yoke on its column, driver on the left (+x), tilted 22 degrees (seat side view).
     yc = (c['seat_x'], c['yoke'][1], ZF - c['yoke'][0])
     place = yoke_place
-    rim, pad, chin, face, pods, trims, wheels = yoke_parts()
+    rim, pad, chin, face, pods, trims, wheels, keys = yoke_parts()
     t = math.radians(c['yoke_tilt'])
     col_dir = np.array([0, -math.sin(t), math.cos(t)])
     col = Cylinder(30, 300).rotate(Axis.X, c['yoke_tilt']).moved(Location(tuple(np.array(yc) + col_dir * 175)))
@@ -1085,6 +1090,8 @@ def interior(p):
     out['yoke_pods'] = place(pods)
     out['yoke_trim'] = place(trims)
     out['yoke_keys'] = place(wheels)
+    for k, key in keys.items():
+        out[f'yoke_btn_{k}'] = place(key)
     # ---- centre console (manual-storage-34C29DB3, -electronics-2298443C, -886D0FDA, -D54DBA46): front wall
     # and the two wireless chargers leaning on it, two cupholders, the armrest lid, the rear section, and the
     # rear face with the rear screen in its vent surround. Front measured at 1,494 back, 918 high (dash render).
@@ -1258,7 +1265,7 @@ def details(p):
     def top(s):
         z = ZF - s
         return min(edge_point(pl['roof'], pl['window_l'], z)[1], edge_point(pl['deck'], pl['window_l'], z)[1]) - m
-    out = {'pillars': [], 'marker_amber': [], 'marker_red': []}
+    out = {'pillars': [], 'marker_red': []}
     # The lower lamp strip: smoked lens in the gap between the bumper top and the steel's lower edge, across
     # the front and round each corner to the flare, its outer ends amber (c059, c085, c147).
     nfh, fr = p['nose_flat_half'], p['face_rake']
@@ -1268,7 +1275,10 @@ def details(p):
     strip = extrude(Face(w), amount=p['lamp_h'] - 0.6, dir=(0, 1, 0))
     ends = both_sides(Box(400, 200, 800, align=(Align.MIN, Align.CENTER, Align.MAX)).moved(Location((BW - 75, y0 + 50, ZF - fr + 50))))
     out['lamp_lower'] = [strip - ends]
-    out['marker_amber'].append(strip & ends)
+    amber = strip & ends                                    # one per side, so each turn signal blinks alone
+    half = Box(2000, 2000, 8000, align=(Align.MIN, Align.CENTER, Align.CENTER))
+    out['marker_amber_l'] = [amber & half]
+    out['marker_amber_r'] = [amber & half.mirror(Plane.YZ)]
     for key, sx in (('window_l', 1), ('window_r', -1)):
         win = pl[key]
         b0, b1 = p['seam_2'] - PILLAR_HALF, p['seam_2'] + PILLAR_HALF
@@ -1671,7 +1681,7 @@ if __name__ == '__main__':
         'planes': [[pt.tolist(), n.tolist()] for pt, n in planes(p).values()],
         'seatEyes': seat_eyes(p),
         'screens': screens(p),
-        'decals': {'yoke_pods': yoke_decal()},
+        'decals': {n: yoke_decal() for n in ['yoke_pods'] + [f'yoke_btn_{k}' for k in YOKE_KEYS]},
         'doors': {k: {'hinge': h.tolist(), 'openDeg': -65 if k.endswith('l') else 65} for k, (_, h) in regions.items()},
         'hinges': {
             'tailgate': {'hinge': gate_hinge(p).tolist(), 'axis': [1, 0, 0], 'openDeg': -90},
