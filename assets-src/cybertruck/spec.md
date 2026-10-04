@@ -248,6 +248,16 @@ measured (650). Jobs and crops are in measure/bumper/.
 | Corner chamfer | from (640, 404) at the intake's corner to (864, 438) at the block's outer edge, down to (720, 245) | c150 R: px (1,875, 1,527), (2,030, 1,507), (1,930, 1,590); lit by the pavement, so facing down |
 | Headlamps in the lower strip | 387 to 614 out | c150 px 1,005 to 1,160 and 1,695 to 1,855 |
 
+Close-up details (second pass, from c147, c085 and c001 at full resolution, and c150 zoomed to 4x):
+
+| What | Built | Source |
+|---|---|---|
+| Headlamp | one lens from 386 out, round the crease, to the amber end: on the centre face a row of 4 projector cells (satin, darker than the lens beside them); under the corner facet a grey reflector over a dark lip 10 mm tall | c150 (lens px 835 to 1,165, crease at 1,000, cells inboard); c147, c085, c001 (clear lens on the corner facet, silver inside, dark lower edge) |
+| Amber end | the strip's outer 75 mm, a dark amber lens unlit | c147 close-up, c085 |
+| Tow-hook covers | thin flat caps 107 x 30 standing on the intake floor at its outer ends, lighter satin grey, rounded ends, 5 behind the bumper face | c147, c085 (lighter than the bumper, about a quarter of the intake's height) |
+| Front camera | a round lens (radius 7) in a round housing (radius 16) under the intake's top edge at the plate recess's left end | c147, c150 |
+| Cladding edges | rounded 9 mm (bumpers, flares, rockers); grille bars 1.5 | c147, c085: the bumper's top edge and corners are soft |
+
 Guesses: how far back the chamfer goes at the block's outer edge (120), the intake's depth (60), the grille's
 setback (25), the bars' thickness (5).
 

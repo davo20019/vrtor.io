@@ -100,11 +100,11 @@ BUMPER_F = dict(
     block_bot=245.0,                              # the corner blocks reach lower than the lip
     plate=(160.0, 570.0, 640.0), plate_depth=8.0, # plate recess: half-width, bottom, top
     grille_set=25.0, grille_pitch=163.0,          # the grille's face behind the bumper's; its vertical bars' spacing
-    tow=(510.0, 617.0, 422.0, 490.0),             # tow-hook covers: x from, x to, bottom, top
-    camera=(-176.0, 40.0),                        # the front camera's housing at the intake's top: x, width
+    tow=(510.0, 617.0, 416.0, 446.0),             # tow-hook covers: x from, x to, bottom, top
+    camera=(-176.0, 16.0),                        # the front camera at the intake's top: x, housing radius
     chamfer_a=(640.0, 404.0), chamfer_b=(864.0, 438.0), chamfer_p=(720.0, 245.0),
     chamfer_depth=120.0,                          # how far back the chamfer is at the block's outer edge: guess
-    lamp_head=(387.0, 614.0),                     # the headlamps in the lower strip, x from and to
+    lamp_head=(386.0, 625.0), lamp_cells=4,       # the headlamps' projector row on the centre face: x from and to, cells (c150 px 1,000 to 1,165)
 )
 
 def V(w, h, s):
@@ -382,13 +382,18 @@ def cladding_parts(p):
     g = [Box(2 * ih, 5, 15).moved(Location((0, i0 + (i1 - i0) * f, gz - 10))) for f in (1 / 3, 2 / 3)]
     nbar = int(ih // F['grille_pitch'])
     g += [Box(5, i1 - i0, 15).moved(Location((k * F['grille_pitch'], (i0 + i1) / 2, gz - 10))) for k in range(-nbar, nbar + 1)]
-    tx0, tx1, ty0, ty1 = F['tow']
-    for sx in (1, -1):
-        g.append(Box(tx1 - tx0, ty1 - ty0, F['intake_depth'] - 20, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(
-            Location((sx * (tx0 + tx1) / 2, ty0, zf - 20))))
-    cxm, cw = F['camera']
-    g.append(Box(cw, 30, 40, align=(Align.CENTER, Align.MAX, Align.MAX)).moved(Location((cxm, i1, zf - 15))))
     out['bumper_f_grille'] = Compound(g)
+    # The tow-hook covers: thin flat caps standing on the intake's floor at its outer ends, lighter than the
+    # bumper (c147, c085: about 108 x 30, their faces 5 behind the bumper's). The front camera: a round lens in
+    # a small housing under the intake's top edge, at the plate recess's left end (c147, c150).
+    tx0, tx1, ty0, ty1 = F['tow']
+    caps = [Box(tx1 - tx0, ty1 - ty0, 30, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((sx * (tx0 + tx1) / 2, ty0, zf - 5)))
+            for sx in (1, -1)]
+    out['bumper_f_tow'] = [fillet(c.edges().filter_by(Axis.Z), 8.0) for c in caps]
+    cxm, cr = F['camera']
+    housing = Cylinder(cr, 25, align=(Align.CENTER, Align.CENTER, Align.MAX)).moved(Location((cxm, i1 - cr - 2, zf - 12)))
+    out['bumper_f_camera'] = housing
+    out['bumper_f_lens'] = Cylinder(cr * 0.45, 2, align=(Align.CENTER, Align.CENTER, Align.MIN)).moved(Location((cxm, i1 - cr - 2, zf - 12 - 0.5)))
     # the intake's back, near black so it reads as an opening
     out['bumper_f_intake'] = Box(2 * ih - 1, i1 - i0 - 1, 1, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(
         Location((0, i0 + 0.5, zf - F['intake_depth'] + 0.1)))
@@ -406,7 +411,7 @@ def cladding_parts(p):
     return out
 
 def cladding(p):
-    return [v for k, v in cladding_parts(p).items() if k not in ('bumper_f_intake', 'bumper_f_grille')]
+    return [v for k, v in cladding_parts(p).items() if not k.startswith('bumper_f_')]
 
 def wheel_centre(p, axle, side):
     return np.array([side * TRACK / 2, TYRE_R - p['squash'], AXLES[axle]])
@@ -1471,10 +1476,24 @@ def details(p):
     w = Wire.make_polygon([(x, y0, z) for x, z in plan], close=True)
     strip = extrude(Face(w), amount=p['lamp_h_centre'] - 0.6, dir=(0, 1, 0)) & below_steel(p, ZF - 1500, ZF + 100, drop=0.3)
     ends = both_sides(Box(400, 200, 800, align=(Align.MIN, Align.CENTER, Align.MAX)).moved(Location((BW - 75, y0 + 50, ZF - fr + 50))))
-    out['lamp_lower'] = [strip - ends]
+    # The headlamps (c150, c147, c085, c001): one lens from lamp_head's inner end round the crease to the amber
+    # end. Under the corner facet it is clear over a silver reflector; on the centre face a row of projector
+    # cells sits behind it. Between the two headlamps the strip is smoked black.
+    centre = Box(2 * nfh, 400, 800, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((0, y0 - 50, ZF + 100)))
+    head = (strip - ends) - centre
+    lip = Box(2400, 10, 1500, align=(Align.CENTER, Align.MAX, Align.MAX)).moved(Location((0, y0 + 10, ZF + 100)))
+    out['lamp_lower'] = [(strip - ends) & centre, head & lip]     # the headlamp's lower edge is a dark lip (c147)
+    out['lamp_head'] = [head - lip]
     h0, h1 = BUMPER_F['lamp_head']
-    out['lamp_head'] = [Box(h1 - h0, p['lamp_h_centre'] - 10, 1.0, align=(Align.MIN if sx > 0 else Align.MAX, Align.MIN, Align.MIN)).moved(
-        Location((sx * h0, y0 + 4, ZF - fr - 4 - 0.5))) for sx in (1, -1)]
+    n, gap = BUMPER_F['lamp_cells'], 6.0
+    cw = (h1 - h0 - (n + 1) * gap) / n
+    cells = []
+    for sx in (1, -1):
+        for k in range(n):
+            xa = h0 + gap + k * (cw + gap)
+            cells.append(Box(cw, p['lamp_h_centre'] - 26, 1.0, align=(Align.MIN if sx > 0 else Align.MAX, Align.MIN, Align.MIN)).moved(
+                Location((sx * xa, y0 + 10, ZF - fr - 4 - 0.4))))
+    out['lamp_cells'] = cells
     # The windshield's black frit: an opaque band printed on the glass's inner face, so the A-pillar and dash
     # trim don't show through at its edges (c134). Measured on c134 against the glass's 1,581 mm bottom
     # width and 1,472 mm slant: about 75 wide down the sides, 65 along the cowl, 280 under the roof edge,
@@ -1863,6 +1882,9 @@ if __name__ == '__main__':
     cp = cladding_parts(p)
     save(cp['bumper_f_intake'], 'intake_back')
     save(cp['bumper_f_grille'], 'intake_grille')
+    save(Compound(cp['bumper_f_tow']), 'tow_covers')
+    save(cp['bumper_f_camera'], 'front_camera', tolerance=0.3, angular=0.3)
+    save(cp['bumper_f_lens'], 'front_camera_lens', tolerance=0.3, angular=0.3)
     mirrors_rest, mirror_pieces = split_doors(both_sides(mirror_part(p)), regions)     # the mirrors ride on the front doors
     for k, piece in mirror_pieces.items():
         save(piece, f'door_{k}_mirror')

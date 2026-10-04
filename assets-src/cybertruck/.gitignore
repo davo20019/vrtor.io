@@ -2,3 +2,4 @@
 __pycache__/
 parts/
 refs/video/*.mp4
+out/assemble.log
