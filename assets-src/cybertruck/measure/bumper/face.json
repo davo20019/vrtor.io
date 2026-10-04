@@ -1,0 +1,178 @@
+{
+ "_": "The front bumper's face features, measured on c150 through its fitted camera, on the bumper face plane (z = ZF - face_rake + 10).",
+ "photo": "../../refs/web/c150-front.jpg",
+ "camera": "../../fit/c150-front/camera.json",
+ "queries": {
+  "bumper top centre (front edge)": {
+   "px": [
+    1430,
+    1400
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "corner block top L": {
+   "px": [
+    900,
+    1381
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "corner block inner edge L top": {
+   "px": [
+    987,
+    1400
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "intake TL": {
+   "px": [
+    990,
+    1457
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "intake TR": {
+   "px": [
+    1877,
+    1436
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "intake BL": {
+   "px": [
+    987,
+    1537
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "intake BR": {
+   "px": [
+    1877,
+    1525
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "plate TL": {
+   "px": [
+    1325,
+    1404
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "plate BR": {
+   "px": [
+    1542,
+    1450
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "tow L TL": {
+   "px": [
+    1005,
+    1497
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "tow L BR": {
+   "px": [
+    1080,
+    1535
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "lip bottom L": {
+   "px": [
+    990,
+    1595
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "lip bottom C": {
+   "px": [
+    1430,
+    1595
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "lip bottom R": {
+   "px": [
+    1877,
+    1590
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "lamp module L outer": {
+   "px": [
+    1005,
+    1362
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "lamp module L inner": {
+   "px": [
+    1160,
+    1382
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "lamp module R inner": {
+   "px": [
+    1695,
+    1355
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "lamp module R outer": {
+   "px": [
+    1855,
+    1375
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  },
+  "grille bar mid L": {
+   "px": [
+    1210,
+    1515
+   ],
+   "plane": {
+    "z": 2685.8
+   }
+  }
+ }
+}

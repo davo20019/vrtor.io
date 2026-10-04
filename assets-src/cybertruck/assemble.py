@@ -98,7 +98,10 @@ M = {
     'mat': material('floor_mat', srgb(30, 30, 31), 0.95, normal_map=PARTS / 'carpet_normal.png', normal_strength=0.5),
     'pillar': material('pillar_black', srgb(14, 14, 15), 0.45),
     'door_button': material('door_button', srgb(10, 10, 11), 0.15),
-    'marker_amber': material('marker_amber', srgb(230, 120, 20), 0.2, emit=(1.0, 0.45, 0.05), emit_strength=0.5),
+    # unlit, an amber lens under smoked plastic (c085, c147); the app lights it when its turn signal blinks
+    'marker_amber': material('marker_amber', srgb(66, 34, 12), 0.15),
+    'lamp_head': material('headlamp_lens', srgb(62, 64, 68), 0.25),     # the headlamps in the lower strip, lighter than it (c150)
+    'intake': material('intake_black', srgb(6, 6, 7), 0.9),
     'lamp_lower': material('lamp_lower_smoked', srgb(22, 22, 24), 0.12),
     'marker_red': material('marker_red', srgb(150, 15, 12), 0.2, emit=(1.0, 0.05, 0.03), emit_strength=0.4),
     'clad': material('cladding_black', srgb(32, 32, 34), 0.72),
@@ -193,6 +196,8 @@ tonneau = stl('tonneau', M['tonneau']); box_uv(tonneau, tile_mm=800)
 lf = stl('light_front', M['light_w'])
 lr = stl('light_rear', M['light_r'])
 clad = stl('cladding', M['clad'])
+intake = stl('intake_back', M['intake'])
+intake_grille = stl('intake_grille', M['grille'])
 mirrors = stl('mirrors', M['mirror'], smooth_angle=30) if (PARTS / 'mirrors.stl').exists() else None
 wiper = stl('wiper', M['wiper'])
 wiper_blade = stl('wiper_blade', M['wiper'])           # the arm and blade, on their own node (wiper_arm)
@@ -288,7 +293,7 @@ for o in cabin_parts:                    # printed symbols: the texture spans it
             q = l.vert.co - c0
             l[uvl].uv = (q.dot(u) / w + 0.5, q.dot(v) / h + 0.5)
     bm.to_mesh(o.data); bm.free()
-DETAILS = {'pillars': 'pillar', 'frit': 'pillar', 'lamp_lower': 'lamp_lower', 'marker_amber_l': 'marker_amber', 'marker_amber_r': 'marker_amber', 'marker_red': 'marker_red'}
+DETAILS = {'pillars': 'pillar', 'frit': 'pillar', 'lamp_lower': 'lamp_lower', 'lamp_head': 'lamp_head', 'marker_amber_l': 'marker_amber', 'marker_amber_r': 'marker_amber', 'marker_red': 'marker_red'}
 detail_parts = [stl(f'det_{n}', M[m], smooth_angle=20) for n, m in DETAILS.items()]
 # The outside door-release buttons, one object each (btn_fl...), so the app can tell which was pressed.
 button_parts = []
@@ -353,7 +358,7 @@ disc = stl('brake_disc', M['disc'], smooth_angle=50)
 caliper = stl('caliper', M['caliper'])
 templates = (tyre, rim, lugs, cover, disc, caliper)
 all_door_parts = [o for v in door_parts.values() for o in v]
-for o in [x for x in (body, glass, tonneau, lf, lr, clad, mirrors, wiper, wiper_blade, slat) if x] + [*cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
+for o in [x for x in (body, glass, tonneau, lf, lr, clad, intake, intake_grille, mirrors, wiper, wiper_blade, slat) if x] + [*cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
     o.data.transform(TO_BLENDER)         # UVs and materials were set in the model frame; now move to Blender's
 
 def empty(name, loc=(0, 0, 0), parent=None):
@@ -365,7 +370,7 @@ def empty(name, loc=(0, 0, 0), parent=None):
 
 root = empty('cybertruck')
 body_node = empty('body', parent=root)
-for o in [x for x in (body, glass, tonneau, lf, lr, clad, mirrors, wiper) if x] + [*detail_parts, *button_parts, *bed_parts]:
+for o in [x for x in (body, glass, tonneau, lf, lr, clad, intake, intake_grille, mirrors, wiper) if x] + [*detail_parts, *button_parts, *bed_parts]:
     o.parent = body_node
 wiper_pivot = Vector(to_blender(GEO['wiper']['pivot']))
 wiper_node = empty('wiper_arm', loc=wiper_pivot, parent=root)

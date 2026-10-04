@@ -23,7 +23,7 @@ W = 1024
 base = rng.normal(0, 1, (W, 1)).repeat(W, 1)                          # one value per row: long streaks
 fine = rng.normal(0, 1, (W, W // 32))                                 # shorter streaks, stretched along u
 fine = np.array(Image.fromarray(((fine * 40 + 128).clip(0, 255)).astype(np.uint8)).resize((W, W), Image.BICUBIC)).astype(np.float32)
-rough = 0.33 + 0.035 * base + 0.03 * (fine - 128) / 40
+rough = 0.33 + 0.012 * base + 0.01 * (fine - 128) / 40      # faint: stronger streaks read as wood grain from a few metres; the real grain only shows up close
 img = (rough.clip(0, 1) * 255).astype(np.uint8)
 Image.fromarray(img).save(OUT / 'steel_rough.png')
 

@@ -223,6 +223,42 @@ Not changed, and why:
 - **Aero covers**: the six-blade covers match c003 (show floor). Other photos (c085, c147) show a different
   wheel with a hexagonal cap; which one is the default is open.
 
+## Front bumper face, measured (2026-10-04)
+
+The bumper was a block with a shallow slot. c150 (straight on, sunlit, no plate), c094 (with a plate) and the
+manual's front view show its face. Widths are read on c150 at the scale of the centre face's creases
+(+-625 at px 1,000 and 1,865: 1.445 mm/px). The tyres give the same scale once their 870 mm greater depth
+is allowed for. c150's fitted camera can't be used for this: it rolls 3.5 degrees where the photo's edges
+roll 1.4, which puts the left side 60 mm above the right. Heights are read on the manual's front view. It
+is a perspective render, so its widths are off, but its heights agree with the bumper top that c059
+measured (650). Jobs and crops are in measure/bumper/.
+
+| What | Value | Source |
+|---|---|---|
+| Steel's lower edge across the centre face | 717 (lamp_h_centre 67) | manual front view 719; c150, light bar to steel 227 px = 328 mm under 1,047 |
+| Steel's lower edge at the side | 682 (lamp_h 32, unchanged) | c059 684; c150 shows it falling along the corner facets |
+| Top band | 650 to 564 | manual 564; c150 58 px |
+| Plate recess | 320 x 70, 570 to 640, 8 deep | c150 314 wide, 71 high; manual 340 to 360 wide (perspective) |
+| Intake | +-640, 414 to 564, 60 deep | at the creases in c150 (px 990, 1,877); manual 414 |
+| Grille | vertical bars every 163 mm, two horizontal at thirds | c150 113 px pitch |
+| Tow-hook covers | 510 to 617 out, 422 to 490 high | c150 px 1,005 to 1,080, at 0.49 to 0.95 of the intake's height |
+| Front camera housing | x -176, at the intake's top | c150 px 1,310 |
+| Lip bottom | 265, its front edge chamfered from 300 | manual 259 |
+| Corner blocks' bottom | 245 | manual 244; c150 below the lip |
+| Corner chamfer | from (640, 404) at the intake's corner to (864, 438) at the block's outer edge, down to (720, 245) | c150 R: px (1,875, 1,527), (2,030, 1,507), (1,930, 1,590); lit by the pavement, so facing down |
+| Headlamps in the lower strip | 387 to 614 out | c150 px 1,005 to 1,160 and 1,695 to 1,855 |
+
+Guesses: how far back the chamfer goes at the block's outer edge (120), the intake's depth (60), the grille's
+setback (25), the bars' thickness (5).
+
+Conflict, written down and not forced: at its crease scale c150 measures 328 mm between the light bar's
+top and the steel's lower edge, and 1.61 mm/px from those two heights against 1.445 across. The model takes
+the widths (nose_flat_half 625, from the top view) and the drawing's 717.
+
+Materials: the amber corner lamps no longer glow at rest. Unlit, they are a dark amber lens; the app lights
+them only while a turn signal blinks. The headlamps are a slightly lighter lens than the strip. The steel's
+roughness streaks are a third as strong: at full strength they read as wood grain from a few metres away.
+
 ## Parameters (P in cad.py)
 
 Fixed (Tesla): L = 5,682.9, H = 1,793.8, wheelbase 3,635.0, front overhang 878.3, clearance 257.0,

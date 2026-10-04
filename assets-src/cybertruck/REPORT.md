@@ -67,7 +67,8 @@ Guesses (no photo constrains them):
 
 Known faults in the model:
 
-- Front and rear bumpers are prisms; the real ones have more facets and the rear step is simpler.
+- The rear bumper is a prism; the real one has more facets and the step is simpler. (The front bumper's face
+  was measured and built on 2026-10-04: spec.md, "Front bumper face, measured".)
 - The cladding steps on the flares (their bevelled outer faces) are flat bands.
 - The tonneau's rails and the light-band end caps are missing; the tonneau is one sunk panel.
 - Review renders through the photo cameras don't apply the per-photo ride offset, so the side pairs on

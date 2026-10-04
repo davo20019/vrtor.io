@@ -80,7 +80,8 @@ P.update(
     # the light bar at the sides (top view: 628 and 620; 285 at 945 out), the bar dropping ~25 mm round them (c059).
     nose_h=1050.0, face_rake=20.0, nose_flat_half=625.0, corner_s=290.0, shoulder_drop=73.0,
     bumper_f_h=650.0,                # bumper top at the corner (c059: 652 to 664)
-    lamp_h=32.0,                     # the lower lamp strip between the bumper and the steel (c059: steel ends at 684)
+    lamp_h=32.0,                     # the lower lamp strip between the bumper and the steel at the sides (c059: steel ends at 684)
+    lamp_h_centre=67.0,              # and across the centre face (c150 at its crease scale: 717; the manual's front view: 719)
     arch_top_h=1030.0,               # outer face top of the flares; their bevel rises another flare_bevel to the body
     flare_band=42.0,                 # flare face seen from the side; opening top at 988 (c059: 990)
     flare_bevel=30.0,                # the bevelled upper edge (c059: lit strip up to 1,042 to 1,060)
@@ -88,6 +89,22 @@ P.update(
     bumper_side_s=352.0,             # the bumper's side face ends just ahead of the tyre (c059: 341 to 352 at the top)
     spat=(300.0, 285.0),             # its lower rear tip in front of the tyre, s and h (c059: 300, 285)
     bumper_side_front_s=140.0,       # where its side face starts, behind the corner chamfer (c059: 105 to 129)
+)
+
+# The front bumper's face, measured on c150 (measure/bumper/): widths at its crease scale (1.445 mm/px, the
+# centre face's creases at +-625, and its tyres agree once their 870 mm greater depth is allowed for), heights
+# on the manual's front view (bumper top 650, as c059 measured). spec.md, "Front bumper face".
+BUMPER_F = dict(
+    intake_half=640.0, intake_bot=414.0, intake_top=564.0, intake_depth=60.0,
+    lip_bot=265.0, lip_chamfer=(300.0, 35.0),     # the lip's lower front edge chamfered from 300 high, 35 back at the bottom
+    block_bot=245.0,                              # the corner blocks reach lower than the lip
+    plate=(160.0, 570.0, 640.0), plate_depth=8.0, # plate recess: half-width, bottom, top
+    grille_set=25.0, grille_pitch=163.0,          # the grille's face behind the bumper's; its vertical bars' spacing
+    tow=(510.0, 617.0, 422.0, 490.0),             # tow-hook covers: x from, x to, bottom, top
+    camera=(-176.0, 40.0),                        # the front camera's housing at the intake's top: x, width
+    chamfer_a=(640.0, 404.0), chamfer_b=(864.0, 438.0), chamfer_p=(720.0, 245.0),
+    chamfer_depth=120.0,                          # how far back the chamfer is at the block's outer edge: guess
+    lamp_head=(387.0, 614.0),                     # the headlamps in the lower strip, x from and to
 )
 
 def V(w, h, s):
@@ -259,11 +276,19 @@ def shell(p):
     for az in AXLES.values():
         body = body - both_sides(side_prism(arch_opening(p, az, grow=1.0), WELL_X, 1300))
     zf = AXLES['f'] + p['arch_f_foot_half'] - 80        # back into the arch, so no steel shows behind the bumper
-    body -= Box(2400, p['bumper_f_h'] + p['lamp_h'], ZF - zf + 100, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(Location((0, 0, zf)))
+    body -= below_steel(p, zf, ZF + 100)
     zr = AXLES['r'] - p['arch_foot_half'] + 10
     body -= Box(2400, p['bumper_r_h'] - 6, zr - ZR + 100, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((0, 0, zr)))
     return body
 
+
+def below_steel(p, z0, z1, drop=0.0):
+    """Everything under the steel's lower edge at the front, from z0 to z1: level across the centre face at
+    bumper_f_h + lamp_h_centre, falling along the corner facets to bumper_f_h + lamp_h at the sides
+    (spec.md, "Front bumper face"). drop lowers the edge (to keep the lamp strip just under the steel)."""
+    yc, ys, nfh = p['bumper_f_h'] + p['lamp_h_centre'] - drop, p['bumper_f_h'] + p['lamp_h'] - drop, p['nose_flat_half']
+    out = [(-1300, 0), (1300, 0), (1300, ys), (body_w(p), ys), (nfh, yc), (-nfh, yc), (-body_w(p), ys), (-1300, ys)]
+    return front_prism(out, z0, z1)
 
 def flare_solid(p, az, x0):
     """The flare's outer outline as a solid from x0 to the published width, its outer edges bevelled: the
@@ -312,16 +337,61 @@ def cladding_parts(p):
     side_z = c0[2] + d[2] * (xs - c0[0]) / d[0]          # where that line reaches the side face
     side_z = max(side_z, zb + 12)
     plan = [(-xs, zb), (xs, zb), (xs, side_z), (c0[0], c0[2]), (nfh, ZF - fr + 10), (-nfh, ZF - fr + 10), (-c0[0], c0[2]), (-xs, side_z)]
-    bot = p['spat'][1] - 10
+    bot = min(p['spat'][1] - 10, BUMPER_F['block_bot'])
     w = Wire.make_polygon([(x, bot, z) for x, z in plan], close=True)
     bf = extrude(Face(w), amount=p['bumper_f_h'] - bot - 1, dir=(0, 1, 0))
     ss, sh = p['spat']
-    prof = [(ZF + 100, p['bumper_f_h'] + 10), (zb, p['bumper_f_h'] + 10), (ZF - ss, sh), (ZF - ss + 70, p['bumper_f_bot']), (ZF + 100, p['bumper_f_bot'])]
+    F = BUMPER_F
+    prof = [(ZF + 100, p['bumper_f_h'] + 10), (zb, p['bumper_f_h'] + 10), (ZF - ss, sh), (ZF - ss + 70, F['block_bot']), (ZF + 100, F['block_bot'])]
     bf = bf & side_prism(prof, -HALF_W - 50, HALF_W + 50)
-    chin = (V(0, p['bumper_f_bot'], fr + 60), np.array([0, -0.55, 0.835]))
-    bf = halfspace_cut(bf, *chin)
-    grille = Box(1250, 70, 60).moved(Location((0, p['bumper_f_bot'] + 110, ZF - fr + 10)))
-    out['bumper_f'] = bf - grille
+    # The face (spec.md, "Front bumper face"): a top band with a shallow plate recess, the intake across the
+    # centre with a grille and a tow-hook cover at each end, a lip under it, and the corner blocks either side
+    # reaching lower, their lower outer corners chamfered back (c150, c094, the manual's front view).
+    zf = ZF - fr + 10                                          # the centre face
+    def face_z(x):
+        return float(np.interp(abs(x), [nfh, c0[0], xs], [zf, c0[2], side_z]))
+    ih, i0, i1 = F['intake_half'], F['intake_bot'], F['intake_top']
+    bf -= Box(2 * ih, i1 - i0, F['intake_depth'] + 100, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((0, i0, zf + 100)))
+    bf -= Box(2 * ih, F['lip_bot'] - F['block_bot'] + 20, 1000, align=(Align.CENTER, Align.MAX, Align.CENTER)).moved(Location((0, F['lip_bot'], zf)))
+    lip_chin = [(zf + 5, F['lip_chamfer'][0]), (zf + 5, F['lip_bot'] - 5), (zf - F['lip_chamfer'][1], F['lip_bot'] - 5)]
+    bf -= side_prism(lip_chin, -ih, ih)
+    px, p0, p1 = F['plate']
+    bf -= Box(2 * px, p1 - p0, 50, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((0, p0, zf - F['plate_depth'] + 50)))
+    # The corner chamfer: the facet runs back from the front face along A (the intake's lower inner corner) to
+    # P (on the block's bottom), and back outward to B (the block's outer edge), set back there by its depth;
+    # only below the line A-B.
+    ax, ay = F['chamfer_a']; bx, by = F['chamfer_b']; cx, cy = F['chamfer_p']
+    for sx in (1, -1):
+        A = np.array([sx * ax, ay, face_z(ax)])
+        P = np.array([sx * cx, cy, face_z(cx)])
+        B = np.array([sx * bx, by, face_z(bx) - F['chamfer_depth']])
+        n = np.cross(P - A, B - A); n /= np.linalg.norm(n)
+        if n[2] < 0:
+            n = -n                                             # outward: forward
+        under = np.cross(B - A, np.array([0, 0, 1.0])); under /= np.linalg.norm(under)
+        if under[1] > 0:
+            under = -under                                     # pointing down, away from the face above A-B
+        wedge = Box(400, 500, 600, align=(Align.MIN if sx > 0 else Align.MAX, Align.MIN, Align.CENTER)).moved(Location((sx * (ih - 5), 0, zf - 200)))
+        wedge = halfspace_cut(wedge, A, -n)                    # keep what lies in front of the facet
+        wedge = halfspace_cut(wedge, A, -under)                # and below A-B
+        bf -= wedge
+    out['bumper_f'] = bf
+    # In the intake: the grille (vertical bars at its pitch, two horizontal bars), the tow-hook covers at its
+    # ends, and the camera at its top left (c150).
+    gz = zf - F['grille_set']
+    g = [Box(2 * ih, 5, 15).moved(Location((0, i0 + (i1 - i0) * f, gz - 10))) for f in (1 / 3, 2 / 3)]
+    nbar = int(ih // F['grille_pitch'])
+    g += [Box(5, i1 - i0, 15).moved(Location((k * F['grille_pitch'], (i0 + i1) / 2, gz - 10))) for k in range(-nbar, nbar + 1)]
+    tx0, tx1, ty0, ty1 = F['tow']
+    for sx in (1, -1):
+        g.append(Box(tx1 - tx0, ty1 - ty0, F['intake_depth'] - 20, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(
+            Location((sx * (tx0 + tx1) / 2, ty0, zf - 20))))
+    cxm, cw = F['camera']
+    g.append(Box(cw, 30, 40, align=(Align.CENTER, Align.MAX, Align.MAX)).moved(Location((cxm, i1, zf - 15))))
+    out['bumper_f_grille'] = Compound(g)
+    # the intake's back, near black so it reads as an opening
+    out['bumper_f_intake'] = Box(2 * ih - 1, i1 - i0 - 1, 1, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(
+        Location((0, i0 + 0.5, zf - F['intake_depth'] + 0.1)))
     xo = BW + 6                                              # stands just proud of the steel it covers
     # Rear bumper: stands out past the tailgate, centre step recess, lower valance with the hitch pocket.
     zt = ZR
@@ -336,7 +406,7 @@ def cladding_parts(p):
     return out
 
 def cladding(p):
-    return list(cladding_parts(p).values())
+    return [v for k, v in cladding_parts(p).items() if k not in ('bumper_f_intake', 'bumper_f_grille')]
 
 def wheel_centre(p, axle, side):
     return np.array([side * TRACK / 2, TYRE_R - p['squash'], AXLES[axle]])
@@ -1399,9 +1469,12 @@ def details(p):
     xs, y0 = BW + 4, p['bumper_f_h'] + 0.3
     plan = [(-xs, ZF - 340), (xs, ZF - 340), (xs, ZF - p['corner_s'] - fr - 8), (nfh - 4, ZF - fr - 4), (-nfh + 4, ZF - fr - 4), (-xs, ZF - p['corner_s'] - fr - 8)]
     w = Wire.make_polygon([(x, y0, z) for x, z in plan], close=True)
-    strip = extrude(Face(w), amount=p['lamp_h'] - 0.6, dir=(0, 1, 0))
+    strip = extrude(Face(w), amount=p['lamp_h_centre'] - 0.6, dir=(0, 1, 0)) & below_steel(p, ZF - 1500, ZF + 100, drop=0.3)
     ends = both_sides(Box(400, 200, 800, align=(Align.MIN, Align.CENTER, Align.MAX)).moved(Location((BW - 75, y0 + 50, ZF - fr + 50))))
     out['lamp_lower'] = [strip - ends]
+    h0, h1 = BUMPER_F['lamp_head']
+    out['lamp_head'] = [Box(h1 - h0, p['lamp_h_centre'] - 10, 1.0, align=(Align.MIN if sx > 0 else Align.MAX, Align.MIN, Align.MIN)).moved(
+        Location((sx * h0, y0 + 4, ZF - fr - 4 - 0.5))) for sx in (1, -1)]
     # The windshield's black frit: an opaque band printed on the glass's inner face, so the A-pillar and dash
     # trim don't show through at its edges (c134). Measured on c134 against the glass's 1,581 mm bottom
     # width and 1,472 mm slant: about 75 wide down the sides, 65 along the cowl, 280 under the roof edge,
@@ -1787,6 +1860,9 @@ if __name__ == '__main__':
     save(lr_rest, 'light_rear')
     save(lr_gate, 'gate_light')
     save(Compound([c - tub_cav for c in cladding(p)]), 'cladding')
+    cp = cladding_parts(p)
+    save(cp['bumper_f_intake'], 'intake_back')
+    save(cp['bumper_f_grille'], 'intake_grille')
     mirrors_rest, mirror_pieces = split_doors(both_sides(mirror_part(p)), regions)     # the mirrors ride on the front doors
     for k, piece in mirror_pieces.items():
         save(piece, f'door_{k}_mirror')

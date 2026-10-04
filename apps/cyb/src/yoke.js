@@ -12,6 +12,7 @@ import { Color3, Matrix, MeshBuilder, Quaternion, Vector3 } from '@babylonjs/cor
 const HOVER = Color3.FromHexString('#ffb020');
 const GREEN = new Color3(0.15, 0.95, 0.3);
 const BLUE = new Color3(0.2, 0.45, 1);
+const AMBER_LIT = new Color3(4.0, 1.8, 0.2);    // a lit corner lamp; unlit, the model's lens is dark amber and doesn't glow
 const FLASH_S = 60 / 85;                       // one on-and-off, at 85 flashes a minute
 const HORN_HZ = [415, 520];                    // a two-tone car horn, about a major third apart (estimate)
 const HORN_S = 0.5;
@@ -142,7 +143,7 @@ export function createYokeControls(scene, byName, info, { onHighBeam = () => {} 
       }
     }
     for (const [side, l] of Object.entries(lamps)) {
-      l.mat.emissiveColor = side === state.signal && state.lit ? l.rest.scale(8) : l.rest.clone();
+      l.mat.emissiveColor = side === state.signal && state.lit ? AMBER_LIT.clone() : l.rest.clone();
     }
   }
 
