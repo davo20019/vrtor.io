@@ -19,11 +19,15 @@
 // - Rock and banks beside the road throw the tyres' airborne roar back: louder on the hill's side.
 //   (No bridge joints or turn signals here: the ride starts past Bixby Bridge, stops short of the Little
 //   Sur's, and keeps to its lane.)
+// - A window down lets the outside in: the wind roars at the gap (owners and reviews put a car's cabin
+//   in the high 70s to 80s dB at highway speed with a window open), the tyres' roar comes in on that
+//   side, and the glass no longer takes the edge off the highs.
 // Estimated (not published): the gear reduction (about 12:1; Tesla says only that it's the lowest
 // of any Tesla), the motors' tone orders, the tyres' tread pitch and cavity resonance, the crack
 // spacing of Highway 1's chip-seal surface, the 30-40 mph motor noise's shape, the suspension's
 // sounds (where the compressor is, how loud and long it and the hiss are), the airborne share of
-// the tyres' noise that a wall can reflect, and each source's share of the total.
+// the tyres' noise that a wall can reflect, how much louder an open window makes the wind and the tyres,
+// and each source's share of the total.
 
 import { crackStrength, isCrack } from './surface.js';
 
@@ -39,6 +43,8 @@ const AIRBORNE = -5;                  // dB: the tyres' roar and hiss, of all th
 const RAISE_AT = 4.47;                // m/s: back up from Entry above 10 mph (Tesla's manual)
 const PUMP_S = 6, PUMP_DB = 48;       // the compressor's run raising it, and its level (estimates)
 const HISS_S = 2.5, HISS_DB = 52;     // the bleed down to Entry (estimates)
+const GAP_DB = 21;                    // dB: the wind at a fully open window, over the closed cabin's wind (estimate)
+const THROUGH_DB = 8;                 // dB: the tyres on a side with its window fully down, over closed (estimate)
 
 const gainOf = (db) => REF_GAIN * 10 ** ((db - REF_DB) / 20);
 const log = (x) => Math.log10(Math.max(x, 1e-4));
@@ -73,6 +79,8 @@ const AT = {
   motorF: [0, 0.45, 1.82], motorR: [0, 0.45, -1.82],
   dash: [0, 1.0, 0.85],
   compressor: [0, 0.45, 1.4],         // under the front, by the front motor (estimate)
+  // The side windows' openings, at the door tops.
+  gapFL: [-0.95, 1.3, 0.45], gapFR: [0.95, 1.3, 0.45], gapRL: [-0.95, 1.3, -0.6], gapRR: [0.95, 1.3, -0.6],
 };
 
 export function createCabinSound() {
@@ -261,6 +269,7 @@ export function createCabinSound() {
     meter.fftSize = 8192;
     out.connect(meter);
     // The cabin: double-layer acoustic glass and the steel body take the edge off the highs.
+    // A window down opens it up (update()).
     const cabin = filter('lowpass', 6500, 0.5);
     out.connect(cabin).connect(ac.destination);
     const bufs = { pink: noiseBuffer('pink'), brown: noiseBuffer('brown'), white: noiseBuffer('white') };
@@ -282,6 +291,15 @@ export function createCabinSound() {
       const { band } = windChain(ac, bufs, level, i);
       level.connect(panner(AT[key]));
       return { level, band, gust: 1, gustTo: 1 };
+    });
+
+    // The wind at each window's gap while it's down: rougher and lower than round the closed glass.
+    const gaps = ['fl', 'fr', 'rl', 'rr'].map((key, i) => {
+      const level = gainNode();
+      const { band } = windChain(ac, bufs, level, i + 2);
+      band.Q.value = 0.3;
+      level.connect(panner(AT[`gap${key.toUpperCase()}`]));
+      return { key, level, band };
     });
 
     // The motors: two tones each at the shaft's whine orders, front and rear.
@@ -335,7 +353,7 @@ export function createCabinSound() {
     // The chime it plays when it starts driving itself (our own two notes).
     const chimeAt = panner(AT.dash);
 
-    src = { tyres, wind, motors, act, groan, fan, walls, pump, hiss, brown: bufs.brown, thudFront, thudRear, chimeAt };
+    src = { cabin, gaps, tyres, wind, motors, act, groan, fan, walls, pump, hiss, brown: bufs.brown, thudFront, thudRear, chimeAt };
   }
 
   function thud(at, strength) {
@@ -381,10 +399,11 @@ export function createCabinSound() {
     },
     /**
      * Each frame: the truck's state (v m/s, ax m/s², rearRate rad/s, s m along the road, dt s, the
-     * climate's fan speed, whether it's parked, and how much of each side is rock or bank, 0 to 1),
+     * climate's fan speed, whether it's parked, how much of each side is rock or bank, 0 to 1, and how far
+     * down each window is, 0 to 1, by door: fl, fr, rl, rr),
      * and the listener (your head) in the truck's frame: position and its forward and up directions.
      */
-    update({ v, ax, rearRate, s, dt, fan, parked = false, walls = { left: 0, right: 0 } }, head) {
+    update({ v, ax, rearRate, s, dt, fan, parked = false, walls = { left: 0, right: 0 }, windows = {} }, head) {
       if (!ac || !src) return;
       const t = ac.currentTime, tc = 0.12;
       const l = levels({ v, ax, rearRate, fan });
@@ -392,10 +411,21 @@ export function createCabinSound() {
       // Spread a level over n sources (each a share of the power).
       const share = (db, n) => (Number.isFinite(db) ? gainOf(db - 10 * Math.log10(n)) : 0);
 
-      for (const tyre of src.tyres) {
-        set(tyre.level.gain, share(l.tyres, 4) / rms.tyre);
-        set(tyre.tread.frequency, Math.max(40, v / TREAD_PITCH));
+      // Open windows: each side's tyres come in louder through its gaps; the glass's muffling goes.
+      const down = (k) => windows[k] ?? 0;
+      const through = (side) => 10 * Math.log10(1 + (10 ** (THROUGH_DB / 10) - 1) * Math.min(1, down(`f${side}`) + down(`r${side}`)));
+      const lift = { l: through('l'), r: through('r') };
+      set(src.cabin.frequency, 6500 + 9500 * Math.max(0, ...Object.values(windows)), 0.3);
+      for (const g of src.gaps) {
+        const u = down(g.key);
+        set(g.level.gain, u > 0 && Number.isFinite(l.wind) ? (gainOf(l.wind + GAP_DB + 10 * Math.log10(u)) / rms.wind) * src.wind[g.key[1] === 'l' ? 0 : 1].gust : 0, 0.25);
+        set(g.band.frequency, 500 + 14 * v);
       }
+
+      src.tyres.forEach((tyre, i) => {
+        set(tyre.level.gain, gainOf(l.tyres - 10 * Math.log10(4) + lift[i % 2 ? 'r' : 'l']) / rms.tyre);
+        set(tyre.tread.frequency, Math.max(40, v / TREAD_PITCH));
+      });
       for (const w of src.wind) {
         // Gusts: a new gentle target every so often, about +-2 dB.
         if (Math.random() < dt * 0.8) w.gustTo = 10 ** ((Math.random() * 4 - 2) / 20);
@@ -414,7 +444,7 @@ export function createCabinSound() {
 
       // The road's roar back off the rock: as much as the bank fills that side.
       [walls.left, walls.right].forEach((fill, i) => {
-        const db = l.tyres + AIRBORNE + 10 * Math.log10(fill);
+        const db = l.tyres + AIRBORNE + 10 * Math.log10(fill) + lift[i ? 'r' : 'l'];
         set(src.walls[i].gain, Number.isFinite(db) ? gainOf(db) / rms.reflect : 0, 0.3);
       });
 

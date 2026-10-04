@@ -92,6 +92,7 @@ M = {
     'pillar': material('pillar_black', srgb(14, 14, 15), 0.45),
     'door_button': material('door_button', srgb(10, 10, 11), 0.15),
     'marker_amber': material('marker_amber', srgb(230, 120, 20), 0.2, emit=(1.0, 0.45, 0.05), emit_strength=0.5),
+    'lamp_lower': material('lamp_lower_smoked', srgb(22, 22, 24), 0.12),
     'marker_red': material('marker_red', srgb(150, 15, 12), 0.2, emit=(1.0, 0.05, 0.03), emit_strength=0.4),
     'clad': material('cladding_black', srgb(32, 32, 34), 0.72),
     'tonneau': material('tonneau_black', srgb(26, 26, 28), 0.5, normal_map=PARTS / 'tonneau_normal.png', normal_strength=0.6),
@@ -265,7 +266,7 @@ for o in cabin_parts:                    # the screens: the picture spans each s
             q = l.vert.co - c0
             l[uvl].uv = (q.dot(u) / w + 0.5, q.dot(v) / h + 0.5)
     bm.to_mesh(o.data); bm.free()
-DETAILS = {'pillars': 'pillar', 'marker_amber': 'marker_amber', 'marker_red': 'marker_red'}
+DETAILS = {'pillars': 'pillar', 'lamp_lower': 'lamp_lower', 'marker_amber': 'marker_amber', 'marker_red': 'marker_red'}
 detail_parts = [stl(f'det_{n}', M[m], smooth_angle=20) for n, m in DETAILS.items()]
 # The outside door-release buttons, one object each (btn_fl...), so the app can tell which was pressed.
 button_parts = []

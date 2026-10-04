@@ -11,7 +11,7 @@ const ROLLING_RADIUS = 0.424;          // m
 /** Stopping when asked (a door button, Stop here): firm but comfortable, about 5 s from 55 mph. */
 const STOP_DECEL = 3.0;                // m/s²
 
-export function createDrive(scene, { pose, truckInfo, nodes, screen, road }) {
+export function createDrive(scene, { pose, truckInfo, nodes, screen, road, windows = () => ({}) }) {
   const p = plan(road);
   const at = laneOf(road, p);
   const car = createVehicle(at, { start: p.start, end: p.end, accel: ACCEL, decel: DECEL });
@@ -169,7 +169,7 @@ export function createDrive(scene, { pose, truckInfo, nodes, screen, road }) {
     const rearRate = dt > 0 ? (c.rear - lastRear) / dt : 0;
     lastRear = c.rear;
     const parked = !state.running && c.v < 0.05;
-    audio.update({ v: c.v, ax: c.ax, rearRate, s: c.s, dt, fan: screen.fan, parked, walls: wallsAt(c.s) }, headInTruck());
+    audio.update({ v: c.v, ax: c.ax, rearRate, s: c.s, dt, fan: screen.fan, parked, walls: wallsAt(c.s), windows: windows() }, headInTruck());
     const after = pose.computeWorldMatrix(true);
     let dyaw = state.heading - heading0;
     dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));

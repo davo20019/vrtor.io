@@ -70,6 +70,22 @@ BED = dict(
 PARAMS = HERE / 'params.json'
 if PARAMS.exists():
     P.update(json.loads(PARAMS.read_text()))
+# The front corner, measured on c059 through its solved camera (long lens, checked on the front wheel centre within
+# 20 mm; spec.md, "Front corner, measured"). These replace fitted values the outline couldn't see (the fit's dark
+# cut-out merges the bumper, the flare and the tyre), so a refit doesn't move them.
+_f = (P['nose_h'] - 650.0) / (P['nose_h'] - P['bumper_f_h'])
+P.update(
+    face_rake=P['face_rake'] * _f,   # the face keeps the fitted slope down to the higher bumper top
+    bumper_f_h=650.0,                # bumper top at the corner (c059: 652 to 664)
+    lamp_h=32.0,                     # the lower lamp strip between the bumper and the steel (c059: steel ends at 684)
+    arch_top_h=1030.0,               # outer face top of the flares; their bevel rises another flare_bevel to the body
+    flare_band=42.0,                 # flare face seen from the side; opening top at 988 (c059: 990)
+    flare_bevel=30.0,                # the bevelled upper edge (c059: lit strip up to 1,042 to 1,060)
+    arch_f_foot_half=588.0,          # the front flare's leg ends on the bumper top, 290 behind the light bar (c059: 283 to 307)
+    bumper_side_s=352.0,             # the bumper's side face ends just ahead of the tyre (c059: 341 to 352 at the top)
+    spat=(300.0, 285.0),             # its lower rear tip in front of the tyre, s and h (c059: 300, 285)
+    bumper_side_front_s=140.0,       # where its side face starts, behind the corner chamfer (c059: 105 to 129)
+)
 
 def V(w, h, s):
     return np.array([w, h, ZF - s], float)
@@ -199,9 +215,11 @@ def recess(body, shell_in, pts, n, depth, gap=0.5, inset=1.0):
 # ---------------------------------------------------------------- arches
 
 def arch_polygon(p, axle_z, grow=0.0):
-    """Outer outline of the arch flare in (z, y): flat top, angled sides, vertical legs to below the sill."""
+    """Outer outline of the arch flare in (z, y): flat top, angled sides, vertical legs to below the sill. The
+    front arch's front leg is steeper and ends on the bumper (knee at the steel's lower edge; c059)."""
     a, t, k, f = axle_z, p['arch_top_half'], p['arch_knee_h'], p['arch_foot_half']
-    return [(a + f + grow, CLEAR - 120), (a + f + grow, k), (a + t + grow, p['arch_top_h'] + grow),
+    F, K = (p['arch_f_foot_half'], p['bumper_f_h'] + p['lamp_h']) if axle_z > 0 else (f, k)
+    return [(a + F + grow, CLEAR - 120), (a + F + grow, K), (a + t + grow, p['arch_top_h'] + grow),
             (a - t - grow, p['arch_top_h'] + grow), (a - f - grow, k), (a - f - grow, CLEAR - 120)]
 
 def arch_opening(p, axle_z, grow=0.0):
@@ -229,12 +247,23 @@ def shell(p):
     body = hull(p)
     for az in AXLES.values():
         body = body - both_sides(side_prism(arch_opening(p, az, grow=1.0), WELL_X, 1300))
-    zf = AXLES['f'] + p['arch_foot_half'] - 10
-    body -= Box(2400, p['bumper_f_h'] - 6, ZF - zf + 100, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(Location((0, 0, zf)))
+    zf = AXLES['f'] + p['arch_f_foot_half'] - 80        # back into the arch, so no steel shows behind the bumper
+    body -= Box(2400, p['bumper_f_h'] + p['lamp_h'], ZF - zf + 100, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(Location((0, 0, zf)))
     zr = AXLES['r'] - p['arch_foot_half'] + 10
     body -= Box(2400, p['bumper_r_h'] - 6, zr - ZR + 100, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((0, 0, zr)))
     return body
 
+
+def flare_solid(p, az, x0):
+    """The flare's outer outline as a solid from x0 to the published width, its outer edges bevelled: the
+    outline is flare_bevel bigger where it meets the body (x = body_w) than at its face (c059, c085, c147)."""
+    BW, b = body_w(p), p['flare_bevel']
+    inner = side_prism(arch_polygon(p, az, grow=b), x0, BW)
+    pts = [np.array([BW, y, z]) for z, y in arch_polygon(p, az, grow=b)]
+    w = Wire.make_polygon([tuple(q) for q in pts], close=True)
+    taper = math.degrees(math.atan2(b, HALF_W - BW))
+    outer = extrude(Face(w), amount=HALF_W - BW, dir=(1, 0, 0), taper=taper)
+    return inner + outer
 
 def cladding_parts(p):
     """Black parts by name: arch flares and sill rockers per side (with their end tabs), front and rear bumpers."""
@@ -242,8 +271,10 @@ def cladding_parts(p):
     out = {}
     above_ground = Box(2 * HALF_W + 20, 2000, 6400, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, CLEAR, 0)))
     for a, az in AXLES.items():
-        band = side_prism(arch_polygon(p, az), BW - 40, HALF_W) - side_prism(arch_opening(p, az), BW - 60, HALF_W + 10)
+        band = flare_solid(p, az, BW - 40) - side_prism(arch_opening(p, az), BW - 60, HALF_W + 10)
         band = band & above_ground
+        if a == 'f':                                     # the front leg stands on the bumper
+            band -= Box(400, 1000, 700, align=(Align.CENTER, Align.MAX, Align.MIN)).moved(Location((BW, p['bumper_f_h'] + 1, az + 150)))
         out[f'flare_{a}_l'], out[f'flare_{a}_r'] = band, band.mirror(Plane.YZ)
     zf = AXLES['f'] - p['arch_foot_half'] + p['flare_band'] * 0.5   # rocker runs between the arch legs
     zr = AXLES['r'] + p['arch_foot_half'] - p['flare_band'] * 0.5
@@ -252,17 +283,24 @@ def cladding_parts(p):
     xo = BW - p['tuck'] + 20
     r = side_prism(rocker, xo - 140, xo)
     out['rocker_l'], out['rocker_r'] = r, r.mirror(Plane.YZ)
-    # Front bumper: the plan of the front face, below its bottom edge, with a chin raked back.
-    nfh, cs, fr = p['nose_flat_half'], p['corner_s'], p['face_rake']
-    zb = AXLES['f'] + p['arch_foot_half'] - 20             # wraps the corner back to the front arch
-    xo = BW + 6                                              # stands just proud of the steel it covers
-    plan = [(-xo, zb), (xo, zb), (xo, ZF - cs - fr + 10), (nfh, ZF - fr + 10), (-nfh, ZF - fr + 10), (-xo, ZF - cs - fr + 10)]
-    w = Wire.make_polygon([(x, p['bumper_f_bot'], z) for x, z in plan], close=True)
-    bf = extrude(Face(w), amount=p['bumper_f_h'] - p['bumper_f_bot'] - 1, dir=(0, 1, 0))
+    # Front bumper: the plan of the front face, below its bottom edge, with a chin raked back. Its corners are
+    # blocks whose side faces stand out to the flares and run back to just ahead of the tyre, the lower rear tip
+    # (a spat) reaching down in front of the tyre (c059, c085, c147).
+    nfh, fr = p['nose_flat_half'], p['face_rake']
+    xs = HALF_W - 12
+    zb = ZF - p['bumper_side_s']
+    plan = [(-xs, zb), (xs, zb), (xs, ZF - p['bumper_side_front_s']), (nfh, ZF - fr + 10), (-nfh, ZF - fr + 10), (-xs, ZF - p['bumper_side_front_s'])]
+    bot = p['spat'][1] - 10
+    w = Wire.make_polygon([(x, bot, z) for x, z in plan], close=True)
+    bf = extrude(Face(w), amount=p['bumper_f_h'] - bot - 1, dir=(0, 1, 0))
+    ss, sh = p['spat']
+    prof = [(ZF + 100, p['bumper_f_h'] + 10), (zb, p['bumper_f_h'] + 10), (ZF - ss, sh), (ZF - ss + 70, p['bumper_f_bot']), (ZF + 100, p['bumper_f_bot'])]
+    bf = bf & side_prism(prof, -HALF_W - 50, HALF_W + 50)
     chin = (V(0, p['bumper_f_bot'], fr + 60), np.array([0, -0.55, 0.835]))
     bf = halfspace_cut(bf, *chin)
     grille = Box(1250, 70, 60).moved(Location((0, p['bumper_f_bot'] + 110, ZF - fr + 10)))
     out['bumper_f'] = bf - grille
+    xo = BW + 6                                              # stands just proud of the steel it covers
     # Rear bumper: stands out past the tailgate, centre step recess, lower valance with the hitch pocket.
     zt = ZR
     za = AXLES['r'] - p['arch_foot_half'] + 20               # wraps the corner forward to the rear arch
@@ -314,17 +352,22 @@ def mirror_glass_part(p):
     return halfspace_cut(pane, *MIRROR_CUT(x0, y0, zc, inset=10.0))
 
 def wiper(p):
-    """The single wiper, parked along the driver's (left) A-pillar on the windshield."""
+    """The single wiper, parked up the driver's (left) A-pillar (c150, c027, c085): the pivot housing at the
+    cowl in the glass's lower corner, the blade lying on the glass close along the pillar to near the roof's
+    apex (about 1,300 long, scaled from those photos), the arm over its lower half."""
     pl = planes(p)
-    a = edge_point(pl['roof'], pl['window_l'], ZF - p['cowl_s'] - 80)
-    b = edge_point(pl['roof'], pl['window_l'], ZF - p['cowl_s'] - 1150)
     n = pl['roof'][1]
-    a, b = a + [-90, 0, 0], b + [-90, 0, 0]
-    a, b = on_plane(pl['roof'], x=a[0], z=a[2]) + n * 14, on_plane(pl['roof'], x=b[0], z=b[2]) + n * 14
-    d = b - a
-    u = np.cross(d, n); u /= np.linalg.norm(u)
-    pts = [a + u * 14, b + u * 9, b - u * 9, a - u * 14]
-    return prism(pts, n, out=6, depth=6)
+    def at(s, inboard, lift):                            # on the glass plane, `inboard` of the pillar crease
+        z = ZF - s
+        e = edge_point(pl['roof'], pl['window_l'], z)
+        return on_plane(pl['roof'], x=e[0] - inboard, z=z) + n * lift
+    s0 = p['cowl_s'] + 60
+    s1 = s0 + 1300 * abs(n[1])                           # 1,300 along the slope
+    # The glass's face is 1 mm under the facet: the blade's rubber sits 0.1 mm above it, 22 wide, 18 tall.
+    blade = rod(at(s0, 64, 8.1), at(s1, 48, 8.1), n, 22, 18)
+    arm = rod(at(p['cowl_s'] + 20, 66, 24), at(s0 + 0.5 * (s1 - s0), 58, 24), n, 26, 14)
+    pivot = rod(at(p['cowl_s'] - 45, 68, 12), at(p['cowl_s'] + 70, 66, 12), n, 46, 52)
+    return blade + arm + pivot
 
 def panels(p):
     """Polygons sunk into the facets: name -> (points, outward normal, pocket depth, inset under the steel, kind)."""
@@ -447,7 +490,23 @@ def tyre():
     prof = [(r0, -hw + 28), (r0 + 70, -hw), (r1 - 95, -hw - 4), (r1 - 30, -hw + 6), (r1, -hw + 30),
             (r1, hw - 30), (r1 - 30, hw - 6), (r1 - 95, hw + 4), (r0 + 70, hw), (r0, hw - 28)]
     w = Wire.make_polygon([(x, r, 0) for r, x in prof], close=True)
-    return revolve(Face(w), Axis.X, 360)
+    body = revolve(Face(w), Axis.X, 360)
+    # Shoulder lugs: the all-terrain blocks wrap from the tread over the shoulder onto the upper sidewall,
+    # alternating long and short, 40 a side (c025, c085, c143, c147).
+    lugs = []
+    n = 40
+    for k in range(n):
+        a = 2 * math.pi * k / n
+        r_in = r1 - (100 if k % 2 else 70)
+        for sx in (1, -1):
+            blk = [polar(r_in, a - 0.028), polar(r1 - 16, a - 0.034), polar(r1 - 16, a + 0.034), polar(r_in, a + 0.028)]
+            x0 = sx * (hw - 26)
+            lugs.append(yz_prism(blk, x0 if sx > 0 else x0 - 29, 29))     # up to 9 mm proud of the sidewall
+    # Clipped to a skin a few mm over the tyre, so they stand proud of the sidewall and shoulder evenly.
+    skin = [(r0, -hw + 34), (r0 + 70, -hw - 6), (r1 - 95, -hw - 11), (r1 - 30, -hw - 3), (r1, -hw + 24),
+            (r1, hw - 24), (r1 - 30, hw + 3), (r1 - 95, hw + 11), (r0 + 70, hw + 6), (r0, hw - 34)]
+    skin = revolve(Face(Wire.make_polygon([(x, r, 0) for r, x in skin], close=True)), Axis.X, 360)
+    return Compound([body, Compound(lugs) & skin])
 
 def yz_prism(pts, x0, depth):
     """Extrude a polygon given in the wheel's face plane, (y, z) points, from x0 outward by depth."""
@@ -1023,7 +1082,7 @@ def interior(p):
     # Sun visors, stowed flat under the header (dgRcedIkNOM-31; the manual's dash render shows none over the
     # glass). Sizes are guesses.
     vis = ceiling_band(p, 24.5, 40) & sband(h0 + 10, h1 - 10) & roof_only
-    out['visors'] = vis & (Box(640, 3000, 8000).moved(Location((370, 0, 0))) + Box(640, 3000, 8000).moved(Location((-370, 0, 0))))
+    out['visors'] = vis & (Box(640, 3000, 8000).moved(Location((370, 1500, 0))) + Box(640, 3000, 8000).moved(Location((-370, 1500, 0))))
     # Overhead console: a plate from the header down to the rear-view mirror (dash render: its lower corners
     # ±136 wide at 1,490 high, 1,578 back; the mirror 195 x 50, 1,464 to 1,513 high, 1,621 back).
     hy = roof_inner_h(p, h0 + 60, c['wall'] + 20)
@@ -1099,6 +1158,16 @@ def details(p):
         z = ZF - s
         return min(edge_point(pl['roof'], pl['window_l'], z)[1], edge_point(pl['deck'], pl['window_l'], z)[1]) - m
     out = {'pillars': [], 'marker_amber': [], 'marker_red': []}
+    # The lower lamp strip: smoked lens in the gap between the bumper top and the steel's lower edge, across
+    # the front and round each corner to the flare, its outer ends amber (c059, c085, c147).
+    nfh, fr = p['nose_flat_half'], p['face_rake']
+    xs, y0 = BW + 4, p['bumper_f_h'] + 0.3
+    plan = [(-xs, ZF - 330), (xs, ZF - 330), (xs, ZF - p['corner_s'] - fr), (nfh - 10, ZF - fr - 4), (-nfh + 10, ZF - fr - 4), (-xs, ZF - p['corner_s'] - fr)]
+    w = Wire.make_polygon([(x, y0, z) for x, z in plan], close=True)
+    strip = extrude(Face(w), amount=p['lamp_h'] - 0.6, dir=(0, 1, 0))
+    ends = both_sides(Box(400, 200, 600, align=(Align.MIN, Align.CENTER, Align.MAX)).moved(Location((nfh + 60, y0 + 50, ZF - fr + 50))))
+    out['lamp_lower'] = [strip - ends]
+    out['marker_amber'].append(strip & ends)
     for key, sx in (('window_l', 1), ('window_r', -1)):
         win = pl[key]
         b0, b1 = p['seam_2'] - PILLAR_HALF, p['seam_2'] + PILLAR_HALF
@@ -1114,15 +1183,6 @@ def details(p):
                 sq = sq[::-1]
             out[f'btn_{door}{key[-1]}'] = [prism(sq, win[1], out=3.5, depth=2)]
         xo = sx * (BW + 6 + 1.5)
-        # The front bumper's flat side ends 38 mm ahead of the arch; the marker sits on its raked corner face,
-        # from just ahead of that edge, standing 1.5 mm proud like the rear ones.
-        a = np.array([sx * (BW + 6), ZF - p['corner_s'] - p['face_rake'] + 10])
-        d = np.array([sx * p['nose_flat_half'], ZF - p['face_rake'] + 10]) - a
-        d /= np.linalg.norm(d)
-        n = np.array([d[1], -d[0]]) * sx                                  # outward and forward
-        cx, cz = a + d * 50 + n * 1.5
-        out['marker_amber'].append(Box(4, 26, 80).rotate(Axis.Y, math.degrees(math.atan2(d[0], d[1])))
-                                   .moved(Location((cx, p['bumper_f_h'] - 55, cz))))
         zr = AXLES['r'] - p['arch_foot_half'] - 40
         out['marker_red'].append(Box(4, 26, 80).moved(Location((xo, p['bumper_r_h'] - 50, zr - 40))))
     return {k: Compound(v) for k, v in out.items()}

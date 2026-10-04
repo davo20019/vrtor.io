@@ -23,6 +23,7 @@ import {
   LoadAssetContainerAsync,
   Matrix,
   Mesh,
+  Plane,
   PointerEventTypes,
   Quaternion,
   MeshBuilder,
@@ -184,6 +185,14 @@ shadows.filteringQuality = ShadowGenerator.QUALITY_LOW;
 shadows.bias = 0.0015;
 shadows.normalBias = 0.02;
 sun.autoCalcShadowZBounds = true;
+/** In the showroom the shadow is drawn once; a door, window, gate or cover that moves asks for it again. */
+let shadowStale = false;
+const shadowMoved = () => { shadowStale = true; };
+scene.onBeforeRenderObservable.add(() => {
+  if (!shadowStale) return;
+  shadowStale = false;
+  shadows.getShadowMap().resetRefreshCounter();
+});
 
 // Brushed stainless is metallic: it shows whatever surrounds it, so the scene needs an environment.
 // A probe renders the showroom (or the road) once into a cube map for every metal surface to reflect.
@@ -231,11 +240,12 @@ async function loadTruck() {
   const world = root.getWorldMatrix().multiply(Matrix.Invert(pose.computeWorldMatrix(true)));
   for (const [k, p] of Object.entries(info.seatEyes)) eyes[k] = Vector3.TransformCoordinates(Vector3.FromArray(p), world);
   covers = container.transformNodes.filter((n) => n.name.startsWith('cover_')).concat(container.meshes.filter((m) => m.name.startsWith('cover_')));
+  const byName = (name) => container.transformNodes.find((n) => n.name === name) ?? container.meshes.find((m) => m.name === name);
   setUpDoors(container, info);
+  setUpWindows(byName);
   setUpTonneau(container, info);
   setUpHinged(container, info);
   shadows.getShadowMap().refreshRate = RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
-  const byName = (name) => container.transformNodes.find((n) => n.name === name) ?? container.meshes.find((m) => m.name === name);
   return { root, info, byName };
 }
 
@@ -292,6 +302,131 @@ function setDoorsAll(open) {
   for (const d of Object.values(doors)) d.target = open ? 1 : 0;
   render();
 }
+
+// ---------------------------------------------------------------- windows
+
+/** Top to bottom or back (estimate: about what owners' videos show). */
+const WINDOW_SECONDS = 3.2;
+/** Each door's glass by door key. u is how far down (0 up, 1 down); dir is +1 lowering, -1 raising, 0 still.
+ *  The pane slides down along its own slant into the door, and what's gone below the door's top edge is cut
+ *  away (a clip plane on its own copy of the glass material), so it never shows through the door. */
+const panes = {};
+/** The switches by key ('window:fl'...; 'window:driver' is the four on the driver's door). */
+const windowButtons = {};
+
+function setUpWindows(byName) {
+  for (const key of Object.keys(doors)) {
+    const pane = byName(`door_${key}_glass`);
+    if (!pane?.getTotalVertices?.()) continue;
+    const door = doors[key].node;
+    // The pane in its door's frame (millimetres, the door closed): its slant, and how far it has to drop.
+    const toDoor = pane.computeWorldMatrix(true).multiply(Matrix.Invert(door.computeWorldMatrix(true)));
+    const pos = pane.getVerticesData('position');
+    const pts = [];
+    for (let i = 0; i < pos.length; i += 3) pts.push(Vector3.TransformCoordinates(new Vector3(pos[i], pos[i + 1], pos[i + 2]), toDoor));
+    const y0 = Math.min(...pts.map((q) => q.y)), y1 = Math.max(...pts.map((q) => q.y));
+    const mean = (sel) => sel.reduce((a, q) => a.addInPlace(q), Vector3.Zero()).scaleInPlace(1 / sel.length);
+    const low = mean(pts.filter((q) => q.y < y0 + 25)), high = mean(pts.filter((q) => q.y > y1 - 25));
+    const down = low.subtract(high);
+    down.z = 0;                                          // straight down its slant, not along the door
+    down.normalize();
+    pane.material = pane.material.clone(`${pane.name}-mat`);
+    panes[key] = {
+      pane, door, mat: pane.material, rest: pane.position.clone(),
+      down, travel: (y1 - y0) / -down.y, belt: y0 - 0.5, u: 0, dir: 0, last: -1,
+    };
+  }
+  // Raise and lower: the one switch on each passenger's door, and the driver's four.
+  for (const k of Object.keys(panes)) {
+    const name = `door_${k}_int_switch`;
+    const button = byName(name);
+    if (!button) continue;
+    button.material = button.material.clone(`${name}-mat`);
+    const id = k === 'fl' ? 'window:driver' : `window:${k}`;
+    windowButtons[id] = [button];
+    const target = MeshBuilder.CreateBox(`${name}-target`, { size: k === 'fl' ? 0.1 : 0.06 }, scene);
+    target.visibility = 0;
+    target.isPickable = true;
+    target.setParent(null);
+    target.position.copyFrom(button.getBoundingInfo().boundingBox.centerWorld);
+    target.setParent(button);
+    doorTargets.set(target, id);
+    doorTargets.set(button, id);
+  }
+}
+
+/** Which of the driver's four keys a press landed on: the outer column works the left windows, the inner
+ *  the right; the front row the front ones (Owner's Manual, Windows). */
+function driverKey(pick) {
+  const button = windowButtons['window:driver']?.[0];
+  if (!button || !pick?.pickedPoint) return 'fl';
+  const door = doors.fl.node;
+  const local = Vector3.TransformCoordinates(pick.pickedPoint, Matrix.Invert(door.computeWorldMatrix(true)));
+  const mid = Vector3.TransformCoordinates(button.getBoundingInfo().boundingBox.centerWorld, Matrix.Invert(door.computeWorldMatrix(true)));
+  // The door's frame is glTF's: +z ahead, and the left door's outside is toward +x.
+  const outer = local.x > mid.x, front = local.z > mid.z;
+  return `${front ? 'f' : 'r'}${outer ? 'l' : 'r'}`;
+}
+
+/** 'down', 'up' or 'toggle'. Like the real one-touch switch, a press while it moves stops it. */
+function windowPress(key, which = 'toggle') {
+  const w = panes[key];
+  if (!w) return;
+  if (w.dir) w.dir = 0;
+  else if (which === 'down') w.dir = w.u < 1 ? 1 : 0;
+  else if (which === 'up') w.dir = w.u > 0 ? -1 : 0;
+  else w.dir = w.u <= 0 ? 1 : w.u >= 1 ? -1 : -w.last;
+  if (w.dir) w.last = w.dir;
+  render();
+}
+
+const anyWindowDown = () => Object.values(panes).some((w) => w.u > 0 || w.dir > 0);
+
+/** The touchscreen's one control for all four: down if they're all up, else all up. */
+function setWindowsAll(down) {
+  for (const w of Object.values(panes)) {
+    w.dir = down ? (w.u < 1 ? 1 : 0) : w.u > 0 ? -1 : 0;
+    if (w.dir) w.last = w.dir;
+  }
+  render();
+}
+
+function windowsState() {
+  const ws = Object.values(panes);
+  if (ws.some((w) => w.dir > 0)) return 'Opening';
+  if (ws.some((w) => w.dir < 0)) return 'Closing';
+  if (ws.every((w) => w.u <= 0)) return 'Up · tap to open';
+  return ws.every((w) => w.u >= 1) ? 'Down · tap to close' : 'Part open · tap to close';
+}
+
+/** How far down each window is, 0 to 1, for the cabin's sound. */
+const windowOpenings = () => Object.fromEntries(Object.entries(panes).map(([k, w]) => [k, w.u]));
+
+const beltPoint = new Vector3(), beltNormal = new Vector3();
+scene.onBeforeRenderObservable.add(() => {
+  const step = engine.getDeltaTime() / 1000 / WINDOW_SECONDS;
+  for (const w of Object.values(panes)) {
+    if (w.dir) {
+      w.u = Math.min(1, Math.max(0, w.u + w.dir * step));
+      if (w.u === 0 || w.u === 1) {
+        w.dir = 0;
+        render();
+      }
+      w.pane.position.copyFrom(w.rest).addInPlace(w.down.scale(w.u * w.travel));
+      w.pane.setEnabled(w.u < 1);
+      shadowMoved();
+    }
+    if (w.u <= 0) {
+      w.mat.clipPlane = null;
+      continue;
+    }
+    // The door's top edge, wherever the door and the truck are now.
+    const m = w.door.computeWorldMatrix(true);
+    Vector3.TransformCoordinatesFromFloatsToRef(0, w.belt, 0, m, beltPoint);
+    Vector3.TransformNormalFromFloatsToRef(0, -1, 0, m, beltNormal);
+    w.mat.clipPlane = Plane.FromPositionAndNormal(beltPoint, beltNormal.normalize());
+  }
+});
 
 // ---------------------------------------------------------------- the powered tonneau cover
 
@@ -403,6 +538,7 @@ scene.onBeforeRenderObservable.add(() => {
     render();
   }
   placeSlats();
+  shadowMoved();
 });
 
 // ---------------------------------------------------------------- the tailgate, the under-bed lid, the outlet cover
@@ -485,6 +621,7 @@ scene.onBeforeRenderObservable.add(() => {
     const e = h.t * h.t * (3 - 2 * h.t);
     h.node.rotationQuaternion = h.rest.multiply(Quaternion.RotationAxis(h.axis, h.open * e));
     if (key === 'tailgate') updateBedLights();
+    shadowMoved();
     if (h.t === h.target) render();
   }
   // Every frame while the gate is down, so they follow the truck on the road too.
@@ -578,6 +715,7 @@ scene.onBeforeRenderObservable.add(() => {
     d.t = d.target > d.t ? Math.min(d.target, d.t + step) : Math.max(d.target, d.t - step);
     const e = d.t * d.t * (3 - 2 * d.t);                    // ease in and out
     d.node.rotationQuaternion = d.rest.multiply(Quaternion.RotationAxis(Vector3.Up(), d.open * e));
+    shadowMoved();
   }
 });
 
@@ -585,7 +723,7 @@ let hovered = null;
 function hover(key) {
   if (key === hovered) return;
   for (const k of [hovered, key]) {
-    const buttons = k && (doors[k]?.buttons ?? tonneau.buttons[k]);
+    const buttons = k && (doors[k]?.buttons ?? tonneau.buttons[k] ?? windowButtons[k]);
     if (!buttons) continue;
     for (const b of buttons) b.material.emissiveColor = k === key ? GLOW : Color3.Black();
   }
@@ -632,6 +770,8 @@ scene.onPointerObservable.add((info) => {
   if (key?.startsWith('tonneau:')) tonneauPress(key.slice(8));
   else if (key === 'tailgate:open') setTailgate(true);
   else if (key?.startsWith('hinge:')) hingePress(key.slice(6));
+  else if (key === 'window:driver') windowPress(driverKey(pick));
+  else if (key?.startsWith('window:')) windowPress(key.slice(7));
   else if (key) toggleDoor(key);
   else if (sitTo) sitIn(sitTo);
   else if (xrPointer) screen?.tap(pick);
@@ -750,12 +890,14 @@ function applyGlows() {
 }
 
 /**
- * The windows, which share one dark tinted material. From outside the tint is the truck's look; from a
+ * The windows, which share one dark tinted material (each door pane its own copy, for its clip plane). From outside the tint is the truck's look; from a
  * seat the eye has adjusted to it, so the view out is kept close to clear (a windscreen passes most light).
  */
 let glass = null;
 function updateGlass() {
-  if (glass) glass.alpha = seat === 'outside' ? 1 : 0.35;
+  const alpha = seat === 'outside' ? 1 : 0.35;
+  if (glass) glass.alpha = alpha;
+  for (const w of Object.values(panes)) w.mat.alpha = alpha;
 }
 
 /** The screen's big button: start the ride from a seat, drive on after a stop, drive it again. */
@@ -773,6 +915,7 @@ function screenAction() {
 function screenControls() {
   return [
     { label: 'Doors', value: anyDoorOpen() ? 'Open · tap to close' : 'Closed · tap to open', active: anyDoorOpen(), onClick: () => setDoorsAll(!anyDoorOpen()) },
+    { label: 'Windows', value: windowsState(), active: anyWindowDown(), onClick: () => setWindowsAll(!anyWindowDown()) },
     { label: 'Tailgate', value: tonneauLocked() ? 'Shift to Park to open' : (hinged.tailgate?.target ?? 0) > 0.5 ? 'Open · lift it to close' : 'Closed · tap to open', active: (hinged.tailgate?.target ?? 0) > 0.5, disabled: tonneauLocked() || (hinged.tailgate?.target ?? 0) > 0.5, onClick: () => setTailgate(true) },
     { label: 'Tonneau', value: tonneauLocked() ? 'Shift to Park to open' : tonneauState(), active: tonneau.u > 0 || tonneau.dir !== 0, disabled: tonneauLocked(), onClick: () => tonneauPress('toggle') },
     { label: 'Lights', value: glows.lightsOn ? 'On' : 'Off', active: glows.lightsOn, onClick: () => ((glows.lightsOn = !glows.lightsOn), applyGlows()) },
@@ -1041,7 +1184,7 @@ function loadBigSur() {
   })).then((world) => {
     ride.bigsur = world;
     // Made in the showroom, while the truck stands unturned on the turntable: the yoke and screen are measured there.
-    ride.drive = createDrive(scene, { pose, truckInfo: truck.info, nodes: truck.byName, screen, road: world.road });
+    ride.drive = createDrive(scene, { pose, truckInfo: truck.info, nodes: truck.byName, screen, road: world.road, windows: windowOpenings });
     return world;
   });
   return ride.loading;

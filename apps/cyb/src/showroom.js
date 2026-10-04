@@ -10,6 +10,8 @@ import { Color3, DynamicTexture, Mesh, MeshBuilder, StandardMaterial, Texture, T
 /** How high the turntable lifts the truck off the walkway. */
 export const PLINTH_TOP = 0.1;
 const PLINTH_R = 3.8;                 // the truck's corners (mirrors out) reach 3.1 m from its centre
+/** The soft light over the truck: across (x) and along (z), the truck being 2.4 m wide and 5.7 m long. */
+const CANOPY = { w: 6.4, d: 9.6 };
 const HALL = { x0: -10, x1: 16, z0: -11, z1: 11, h: 6 };
 /** The parts space, beside the truck on its right (+x): room for a truck's worth of parts laid out. */
 const PARTS = { x: 10.6, z: 0, w: 4.6, d: 8.4, h: 0.1 };
@@ -48,37 +50,56 @@ function canvasTexture(scene, name, w, h, draw, { mipmaps = true } = {}) {
   return tex;
 }
 
-/** Pale polished concrete in 2 m bays, one bay per tile. */
+/** Pale polished concrete in 2 m bays, one bay per tile. Light, as in a real showroom: the steel's lower
+ * faces look down at it, so a dark floor would show as dark doors. */
 function floorTexture(scene) {
   return canvasTexture(scene, 'showroom-floor', 512, 512, (ctx, w, h) => {
-    ctx.fillStyle = '#a9a7a2';
+    ctx.fillStyle = '#bdbbb6';
     ctx.fillRect(0, 0, w, h);
     // Soft cloudiness, then a fine speckle, so it reads as ground and polished stone, not paint.
     for (let i = 0; i < 90; i++) {
-      const v = 160 + Math.floor(Math.random() * 22);
+      const v = 178 + Math.floor(Math.random() * 22);
       ctx.fillStyle = `rgba(${v},${v - 1},${v - 4},0.12)`;
       ctx.beginPath();
       ctx.arc(Math.random() * w, Math.random() * h, 20 + Math.random() * 70, 0, Math.PI * 2);
       ctx.fill();
     }
     for (let i = 0; i < 3000; i++) {
-      const v = 140 + Math.floor(Math.random() * 60);
+      const v = 158 + Math.floor(Math.random() * 60);
       ctx.fillStyle = `rgb(${v},${v - 1},${v - 4})`;
       ctx.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5);
     }
-    ctx.strokeStyle = '#8a8883';            // the saw cut between bays
+    ctx.strokeStyle = '#9d9b96';            // the saw cut between bays
     ctx.lineWidth = 2;
     ctx.strokeRect(0, 0, w, h);
   });
 }
 
-/** Wall panels: 1.5 m wide, with a shadow line between them. */
-function wallTexture(scene) {
-  return canvasTexture(scene, 'showroom-wall', 256, 256, (ctx, w, h) => {
-    ctx.fillStyle = '#e4e3df';
+/**
+ * The light over the truck, as car studios and showrooms hang it: one big diffuser, brightest in two long
+ * bands down the truck's length (they draw the highlights along its creases), dimming softly to the edges
+ * so its reflection is a smooth gradient, not a hard-edged box. u across the truck, v along it.
+ */
+function canopyTexture(scene) {
+  return canvasTexture(scene, 'showroom-canopy', 256, 512, (ctx, w, h) => {
+    ctx.fillStyle = '#ecebe7';
     ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = '#c9c8c3';
-    ctx.fillRect(0, 0, 3, h);
+    // Soft fall-off to every edge.
+    const edge = (g, x, y, ww, hh) => { ctx.fillStyle = g; ctx.fillRect(x, y, ww, hh); };
+    const fade = 64, dim = 'rgba(196,196,192,0.8)', clear = 'rgba(196,196,192,0)';
+    let g = ctx.createLinearGradient(0, 0, fade, 0); g.addColorStop(0, dim); g.addColorStop(1, clear); edge(g, 0, 0, fade, h);
+    g = ctx.createLinearGradient(w, 0, w - fade, 0); g.addColorStop(0, dim); g.addColorStop(1, clear); edge(g, w - fade, 0, fade, h);
+    g = ctx.createLinearGradient(0, 0, 0, fade); g.addColorStop(0, dim); g.addColorStop(1, clear); edge(g, 0, 0, w, fade);
+    g = ctx.createLinearGradient(0, h, 0, h - fade); g.addColorStop(0, dim); g.addColorStop(1, clear); edge(g, 0, h - fade, w, fade);
+    // The two bands, soft-sided, over the truck's shoulders.
+    for (const cx of [w * 0.32, w * 0.68]) {
+      g = ctx.createLinearGradient(cx - 18, 0, cx + 18, 0);
+      g.addColorStop(0, 'rgba(255,255,253,0)');
+      g.addColorStop(0.5, 'rgba(255,255,253,1)');
+      g.addColorStop(1, 'rgba(255,255,253,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(cx - 18, fade * 0.6, 36, h - fade * 1.2);
+    }
   });
 }
 
@@ -142,14 +163,12 @@ export function createShowroom(scene) {
   floors.push(floor);
   envMeshes.push(floor);
 
-  // ---- walls, facing in (one-sided, so from outside the hall you look in through them)
+  // ---- walls, facing in (one-sided, so from outside the hall you look in through them). Plain and evenly
+  // lit, no panel seams: the steel's sides reflect them, and seams would show as lines down the doors.
+  const wallMat = flat(scene, 'showroom-wall', '#e4e3df', { specular: 0.02 });
+  wallMat.emissiveColor = new Color3(0.2, 0.2, 0.2);     // light bouncing round a white room
   const wall = (name, len, pos, rotY) => {
-    // Each wall its own small texture, repeated once per panel (a cloned DynamicTexture comes out blank).
-    const mat = flat(scene, `${name}-mat`, '#ffffff', { specular: 0.02 });
-    mat.diffuseTexture = wallTexture(scene);
-    mat.diffuseTexture.uScale = len / 1.5;
-    mat.emissiveColor = new Color3(0.16, 0.16, 0.16);    // light bouncing round a white room
-    const m = plane(scene, name, len, h, mat, root, pos, rotY);
+    const m = plane(scene, name, len, h, wallMat, root, pos, rotY);
     envMeshes.push(m);
     return m;
   };
@@ -162,8 +181,9 @@ export function createShowroom(scene) {
   const lintel = wall('showroom-wall-front-top', DOOR.w, new Vector3(0, (h + DOOR.h) / 2, z1), 0);
   lintel.scaling.y = (h - DOOR.h) / h;
 
-  // A dark skirting strip along every wall, where the walls meet the floor.
-  const skirtMat = flat(scene, 'showroom-skirt', '#2b2e31');
+  // A skirting strip along every wall, where the walls meet the floor: mid grey, not black, so it doesn't
+  // draw a dark line along the reflection.
+  const skirtMat = flat(scene, 'showroom-skirt', '#8f918f');
   for (const [name, len, pos, rotY] of [
     ['back', W, new Vector3(cx, 0.06, z0 + 0.01), Math.PI],
     ['left', D, new Vector3(x0 + 0.01, 0.06, cz), -Math.PI / 2],
@@ -172,8 +192,7 @@ export function createShowroom(scene) {
     ['front-r', x1 - DOOR.w / 2, new Vector3((x1 + DOOR.w / 2) / 2, 0.06, z1 - 0.01), 0],
   ]) plane(scene, `showroom-skirt-${name}`, len, 0.12, skirtMat, root, pos, rotY);
 
-  // ---- ceiling: pale, so the hood and roof (which face it) read as bright steel, with the light
-  // fittings brighter still for the highlights
+  // ---- ceiling: pale, so the hood and roof (which face it) read as bright steel
   const ceilMat = flat(scene, 'showroom-ceiling', '#d9d9d6', { specular: 0 });
   ceilMat.emissiveColor = new Color3(0.42, 0.42, 0.41);
   const ceiling = MeshBuilder.CreatePlane('showroom-ceiling', { width: W, height: D }, scene);
@@ -184,30 +203,20 @@ export function createShowroom(scene) {
   ceiling.isPickable = false;
   envMeshes.push(ceiling);
 
-  // Light fittings. Over the truck: long strips along it, and a ring over the turntable. These are
-  // what draw the long highlights down the steel's flat faces.
-  const lightMat = glow(scene, 'showroom-light', '#fbfaf6');
-  const strip = (name, len, x, z, alongZ = true) => {
-    const m = MeshBuilder.CreateBox(name, { width: alongZ ? 0.16 : len, height: 0.05, depth: alongZ ? len : 0.16 }, scene);
-    m.position.set(x, h - 0.03, z);
-    m.material = lightMat;
-    m.parent = root;
-    m.isPickable = false;
-    envMeshes.push(m);
-    return m;
-  };
-  for (const x of [-1.6, -0.55, 0.55, 1.6]) strip(`showroom-strip-${x}`, 7.2, x, 0);
-  // An open cylinder, not a torus: a torus's tessellation goes both ways, thousands of triangles.
-  const ring = MeshBuilder.CreateCylinder('showroom-light-ring', { diameter: 2 * (PLINTH_R + 0.4), height: 0.12, tessellation: 72, cap: Mesh.NO_CAP, sideOrientation: Mesh.DOUBLESIDE }, scene);
-  ring.position.set(0, h - 0.1, 0);
-  ring.material = lightMat;
-  ring.parent = root;
-  ring.isPickable = false;
-  envMeshes.push(ring);
+  // Over the truck: one big soft light, a little larger than the turntable, as car studios and showrooms
+  // hang it. It's what the hood, roof and upper sides reflect, so they show the steel's own tone.
+  const canopy = MeshBuilder.CreatePlane('showroom-canopy', { width: CANOPY.w, height: CANOPY.d }, scene);
+  canopy.rotation.x = -Math.PI / 2;
+  canopy.position.set(0, h - 0.04, 0);
+  canopy.material = glow(scene, 'showroom-canopy', '#ffffff', canopyTexture(scene));
+  canopy.parent = root;
+  canopy.isPickable = false;
+  envMeshes.push(canopy);
   // Over the rest of the hall: a grid of square panels.
+  const lightMat = glow(scene, 'showroom-light', '#fbfaf6');
   for (let x = x0 + 3; x <= x1 - 2; x += 4) {
     for (let z = z0 + 2.5; z <= z1 - 2; z += 4) {
-      if (Math.hypot(x, z) < PLINTH_R + 2) continue;
+      if (Math.abs(x) < CANOPY.w / 2 + 1 && Math.abs(z) < CANOPY.d / 2 + 1) continue;
       const m = MeshBuilder.CreateBox(`showroom-panel-${x}-${z}`, { width: 1.2, height: 0.04, depth: 1.2 }, scene);
       m.position.set(x, h - 0.02, z);
       m.material = lightMat;
@@ -217,8 +226,9 @@ export function createShowroom(scene) {
     }
   }
 
-  // ---- the turntable plinth
-  const plinthMat = flat(scene, 'showroom-plinth', '#2f3236', { specular: 0.35, power: 120 });
+  // ---- the turntable plinth: light grey, as showroom turntables are. The lower half of the body looks
+  // down at it, so a dark one turns the doors charcoal.
+  const plinthMat = flat(scene, 'showroom-plinth', '#bcbcb8', { specular: 0.18, power: 120 });
   const plinth = MeshBuilder.CreateCylinder('showroom-plinth', { diameter: 2 * PLINTH_R, height: PLINTH_TOP, tessellation: 96 }, scene);
   plinth.position.y = PLINTH_TOP / 2;
   plinth.material = plinthMat;
@@ -238,8 +248,10 @@ export function createShowroom(scene) {
   led.parent = root;
   led.isPickable = false;
 
-  // ---- the parts space: an empty low plinth, its edge marked, and a stand saying what's coming
-  const partsMat = flat(scene, 'showroom-parts', '#3a3d41', { specular: 0.2 });
+  // ---- the parts space: an empty low plinth, its edge marked, and a stand saying what's coming. Light
+  // grey like the turntable: the truck's right side looks straight at it, and a dark one shows as a dark
+  // band along the doors.
+  const partsMat = flat(scene, 'showroom-parts', '#bcbcb8', { specular: 0.2 });
   const parts = MeshBuilder.CreateBox('showroom-parts', { width: PARTS.w, height: PARTS.h, depth: PARTS.d }, scene);
   parts.position.set(PARTS.x, PARTS.h / 2, PARTS.z);
   parts.material = partsMat;
@@ -248,9 +260,9 @@ export function createShowroom(scene) {
   envMeshes.push(parts);
   // A dashed outline on its top: a space kept, not yet filled.
   const outlineTex = canvasTexture(scene, 'showroom-parts-top', 512, 1024, (ctx, w, hh) => {
-    ctx.fillStyle = '#3a3d41';
+    ctx.fillStyle = '#bcbcb8';
     ctx.fillRect(0, 0, w, hh);
-    ctx.strokeStyle = '#f2b544';
+    ctx.strokeStyle = '#e0a12c';
     ctx.lineWidth = 8;
     ctx.setLineDash([36, 24]);
     ctx.strokeRect(30, 30, w - 60, hh - 60);
