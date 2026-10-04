@@ -1,0 +1,1 @@
+{"glbFrame": "y-up", "samples": 24, "exposure": 1.5, "cameras": {"athens_solved": {"measure": "../../measure/console/athens3b.camera.json", "photo": "../../refs/web/int-athens-3.jpg"}, "side_ext": {"eye": [-6000, 1300, 700], "look": [0, 1100, 700], "fovDeg": 32, "size": [1600, 700]}}}

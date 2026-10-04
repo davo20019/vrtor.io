@@ -1,0 +1,33 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "exposure": 1.5,
+ "cameras": {
+  "no_pillar": {
+   "measure": "../../measure/console/athens3b.camera.json",
+   "hide": [
+    "int_pillar_trim",
+    "glass",
+    "door_fr_glass"
+   ]
+  },
+  "no_pillar_body": {
+   "measure": "../../measure/console/athens3b.camera.json",
+   "hide": [
+    "int_pillar_trim",
+    "glass",
+    "door_fr_glass",
+    "body",
+    "door_fr_steel",
+    "det_pillars",
+    "det_frit"
+   ]
+  },
+  "only_pillar": {
+   "measure": "../../measure/console/athens3b.camera.json",
+   "only": [
+    "int_pillar_trim"
+   ]
+  }
+ }
+}

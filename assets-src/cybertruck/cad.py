@@ -531,6 +531,26 @@ def wiper_pivot(p):
     sweep = math.degrees(math.acos(np.dot(tip, across) / np.linalg.norm(tip)))
     return pivot, n / np.linalg.norm(n), sweep
 
+def side_glass_tip(p):
+    """Where the side glass's front tip sits along the truck. c003 through its fitted camera
+    (measure/windshield/c003-sidetip.md): the glass runs past the mirror and the door's front edge to a point
+    about over the front wheel, 799 back, where the A-pillar's lower edge comes down to the beltline."""
+    return 800.0
+
+def side_glass_top(p, s):
+    """The side glass's top edge at s: from the tip up along the A-pillar's lower edge, the steel band above it
+    about 60 deep at the door's front seam (c003: 40 to 45 px at 1.45 mm/px), then the roof edge less the margin
+    from there to the apex (the band narrowing to it)."""
+    pl = planes(p)
+    def belt(q):
+        return p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (q - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
+    def crease(q):
+        z = ZF - q
+        return min(edge_point(pl['roof'], pl['window_l'], z)[1], edge_point(pl['deck'], pl['window_l'], z)[1])
+    t, sm = side_glass_tip(p), 1553.0
+    pts = [(t, belt(t) + 12), (sm, crease(sm) - 60), (p['apex_s'], crease(p['apex_s']) - p['win_margin'])]
+    return float(np.interp(s, [q for q, _ in pts], [h for _, h in pts]))
+
 def panels(p):
     """Polygons sunk into the facets: name -> (points, outward normal, pocket depth, inset under the steel, kind)."""
     pl = planes(p)
@@ -566,10 +586,8 @@ def panels(p):
     def top(s):
         z = ZF - s
         return min(edge_point(pl['roof'], pl['window_l'], z)[1], edge_point(pl['deck'], pl['window_l'], z)[1]) - m
-    s0 = p['a_pillar_s']
-    while top(s0) < belt(s0) + 15:
-        s0 += 5
-    side_pts = [(s0, belt(s0) + 12), (p['apex_s'], top(p['apex_s'])), (p['c_pillar_s'], top(p['c_pillar_s'])),
+    s0 = side_glass_tip(p)
+    side_pts = [(s0, belt(s0) + 12), (1553.0, side_glass_top(p, 1553.0)), (p['apex_s'], top(p['apex_s'])), (p['c_pillar_s'], top(p['c_pillar_s'])),
                 (p['c_pillar_s'], belt(p['c_pillar_s']) + 12)]
     for key, sx in (('window_l', 1), ('window_r', -1)):
         pts = [on_plane(pl[key], y=h, z=ZF - s) for s, h in side_pts]
@@ -1133,6 +1151,10 @@ def door_trim(p, d, sx, driver):
             keys.append(Box(26, 6, 34).moved(Location((x, hk, Z(s)))))
     out['switch'] = keys
     out['open'] = [Box(24, 8, 30).moved(Location((hip + 15, ya + 3, Z(arm_s0 + 160))))]   # the door-open button, ahead of the pull pocket
+    # On the front door the white panel, cap and ambient line reach forward past the door's edge to the dash's
+    # end, closing the gap (int-athens-3: no dark seam between them).
+    if d == 'f':
+        s0 = s0 - 20
     white = SH([(s0, ya - 2), (s1, ya - 2), (s1, bt1), (s0, bt0)], hip - 40, xw)
     # Crease: front door from high at the front to low at the back; rear door the other way (a chevron).
     hc_hi, hc_lo = (lambda s: belt_h(p, s) - 70), ya + 25
@@ -1186,9 +1208,26 @@ def interior(p):
     out['dash_face'] = grey
     out['dash_vent'] = across([(1430, 1179.5), (1447, 1179.5), (1447, 1190.5), (1430, 1190.5)])
     out['ambient'] = across([(1440, 1157.5), (1469, 1157.5), (1469, 1161.5), (1440, 1161.5)])
-    out['dash_white'] = across([(1467, 1159), (1488, 1118), (1492, 1062), (1462, 1028), (1300, 1028), (1300, 1159)])
+    white = across([(1467, 1159), (1488, 1118), (1492, 1062), (1462, 1028), (1300, 1028), (1300, 1159)])
+    # At each door the block ends in a point (int-athens-3, dgRcedIkNOM-14, -15): its top chamfer drops 34 over the
+    # last 120 and its bottom one rises 97 over the last 85, meeting at 1,125 high (read on int-athens-3 against
+    # the block's 131 mm height at that end); in plan the end also turns forward 60 into the door.
+    E = white.bounding_box().max.X
+    def ht(x): return 1159 - (x - (E - 120)) * 34 / 120
+    def hb(x): return 1028 + (x - (E - 85)) * 97 / 85
+    cuts = []
+    for sx in (1, -1):
+        cuts.append(XH([(sx * (E - 130), ht(E - 130)), (sx * (E + 30), ht(E + 30)), (sx * (E + 30), 1220), (sx * (E - 130), 1220)], 1250, 1550))
+        cuts.append(XH([(sx * (E - 95), hb(E - 95)), (sx * (E + 30), hb(E + 30)), (sx * (E + 30), 990), (sx * (E - 95), 990)], 1250, 1550))
+        cuts.append(XS([(sx * (E - 60), 1510), (sx * (E + 20), 1510), (sx * (E + 20), 1510 - 80 - 38)], 1000, 1180))
+    out['dash_white'] = white - Compound(cuts)
     lower = across([(1462, 1029), (1430, 880), (1390, 700), (1170, 700), (1170, 1029)])
-    glove = SH([(1300, 1012), (1520, 1012), (1520, 860), (1300, 860)], -700, -262) - SH([(1290, 1009), (1530, 1009), (1530, 863), (1290, 863)], -697, -265)
+    # The glovebox: a slim drawer face right under the white block, from just outboard of the screen to near the
+    # door (CC015C4E, 18, through the dash camera on the lower face: x -236 to -612 at the top, -212 to -604 at
+    # the bottom, 968 high; measure/int/glove.md). B379A2C2 shows the same leaning inner edge.
+    gl = [(-236, 1024), (-612, 1024), (-604, 968), (-212, 968)]
+    gi = [(-237.5, 1021), (-609, 1021), (-601.5, 971), (-215.5, 971)]
+    glove = XH(gl, 1300, 1530) - XH(gi, 1290, 1540)
     out['dash_lower'] = lower - glove                    # the glovebox's outline, a 3 mm groove
     # 18.5 in screen, landscape, centred on the truck, leaning back 7 degrees (seat side view; the dash render's
     # camera fits better with it than with 15); its face carries screen.png.
@@ -1221,25 +1260,29 @@ def interior(p):
     # the cupholder pod (one figure-eight pocket, pinched between the cups by faceted wedges from its front and
     # back walls), the padded grey armrest lid, the rear section, and the rear face with the rear screen in its
     # vent surround. The top is a satin silver band that wraps 20 down the black sides; under it the body steps
-    # in 10 (2298443C) and narrows to the floor, its front face leaning back. Front measured at 1,494 back, 918
+    # in 10 (2298443C) and narrows to the floor, its front face leaning back. Front measured at 1,614 back, 918
     # high (dash camera); the rest scaled from the pictures (spec.md, "Console top").
     se = c['console_end_s']
     # The tray holds a charger well about as long as the cupholder pod (2298443C, int-athens-3), and the lid is
     # about twice as long as it is wide (34C29DB3, open): the lid starts 1,795 back, right behind the pod.
-    lid0, lid1 = 1795.0, 2330.0
+    # Front and lid measured on the dash render through its camera on their own heights (rim 918, lid 943;
+    # measure/int/glove.md): the rim's front edge 1,614 back, the lid's front 1,897. (Taken before as 1,494 on the
+    # x = 0 plane, a near-grazing ray, at the pixel of the dash's lower edge.) The lid keeps its 535 length.
+    cf = 1614.0
+    lid0, lid1 = 1897.0, 2432.0
     rim_h, band, step = 918.0, 20.0, 10.0
     crease = rim_h - band
     # The lid's top is level with the door armrests (943): from the driver's eye the whole pod shows in front of
     # it (int-athens-3), which a lid more than ~25 above the rim would hide.
     ah = c['door_arm_h']
-    side = [(1560, c['floor'] - 2), (1494, 690), (1494, rim_h), (lid0, rim_h), (lid0, ah), (lid1, ah), (lid1 + 15, ah + 12),
+    side = [(cf + 66, c['floor'] - 2), (cf, 690), (cf, rim_h), (lid0, rim_h), (lid0, ah), (lid1, ah), (lid1 + 15, ah + 12),
             (se, ah + 12), (se, 640), (se - 90, 560), (se - 120, c['floor'] - 2)]
     frontl = [(-112, c['floor'] - 2), (112, c['floor'] - 2), (146 - step, crease), (146, crease), (146, rim_h), (132, ah + 12),
               (-132, ah + 12), (-146, rim_h), (-146, crease), (-146 + step, crease)]
-    shell = SH(side, -160, 160) & XH(frontl, 1480, se + 10)
+    shell = SH(side, -160, 160) & XH(frontl, cf - 14, se + 10)
     # the charger well: its front wall slopes back 34 degrees from vertical from just under the rim to the floor
-    wf, wfl, ww = 1514.0, 785.0, 124.0
-    A, B = np.array([wf, 904.0]), np.array([1590.0, 790.0])
+    wf, wfl, ww = cf + 20, 785.0, 124.0
+    A, B = np.array([wf, 904.0]), np.array([cf + 96, 790.0])
     d = (B - A) / np.linalg.norm(B - A)
     n = np.array([-d[1], d[0]])                           # normal pointing back and up, off the slope into the well
     if n[0] < 0:
@@ -1259,7 +1302,7 @@ def interior(p):
     wb = cups_s - cb - 18                                 # the well's back wall, 18 thick, just ahead of the cupholders (886D0FDA)
     well = SH([(wf, 1000), tuple(A), tuple(B), (B[0], wfl), (wb, wfl), (wb, 1000)], -ww, ww)
     hollow = well + cups + passage + pinch
-    top = SH([(1480, crease), (se + 20, crease), (se + 20, rim_h), (1480, rim_h)], -200, 200)
+    top = SH([(cf - 14, crease), (se + 20, crease), (se + 20, rim_h), (cf - 14, rim_h)], -200, 200)
     lid = SH([(lid0, rim_h), (lid1, rim_h), (lid1, ah + 1), (lid0, ah + 1)], -200, 200)
     con = shell - top - lid - hollow
     out['console'] = con
@@ -1362,6 +1405,26 @@ def interior(p):
     b0, b1 = p['seam_2'] - PILLAR_HALF + 2, p['seam_2'] + PILLAR_HALF - 2
     bpil = SH([(b0, c['floor']), (b1, c['floor']), (b1, 2000), (b0, 2000)], -1300, 1300) & (hull(p, inset=c['wall'] - 3) - hull(p, inset=c['wall'] + 40))
     out['pillar_trim'] = bpil - Box(1520, 3000, 8000)                 # only the sides, outboard of 760
+    # The A-pillar's inner trim: a wide suede panel just inside the side glass, covering its front part from the
+    # dash up to the roof edge; the window opening seen from the cabin starts behind it. Its rear edge, through
+    # int-athens-3's solved camera (measure/console/athens-opening.md): 1,390 back at the beltline, rising to a
+    # rounded corner at 1,445, 1,462 high, then along the glass's top.
+    apil = []
+    for key in ('window_l', 'window_r'):
+        wp, wn = pl[key]
+        wn = np.array(wn) * (1 if np.dot(wn, [1 if key == 'window_l' else -1, 0, 0]) > 0 else -1)     # outward
+        def wpt(s, h):
+            return on_plane(pl[key], y=h, z=ZF - s) - wn * 14
+        def belt(s):
+            return p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (s - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
+        def ridge(s):
+            z = ZF - s
+            return edge_point(pl['roof'], pl[key], z)[1] - 5
+        outline = [(1000, belt(1000) - 20), (1390, belt(1390) - 20), (1392, belt(1392) + 12), (1418, 1400), (1430, 1440),
+                   (1445, 1462), (1450, ridge(1450)), (1000, ridge(1000))]
+        w = Wire.make_polygon([tuple(wpt(s, h)) for s, h in outline], close=True)
+        apil.append(extrude(Face(w), amount=16, dir=tuple(-wn)))
+    out['a_pillar_inner'] = Compound(apil)
     out['rear_wall'] = (SH([(c['cab_rear_s'] - 26, c['floor']), (c['cab_rear_s'] + 5, c['floor']), (c['cab_rear_s'] + 5, 2000), (c['cab_rear_s'] - 26, 2000)], -1300, 1300) & inner)
     # Sun visors, stowed flat under the header (dgRcedIkNOM-31; the manual's dash render shows none over the
     # glass). Sizes are guesses.
@@ -1409,6 +1472,39 @@ def interior(p):
             XS([(-140, 1330), (-640, 1330), (-690, 1420), (-690, 2080), (-140, 2080)], c['floor'] + 13, c['floor'] + 22),
             XS([(-690, 2690), (690, 2690), (690, 2700 + 300), (640, 3050), (-640, 3050), (-690, 3000)], c['floor'] + 13, c['floor'] + 22)]
     out['mats'] = Compound(mats) - out['console']
+    # Each mat's edge is bound with a smoother band, 25 wide and 2 proud (dgRcedIkNOM-25). Outlines: guess.
+    def binding(pts):
+        w = Wire.make_polygon([(x, 0, Z(s)) for x, s in pts], close=True)
+        ring = Face(w) - Face(w.offset_2d(-25, kind=Kind.INTERSECTION))
+        return extrude(ring.moved(Location((0, c['floor'] + 13, 0))), amount=11, dir=(0, 1, 0))
+    outlines = [[(140, 1330), (640, 1330), (690, 1420), (690, 2080), (140, 2080)],
+                [(-140, 1330), (-640, 1330), (-690, 1420), (-690, 2080), (-140, 2080)],
+                [(-690, 2690), (690, 2690), (690, 3000), (640, 3050), (-640, 3050), (-690, 3000)]]
+    out['mat_edges'] = Compound([binding(o) for o in outlines]) - out['console']
+    # Between the footwells, ahead of the console: a panel of brushed aluminium ribs along the truck, black between
+    # them, from the dash's lower edge down to the floor (dgRcedIkNOM-16, -25, int-athens-3). Measured through the
+    # dash camera (CC015C4E, the ribs' ends showing above the console, measure/int/glove.md): top at 881 high,
+    # 1,444 back, about +-125 across; six ribs (CC015C4E: five dark gaps). It slopes down to the floor ahead of the console's lower
+    # front, reaching the floor at 1,640, then along the floor under the console's front (1,614 at the rim, its
+    # foot 1,680). Rib height, the ramp's slope and its foot: guess.
+    fl = c['floor'] + 12.5
+    P0, P1, P2 = np.array([1444.0, 884.0]), np.array([1640.0, fl]), np.array([1780.0, fl])
+    d = (P1 - P0) / np.linalg.norm(P1 - P0)
+    nr = np.array([-d[1], d[0]])                          # off the ramp, back and up
+    if nr[0] < 0:
+        nr = -nr
+    def offset_profile(t):
+        """The ramp-then-floor line moved t off its face; the corner where the two offset lines meet."""
+        a = P0 + nr * t
+        hh = fl + t
+        corner = a + d * ((hh - a[1]) / d[1])
+        return [tuple(a), tuple(corner), (P2[0], hh)]
+    base_line, rib_line = offset_profile(0.0), offset_profile(10.0)
+    back = offset_profile(-8.0)
+    out['center_rib_base'] = SH(base_line + back[::-1], -125, 125)
+    pitch, rw = 250.0 / 6, 28.0
+    ribs = [SH(rib_line + base_line[::-1], xc - rw / 2, xc + rw / 2) for xc in (-pitch * 2.5 + k * pitch for k in range(6))]
+    out['center_ribs'] = Compound(ribs)
     # Shapes from the manual's cabin render (CC015C4E, 14 and 15): sizes from the pads' widths against their
     # 170 mm spacing (47 px, 3.6 mm/px). The brake is a hanging pedal, a rounded aluminium pad 130 wide with
     # eight black rubber strips running up it, on a thin arm rising inboard into the dash. The accelerator is
@@ -1560,7 +1656,10 @@ def door_regions(p, glass=True):
     for d, (s0, s1) in door_spans(p).items():
         poly = [(ZF - s0, 480.0), (ZF - s1, 480.0), (ZF - s1, 2100.0), (ZF - s0, 2100.0)]
         prism_l = side_prism(poly, x_in, 1300)
-        a = halfspace_cut(prism_l, pl['roof'][0] - pl['roof'][1] * 12, pl['roof'][1])
+        # the front door's window reaches forward past its seam to the glass's tip, over the fender
+        ga = side_glass_tip(p) - 20 if d == 'f' else s0
+        prism_a = side_prism([(ZF - ga, 480.0), (ZF - s1, 480.0), (ZF - s1, 2100.0), (ZF - ga, 2100.0)], x_in, 1300)
+        a = halfspace_cut(prism_a, pl['roof'][0] - pl['roof'][1] * 12, pl['roof'][1])
         a = halfspace_cut(a, pl['deck'][0] - pl['deck'][1] * 12, pl['deck'][1])
         wp, wn = pl['window_l']
         a = halfspace_cut(a, wp - wn * 120, -wn)

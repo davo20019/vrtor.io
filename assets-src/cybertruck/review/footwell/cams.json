@@ -1,0 +1,110 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "cameras": {
+  "dash_manual": {
+   "measure": "../../measure/int/dash-cam.camera.json",
+   "photo": "../../refs/tesla/manual-interior-GUID-CC015C4E-DAD0-4235-9D66-AE0EB87D4452-online-en-US.png"
+  },
+  "passenger_down": {
+   "eye": [
+    -390,
+    1411,
+    436
+   ],
+   "look": [
+    -280,
+    480,
+    1350
+   ],
+   "fovDeg": 80,
+   "size": [
+    700,
+    1100
+   ]
+  },
+  "driver_down": {
+   "eye": [
+    390,
+    1380,
+    600
+   ],
+   "look": [
+    150,
+    450,
+    1300
+   ],
+   "fovDeg": 75,
+   "size": [
+    1280,
+    720
+   ],
+   "photo": "../../refs/video/frames/dgRcedIkNOM-25.jpg"
+  },
+  "athens": {
+   "eye": [
+    390,
+    1300,
+    400
+   ],
+   "look": [
+    -150,
+    900,
+    1600
+   ],
+   "fovDeg": 95,
+   "size": [
+    1400,
+    1050
+   ],
+   "photo": "../../refs/web/int-athens-3.jpg"
+  },
+  "side_x": {
+   "eye": [
+    1500,
+    700,
+    1250
+   ],
+   "look": [
+    0,
+    650,
+    1250
+   ],
+   "fovDeg": 40,
+   "size": [
+    1000,
+    700
+   ],
+   "only": [
+    "int_center",
+    "int_console",
+    "int_dash",
+    "int_carpet",
+    "int_mats",
+    "int_mat_edges"
+   ]
+  },
+  "driver_down2": {
+   "eye": [
+    390,
+    1380,
+    600
+   ],
+   "look": [
+    150,
+    450,
+    1300
+   ],
+   "fovDeg": 75,
+   "size": [
+    1280,
+    720
+   ],
+   "photo": "../../refs/video/frames/dgRcedIkNOM-25.jpg",
+   "hide": [
+    "int_console"
+   ]
+  }
+ },
+ "exposure": 2.0
+}

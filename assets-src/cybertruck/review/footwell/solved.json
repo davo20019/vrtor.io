@@ -1,0 +1,32 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "exposure": 1.5,
+ "cameras": {
+  "athens_solved": {
+   "measure": "../../measure/console/athens3b.camera.json",
+   "photo": "../../refs/web/int-athens-3.jpg"
+  },
+  "no_glass": {
+   "measure": "../../measure/console/athens3b.camera.json",
+   "hide": [
+    "glass",
+    "door_fr_glass",
+    "door_fl_glass",
+    "door_rr_glass",
+    "door_rl_glass"
+   ]
+  },
+  "no_mirror": {
+   "measure": "../../measure/console/athens3b.camera.json",
+   "hide": [
+    "mirror",
+    "door_fr_mirror",
+    "door_fl_mirror",
+    "glass",
+    "door_fr_glass",
+    "door_fl_glass"
+   ]
+  }
+ }
+}

@@ -1,0 +1,54 @@
+{
+ "glbFrame": "y-up",
+ "samples": 16,
+ "exposure": 1.5,
+ "cameras": {
+  "side_in": {
+   "eye": [
+    0,
+    1250,
+    995
+   ],
+   "look": [
+    -1000,
+    1250,
+    995
+   ],
+   "fovDeg": 90,
+   "size": [
+    1200,
+    800
+   ],
+   "only": [
+    "body",
+    "door_fr_steel",
+    "door_fr_glass",
+    "glass",
+    "int_dash",
+    "int_pillar",
+    "det_pillars"
+   ]
+  },
+  "side_in_nod": {
+   "eye": [
+    0,
+    1250,
+    995
+   ],
+   "look": [
+    -1000,
+    1250,
+    995
+   ],
+   "fovDeg": 90,
+   "size": [
+    1200,
+    800
+   ],
+   "only": [
+    "body",
+    "int_dash"
+   ]
+  }
+ }
+}

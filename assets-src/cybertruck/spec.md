@@ -353,7 +353,7 @@ render, both scaled to 318 mm): outline IoU 0.965, mean edge distance 1.6 mm, he
 | Dome light under the header | 1,826 back | dash camera | (was taken as the header) |
 | Overhead console | lower corners +-136 at 1,490 high, 1,578 back | dash camera | none |
 | Rear-view mirror | 195 x 50, 1,464 to 1,513 high, 1,621 back | dash camera | 250 x 72 at the apex |
-| Console front | 1,494 back, top 918 | dash camera | 1,480 |
+| Console front | 1,614 back at the rim (918), lid front 1,897 | dash camera on the rim's and lid's own heights (measure/int/glove.md); 1,494 before was the dash's lower edge, read on the near-grazing x = 0 plane. int-athens-3's camera solves to 23 px RMS with it (54 with 1,494) | 1,494 |
 | Pedals across | brake w 460, accelerator w 290 (brake outboard) | dash camera | swapped |
 | Pedal shapes | brake: hanging, rounded pad 130 x 80 with eight black rubber strips, arm rising inboard into the dash; accelerator: floor-hinged, 50 x 220 with a rounded top, four strips down its upper part, hinge block on the floor | manual-interior-CC015C4E (14, 15), widths against their 170 mm spacing (3.6 mm/px) | plain boxes 120 x 85 and 55 x 220, fully metallic (read black in the footwell) |
 | Front seat side profile | back's rear edge (2,447, 675) (2,493, 812) (2,626, 1,316), headrest tip 1,637 high at 2,470; front face (2,300, 760) to (2,425, 1,225); cushion front 1,765, top 742 to 760 front, 716 rear | seat side view at 4.58 | slab and box |
@@ -365,7 +365,7 @@ render, both scaled to 318 mm): outline IoU 0.965, mean edge distance 1.6 mm, he
 | Rear backrest | 21 deg | manual-childseats-D8CE20B2, side view | 25 |
 | Door armrest face | w 700 (armrest), lower panel w 727 at hip height | hip room 1,453 | w 792 |
 | Door white panel crease | w 806 front, 790 rear | shoulder room 1,608 / 1,576 | flat panel |
-| Console proportions | tray 1,494 to 1,795 (charger well 1,514 to 1,665, cupholder pod to 1,795), lid 1,795 to 2,330, rear block to 2,600 | the well about as long as the pod (2298443C, int-athens-3); the open lid about twice as long as wide (34C29DB3) | tray to 1,880, lid 1,880 to 2,330 (35/40/25 by eye) |
+| Console proportions | tray 1,614 to 1,897 (charger well from 1,634, cupholder pod to 1,897), lid 1,897 to 2,432, rear block to 2,600 | the well about as long as the pod (2298443C, int-athens-3); the open lid about twice as long as wide (34C29DB3) | tray to 1,880, lid 1,880 to 2,330 (35/40/25 by eye) |
 | Console top | satin silver band, rim 918, wrapping 20 down the black sides the whole length; below it the body steps in 10 (+-136) and narrows to +-112 at the floor | int-athens-3 (a real truck: silver deck, thin silver edge on the side); the step from 2298443C | light grey plate on the tray only; then a 60 white band (2298443C shows a white-trim version) |
 | Console lid | light warm grey padded leather, top 943 (25 above the rim), level with the door armrests | int-athens-3: from the driver's seat the whole cupholder pod shows in front of the lid, which a lid more than ~25 above the rim would hide from the eye (s 2,260, h 1,411) | 22, 50, then 90 above the rim; the 90 came from the open lid's thickness, which includes the part that drops into the bin |
 | Cupholders | one figure-eight pocket: chamfered octagons 80 across, 87 along, chamfer 13, centres +-90, 15 ahead of the lid; between them a 36 passage, the front and back walls coming in as wedges whose tops slope down 40; grip tabs on the side walls | 886D0FDA (pair spans 0.89 of the width); int-athens-3 (the pinch) | separate octagons with a lowered bridge |
@@ -386,7 +386,7 @@ Shapes taken from pictures, sizes partly guessed:
   grille low at the front. Crease heights and the pocket and grille outlines: **guess**.
 - Dash profile (frames dgRcedIkNOM-14, -16): shelf lip, grey face 12 mm behind it with the vent slot, ambient
   line, white block (45 deg upper chamfer, front face 10 mm proud of the lip, lower chamfer), dark lower
-  dash, glovebox groove on the passenger side (B379A2C2). The face depths and the glovebox outline: **guess**.
+  dash, glovebox groove on the passenger side (measured since: see "Passenger corner and footwell"). The face depths: **guess**.
 
 - Front seat details (dgRcedIkNOM-13, -26, -37, -45): light grey piping along the back's front corners and the
   cushion's side bolsters, the insert's V seams (shoulders to the lumbar, then straight down), the map pocket on
@@ -454,6 +454,25 @@ measured through the dash render's solved camera. Checks:
   cowl line can't do. Left as is until a view that shows the cowl line across the hood is measured.
 - Top view (dims-top.jpg, 4.11 mm/px; 1,427, 1,549 and the 1,751 diagonal agree to 2 mm) and the A- and
   B-pillar widths (dims-pillars.jpg: 1,543, 1,689, 1,691, 1,629 diagonal) are saved for checking the cab.
+
+### Passenger corner and footwell (2026-10-04)
+
+Checked from the passenger seat against int-athens-3 (camera solved from the screen corners, yoke and console
+front: measure/console/athens3b.md), the dash render's camera, and frames dgRcedIkNOM-14, -15, -16, -25.
+
+| What | Built | Source |
+|---|---|---|
+| Glovebox | slim drawer face under the white block: x -236 to -612 at 1,024, -212 to -604 at 968 (the inner end leans) | CC015C4E item 18 through the dash camera (measure/int/glove.md); B379A2C2 |
+| Centre ribs | six brushed aluminium ribs along the truck, 28 wide over +-125, black between, from the dash's lower edge (881 high, 1,444 back) down to the floor at 1,640 and on under the console | dash camera (the ribs' ends above the console); dgRcedIkNOM-16, -25; int-athens-3. Slope and rib height: guess |
+| Dash block ends | pointed: the top chamfer drops 34 over the last 120, the bottom one rises 97 over the last 85, meeting at 1,125; in plan the end turns forward 60 | int-athens-3 against the block's 131 mm height; -14, -15 |
+| Front door trim | white panel, cap and ambient line start 20 ahead of the door's edge, flush with the dash's end | int-athens-3 (no dark seam) |
+| Side glass tip | 800 back on the beltline, about over the front wheel; the glass's top edge 60 under the roof edge at the door's front seam (1,553), then the margin to the apex | c003 through its fitted camera (measure/windshield/c003-sidetip.md), c022. It was 1,514 with a straight top edge to the apex, which left a steel triangle where the glass is |
+| Front door glass | reaches forward with the glass to the tip, so it opens with the door | as the real truck |
+| A-pillar inner trim | suede panel 14 inside the side glass from 1,000 to the window opening's edge: 1,390 back at the beltline, rounded up to 1,445 at 1,462 | int-athens-3's solved camera (measure/console/athens-opening.md) |
+| Carpet and mats | carpet a fine cut pile; mats a flatter velour with a 25 mm bound edge | dgRcedIkNOM-25. Mat outlines: guess |
+
+Not yet matched: the real door sill under the glass is grey and deeper than the black cap; the mirror shows
+through the window opening in int-athens-3 but not through the model's.
 
 ### Still guesses
 

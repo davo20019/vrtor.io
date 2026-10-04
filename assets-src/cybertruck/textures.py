@@ -146,10 +146,13 @@ normal_wrapped(leather, 2.2).save(OUT / 'leather_normal.png')
 # Suede: fine fibres, no pattern.
 suede = (128 + 1.2 * tiling_noise(C, 2, 21) + 0.6 * tiling_noise(C, 8, 22)).clip(0, 255)
 normal_wrapped(suede, 1.4).save(OUT / 'suede_normal.png')
-# Carpet: loop pile, about 2 mm, deep.
-pile = (128 + 2.5 * tiling_noise(C, 8, 31) + 1.5 * tiling_noise(C, 4, 32)).clip(0, 255)
-normal_wrapped(pile, 4.0).save(OUT / 'carpet_normal.png')
-print('textures: wrote leather_normal.png, suede_normal.png, carpet_normal.png')
+# Carpet: a fine, even cut pile under 1 mm (dgRcedIkNOM-25: smooth at arm's length, no pebbling).
+pile = (128 + 1.6 * tiling_noise(C, 2, 31) + 0.8 * tiling_noise(C, 4, 32)).clip(0, 255)
+normal_wrapped(pile, 2.0).save(OUT / 'carpet_normal.png')
+# The mats: a denser velour, finer and flatter than the carpet round them.
+velour = (128 + 1.2 * tiling_noise(C, 2, 33) + 0.3 * tiling_noise(C, 16, 34)).clip(0, 255)
+normal_wrapped(velour, 1.4).save(OUT / 'mat_normal.png')
+print('textures: wrote leather_normal.png, suede_normal.png, carpet_normal.png, mat_normal.png')
 
 # The dash shelf's weave (dgRcedIkNOM-14): a 2 x 2 basket of 4 mm blocks, threads 2 mm apart, alternating
 # direction block by block, like carbon fibre. 16 px blocks divide the 1024 px tile, so it wraps cleanly.

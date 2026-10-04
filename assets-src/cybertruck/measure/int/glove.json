@@ -1,0 +1,328 @@
+{
+ "_": "Manual dash render (Tesla CAD): camera from the screen (centred, model placement), the yoke centre and the windshield glass's lower corners.",
+ "photo": "../../refs/tesla/manual-interior-GUID-CC015C4E-DAD0-4235-9D66-AE0EB87D4452-online-en-US.png",
+ "refs": {
+  "screen TL": {
+   "px": [
+    351.5,
+    219.5
+   ],
+   "mm": [
+    206,
+    1278.9475773417973,
+    1219.3896978470927
+   ]
+  },
+  "screen TR": {
+   "px": [
+    535.5,
+    219.5
+   ],
+   "mm": [
+    -206,
+    1278.9475773417973,
+    1219.3896978470927
+   ]
+  },
+  "screen BL": {
+   "px": [
+    351.5,
+    328
+   ],
+   "mm": [
+    206,
+    1045.1935273798429,
+    1156.7554889322826
+   ]
+  },
+  "screen BR": {
+   "px": [
+    535.5,
+    328
+   ],
+   "mm": [
+    -206,
+    1045.1935273798429,
+    1156.7554889322826
+   ]
+  },
+  "glass base L": {
+   "px": [
+    212,
+    209
+   ],
+   "mm": [
+    790.6,
+    1382.8,
+    1711.5
+   ]
+  },
+  "glass base R": {
+   "px": [
+    639,
+    210
+   ],
+   "mm": [
+    -790.6,
+    1382.8,
+    1711.5
+   ]
+  },
+  "yoke centre": {
+   "px": [
+    250,
+    290
+   ],
+   "mm": [
+    390,
+    1150,
+    1012.8
+   ]
+  }
+ },
+ "queries": {
+  "glove TL": {
+   "px": [
+    540,
+    320
+   ],
+   "plane": {
+    "point": [
+     0,
+     955,
+     1249.0
+    ],
+    "normal": [
+     0,
+     32,
+     149
+    ]
+   }
+  },
+  "glove TR": {
+   "px": [
+    700,
+    320
+   ],
+   "plane": {
+    "point": [
+     0,
+     955,
+     1249.0
+    ],
+    "normal": [
+     0,
+     32,
+     149
+    ]
+   }
+  },
+  "glove BL": {
+   "px": [
+    527,
+    352
+   ],
+   "plane": {
+    "point": [
+     0,
+     955,
+     1249.0
+    ],
+    "normal": [
+     0,
+     32,
+     149
+    ]
+   }
+  },
+  "glove B mid": {
+   "px": [
+    600,
+    354
+   ],
+   "plane": {
+    "point": [
+     0,
+     955,
+     1249.0
+    ],
+    "normal": [
+     0,
+     32,
+     149
+    ]
+   }
+  },
+  "glove BR": {
+   "px": [
+    690,
+    352
+   ],
+   "plane": {
+    "point": [
+     0,
+     955,
+     1249.0
+    ],
+    "normal": [
+     0,
+     32,
+     149
+    ]
+   }
+  },
+  "dash low edge mid": {
+   "px": [
+    600,
+    378
+   ],
+   "plane": {
+    "point": [
+     0,
+     955,
+     1249.0
+    ],
+    "normal": [
+     0,
+     32,
+     149
+    ]
+   }
+  },
+  "dash low edge L": {
+   "px": [
+    520,
+    378
+   ],
+   "plane": {
+    "point": [
+     0,
+     955,
+     1249.0
+    ],
+    "normal": [
+     0,
+     32,
+     149
+    ]
+   }
+  },
+  "glove TL y": {
+   "px": [
+    540,
+    320
+   ],
+   "plane": {
+    "y": 1028
+   }
+  },
+  "glove TR y": {
+   "px": [
+    700,
+    320
+   ],
+   "plane": {
+    "y": 1028
+   }
+  },
+  "rib slot top": {
+   "px": [
+    440,
+    386
+   ],
+   "plane": {
+    "x": 0
+   }
+  },
+  "rib slot bot": {
+   "px": [
+    440,
+    397
+   ],
+   "plane": {
+    "x": 0
+   }
+  },
+  "rib L edge": {
+   "px": [
+    388,
+    392
+   ],
+   "plane": {
+    "z": 1295.0
+   }
+  },
+  "rib R edge": {
+   "px": [
+    478,
+    392
+   ],
+   "plane": {
+    "z": 1295.0
+   }
+  },
+  "console front rim (y918)": {
+   "px": [
+    443,
+    398
+   ],
+   "plane": {
+    "y": 918
+   }
+  },
+  "console front rim L (y918)": {
+   "px": [
+    396,
+    400
+   ],
+   "plane": {
+    "y": 918
+   }
+  },
+  "console front rim R (y918)": {
+   "px": [
+    470,
+    400
+   ],
+   "plane": {
+    "y": 918
+   }
+  },
+  "lid front L (y943)": {
+   "px": [
+    388,
+    465
+   ],
+   "plane": {
+    "y": 943
+   }
+  },
+  "rib top (y881)": {
+   "px": [
+    440,
+    386
+   ],
+   "plane": {
+    "y": 881
+   }
+  },
+  "dash low edge centre (y900)": {
+   "px": [
+    440,
+    378
+   ],
+   "plane": {
+    "y": 900
+   }
+  },
+  "screen bottom ref": {
+   "px": [
+    443,
+    328
+   ],
+   "plane": {
+    "y": 1045
+   }
+  }
+ }
+}

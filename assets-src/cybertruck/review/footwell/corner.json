@@ -1,0 +1,98 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "exposure": 1.5,
+ "cameras": {
+  "corner": {
+   "eye": [
+    390,
+    1300,
+    400
+   ],
+   "look": [
+    -700,
+    1150,
+    1250
+   ],
+   "fovDeg": 40,
+   "size": [
+    1000,
+    750
+   ]
+  },
+  "corner_noint": {
+   "eye": [
+    390,
+    1300,
+    400
+   ],
+   "look": [
+    -700,
+    1150,
+    1250
+   ],
+   "fovDeg": 40,
+   "size": [
+    1000,
+    750
+   ],
+   "hide": [
+    "door_"
+   ]
+  },
+  "corner_mirror14": {
+   "eye": [
+    -300,
+    1250,
+    700
+   ],
+   "look": [
+    -800,
+    1100,
+    1300
+   ],
+   "fovDeg": 60,
+   "size": [
+    1280,
+    720
+   ],
+   "photo": "../../refs/video/frames/dgRcedIkNOM-14.jpg"
+  },
+  "athens": {
+   "eye": [
+    390,
+    1300,
+    400
+   ],
+   "look": [
+    -150,
+    900,
+    1600
+   ],
+   "fovDeg": 95,
+   "size": [
+    1400,
+    1050
+   ],
+   "photo": "../../refs/web/int-athens-3.jpg"
+  },
+  "driver15": {
+   "eye": [
+    390,
+    1250,
+    500
+   ],
+   "look": [
+    600,
+    1050,
+    1300
+   ],
+   "fovDeg": 65,
+   "size": [
+    1280,
+    720
+   ],
+   "photo": "../../refs/video/frames/dgRcedIkNOM-15.jpg"
+  }
+ }
+}

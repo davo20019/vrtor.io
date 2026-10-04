@@ -93,9 +93,10 @@ M = {
     # brushed aluminium, light in the manual render; fully metallic it mirrored the dark footwell and read black
     'pedal': material('pedal_metal', srgb(176, 176, 178), 0.4, metallic=0.6),
     'silver': material('satin_silver', srgb(168, 168, 170), 0.35, metallic=0.6),
-    'carpet': material('carpet_black', srgb(26, 26, 27), 1.0, normal_map=PARTS / 'carpet_normal.png', normal_strength=0.8),
+    'carpet': material('carpet_black', srgb(26, 26, 27), 1.0, normal_map=PARTS / 'carpet_normal.png', normal_strength=0.5),
     'door_dark': material('door_panel_dark', srgb(34, 34, 36), 0.7),
-    'mat': material('floor_mat', srgb(30, 30, 31), 0.95, normal_map=PARTS / 'carpet_normal.png', normal_strength=0.5),
+    'mat': material('floor_mat', srgb(30, 30, 31), 0.95, normal_map=PARTS / 'mat_normal.png', normal_strength=0.4),
+    'mat_edge': material('mat_binding', srgb(22, 22, 23), 0.7),
     'pillar': material('pillar_black', srgb(14, 14, 15), 0.45),
     'door_button': material('door_button', srgb(10, 10, 11), 0.15),
     # unlit, an amber lens under smoked plastic (c085, c147); the app lights it when its turn signal blinks
@@ -267,8 +268,8 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'yoke_btn_signal_right': 'yoke_pod', 'yoke_btn_signal_left': 'yoke_pod', 'yoke_btn_high_beam': 'yoke_pod', 'yoke_btn_wiper': 'yoke_pod',
             'console': 'console', 'console_rim': 'console_rim', 'console_lid': 'console_lid', 'charger_trim': 'dash_top', 'chargers': 'dash_top', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
             'seats_front': 'seat', 'seats_rear': 'seat', 'seat_base': 'armrest', 'seat_knobs': 'switch', 'rear_armrest': 'seat',
-            'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
-            'overhead': 'overhead', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'pedals': 'pedal', 'pedal_grips': 'yoke', 'pedal_arms': 'tiedown',
+            'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'a_pillar_inner': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
+            'overhead': 'overhead', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'mat_edges': 'mat_edge', 'center_ribs': 'pedal', 'center_rib_base': 'pillar', 'pedals': 'pedal', 'pedal_grips': 'yoke', 'pedal_arms': 'tiedown',
             'piping': 'piping', 'belts': 'belt', 'belt_hw': 'bezel',
             'overhead_strip': 'bezel', 'overhead_keys': 'switch', 'overhead_arms': 'overhead', 'mirror_glass': 'mirror_glass', 'tweeters': 'grille', 'usb': 'screen',
             # on the doors (door_<k>_int_<name>)

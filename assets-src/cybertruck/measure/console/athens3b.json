@@ -1,0 +1,84 @@
+{
+ "_": "int-athens-3 (CC0, a real truck from the driver's seat): camera from the screen's corners (dash-cam.json), the yoke centre and the console's front top corners; measures where the lid starts and how high it stands.",
+ "photo": "../../refs/web/int-athens-3.jpg",
+ "refs": {
+  "screen TL": {
+   "px": [
+    893.6,
+    524.5
+   ],
+   "mm": [
+    206,
+    1278.95,
+    1219.39
+   ]
+  },
+  "screen TR": {
+   "px": [
+    1371.0,
+    502.7
+   ],
+   "mm": [
+    -206,
+    1278.95,
+    1219.39
+   ]
+  },
+  "screen BR": {
+   "px": [
+    1362.8,
+    786.4
+   ],
+   "mm": [
+    -206,
+    1045.19,
+    1156.76
+   ]
+  },
+  "screen BL": {
+   "px": [
+    904.5,
+    871.0
+   ],
+   "mm": [
+    206,
+    1045.19,
+    1156.76
+   ]
+  },
+  "yoke centre": {
+   "px": [
+    568,
+    960
+   ],
+   "mm": [
+    390,
+    1150,
+    1012.8
+   ]
+  },
+  "console front near top": {
+   "px": [
+    1095.6,
+    1083.6
+   ],
+   "mm": [
+    146,
+    918,
+    1081
+   ]
+  },
+  "console front far top": {
+   "px": [
+    1341.4,
+    998.5
+   ],
+   "mm": [
+    -146,
+    918,
+    1081
+   ]
+  }
+ },
+ "queries": {}
+}
