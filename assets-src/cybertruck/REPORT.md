@@ -1,6 +1,6 @@
-# Cybertruck: build-3d-model test report (2026-10-03)
+# Cybertruck: building-3d-replicas test report (skill then called build-3d-model) (2026-10-03)
 
-A test of the build-3d-model skill on a large, metallic object. Evidence, structure and parameters are
+A test of the building-3d-replicas skill on a large, metallic object. Evidence, structure and parameters are
 in spec.md; the last review round is review/round-2 (sheet.png, report.md); the fit is fit/report.md.
 
 ## Fit per photo

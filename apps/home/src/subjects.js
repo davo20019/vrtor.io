@@ -17,7 +17,7 @@ const ORCA = { name: 'Orca', code: 'orca', service: 'ORCA' };
 const EARTH = { name: 'Earth', code: 'geo', service: 'GEO' };
 // A skydive over Interlaken from swisstopo data (apps/jump).
 const JUMP = { name: 'Parachute', code: 'jump', service: 'JUMP' };
-// A full-size Cybertruck to walk around and sit in, built with the build-3d-model skill (apps/cyb).
+// A full-size Cybertruck to walk around and sit in, built with the building-3d-replicas skill (apps/cyb).
 const CYB = { name: 'Cybertruck', code: 'cyb', service: 'CYB' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };

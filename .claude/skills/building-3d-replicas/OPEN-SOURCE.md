@@ -3,7 +3,7 @@
 The plan: keep using it inside vrtor, then extract it into its own public repo once these hold.
 Prepare the repo locally; David decides when it goes public.
 
-**Status 2026-10-04:** the standalone repo is prepared locally at `~/projects/build-3d-model` (one commit,
+**Status 2026-10-04:** the standalone repo is prepared locally at `~/projects/building-3d-replicas` (one commit,
 no remote): SKILL.md without vrtor specifics, scripts, a CC0 cowbell example graded against the museum's
 scan, a template, docs, MIT, pinned dependencies, 9 tests. What is left is below, unchecked. Script changes
 made there were ported back to scripts/3d/ (exclude, satMax, focalPx, compare_mesh.py, and two fit bug
@@ -13,7 +13,7 @@ box). The Cybertruck's and the altimeter's fits predate the bug fixes and have n
 ## Proven
 - [ ] The altimeter is approved in the headset. Rebuilt 2026-10-04 with its `needle` node; refitted, the outline and the dial landmark now agree on one camera (pitch -10.2, landmark 0.13 mm, IoU 0.947). Mounted on the left hand in /jump (apps/jump/src/altimeter.js), needle driven by height: waiting for a headset test.
 - [ ] Two or three more objects built with it, approved in the headset, including a dark or metallic one and a bigger one.
-  - Cowbell (2026-10-04, ~/projects/build-3d-model/examples/cowbell, REPORT.md): CC0 photo and scan, painted steel. Graded against the scan: 1.37 mm mean, 4.4 mm p95 after alignment. Cameras from the real scan views are 10-15 degrees off (the model is simpler than the bell); on the model's own renders within 2 degrees. Not yet in any app or headset.
+  - Cowbell (2026-10-04, ~/projects/building-3d-replicas/examples/cowbell, REPORT.md): CC0 photo and scan, painted steel. Graded against the scan: 1.37 mm mean, 4.4 mm p95 after alignment. Cameras from the real scan views are 10-15 degrees off (the model is simpler than the bell); on the model's own renders within 2 degrees. Not yet in any app or headset.
   - Cybertruck (2026-10-03, assets-src/cybertruck, REPORT.md): large and bare stainless steel. Built, fitted on three photos (IoU 0.91 to 0.92, outline 41 to 69 mm), interior added, served at dev.vrtor.io/cyb/. Waiting for headset approval. Its front-photo fit is unreliable (camera at the height prior's limit).
 
 ## General

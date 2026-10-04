@@ -1,5 +1,5 @@
 // VRtor Cybertruck (/cyb): a full-size model of the stainless steel pickup,
-// built in assets-src/cybertruck with the build-3d-model skill, on a turntable in a showroom
+// built in assets-src/cybertruck with the building-3d-replicas skill, on a turntable in a showroom
 // (showroom.js). Walk around it,
 // sit in the driver's seat or the back seat, and take the wheel covers off. From a seat, take the
 // self-driving ride: the truck drives itself down Highway 1 in Big Sur (bigsur.js, drive.js). On the

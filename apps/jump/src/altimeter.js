@@ -1,5 +1,5 @@
 // The Alti-2 Galaxy on the back of your left hand (assets-src/altimeter, built with the
-// build-3d-model skill). Its needle reads height above the ground, one turn per 4,000 m.
+// building-3d-replicas skill). Its needle reads height above the ground, one turn per 4,000 m.
 import { LoadAssetContainerAsync, Quaternion, TransformNode, Vector3 } from '@babylonjs/core';
 
 const MODELS = `${import.meta.env.BASE_URL}models/`;

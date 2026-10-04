@@ -1,6 +1,6 @@
 # Tesla Cybertruck (production, 2024 onward), standard configuration
 
-A test of the build-3d-model skill on a large, metallic object. Once it is built and approved it may
+A test of the building-3d-replicas skill on a large, metallic object. Once it is built and approved it may
 become a vrtor subject (David, 2026-10-03), so the GLB is our own geometry and textures only: nothing
 from refs/ is shipped, and the "T" badge, the CYBERTRUCK/CYBRTRK wordmarks and every other logo are left
 out. Nothing is committed or published during the test.
