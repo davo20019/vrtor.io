@@ -152,7 +152,7 @@ Cuts and fittings on the shell:
   frunk lid.
 - **Mirrors**: black housings on short stalks at the front lower corner of each front window. The
   measured span is 2,413.3 across them.
-- **Wiper**: the single wiper parked up the driver's A-pillar (c150, c027, c085): pivot housing at the cowl in the glass's lower corner, the blade (about 1,300 long, scaled from those photos) lying on the glass 50 to 65 mm inboard of the pillar crease, to near the apex; the arm over its lower half.
+- **Wiper**: the single wiper parked up the driver's A-pillar (c150, c027, c085): pivot housing at the cowl in the glass's lower corner; the blade lies on the glass 50 to 65 mm inboard of the pillar crease, toward the apex; the arm covers its lower half. Blade 48 in = 1,220 mm (Tesla part 1853252; notateslaapp.com blade-size table); arm about 50 in (Auto Connected Car News, measured). A 62 in figure (theautopian.com) is unsourced and longer than the glass from cowl to apex (1,530 along the slope).
 - Not modelled: cameras, the charge port door and the body-side antennae (too small for the budget,
   and not visible beyond a few metres).
 

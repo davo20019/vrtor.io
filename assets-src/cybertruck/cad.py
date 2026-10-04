@@ -319,42 +319,84 @@ def cladding(p):
 def wheel_centre(p, axle, side):
     return np.array([side * TRACK / 2, TYRE_R - p['squash'], AXLES[axle]])
 
-def mirror_part(p):
-    """Left mirror: a black tent-shaped housing (side view: a triangle with rounded-off corners, peak in its
-    front third; front view: narrower at the top), about 330 long and 170 tall (c059, c150), on a short
-    stalk from the beltline at the front of the side glass. Outer edge on the published mirror span."""
-    win = planes(p)['window_l']
-    s = p['a_pillar_s'] + 230
-    yb = p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (s - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
-    base = on_plane(win, y=yb + 25, z=ZF - s)
-    x1, x0 = MIRROR_HALF, MIRROR_HALF - 135
-    y0, zc = yb + 45, ZF - s
-    # The rear face is the glass, nearly vertical and about as tall as it is wide (dgRcedIkNOM-14, -31): the top
-    # falls from the peak to 130 mm at the back (spec: mirror height 130).
-    side = [(zc + 165, y0), (zc + 150, y0 + 45), (zc + 60, y0 + 170), (zc + 20, y0 + 170), (zc - 165, y0 + 130), (zc - 165, y0)]
-    housing = side_prism(side, x0, x1)
-    # front view: the top leans inward, so cut the top-inner edge off
-    housing = halfspace_cut(housing, *MIRROR_CUT(x0, y0, zc))
-    stalk = Box(x0 - base[0] + 40, 45, 90).moved(Location(((x0 + base[0]) / 2, y0 + 15, zc - 40)))
-    return housing + stalk
+def mirror_frame(p):
+    """The left mirror, unfolded as it is when driving (spec.md, "Door mirrors"). Parked Cybertrucks fold their
+    mirrors when locked, and most street photos show them folded (c022, c059, c086, c150, c163: long and low,
+    the glass turned toward the window). c003 (an open Ride & Drive truck) shows them out, and was measured
+    through its solved camera, corrected by its door seam (70 mm) and ride height (26 mm). Width from c134 (a
+    moving truck), the outer edge on the published span; the fold check is in spec.md."""
+    xo = MIRROR_HALF
+    xi = xo - 190.0                                   # c134: housing 188 wide, the arm inboard of it
+    zf = ZF - (p['seam_1'] + 89.0)                    # the front tip, 89 behind the door seam (c003; c059 94)
+    zr = zf - 254.0                                   # the glass face at its foot
+    belt = belt_h(p, ZF - (zf + zr) / 2)
+    ylo = belt + 10.0                                 # the base's underside, just clear of the door top
+    yb = ylo + 63.0                                   # the base's top: the shell's grey faces start here
+    ytop = ylo + 190.0                                # 1,421 at the spec ride height (c003, corrected; c059 1,431)
+    return dict(xo=xo, xi=xi, zf=zf, zr=zr, belt=belt, ylo=ylo, yb=yb, ytop=ytop)
 
-def MIRROR_CUT(x0, y0, zc, inset=0.0):
-    n = np.array([-0.8, 0.6, 0.0])
-    return np.array([x0, y0 + 170, zc]) - n * inset, n
+def mirror_profiles(f, inset=0.0):
+    """Side and front outlines (c003; c134, c137): the side a flat top over the glass, falling 38 degrees to a
+    low tip at the front, the glass face leaning 45 mm forward at the top; the front a tall inner edge, a short
+    flat top, and the outer face falling to a short outer end (both the front and the glass face are triangles,
+    tall at the inner edge: c134, c068, dgRcedIkNOM-11). inset shrinks both, for the glass inside its frame."""
+    xo, xi, zf, zr, ylo, ytop = (f[k] for k in ('xo', 'xi', 'zf', 'zr', 'ylo', 'ytop'))
+    i = inset
+    side = [(zr - 60.0, ylo + i), (zf - i, ylo + i), (zf - i, ylo + 66.0), (zr + 112.0, ytop - i), (zr - 60.0, ytop - i)]
+    front = [(xi + i, ylo + i), (xo - i, ylo + i), (xo - i, ylo + 95.0 - i * 0.4), (xi + 30.0, ytop - i), (xi + i, ytop - i)]
+    return side, front
+
+def front_prism(poly_xy, z0, z1):
+    """Extrude an (x, y) outline along z from z0 to z1."""
+    w = Wire.make_polygon([(x, y, z0) for x, y in poly_xy], close=True)
+    return extrude(Face(w), amount=z1 - z0, dir=(0, 0, 1))
+
+def mirror_part(p):
+    """Left mirror: the housing as its side outline across its front outline (flat facets, as on the truck), the
+    base's lower edges chamfered, and the arm from the base's inner front down onto the door top (c134)."""
+    f = mirror_frame(p)
+    side, front = mirror_profiles(f)
+    housing = side_prism(side, f['xi'], f['xo']) & front_prism(front, f['zr'] - 50, f['zf'] + 50)
+    housing = halfspace_cut(housing, np.array([f['xo'], f['ylo'] + 12.0, 0.0]), np.array([0.7071, -0.7071, 0.0]))
+    housing = halfspace_cut(housing, np.array([0.0, f['ylo'] + 12.0, f['zf']]), np.array([0.0, -0.7071, 0.7071]))
+    win = planes(p)['window_l']
+    xw = on_plane(win, y=f['belt'] + 10.0, z=f['zf'] - 60.0)[0]
+    arm = Box(f['xi'] + 40.0 - (xw - 5.0), f['ylo'] + 25.0 - (f['belt'] - 3.0), 90.0,
+              align=(Align.MIN, Align.MIN, Align.MAX)).moved(Location((xw - 5.0, f['belt'] - 3.0, f['zf'] - 15.0)))
+    part = housing + arm
+    try:
+        part = fillet(part.edges().filter_by(lambda e: e.length > 20), 3.0)
+    except Exception:
+        pass
+    return part
+
+def glass_plane(f):
+    """The glass face: turned 12 degrees toward the driver (its inner end 40 mm further forward than its outer end,
+    from where c003's 16-degree view from behind puts its edge) and leaning 15 mm forward at the top.
+    (point, outward normal)."""
+    a = np.array([f['xo'], f['ylo'], f['zr']])
+    b = np.array([f['xi'], f['ylo'], f['zr'] + 40.0])
+    c = np.array([f['xo'], f['ytop'], f['zr'] + 15.0])
+    n = np.cross(b - a, c - a); n = n / np.linalg.norm(n)
+    if n[2] > 0: n = -n
+    return a, n
 
 def mirror_glass_part(p):
-    """The left mirror's glass on the housing's rear face, inside a 10 mm black frame, 1.5 mm proud."""
-    s = p['a_pillar_s'] + 230
-    yb = p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (s - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
-    x1, x0 = MIRROR_HALF, MIRROR_HALF - 135
-    y0, zc = yb + 45, ZF - s
-    pane = Box(x1 - x0 - 20, 110, 2, align=(Align.MIN, Align.MIN, Align.CENTER)).moved(Location((x0 + 10, y0 + 10, zc - 165 - 1.5)))
-    return halfspace_cut(pane, *MIRROR_CUT(x0, y0, zc, inset=10.0))
+    """The left mirror's glass: the whole glass face inside an 8 mm black frame (dgRcedIkNOM-11), 1 mm proud,
+    above the base."""
+    f = mirror_frame(p)
+    _, front = mirror_profiles(f, inset=8.0)
+    a, n = glass_plane(f)
+    slab = front_prism(front, f['zr'] - 60, f['zr'] + 120)
+    slab = halfspace_cut(slab, a + n * 1.0, n)
+    slab = halfspace_cut(slab, a - n * 1.0, -n)
+    return halfspace_cut(slab, np.array([0.0, f['yb'] + 6.0, 0.0]), np.array([0.0, -1.0, 0.0]))
 
 def wiper(p):
     """The single wiper, parked up the driver's (left) A-pillar (c150, c027, c085): the pivot housing at the
-    cowl in the glass's lower corner, the blade lying on the glass close along the pillar to near the roof's
-    apex (about 1,300 long, scaled from those photos), the arm over its lower half."""
+    cowl in the glass's lower corner, the blade lying on the glass close along the pillar toward the roof's
+    apex, the arm over its lower half. Blade 48 in (1,220 mm, Tesla part 1853252, per notateslaapp's blade
+    table); the arm about 50 in (Auto Connected Car News, measured)."""
     pl = planes(p)
     n = pl['roof'][1]
     def at(s, inboard, lift):                            # on the glass plane, `inboard` of the pillar crease
@@ -362,7 +404,7 @@ def wiper(p):
         e = edge_point(pl['roof'], pl['window_l'], z)
         return on_plane(pl['roof'], x=e[0] - inboard, z=z) + n * lift
     s0 = p['cowl_s'] + 60
-    s1 = s0 + 1300 * abs(n[1])                           # 1,300 along the slope
+    s1 = s0 + 1220 * abs(n[1])                           # the blade's 1,220 along the slope
     # The glass's face is 1 mm under the facet: the blade's rubber sits 0.1 mm above it, 22 wide, 18 tall.
     blade = rod(at(s0, 64, 8.1), at(s1, 48, 8.1), n, 22, 18)
     arm = rod(at(p['cowl_s'] + 20, 66, 24), at(s0 + 0.5 * (s1 - s0), 58, 24), n, 26, 14)
@@ -492,21 +534,22 @@ def tyre():
     w = Wire.make_polygon([(x, r, 0) for r, x in prof], close=True)
     body = revolve(Face(w), Axis.X, 360)
     # Shoulder lugs: the all-terrain blocks wrap from the tread over the shoulder onto the upper sidewall,
-    # alternating long and short, 40 a side (c025, c085, c143, c147).
+    # alternating long and short, 40 a side (c025, c085, c143, c147). Each is one flat-faced prism whose
+    # profile follows the sidewall a few mm proud, so it stays cheap in triangles.
+    def skin_x(r):                                   # the lug faces: 3 to 11 mm over the sidewall
+        if r <= r1 - 30:
+            return hw + 11 - 8 * (r - (r1 - 95)) / 65
+        return hw + 3 - 27 * (r - (r1 - 30)) / 30
     lugs = []
     n = 40
     for k in range(n):
-        a = 2 * math.pi * k / n
         r_in = r1 - (100 if k % 2 else 70)
+        prof = [(r_in, hw - 26), (r_in, skin_x(r_in)), (r1 - 30, skin_x(r1 - 30)), (r1 - 16, skin_x(r1 - 16)), (r1 - 16, hw - 26)]
         for sx in (1, -1):
-            blk = [polar(r_in, a - 0.028), polar(r1 - 16, a - 0.034), polar(r1 - 16, a + 0.034), polar(r_in, a + 0.028)]
-            x0 = sx * (hw - 26)
-            lugs.append(yz_prism(blk, x0 if sx > 0 else x0 - 29, 29))     # up to 9 mm proud of the sidewall
-    # Clipped to a skin a few mm over the tyre, so they stand proud of the sidewall and shoulder evenly.
-    skin = [(r0, -hw + 34), (r0 + 70, -hw - 6), (r1 - 95, -hw - 11), (r1 - 30, -hw - 3), (r1, -hw + 24),
-            (r1, hw - 24), (r1 - 30, hw + 3), (r1 - 95, hw + 11), (r0 + 70, hw + 6), (r0, hw - 34)]
-    skin = revolve(Face(Wire.make_polygon([(x, r, 0) for r, x in skin], close=True)), Axis.X, 360)
-    return Compound([body, Compound(lugs) & skin])
+            w = Wire.make_polygon([(sx * x, r, -13) for r, x in prof], close=True)
+            lug = extrude(Face(w), amount=26, dir=(0, 0, 1))
+            lugs.append(lug.rotate(Axis.X, 360 * k / n))
+    return Compound([body, *lugs])
 
 def yz_prism(pts, x0, depth):
     """Extrude a polygon given in the wheel's face plane, (y, z) points, from x0 outward by depth."""
