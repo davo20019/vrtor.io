@@ -11,6 +11,8 @@ from pathlib import Path
 
 SRC = Path(sys.argv[1] if len(sys.argv) > 1 else Path.home() / 'projects' / 'building-3d-replicas').expanduser()
 DST = Path(__file__).resolve().parents[2] / '.claude' / 'skills' / 'building-3d-replicas'
+if (SRC / 'skills' / 'building-3d-replicas' / 'SKILL.md').exists():   # the repo, not the skill folder
+    SRC = SRC / 'skills' / 'building-3d-replicas'
 if not (SRC / 'SKILL.md').exists():
     sys.exit(f'sync_skill: no SKILL.md in {SRC}')
 
