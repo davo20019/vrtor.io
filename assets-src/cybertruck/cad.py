@@ -166,6 +166,14 @@ def on_plane(pl, x=None, y=None, z=None):
     q[i] = p0[i] - sum(n[k] * (q[k] - p0[k]) for k in known) / n[i]
     return np.array(q, float)
 
+def crease_at_x(a, b, x):
+    """The point at x on the line where planes a and b meet."""
+    (pa, na), (pb, nb) = a, b
+    A = np.array([[na[1], na[2]], [nb[1], nb[2]]])
+    r = np.array([np.dot(na, pa) - na[0] * x, np.dot(nb, pb) - nb[0] * x])
+    y, z = np.linalg.solve(A, r)
+    return np.array([x, y, z])
+
 def edge_point(a, b, z):
     """The point at depth z on the line where planes a and b meet."""
     (pa, na), (pb, nb) = a, b
@@ -292,7 +300,18 @@ def cladding_parts(p):
     nfh, fr = p['nose_flat_half'], p['face_rake']
     xs = HALF_W - 12
     zb = ZF - p['bumper_side_s']
-    plan = [(-xs, zb), (xs, zb), (xs, ZF - p['bumper_side_front_s']), (nfh, ZF - fr + 10), (-nfh, ZF - fr + 10), (-xs, ZF - p['bumper_side_front_s'])]
+    # Its top corner follows the steel's corner facet just proud of it (c001, c147: the lamp strip and its amber
+    # end sit right under the steel's corner, not behind a ledge), out to the flares' width.
+    pl = planes(p)
+    a, b = (on_plane(pl['corner_l'], x=x, y=p['bumper_f_h']) for x in (nfh, BW))
+    d = (b - a) / np.linalg.norm(b - a)
+    n = np.array([d[2], 0, -d[0]])                       # outward in plan (toward +x and forward)
+    if n[2] < 0:
+        n = -n
+    c0 = a + n * 8
+    side_z = c0[2] + d[2] * (xs - c0[0]) / d[0]          # where that line reaches the side face
+    side_z = max(side_z, zb + 12)
+    plan = [(-xs, zb), (xs, zb), (xs, side_z), (c0[0], c0[2]), (nfh, ZF - fr + 10), (-nfh, ZF - fr + 10), (-c0[0], c0[2]), (-xs, side_z)]
     bot = p['spat'][1] - 10
     w = Wire.make_polygon([(x, bot, z) for x, z in plan], close=True)
     bf = extrude(Face(w), amount=p['bumper_f_h'] - bot - 1, dir=(0, 1, 0))
@@ -484,10 +503,12 @@ def panels(p):
     fb, nh, nfh = p['front_bar_h'], p['nose_h'], p['nose_flat_half']
     def face_pt(y, x):
         return on_plane(pl['face'], x=x, y=y)
-    out['light_f'] = ([face_pt(nh - 3, -nfh + 2), face_pt(nh - 3, nfh - 2), face_pt(nh - 3 - fb, nfh - 2), face_pt(nh - 3 - fb, -nfh + 2)], pl['face'][1], 6, 1.0, 'light_w')
+    out['light_f'] = ([face_pt(nh - 3, -nfh), face_pt(nh - 3, nfh), face_pt(nh - 3 - fb, nfh), face_pt(nh - 3 - fb, -nfh)], pl['face'][1], 6, 1.0, 'light_w')
     for key, sx in (('corner_l', 1), ('corner_r', -1)):
-        top_in = on_plane(pl[key], x=sx * (nfh + 2), y=nh - 3)
-        top_out = on_plane(pl[key], x=sx * (BW - 15), y=nh - 3 - p['shoulder_drop'] * (BW - 15 - nfh) / (BW - nfh))
+        # On the crease where the corner facet meets the shoulder, 3 mm under it, from the face's crease out to
+        # 15 mm short of the side: the bar wraps the corner along the edge, as on the truck (c001, c055).
+        top_in = crease_at_x(pl[key], pl['shoulder_' + key[-1]], sx * nfh) - [0, 3, 0]
+        top_out = crease_at_x(pl[key], pl['shoulder_' + key[-1]], sx * (BW - 15)) - [0, 3, 0]
         pts = [top_in, top_out, top_out - [0, fb, 0], top_in - [0, fb, 0]]
         pts = [on_plane(pl[key], x=q[0], y=q[1]) for q in pts]
         out['light_f_' + key[-1]] = (pts if sx > 0 else pts[::-1], pl[key][1], 6, 1.0, 'light_w')
@@ -1310,7 +1331,7 @@ def details(p):
     # the front and round each corner to the flare, its outer ends amber (c059, c085, c147).
     nfh, fr = p['nose_flat_half'], p['face_rake']
     xs, y0 = BW + 4, p['bumper_f_h'] + 0.3
-    plan = [(-xs, ZF - 330), (xs, ZF - 330), (xs, ZF - p['corner_s'] - fr), (nfh - 10, ZF - fr - 4), (-nfh + 10, ZF - fr - 4), (-xs, ZF - p['corner_s'] - fr)]
+    plan = [(-xs, ZF - 340), (xs, ZF - 340), (xs, ZF - p['corner_s'] - fr - 8), (nfh - 4, ZF - fr - 4), (-nfh + 4, ZF - fr - 4), (-xs, ZF - p['corner_s'] - fr - 8)]
     w = Wire.make_polygon([(x, y0, z) for x, z in plan], close=True)
     strip = extrude(Face(w), amount=p['lamp_h'] - 0.6, dir=(0, 1, 0))
     ends = both_sides(Box(400, 200, 800, align=(Align.MIN, Align.CENTER, Align.MAX)).moved(Location((BW - 75, y0 + 50, ZF - fr + 50))))
