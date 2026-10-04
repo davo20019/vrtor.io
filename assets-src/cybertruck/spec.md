@@ -204,12 +204,21 @@ approach line (tangent to the tyre) passes 292 mm high at the spat's s, consiste
 Also changed at the same time: tyre shoulder lugs as geometry (40 a side, alternating long and short, up to
 11 mm proud of the sidewall; c025, c085, c147), cheap flat prisms following the sidewall.
 
+The nose and the corner facets, from the manual's dimensions page (refs/tesla, the bed drawing's side and top
+views: CAD renders, scaled by the tyre's 878.5 and the published length) and c059, after a review against c001
+and c055 showed the light bar's corner sections far too short and steep:
+
+| What | Value | Source | Before (fitted, from c150, flagged unreliable) |
+|---|---|---|---|
+| Light bar height (nose_h) | 1,050 | side view 1,061; c059 1,024 to 1,084 | 950 |
+| Front face rake (face_rake) | 20 | side view: the face nearly vertical, 10 to 20 | 79 |
+| Flat front face, half-width (nose_flat_half) | 625 | top view 628 and 620 | 852 |
+| Corner facet reaches the side at (corner_s) | 290 | top view: 285 at 945 out | 159 |
+| Light bar drop round the corner (shoulder_drop) | 73 at the face plane; ~25 along the bar | c059: the corner section 1,011 to 1,086 | 135 |
+
+The top view also shows the flat face slightly vee'd (its centre 68 mm ahead of its ends); not modelled.
+
 Not changed, and why:
-- **The light bar's kink at the corner**: c147 shows the real bar bending where the front face meets the corner
-  facet, as the model does.
-- **The nose height**: c059 suggests the light bar's corner may sit 50 to 100 mm higher than nose_h (950,
-  from the side drawing and kept by the fit). One photo isn't enough to settle it; needs a second side view
-  with a long lens.
 - **Aero covers**: the six-blade covers match c003 (show floor). Other photos (c085, c147) show a different
   wheel with a hexagonal cap; which one is the default is open.
 

@@ -46,14 +46,6 @@
     "darkWeightMm": 300,
     "workPx": 1200,
     "params": {
-      "nose_h": [
-        880,
-        1020
-      ],
-      "face_rake": [
-        0,
-        150
-      ],
       "cowl_s": [
         950,
         1400
@@ -85,18 +77,6 @@
       "flare_proud": [
         15,
         60
-      ],
-      "nose_flat_half": [
-        600,
-        900
-      ],
-      "corner_s": [
-        80,
-        350
-      ],
-      "shoulder_drop": [
-        30,
-        160
       ],
       "roof_half": [
         560,
