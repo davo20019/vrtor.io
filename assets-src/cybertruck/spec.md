@@ -153,8 +153,8 @@ Cuts and fittings on the shell:
   corners and amber marker lights at the front corners.
 - **Panel seams**: 4 mm grooves for the front door, B-pillar and rear door seams, the tailgate and the
   frunk lid.
-- **Mirrors**: black housings on short stalks at the front lower corner of each front window. The
-  measured span is 2,413.3 across them.
+- **Mirrors**: black faceted housings on a dark base, at the front lower corner of each front window,
+  unfolded as when driving; the span is 2,413.3 across them. See "Door mirrors, measured".
 - **Wiper**: the single wiper parked up the driver's A-pillar (c150, c027, c085): pivot housing at the cowl in the glass's lower corner; the blade lies on the glass 50 to 65 mm inboard of the pillar crease, toward the apex; the arm covers its lower half. Blade 48 in = 1,220 mm (Tesla part 1853252; notateslaapp.com blade-size table); arm about 50 in (Auto Connected Car News, measured). A 62 in figure (theautopian.com) is unsourced and longer than the glass from cowl to apex (1,530 along the slope).
 - Not modelled: cameras, the charge port door and the body-side antennae (too small for the budget,
   and not visible beyond a few metres).
@@ -253,7 +253,7 @@ track 1,772.0, width across flares 2,031.6, mirror span 2,413.3, tyre 878.5 x 28
 | c_pillar_s | 3,617 | 3,450-3,750 | rear edge of the rear side window | c022 | measured on c022 |
 | seam_s | 1,503 / 2,636 / 3,638 | ±60 | door seams | c022 | measured on c022 |
 | squash | 15 | 5-30 | tyre squash; wheel centre height = 439.25 - squash | c022 | side (wheel landmark) |
-| mirror_size | 230 x 130 x 90 | ±30% | mirror housing | c150, c022 | measured |
+| mirror size | 190 x 254 x 190 (w x l x h) | measured | mirror housing, unfolded | c003, c134 | see "Door mirrors, measured" |
 | cover_dish | 15 | 0-30 | aero cover depth inside the rim lip | c057 | measured |
 
 The measured (not fitted) entries are inner features the silhouette can't see. They are measured on the
@@ -424,3 +424,33 @@ face), the travel time (16 s), the liner's colour, the switch pad's size (156 x 
 (150 mm ahead of the tailgate, 48 mm down from the sail's top edge), the strut anchors, the outlet cover's
 size (105 x 210), the tie-downs' shape. Not modelled: the L-tracks (optional equipment), the charge port's
 manual release on the left pillar, the attachment points under the rail appliques.
+
+## Door mirrors, measured (2026-10-03)
+
+Tesla folds the mirrors when the truck locks, and most parked street photos show them folded: c022, c059,
+c086, c090, c108, c130, c150 and c163 show a long low wedge (1.75 to 1.8 times as long as tall), its glass
+turned toward the window (so the glass is plain to see from the driver's seat, dgRcedIkNOM-14). Unfolded
+(the published 2,413.3 span, and how the truck is driven), c003 (an open Ride & Drive truck) and the moving
+trucks c134 and c137. The model is unfolded.
+
+Measured through c003's solved camera with the fit's own bias put back: the door seam there reads 70 mm too
+far back and the roof 26 mm too high (measure/c003-camcheck.md), so both were applied, and the projected
+outline then lies on the photo's within about 10 mm all round.
+
+| What | Value | Source |
+|---|---|---|
+| Outer edge | 1,206.65 off the centreline (half the published span) | Manual |
+| Width | 190, inner face 1,016.65 off the centreline; an arm from its inner front down onto the door top at the window | c134 (188 at 0.69 px/mm), dgRcedIkNOM-04 |
+| Front tip | 99 behind the front door seam (s 1,602) | c003 89, c059 94, refined on the c003 overlay |
+| Length | 254 at the base, glass face to tip | c003 |
+| Height | base underside 10 above the beltline; base 63; top 190 above the base's underside (1,422 at spec ride) | c003, corrected 26; c059 1,431 |
+| Side outline | flat top over the glass, then down 38 degrees to a low tip at the front | c003 |
+| Front outline | tall inner edge, 30 mm flat top, the outer face falling to a 95 mm outer end | c134, c137, c150 |
+| Glass face | upright, turned 12 degrees toward the driver (inner end 40 forward), leaning 45 forward at the top; same outline as the front (tall inner edge), the glass inside an 8 mm frame | c003 overlay; c068, c089, dgRcedIkNOM-11, -14 |
+
+Fold check: the folded width (2,200.7) brings the outer edge in 106 mm, which a 190 mm wide housing does at
+about 64 degrees; folded at that angle the side view lengthens to about 300 to 330, as the street photos show.
+
+Still guesses: the arm's shape under the base (it is mostly hidden), the edge rounding (the facets are left
+sharp), the housing's exact black (the material is the trim black).
+

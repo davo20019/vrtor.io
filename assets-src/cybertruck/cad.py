@@ -73,9 +73,12 @@ if PARAMS.exists():
 # The front corner, measured on c059 through its solved camera (long lens, checked on the front wheel centre within
 # 20 mm; spec.md, "Front corner, measured"). These replace fitted values the outline couldn't see (the fit's dark
 # cut-out merges the bumper, the flare and the tyre), so a refit doesn't move them.
-_f = (P['nose_h'] - 650.0) / (P['nose_h'] - P['bumper_f_h'])
 P.update(
-    face_rake=P['face_rake'] * _f,   # the face keeps the fitted slope down to the higher bumper top
+    # The nose, from the manual's side and top views (refs/tesla, the dimensions page; scaled by the tyre and the
+    # length) and c059: the light bar 1,050 high (side view 1,061; c059 1,024 to 1,084), the face nearly vertical
+    # (side view: 10 to 20 mm), flat to 625 either side of the centreline, then the corner facets back to 290 behind
+    # the light bar at the sides (top view: 628 and 620; 285 at 945 out), the bar dropping ~25 mm round them (c059).
+    nose_h=1050.0, face_rake=20.0, nose_flat_half=625.0, corner_s=290.0, shoulder_drop=73.0,
     bumper_f_h=650.0,                # bumper top at the corner (c059: 652 to 664)
     lamp_h=32.0,                     # the lower lamp strip between the bumper and the steel (c059: steel ends at 684)
     arch_top_h=1030.0,               # outer face top of the flares; their bevel rises another flare_bevel to the body
@@ -327,7 +330,7 @@ def mirror_frame(p):
     moving truck), the outer edge on the published span; the fold check is in spec.md."""
     xo = MIRROR_HALF
     xi = xo - 190.0                                   # c134: housing 188 wide, the arm inboard of it
-    zf = ZF - (p['seam_1'] + 89.0)                    # the front tip, 89 behind the door seam (c003; c059 94)
+    zf = ZF - (p['seam_1'] + 99.0)                    # the front tip, ~95 behind the door seam (c003, c059; overlay)
     zr = zf - 254.0                                   # the glass face at its foot
     belt = belt_h(p, ZF - (zf + zr) / 2)
     ylo = belt + 10.0                                 # the base's underside, just clear of the door top
@@ -352,17 +355,23 @@ def front_prism(poly_xy, z0, z1):
     return extrude(Face(w), amount=z1 - z0, dir=(0, 0, 1))
 
 def mirror_part(p):
-    """Left mirror: the housing as its side outline across its front outline (flat facets, as on the truck), the
-    base's lower edges chamfered, and the arm from the base's inner front down onto the door top (c134)."""
+    """Left mirror: the housing as its side outline across its front outline (flat facets, as on the truck),
+    cut off behind by the glass face, the base's lower edges chamfered, and the arm from the base's inner front
+    down onto the door top (c134)."""
     f = mirror_frame(p)
     side, front = mirror_profiles(f)
     housing = side_prism(side, f['xi'], f['xo']) & front_prism(front, f['zr'] - 50, f['zf'] + 50)
+    housing = halfspace_cut(housing, *glass_plane(f))
     housing = halfspace_cut(housing, np.array([f['xo'], f['ylo'] + 12.0, 0.0]), np.array([0.7071, -0.7071, 0.0]))
     housing = halfspace_cut(housing, np.array([0.0, f['ylo'] + 12.0, f['zf']]), np.array([0.0, -0.7071, 0.7071]))
     win = planes(p)['window_l']
     xw = on_plane(win, y=f['belt'] + 10.0, z=f['zf'] - 60.0)[0]
     arm = Box(f['xi'] + 40.0 - (xw - 5.0), f['ylo'] + 25.0 - (f['belt'] - 3.0), 90.0,
               align=(Align.MIN, Align.MIN, Align.MAX)).moved(Location((xw - 5.0, f['belt'] - 3.0, f['zf'] - 15.0)))
+    # its top falls from the base to the door top at the window: a tapered foot, not a block (dgRcedIkNOM-04)
+    a0, a1 = np.array([f['xi'] + 40.0, f['ylo'] + 25.0, 0.0]), np.array([xw, f['belt'] + 12.0, 0.0])
+    d = a1 - a0; n = np.array([d[1], -d[0], 0.0]); n = n / np.linalg.norm(n)
+    arm = halfspace_cut(arm, a0, n if n[1] > 0 else -n)
     part = housing + arm
     try:
         part = fillet(part.edges().filter_by(lambda e: e.length > 20), 3.0)
@@ -372,11 +381,11 @@ def mirror_part(p):
 
 def glass_plane(f):
     """The glass face: turned 12 degrees toward the driver (its inner end 40 mm further forward than its outer end,
-    from where c003's 16-degree view from behind puts its edge) and leaning 15 mm forward at the top.
+    from where c003's 16-degree view from behind puts its edge) and leaning 45 mm forward at the top.
     (point, outward normal)."""
     a = np.array([f['xo'], f['ylo'], f['zr']])
     b = np.array([f['xi'], f['ylo'], f['zr'] + 40.0])
-    c = np.array([f['xo'], f['ytop'], f['zr'] + 15.0])
+    c = np.array([f['xo'], f['ytop'], f['zr'] + 45.0])
     n = np.cross(b - a, c - a); n = n / np.linalg.norm(n)
     if n[2] > 0: n = -n
     return a, n
@@ -1208,7 +1217,7 @@ def details(p):
     plan = [(-xs, ZF - 330), (xs, ZF - 330), (xs, ZF - p['corner_s'] - fr), (nfh - 10, ZF - fr - 4), (-nfh + 10, ZF - fr - 4), (-xs, ZF - p['corner_s'] - fr)]
     w = Wire.make_polygon([(x, y0, z) for x, z in plan], close=True)
     strip = extrude(Face(w), amount=p['lamp_h'] - 0.6, dir=(0, 1, 0))
-    ends = both_sides(Box(400, 200, 600, align=(Align.MIN, Align.CENTER, Align.MAX)).moved(Location((nfh + 60, y0 + 50, ZF - fr + 50))))
+    ends = both_sides(Box(400, 200, 800, align=(Align.MIN, Align.CENTER, Align.MAX)).moved(Location((BW - 75, y0 + 50, ZF - fr + 50))))
     out['lamp_lower'] = [strip - ends]
     out['marker_amber'].append(strip & ends)
     for key, sx in (('window_l', 1), ('window_r', -1)):
