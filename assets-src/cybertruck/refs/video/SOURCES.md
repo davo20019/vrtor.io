@@ -7,3 +7,7 @@
 | VohqTkAn37A.mp4 | "Cybertruck Close-Up Details -- Exterior + Interior Walkaround" | Close-ups: tonneau slats, sail panel and vault edge, door seams, cladding and arch flares, tyre tread. Has aftermarket "RC" decals; use for shape only | 02-03, 08-15, 20-25, 42-43 |
 
 Frame index i is at time (i + 0.5) x duration / 48, the contact-sheet cell.
+
+Single frames by time: dgRcedIkNOM-376s.jpg (6:16, passenger seat, A-pillar post, strip and glass triangle) and
+dgRcedIkNOM-433s.jpg (7:13, from the driver's seat across to the passenger's pillar), for the A-pillar trim
+(measure/console/pillar_hull.py).

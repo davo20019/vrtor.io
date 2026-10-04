@@ -98,6 +98,9 @@ M = {
     'mat': material('floor_mat', srgb(30, 30, 31), 0.95, normal_map=PARTS / 'mat_normal.png', normal_strength=0.4),
     'mat_edge': material('mat_binding', srgb(22, 22, 23), 0.7),
     'pillar': material('pillar_black', srgb(14, 14, 15), 0.45),
+    # the windshield's black band seen from the cabin: fired enamel on the glass's inner face, matte (int-athens-1:
+    # a dark lip beside the A-pillar strip); the gloss was reflecting the sky as a light sliver at the lower corner
+    'frit': material('frit_black', srgb(12, 12, 13), 0.85),
     'door_button': material('door_button', srgb(10, 10, 11), 0.15),
     # unlit, an amber lens under smoked plastic (c085, c147); the app lights it when its turn signal blinks
     'marker_amber': material('marker_amber', srgb(96, 50, 14), 0.1),
@@ -318,7 +321,7 @@ for o in cabin_parts:                    # printed symbols: the texture spans it
             q = l.vert.co - c0
             l[uvl].uv = (q.dot(u) / w + 0.5, q.dot(v) / h + 0.5)
     bm.to_mesh(o.data); bm.free()
-DETAILS = {'pillars': 'pillar', 'frit': 'pillar', 'lamp_lower': 'lamp_lower', 'lamp_head': 'lamp_head', 'lamp_cells': 'lamp_cell', 'marker_amber_l': 'marker_amber', 'marker_amber_r': 'marker_amber', 'marker_red': 'marker_red'}
+DETAILS = {'pillars': 'pillar', 'frit': 'frit', 'lamp_lower': 'lamp_lower', 'lamp_head': 'lamp_head', 'lamp_cells': 'lamp_cell', 'marker_amber_l': 'marker_amber', 'marker_amber_r': 'marker_amber', 'marker_red': 'marker_red'}
 detail_parts = [stl(f'det_{n}', M[m], smooth_angle=20) for n, m in DETAILS.items()]
 # The outside door-release buttons, one object each (btn_fl...), so the app can tell which was pressed.
 button_parts = []
