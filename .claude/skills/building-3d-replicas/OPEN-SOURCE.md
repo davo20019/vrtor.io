@@ -37,4 +37,4 @@ box). The Cybertruck's and the altimeter's fits predate the bug fixes and have n
 - [x] Museums' open access and Wikimedia Commons named as sources, with refs/SOURCES.md per model.
 - [x] Example object we may publish, no trademarks: the NMAH cowbell (CC0). Altimeter and Cybertruck stay out.
 - [x] MIT licence (copyright David Loor).
-- [ ] Before publishing: pick the GitHub owner for the README's clone URL, and read the repo once more.
+- [x] Published 2026-10-04: https://github.com/davo20019/building-3d-replicas (public, MIT, v0.2 "early").
