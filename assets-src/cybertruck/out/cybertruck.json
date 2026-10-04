@@ -70,7 +70,34 @@
   },
   "lights": {
     "front": "light_front (emissive white)",
-    "rear": "light_rear (emissive red, low)"
+    "tail": [
+      "light_rear_l",
+      "gate_light",
+      "light_rear_r",
+      "light_low"
+    ],
+    "brake": [
+      "light_cap_l",
+      "light_cap_r",
+      "gate_brake",
+      "light_rear_l",
+      "light_rear_r",
+      "light_low"
+    ],
+    "turn": {
+      "left": [
+        "light_cap_l",
+        "light_rear_l"
+      ],
+      "right": [
+        "light_cap_r",
+        "light_rear_r"
+      ]
+    },
+    "reverse": [
+      "light_reverse"
+    ],
+    "note": "tail: the thin strip across the band and the red lamps under the tailgate, lit with the lights (their emission in the GLB). Braking (c080; The Drive, The Autopian): the middle of the strip goes out and the end caps fill solid red with a shorter bar under it in the middle. The turn signals are the end caps, red on US trucks. Reverse: white lamps either side of the plate. gate_* parts ride on the tailgate node"
   },
   "material": "brushed stainless is metallic: the scene needs environment lighting",
   "seatEyes": {
