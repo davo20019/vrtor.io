@@ -350,11 +350,6 @@ for k, h in GEO['hinges'].items():
     for o in hinged[k]:
         o.parent = node
         o.location = -hinge
-# The tailgate's struts: the app draws each between these two points, one on the body, one on the gate.
-for side, a in GEO['struts'].items():
-    empty(f'strut_body_{side}', loc=to_blender(a['body']), parent=body_node)
-    gate_node = bpy.data.objects['tailgate']
-    empty(f'strut_gate_{side}', loc=Vector(to_blender(a['gate'])) - gate_node.location, parent=gate_node)
 # The tonneau's slats, one mesh shared, each on its own node at its closed place: the app moves each one
 # along the track (GEO['tonneau']['path']) and turns it to the track's direction there.
 TON = GEO['tonneau']
@@ -557,6 +552,8 @@ info = {
                   'note': 'door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle'}
               for k, d in GEO['doors'].items()},
     'hinged': {k: {'node': k, 'hinge': [v * 0.001 for v in h['hinge']], 'axis': h['axis'], 'openDeg': h['openDeg']} for k, h in GEO['hinges'].items()},
+    'struts': {side: {'body': a['body'], 'gate': [a['gate'][i] - GEO['hinges']['tailgate']['hinge'][i] for i in range(3)]} for side, a in GEO['struts'].items()},
+    'strutsNote': 'the tailgate struts, l and r: body is in the root node cybertruck\'s own frame, gate in the tailgate node\'s (both millimetres, glTF axes); draw each strut between the two',
     'hingedNote': 'each node turns about its own axis (glTF frame) by openDeg to open: tailgate (drops to level with the bed floor; struts strut_body_<l|r> to strut_gate_<l|r>), bedlid (the under-bed compartment, lifts from its front edge), outlet_cover (the left wall: two 120 V and one 240 V outlets behind it)',
     'tonneau': {'node': 'tonneau_cover', 'slats': [f'slat_{i:02d}' for i in range(len(TON['slats']))],
                 'path': [[z * 0.001, h * 0.001] for z, h in TON['path']], 'arc': [a * 0.001 for a in TON['arc']],

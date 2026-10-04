@@ -197,7 +197,8 @@ track 1,772.0, width across flares 2,031.6, mirror span 2,413.3, tyre 878.5 x 28
 | corner_s | 200 | 80-350 | how far back the front corner facets reach | c134, c147 | front (+ three-quarter) |
 | shoulder_drop | 80 | 30-160 | drop of the hood's shoulder facet at the corners | c150 | front |
 | roof_half | 650 | 560-760 | half-width of the roof at the apex | c150 | front |
-| tail_half | 960 | 880-1,000 | half-width of the deck at the tail top | c069 | rear |
+| tail_half | 930.5 | fixed | half-width of the deck at the tail top | manual top view (the sail's crease with the deck, s 3,700 to 5,500) | not fitted |
+| side_tail_h | 1,259.1 | 1,200-1,320 | height of the sail's crease with the side at the tail | carried over from the side-photo fit | side |
 | (tail_bevel) | dropped | | the sail now runs through the window crease (roof corner at the apex to the C-pillar base) and the tail corner, which fixes the rear top corner | c069 | rear |
 | arch_top_h | 980 | 900-1,060 | top of the arch flare | c022 981 | side (wheel landmark) |
 | arch_top_half | 310 | 250-380 | half-length of the flat arch top | c022 | side |
@@ -346,19 +347,41 @@ measured by pixel at 8.2 mm/px from the truck's length; enlargements in measure/
 | Canister rear face | s 3,925, vertical down to h 1,350, then the wall slopes forward to the floor | drawing (bed top front at 3,913), overview render (vertical face under the open cover) |
 | Wheel-well humps | foot s 3,970 / 5,085, top s 4,188 / 4,876, top h 1,074 | drawing |
 | Width at floor, between humps | 1,295.4 | Manual, cargo bed C |
-| Side walls, inside | 1,350 built (drawing: ~1,473) | held in: see below |
-| Slats | 16 at 102 mm, 10 mm thick, 1,410 wide | pitch from the close-up video's slat lines (the old normal map); count from the bay's length |
+| Side walls, inside | 1,470 | top view: constant from s 3,950 to 5,450 |
+| Slats | 16 at 102 mm, 10 mm thick, 1,520 wide (25 mm over each wall, into the rails) | pitch from the close-up video's slat lines (the old normal map); count from the bay's length |
 | Switch | left sail by the tail light, three keys front to back: open, close, tailgate | Manual, Cargo Bed, items 3 and "Accessing the Cargo Bed" |
 | LED strips | along the top of each side wall | Manual, Cargo Bed, item 2; lit on Auto when the cover is open (Lights page) |
 | Behaviour | full press opens or closes fully; a second press stops it; only in Park; also Controls > Tonneau | Manual, Cargo Bed |
 
-Deliberate differences: the fitted sails (from the side and rear photos; there is no straight top view) are
-about 80 mm a side narrower at the bed's front than the manual's top view, so the slats and bed walls are
-held inside them (cover half-width 705, walls 675). The real cover runs between parallel rails; here too,
-with the taper out to the sails filled by fixed dark rails.
+The sail, checked against the manual's top view (the model rendered orthographic at the drawing's scale and
+overlaid, 2026-10-03): the outline matched within a few pixels, but the sail's crease with the deck ran 64 to
+90 mm a side inside the drawing over the bed. The fit had no rear or top photo, so the side photos fixed the
+sail's lower crease and nothing fixed its top. The sail is now the plane through the C-pillar base and that
+lower crease at the tail (both as fitted) and the deck's tail corner at 930.5 (drawing). It reproduces the
+drawing's crease, 823 to 925 mm off the centreline from s 3,700 to 5,500, within 6 mm, and leaves the side
+views as they were. From the C-pillar back to about s 4,040 the window facet now bounds the deck: there the
+model sits up to 36 mm inside the drawing.
+
+Tailgate, compartment, outlets, tie-downs (manual: Cargo Bed and Cargo Bed Outlets pages and their renders;
+c069 straight rear, tonneau shut; c056 open bed, tailgate down):
+
+| What | Value | Source |
+|---|---|---|
+| Tailgate | steel panel to 926 mm off the centreline, from h 735 to 1,200; the light band's middle above it to 806 (the corner blocks stay on the pillars) | c069, scaled from the rear face's width |
+| Tailgate hinge | on its outer face, 58 mm under the floor liner's top, so it lies level with the floor when down; 90 degrees | c056 (level with the floor) |
+| Struts | one each side, from the pillar's rear face (h 1,110) to the gate's inside near the hinge | c056, the manual's bed render |
+| Pillar backs | black, with a red light under each corner block | c056 |
+| Emergency release | on the gate's inside, low, 440 mm left of centre | manual's bed render, item 6 |
+| Under-bed compartment | tub 1,080 x 385 x 226 (94 L; manual: 97 L), lid 1,120 x 415 hinged at its front edge, lifting 80 degrees, handle at its back edge, drain plug | manual, Under Bed Compartment and its render |
+| Outlets | left wall by the tailgate: two 120 V 20 A over one 240 V, behind a cover hinged at its front edge (pull its back edge) | manual, Cargo Bed Outlets; c056 |
+| Tie-downs | one at each bottom corner, on the side walls | manual, Securing Cargo and its render |
+
+Behaviour: the switch's third key drops the tailgate (only in Park); it closes when lifted (pressing it). The
+bed lights are on while the tonneau or the tailgate is open (manual, Lights). The lid and the outlet cover
+open by hand once the bed is open.
 
 Still guesses: the canister's coil (radius 100 mm, hidden in the steel between the cab and the canister
 face), the travel time (16 s), the liner's colour, the switch pad's size (156 x 52) and position on the sail
-(150 mm ahead of the tailgate, 48 mm down from the sail's top edge). Not modelled: the under-bed
-compartment, L-tracks, tie-downs, outlets, and the tailgate opening (its key is on the switch but does
-nothing).
+(150 mm ahead of the tailgate, 48 mm down from the sail's top edge), the strut anchors, the outlet cover's
+size (105 x 210), the tie-downs' shape. Not modelled: the L-tracks (optional equipment), the charge port's
+manual release on the left pillar, the attachment points under the rail appliques.

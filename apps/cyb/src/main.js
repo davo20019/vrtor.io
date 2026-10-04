@@ -233,6 +233,7 @@ async function loadTruck() {
   covers = container.transformNodes.filter((n) => n.name.startsWith('cover_')).concat(container.meshes.filter((m) => m.name.startsWith('cover_')));
   setUpDoors(container, info);
   setUpTonneau(container, info);
+  setUpHinged(container, info);
   shadows.getShadowMap().refreshRate = RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
   const byName = (name) => container.transformNodes.find((n) => n.name === name) ?? container.meshes.find((m) => m.name === name);
   return { root, info, byName };
@@ -359,7 +360,13 @@ function placeSlats() {
     s.node.rotationQuaternion = Quaternion.RotationAxis(Vector3.Right(), p.angle);
   }
   // Bed lights on Auto: lit while the bed is open.
-  tonneau.lights?.emissiveColor.copyFrom(tonneau.u > 0.01 ? tonneau.lightsOn : Color3.Black());
+  updateBedLights();
+}
+
+/** Bed lights on Auto (Owner's Manual, Lights): lit while the tonneau or the tailgate is open. */
+function updateBedLights() {
+  const on = tonneau.u > 0.01 || (hinged.tailgate?.t ?? 0) > 0.01;
+  tonneau.lights?.emissiveColor.copyFrom(on ? tonneau.lightsOn : Color3.Black());
 }
 
 const tonneauLocked = () => ride.world === 'bigsur' && !ride.drive?.stopped;
@@ -396,6 +403,103 @@ scene.onBeforeRenderObservable.add(() => {
     render();
   }
   placeSlats();
+});
+
+// ---------------------------------------------------------------- the tailgate, the under-bed lid, the outlet cover
+
+/** How long each takes, open or shut: the tailgate drops on its struts, the others go by hand. */
+const HINGE_SECONDS = { tailgate: 1.8, bedlid: 1.0, outlet_cover: 0.5 };
+/** By key (tailgate, bedlid, outlet_cover): the node, its axis and opening angle (the model's json), t now. */
+const hinged = {};
+/** The tailgate's two struts: drawn each frame between a point on the body and one on the gate. */
+const struts = [];
+
+function setUpHinged(container, info) {
+  const byName = (name) => container.transformNodes.find((n) => n.name === name) ?? container.meshes.find((m) => m.name === name);
+  for (const [key, h] of Object.entries(info.hinged ?? {})) {
+    const node = byName(h.node);
+    if (!node) continue;
+    node.rotationQuaternion ??= Quaternion.Identity();
+    hinged[key] = { node, rest: node.rotationQuaternion.clone(), axis: Vector3.FromArray(h.axis), open: (h.openDeg * Math.PI) / 180, t: 0, target: 0 };
+    // The part itself is what you press: the lid and the cover open and shut by hand, the tailgate shuts by hand.
+    for (const m of node.getChildMeshes()) doorTargets.set(m, `hinge:${key}`);
+  }
+  // The tailgate's key on the switch (the third, nearest the tail light) drops it.
+  const name = info.tonneau?.buttons?.tailgate;
+  const button = name && byName(name);
+  if (button) {
+    button.material = button.material.clone(`${name}-mat`);
+    tonneau.buttons['tailgate:open'] = [button];
+    const target = MeshBuilder.CreateBox(`${name}-target`, { size: 0.05 }, scene);
+    target.visibility = 0;
+    target.isPickable = true;
+    target.setParent(null);
+    target.position.copyFrom(button.getBoundingInfo().boundingBox.centerWorld);
+    target.setParent(button);
+    doorTargets.set(target, 'tailgate:open');
+    doorTargets.set(button, 'tailgate:open');
+  }
+  const mat = new StandardMaterial('strut', scene);
+  mat.diffuseColor = Color3.FromHexString('#2a2a2c');
+  mat.specularColor = new Color3(0.4, 0.4, 0.4);
+  const root = byName('cybertruck'), gate = hinged.tailgate?.node;
+  for (const [side, s] of Object.entries(info.struts ?? {})) {
+    if (!root || !gate) continue;
+    const mesh = MeshBuilder.CreateCylinder(`strut-${side}`, { height: 1, diameter: 0.016, tessellation: 10 }, scene);
+    mesh.material = mat;
+    mesh.rotationQuaternion = Quaternion.Identity();
+    mesh.isPickable = false;
+    mesh.setEnabled(false);
+    // Anchors in millimetres: on the body in the root's frame, on the gate in the tailgate node's.
+    struts.push({ a: { node: root, at: Vector3.FromArray(s.body) }, b: { node: gate, at: Vector3.FromArray(s.gate) }, mesh });
+  }
+}
+
+const bedOpen = () => (hinged.tailgate?.t ?? 0) > 0.9 || tonneau.u > 0.3;
+
+/** A press on a hinged part, or the tailgate's key. */
+function hingePress(key) {
+  const h = hinged[key];
+  if (!h) return;
+  if (key === 'tailgate') {
+    if (h.target > 0.5) h.target = 0;                 // lifted shut by hand; it has no handle to open it
+  } else if (bedOpen() || h.target > 0.5) {
+    h.target = h.target > 0.5 ? 0 : 1;               // reached from the open bed (manual: open the tailgate first)
+  }
+  render();
+}
+
+function setTailgate(open) {
+  const h = hinged.tailgate;
+  if (!h || (open && tonneauLocked())) return;
+  h.target = open ? 1 : 0;
+  render();
+}
+
+scene.onBeforeRenderObservable.add(() => {
+  const dt = engine.getDeltaTime() / 1000;
+  for (const [key, h] of Object.entries(hinged)) {
+    if (h.t === h.target) continue;
+    const step = dt / HINGE_SECONDS[key];
+    h.t = h.target > h.t ? Math.min(h.target, h.t + step) : Math.max(h.target, h.t - step);
+    const e = h.t * h.t * (3 - 2 * h.t);
+    h.node.rotationQuaternion = h.rest.multiply(Quaternion.RotationAxis(h.axis, h.open * e));
+    if (key === 'tailgate') updateBedLights();
+    if (h.t === h.target) render();
+  }
+  // Every frame while the gate is down, so they follow the truck on the road too.
+  const down = (hinged.tailgate?.t ?? 0) > 0.02;
+  for (const s of struts) {
+    s.mesh.setEnabled(down);
+    if (!down) continue;
+    const a = Vector3.TransformCoordinates(s.a.at, s.a.node.computeWorldMatrix(true));
+    const b = Vector3.TransformCoordinates(s.b.at, s.b.node.computeWorldMatrix(true));
+    const d = b.subtract(a);
+    const len = d.length();
+    s.mesh.position.copyFrom(a.add(b).scale(0.5));
+    s.mesh.scaling.set(1, len, 1);
+    Quaternion.FromUnitVectorsToRef(Vector3.Up(), d.scale(1 / len), s.mesh.rotationQuaternion);
+  }
 });
 
 // ---------------------------------------------------------------- getting in through an open door
@@ -526,6 +630,8 @@ scene.onPointerObservable.add((info) => {
   const press = (xrPointer && info.type === PointerEventTypes.POINTERDOWN) || (!xrPointer && info.type === PointerEventTypes.POINTERTAP);
   if (!press) return;
   if (key?.startsWith('tonneau:')) tonneauPress(key.slice(8));
+  else if (key === 'tailgate:open') setTailgate(true);
+  else if (key?.startsWith('hinge:')) hingePress(key.slice(6));
   else if (key) toggleDoor(key);
   else if (sitTo) sitIn(sitTo);
   else if (xrPointer) screen?.tap(pick);
@@ -667,6 +773,7 @@ function screenAction() {
 function screenControls() {
   return [
     { label: 'Doors', value: anyDoorOpen() ? 'Open · tap to close' : 'Closed · tap to open', active: anyDoorOpen(), onClick: () => setDoorsAll(!anyDoorOpen()) },
+    { label: 'Tailgate', value: tonneauLocked() ? 'Shift to Park to open' : (hinged.tailgate?.target ?? 0) > 0.5 ? 'Open · lift it to close' : 'Closed · tap to open', active: (hinged.tailgate?.target ?? 0) > 0.5, disabled: tonneauLocked() || (hinged.tailgate?.target ?? 0) > 0.5, onClick: () => setTailgate(true) },
     { label: 'Tonneau', value: tonneauLocked() ? 'Shift to Park to open' : tonneauState(), active: tonneau.u > 0 || tonneau.dir !== 0, disabled: tonneauLocked(), onClick: () => tonneauPress('toggle') },
     { label: 'Lights', value: glows.lightsOn ? 'On' : 'Off', active: glows.lightsOn, onClick: () => ((glows.lightsOn = !glows.lightsOn), applyGlows()) },
     { label: 'Ambient light', value: AMBIENT[glows.colour].name, active: AMBIENT[glows.colour].name !== 'Off', onClick: () => ((glows.colour = (glows.colour + 1) % AMBIENT.length), applyGlows()) },
@@ -744,6 +851,7 @@ function content() {
     // The way forward last (on the right): one primary button, the ride.
     ...(seat !== 'outside' ? [{ label: 'Step out', onClick: () => sitIn('outside') }] : []),
     { label: anyDoorOpen() ? 'Close doors' : 'Open doors', onClick: () => setDoorsAll(!anyDoorOpen()) },
+    { label: (hinged.tailgate?.target ?? 0) > 0.5 ? 'Close the tailgate' : 'Open the tailgate', onClick: () => setTailgate((hinged.tailgate?.target ?? 0) < 0.5) },
     { label: tonneau.dir ? 'Stop the cover' : tonneau.u > 0 ? 'Close the bed' : 'Open the bed', onClick: () => tonneauPress(tonneau.dir ? 'stop' : tonneau.u > 0 ? 'close' : 'open') },
     { label: coversOn ? 'Wheel covers off' : 'Wheel covers on', onClick: toggleCovers },
     ...(seat !== 'driver' ? [{ label: "Driver's seat", onClick: () => sitIn('driver') }] : []),
@@ -763,7 +871,7 @@ function content() {
     kicker: 'Full size',
     title: where,
     body: seat === 'outside'
-      ? 'Built from the maker’s dimensions and photos. No door handles: press the black button on the pillar behind a door, then step in where it says Sit here. The cover over the bed rolls into its canister: use the switch on the left by the tail light, or Controls on the touchscreen.'
+      ? 'Built from the maker’s dimensions and photos. No door handles: press the black button on the pillar behind a door, then step in where it says Sit here. The cover over the bed rolls into its canister: use the switch on the left by the tail light, or Controls on the touchscreen. Its third key drops the tailgate; inside are the outlets and a compartment under the floor.'
       : 'The dash shelf, the yoke, the touchscreen and the glass roof. Tap Start self-driving on the screen for 5 km of Highway 1 in Big Sur.',
     fact: inXr()
       ? menuFact
@@ -1278,7 +1386,7 @@ async function start() {
   // Before createXr: the headset rig starts the log too, and only the first start's state() is kept.
   startHeadsetLog(() => ({ fps: Math.round(engine.getFps()), seat, xr: inXr(), covers: covers[0]?.isEnabled(),
     world: ride.world, s: ride.drive ? Math.round(ride.drive.state.s) : undefined, v: ride.drive ? +ride.drive.state.v.toFixed(1) : undefined,
-    tonneau: +tonneau.u.toFixed(2),
+    tonneau: +tonneau.u.toFixed(2), tailgate: +(hinged.tailgate?.t ?? 0).toFixed(2),
     doorsOpen: Object.entries(doors).filter(([, d]) => d.target > 0.5).map(([k]) => k).join(',') }));
   truck = await loadTruck();
   // Only the door buttons take the pointer: from a seat, the dash and yoke would catch every press
@@ -1393,4 +1501,4 @@ start().catch((err) => {
 });
 
 // For automated checks in a browser.
-window.__cyb = { mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, tonneauPress, tonneau, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };
+window.__cyb = { mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, tonneauPress, tonneau, hinged, setTailgate, hingePress, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };

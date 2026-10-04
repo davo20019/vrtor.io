@@ -148,6 +148,78 @@
       "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
     }
   },
+  "hinged": {
+    "tailgate": {
+      "node": "tailgate",
+      "hinge": [
+        0.0,
+        0.7618699999999999,
+        -2.87337
+      ],
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "openDeg": -90
+    },
+    "bedlid": {
+      "node": "bedlid",
+      "hinge": [
+        0.0,
+        0.82004,
+        -2.3842
+      ],
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "openDeg": 80
+    },
+    "outlet_cover": {
+      "node": "outlet_cover",
+      "hinge": [
+        0.7312000000000001,
+        1.025,
+        -2.6552
+      ],
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "openDeg": 100
+    }
+  },
+  "struts": {
+    "l": {
+      "body": [
+        905.0,
+        1110.0,
+        -2817.2
+      ],
+      "gate": [
+        905.0,
+        120.0,
+        52.17000000000007
+      ]
+    },
+    "r": {
+      "body": [
+        -905.0,
+        1110.0,
+        -2817.2
+      ],
+      "gate": [
+        -905.0,
+        120.0,
+        52.17000000000007
+      ]
+    }
+  },
+  "strutsNote": "the tailgate struts, l and r: body is in the root node cybertruck's own frame, gate in the tailgate node's (both millimetres, glTF axes); draw each strut between the two",
+  "hingedNote": "each node turns about its own axis (glTF frame) by openDeg to open: tailgate (drops to level with the bed floor; struts strut_body_<l|r> to strut_gate_<l|r>), bedlid (the under-bed compartment, lifts from its front edge), outlet_cover (the left wall: two 120 V and one 240 V outlets behind it)",
   "tonneau": {
     "node": "tonneau_cover",
     "slats": [
