@@ -8,5 +8,5 @@ cd "$(dirname "$0")"
 blender -b --factory-startup --python assemble.py 2>&1 | grep -E 'Error|assemble:'
 npx -y @gltf-transform/cli optimize out/altimeter.glb out/altimeter.glb \
   --compress meshopt --texture-compress webp --texture-size 1024 --simplify false \
-  --flatten false --join false --instance false   # keep the needle node (optimize flattens and joins by default)
+  --flatten false --join false --instance false --palette false   # keep the needle node and the dial material (optimize flattens and joins by default)
 ls -l out/altimeter.glb
