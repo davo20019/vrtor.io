@@ -25,6 +25,7 @@ import { createHelicopter } from './helicopter.js';
 import { createBody } from './body.js';
 import { createDropzone } from './dropzone.js';
 import { createAudio } from './audio.js';
+import { createAltimeter } from './altimeter.js';
 import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
@@ -480,6 +481,9 @@ function instruct(key, text) {
 // --- Readouts: the wrist altimeter (headset) and the top bar (flat screens) -------------------
 
 const wrist = createWrist();
+// The real altimeter on the back of the left hand; the panel above the wrist keeps the words.
+let altimeter = null;
+const altimeterReady = createAltimeter(scene).then((a) => (altimeter = a)).catch((e) => log.note('altimeter-error', { message: String(e) }));
 let readoutAt = 0;
 function updateReadouts(w) {
   const now = performance.now();
@@ -509,6 +513,7 @@ function updateReadouts(w) {
     canopy: 'A/← left toggle · D/→ right toggle · S/↓/Space both: slow down, and flare at about 3 m',
     landed: 'Space to jump again',
   }[s.phase];
+  altimeter?.set(agl);
   wrist.draw({ agl, fall, ground, phaseText, instruction, toTarget, bearing, band: s.phase === 'freefall' ? (agl > PULL + 300 ? 'green' : agl > 1000 ? 'amber' : 'red') : 'plain', debug: params.has('xrdebug') && rig ? rig.stats() : '' });
 }
 
@@ -773,7 +778,10 @@ async function start() {
           controller.onMotionControllerInitObservable.add((mc) => {
             // Your own hands are drawn (body.js), not the controllers.
             mc.onModelLoadedObservable.add(() => mc.rootMesh?.setEnabled(false));
-            if (mc.handedness === 'left') wrist.attach(controller);
+            if (mc.handedness === 'left') {
+              wrist.attach(controller);
+              altimeterReady.then(() => altimeter?.attach(controller));
+            }
           });
         });
         ui.vr.hidden = false;
