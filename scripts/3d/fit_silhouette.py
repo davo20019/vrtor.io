@@ -3,7 +3,7 @@
 
 Reads the "fit" block of <model>/review.json. Two forms:
 
-Single photo (the altimeter's form):
+Single photo (a small object seen from the front):
   photo      reference photo, relative to the model folder
   solid      name of the function in <model>/cad.py that builds the part to fit from a params dict
   hsv        [[h, s, v], [h, s, v]] OpenCV HSV range that cuts the part out of the photo
@@ -32,10 +32,14 @@ Several photos fitted together (shared shape parameters, one camera per photo):
                below the ground line (through the tyres' contact points) is background. With "refine", it is
                run again seeded by the model's own silhouette through the solved camera, inside a band of
                bandFrac x the part's size: for parts that don't separate by colour (bare steel, silver, black).
+               "exclude": [[[x, y], ...], ...] polygons that are sure background for grabcut: a drop shadow, a
+               car parked beside it, a sign in front. A few marked pixels also teach grabcut their colour.
     landmarks  {landmark name: [x, y] px in the photo}: measured inner points (wheel centres, light bar)
     parts      (with a parts solid) which entry of cad.<viewDark> lists the dark parts this photo sees
     dark       {"valueMax": v} or {"method": "otsu"}: the dark parts (cladding, tyres, glass) cut out inside
-               the part by brightness; compared with the model's dark parts, weighted by darkWeightMm
+               the part by brightness; compared with the model's dark parts, weighted by darkWeightMm.
+               {"satMax": s, "valueMax": v}: by saturation instead, for a coloured object's neutral parts
+               (a black grip on red paint, where the paint's shade is as dark as the grip)
 
 Parts solid: `solid` may return a dict {name: shape} instead of one shape. The outline is then all parts
 together, and with viewDark (name of a dict in cad.py, {view: [part names]}) the fit also matches where the
@@ -106,8 +110,13 @@ class Photo:
         if dc and self.dark_names:
             g = cv2.cvtColor(self.small, cv2.COLOR_BGR2GRAY)
             inside = m.astype(bool)
-            thr = dc['valueMax'] if 'valueMax' in dc else cv2.threshold(g[inside].reshape(-1, 1), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[0]
-            d = ((g < thr) & inside).astype(np.uint8)
+            if 'satMax' in dc:                                     # neutral parts of a coloured object (black grip, red paint)
+                sat = cv2.cvtColor(self.small, cv2.COLOR_BGR2HSV)[..., 1]
+                d = (sat < dc['satMax']) & (g < dc.get('valueMax', 256)) & inside
+            else:
+                thr = dc['valueMax'] if 'valueMax' in dc else cv2.threshold(g[inside].reshape(-1, 1), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[0]
+                d = (g < thr) & inside
+            d = d.astype(np.uint8)
             d = cv2.morphologyEx(d, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
             self.dark = cv2.morphologyEx(d, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
 
@@ -162,6 +171,8 @@ class Photo:
             gc[prior.astype(bool)] = cv2.GC_PR_FGD
             gc[sure] = cv2.GC_FGD
         gc[self.below_ground()] = cv2.GC_BGD
+        for poly in mc.get('exclude', []):                        # sure background: shadows, neighbours, props
+            cv2.fillPoly(gc, [np.round(np.array(poly, float) * self.S).astype(np.int32)], cv2.GC_BGD)
         bgd, fgd = np.zeros((1, 65)), np.zeros((1, 65))
         cv2.grabCut(self.small, gc, None, bgd, fgd, mc.get('iterations', 6), cv2.GC_INIT_WITH_MASK)
         m = np.isin(gc, (cv2.GC_FGD, cv2.GC_PR_FGD)).astype(np.uint8)
