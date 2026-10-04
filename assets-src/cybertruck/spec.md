@@ -471,6 +471,20 @@ front: measure/console/athens3b.md), the dash render's camera, and frames dgRced
 | A-pillar inner trim | suede panel 14 inside the side glass from 1,000 to the window opening's edge: 1,390 back at the beltline, rounded up to 1,445 at 1,462 | int-athens-3's solved camera (measure/console/athens-opening.md) |
 | Carpet and mats | carpet a fine cut pile; mats a flatter velour with a 25 mm bound edge | dgRcedIkNOM-25. Mat outlines: guess |
 
+Cross-checked on independent real photos (2026-10-04). Sources are Wikimedia Commons photographs with named
+authors (auto show, street, Tesla store) and two walkaround videos of a US Foundation Series truck; EXIF, where it
+survives the resizing, names phone cameras (c059 iPhone 14 Pro Max, c090 Galaxy S8). The three int-athens photos
+are one truck, so each interior change was also checked on the video's truck:
+- Side glass tip over the front wheel: all ten side photos (c003, c022, c059, c086, c090, c091, c108, c109,
+  c130, c163); the tip reads 0 to 50 px ahead of the front axle on seven of them, 700 to 880 back. 800 is inside.
+- Wide suede A-pillar trim with the window opening behind it: int-athens-1, -3; dgRcedIkNOM-14 and its 6:16 frame.
+- Pointed dash block end, door trim flush with it: int-athens-1, -3; dgRcedIkNOM-15 and its 6:16 frame.
+- Ribs between the footwells, console behind them: int-athens-1, -2, -3; dgRcedIkNOM-16, -25; the dash render.
+- Glovebox outline: only Tesla's own CAD renders (CC015C4E, B379A2C2) show it; in the photos the passenger lower
+  dash is too dark to see a seam (the screen's "Glovebox, tap to open" button confirms it exists).
+- Mats differ between the trucks (Athens: ribbed rubber all-weather; the video's truck and Tesla's render:
+  carpet), so they are an option; the model keeps carpet.
+
 Not yet matched: the real door sill under the glass is grey and deeper than the black cap; the mirror shows
 through the window opening in int-athens-3 but not through the model's.
 
