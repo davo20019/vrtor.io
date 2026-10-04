@@ -160,3 +160,61 @@ along_y = 0.5 + 0.5 * np.cos(2 * np.pi * xx / 8)
 weave = np.where(block == 0, along_x, along_y) * 70 + 90 + 0.4 * tiling_noise(C, 4, 41)
 normal_wrapped(weave.clip(0, 255), 2.0).save(OUT / 'weave_normal.png')
 print('textures: wrote weave_normal.png')
+
+# The yoke's button pods (manual, Steering: the left and right scroll button pictures, E2AF1DEC straight on):
+# light grey symbols printed on the dark pods, placed on a 10 mm grid over the straight-on render. The
+# texture spans x -130..130, y -20..45 mm in the yoke's frame (cad.py yoke_decal: driver's view, x to the
+# right), 2048 x 512, so 7.88 px/mm. Left pod: right and left turn signals with a line between them, high
+# beam, the four-way icon. Right pod: the custom button (hexagon), the gauge, wipers, a line, voice. Dark
+# rings round both scroll wheels.
+YW, YH = 2048, 512
+k = YW / 260 * SS                                        # px per mm, supersampled
+img = Image.new('RGB', (YW * SS, YH * SS), (30, 30, 32))
+d = ImageDraw.Draw(img)
+ink, lw = (165, 165, 168), max(1, round(0.35 * k))
+def P(x, y):                                             # yoke mm -> pixel
+    return ((x + 130) * k, (45 - y) * k)
+def line(pts, w=lw):
+    d.line([P(*q) for q in pts], fill=ink, width=w, joint='curve')
+def arrow(cx, cy, s):                                    # outlined turn-signal arrow pointing toward s (+1 right)
+    pts = [(-2.2, 0.8), (0.2, 0.8), (0.2, 1.9), (2.4, 0), (0.2, -1.9), (0.2, -0.8), (-2.2, -0.8), (-2.2, 0.8)]
+    line([(cx + s * x, cy + y) for x, y in pts])
+def high_beam(cx, cy):                                   # D lamp with three beams to its left
+    d.chord([P(cx - 0.6, cy + 1.7), P(cx + 2.8, cy - 1.7)], 270, 90, outline=ink, width=lw)
+    line([(cx + 1.1, cy + 1.7), (cx + 1.1, cy - 1.7)])
+    for dy in (-1.2, 0, 1.2):
+        line([(cx - 2.6, cy + dy), (cx - 0.4, cy + dy)])
+def four_way(cx, cy):                                    # four small arrowheads round a dot
+    r = lw / k * 1.4
+    d.ellipse([P(cx - r, cy + r), P(cx + r, cy - r)], fill=ink)
+    for ax, ay in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        tip = (cx + ax * 2.3, cy + ay * 2.3)
+        b1 = (cx + ax * 1.3 - ay * 0.8, cy + ay * 1.3 + ax * 0.8)
+        b2 = (cx + ax * 1.3 + ay * 0.8, cy + ay * 1.3 - ax * 0.8)
+        d.polygon([P(*tip), P(*b1), P(*b2)], fill=ink)
+def hexagon(cx, cy):
+    import math as m
+    line([(cx + 2.0 * m.cos(m.radians(30 + 60 * i)), cy + 2.0 * m.sin(m.radians(30 + 60 * i))) for i in range(7)])
+    d.ellipse([P(cx - 0.8, cy + 0.8), P(cx + 0.8, cy - 0.8)], outline=ink, width=lw)
+def gauge(cx, cy):                                       # dial arc open at the bottom, needle up and right
+    d.arc([P(cx - 2.1, cy + 2.1), P(cx + 2.1, cy - 2.1)], 135, 45, fill=ink, width=lw)
+    line([(cx, cy), (cx + 1.1, cy + 1.1)])
+def wiper(cx, cy):                                       # windscreen, the blade across it, spray above
+    d.arc([P(cx - 2.6, cy + 1.4), P(cx + 2.6, cy - 3.8)], 200, 340, fill=ink, width=lw)
+    line([(cx - 2.4, cy - 1.6), (cx + 2.4, cy - 1.6)])
+    line([(cx, cy - 1.6), (cx + 1.4, cy + 0.9)])
+    for dx in (-1.6, -0.5, 0.6, 1.7):
+        d.ellipse([P(cx + dx - 0.25, cy + 2.2), P(cx + dx + 0.25, cy + 1.7)], fill=ink)
+def mic(cx, cy):
+    d.rounded_rectangle([P(cx - 0.8, cy + 2.4), P(cx + 0.8, cy - 0.3)], radius=0.8 * k, outline=ink, width=lw)
+    d.arc([P(cx - 1.6, cy + 1.6), P(cx + 1.6, cy - 1.4)], 0, 180, fill=ink, width=lw)
+    line([(cx, cy - 1.4), (cx, cy - 2.3)])
+    line([(cx - 0.9, cy - 2.3), (cx + 0.9, cy - 2.3)])
+for sx in (-1, 1):                                       # rings round the scroll wheels
+    cx, cy = sx * 85.2, 16.0
+    d.ellipse([P(cx - 9.2, cy + 9.2), P(cx + 9.2, cy - 9.2)], fill=(14, 14, 15))
+    line([(sx * 104 - 5.5, 17.7), (sx * 104 + 5.5, 17.7)], w=round(0.9 * k))
+arrow(-98.1, 25.3, 1); arrow(-104.0, 9.8, -1); high_beam(-74.2, 27.8); four_way(-71.2, 14.3)
+hexagon(74.2, 27.8); gauge(71.2, 14.3); wiper(98.1, 25.3); mic(104.0, 9.8)
+img.resize((YW, YH), Image.LANCZOS).save(OUT / 'yoke_icons.png')
+print('textures: wrote yoke_icons.png')

@@ -234,7 +234,7 @@ export function createDrive(scene, { pose, truckInfo, nodes, screen, road, windo
 
 /** The yoke and what's on it turn about the column: the axis is the yoke's own face normal. */
 function yokePivot(scene, nodes) {
-  const parts = ['int_yoke', 'int_yoke_pods', 'int_yoke_keys'].map((n) => nodes(n)).filter((m) => m?.getTotalVertices?.() > 0);
+  const parts = ['int_yoke', 'int_yoke_pad', 'int_yoke_chin', 'int_yoke_face', 'int_yoke_pods', 'int_yoke_trim', 'int_yoke_keys'].map((n) => nodes(n)).filter((m) => m?.getTotalVertices?.() > 0);
   if (!parts.length) return null;
   const main = parts[0];
   main.parent?.computeWorldMatrix(true);

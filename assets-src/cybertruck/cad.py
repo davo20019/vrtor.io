@@ -616,7 +616,7 @@ def brake():
 
 CAB = dict(floor=400.0, wall=60.0, trim_t=110.0, cab_front_s=1250.0, cab_rear_s=3700.0,
            h_front=(2200.0, 771.0), h_rear=(3150.0, None), seat_x=390.0, dash_h=1224.0, dash_s=1480.0,
-           yoke=(1683.0, 1150.0), yoke_w=318.0, yoke_hgt=212.0, yoke_tilt=22.0, screen_y=1160.0, screen_s=1510.0,
+           yoke=(1683.0, 1150.0), yoke_w=318.0, yoke_hgt=215.3, yoke_tilt=22.0, screen_y=1160.0, screen_s=1510.0,
            screen_tilt=7.0, arm=(1696.0, 2084.0, 940.0), console_end_s=2600.0, door_arm_h=943.0, back_h=940.0,
            head_rear=991.9, head_front=1058.8, hip_half=1453.4 / 2, shoulder_front=1608.0 / 2,
            shoulder_rear=1576.4 / 2, header=(1739.0, 1905.0))
@@ -889,39 +889,85 @@ def rear_bench(p):
     out['seat_base'].append(SH([(sR - 410, c['floor'] - 2), (sR - 410, hR - 128), (sR + 300, hR - 128), (sR + 300, c['floor'] - 2)], -700, 700))
     return out, hR
 
+YOKE_OUTLINE = json.loads((HERE / 'measure/yoke/outline.json').read_text())
+YOKE_WHEELS = (-85.2, 16.0)                                   # scroll wheel centres at +-85.2, 16 high (left one measured)
+
 def yoke_parts():
-    """The yoke, built facing +z around its centre (manual-steering-E2AF1DEC straight on, 0.848 mm/px from the
-    318 mm width measured through the dash render's camera): rim, spoke band, V-shaped centre pad with its
-    lower chin, and the two angled button pods with their scroll wheels. No logo."""
-    w, h = CAB['yoke_w'], CAB['yoke_hgt']
-    T = 32.0
-    with BuildSketch() as sk:
-        RectangleRounded(w, h, 58)
-        with Locations((0, 61)):
-            RectangleRounded(252, 46, 18, mode=Mode.SUBTRACT)
-    rim = extrude(sk.sketch, amount=T)
-    for sx in (1, -1):                                  # the two openings below the spokes
-        hole = [(sx * 128, -10), (sx * 58, -14), (sx * 36, -86), (sx * 120, -88), (sx * 136, -50)]
-        rim -= extrude(Face(Wire.make_polygon([(x, y, -1) for x, y in hole], close=True)), amount=T + 2, dir=(0, 0, 1))
+    """The yoke, built facing +z (toward the driver) around its centre, x to the driver's right: the outer
+    edge and three openings traced from the manual's straight-on render (measure/yoke/outline.py, 0.844
+    mm/px), everything else read off the same render on a 10 mm grid (spec.md). The rim is the traced plate,
+    rounded front and back; the centre pad stands proud with its recessed horn face; the silver chin joins it
+    to the bottom of the rim; the two button pods sit on the spokes with a silver strip along their upper
+    outer edge and a knurled scroll wheel in a ring. Depths are guesses (spec.md, Unknowns). No logo."""
+    T = 30.0                                            # rim depth; assemble.py rounds its front and back edges (OCC's fillet stalls on the traced curves)
+    def spline_face(pts):
+        return Face(Wire([Spline(*[(x, y, 0) for x, y in pts], periodic=True)]))
+    def poly(pts, r=0.0, z0=0.0, z1=1.0):
+        with BuildSketch(Plane.XY.offset(z0)) as sk:
+            Polygon(*pts, align=None)
+            if r:
+                fillet(sk.vertices(), r)
+        return extrude(sk.sketch, amount=z1 - z0, dir=(0, 0, 1))
+    o = YOKE_OUTLINE
+    plate = extrude(spline_face(o['outer']), amount=T, dir=(0, 0, 1))
+    for k in ('top', 'lower_left', 'lower_right'):
+        plate -= extrude(spline_face(o[k]).moved(Location((0, 0, -1))), amount=T + 2, dir=(0, 0, 1))
+    # Centre pad: wide at the top, its sides bowing in to the chin; top corners round into the hub's top.
+    pad_pts = [(-68.6, 36), (-64, 10), (-59.4, -14), (-51, -38), (-42.5, -61), (42.5, -61), (51, -38), (59.4, -14),
+               (64, 10), (68.6, 36), (52, 52), (-52, 52)]
+    pz = T + 16
+    pad = poly(pad_pts, 6, T - 4, pz)
     try:
-        rim = chamfer(rim.edges().filter_by(Axis.Z, reverse=True), length=7)
-    except Exception:
-        pass
-    # Spoke band across the middle, then the pad on it; the pad is a V: wide at the top, narrow at the chin.
-    band = extrude(Face(Wire.make_polygon([(-135, 38, 0), (135, 38, 0), (128, -8, 0), (60, -12, 0), (40, -62, 0),
-                                           (-40, -62, 0), (-60, -12, 0), (-128, -8, 0)], close=True)), amount=T + 6, dir=(0, 0, 1))
-    pad = extrude(Face(Wire.make_polygon([(-68, 44, 0), (68, 44, 0), (38, -60, 0), (-38, -60, 0)], close=True)), amount=T + 22, dir=(0, 0, 1))
+        pad = fillet(pad.edges().group_by(Axis.Z)[-1], radius=6)
+    except Exception as e:
+        print('yoke: pad not rounded:', e)
+    face_pts = [(-42.5, 27.8), (42.5, 27.8), (27.3, -39.6), (-27.3, -39.6)]
+    pad -= poly(face_pts, 6, pz - 1.5, pz + 5)
+    face = poly([(x * 0.99, y * 0.99 - 0.1) for x, y in face_pts], 5.6, pz - 1.4, pz - 0.6)
+    chin = poly([(-40, -58), (40, -58), (27.3, -90), (-27.3, -90)], 2, T - 6, T + 9)
     try:
-        pad = chamfer(pad.edges().filter_by(Axis.Z, reverse=True).group_by(Axis.Z)[-1], length=8)
-    except Exception:
-        pass
-    chin = extrude(Face(Wire.make_polygon([(-40, -62, 0), (40, -62, 0), (30, -96, 0), (-30, -96, 0)], close=True)), amount=T + 14, dir=(0, 0, 1))
-    pods, wheels = [], []
+        chin = chamfer(chin.edges().group_by(Axis.Z)[-1], length=1.5)
+    except Exception as e:
+        print('yoke: chin not chamfered:', e)
+    # Pods on the spokes, 7 mm proud; their inner ends run under the pad.
+    pods, trims, wheels = [], [], []
+    tip, low = (-123.0, 6.7), (-59.0, -15.2)
+    pod_pts = [(-60, 42), (-69.5, 41.3), (-104.9, 33.7), (-123.0, 6.7), (-111.6, -5.0), (-59.0, -15.2)]
+    knurl = [(7.4 if i % 2 == 0 else 6.9) * np.array([math.cos(i * math.pi / 24), math.sin(i * math.pi / 24)]) for i in range(48)]
     for sx in (1, -1):
-        pod = [(sx * 62, 34), (sx * 118, 30), (sx * 134, 10), (sx * 122, -10), (sx * 66, -12)]
-        pods.append(extrude(Face(Wire.make_polygon([(x, y, 0) for x, y in pod], close=True)), amount=T + 12, dir=(0, 0, 1)))
-        wheels.append(Cylinder(8, 11, rotation=(0, 90, 0)).moved(Location((sx * 88, 12, T + 12))))
-    return rim + band + pad, chin, Compound(pods), Compound(wheels)
+        pts = [(sx * x, y) for x, y in pod_pts]
+        pod = poly(pts if sx > 0 else pts[::-1], 3, T - 4, T + 7)
+        try:
+            pod = chamfer(pod.edges().group_by(Axis.Z)[-1], length=1.2)
+        except Exception as e:
+            print('yoke: pod not chamfered:', e)
+        cx, cy = sx * YOKE_WHEELS[0], YOKE_WHEELS[1]
+        pod -= Cylinder(7.4, 20).moved(Location((cx, cy, T + 7)))
+        ring = Cylinder(8.8, 2.0).moved(Location((cx, cy, T + 7.4))) - Cylinder(7.4, 4).moved(Location((cx, cy, T + 7.4)))
+        pods += [pod, ring]
+        # The silver strip: a 1.6 mm band round the pod, kept above the line from its tip to its inner bottom.
+        big = poly([(sx * x, y) for x, y in [(-58, 43.6), (-69.5, 42.9), (-105.6, 35.2), (-124.8, 6.7), (-112.2, -6.5), (-58, -16.8)]][::(1 if sx > 0 else -1)],
+                   3, T - 3, T + 5.5)
+        a, b = sorted([(sx * tip[0], tip[1]), (sx * low[0], low[1])])     # left to right, so the box's +y side is above the line
+        keep = Box(400, 400, 100).moved(Location((0, 200, 0)))
+        keep = keep.rotate(Axis.Z, math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))).moved(Location((a[0], a[1], 0)))
+        trims.append((big - pod) & keep)
+        # A knurled roller turning about x, trimmed to a ball: round from the driver's seat, 4 mm proud.
+        drum = extrude(Face(Wire.make_polygon([(0, y, z) for y, z in knurl], close=True)).moved(Location((-8, 0, 0))), amount=16, dir=(1, 0, 0))
+        drum = drum.moved(Location((cx, cy, T + 4))) & Sphere(7.1).moved(Location((cx, cy, T + 4)))
+        wheels.append(drum)
+    return plate, pad, chin, face, Compound(pods), Compound(trims), Compound(wheels)
+
+def yoke_place(s):
+    """From the yoke's own frame (yoke_parts) to the cabin: turned to face the driver, tilted, on the column."""
+    c = CAB
+    return s.rotate(Axis.Y, 180).rotate(Axis.X, c['yoke_tilt']).moved(Location((c['seat_x'], c['yoke'][1], ZF - c['yoke'][0])))
+
+def yoke_decal():
+    """The pods' icon texture (textures.py, yoke_icons.png) spans x -130..130, y -20..45 in the yoke's frame;
+    its centre and axes in the cabin, for assemble.py's planar mapping (u to the driver's right, v up)."""
+    p0, px, py = (yoke_place(Vertex(*q)).center() for q in ((0, 12.5, 0), (1, 12.5, 0), (0, 13.5, 0)))
+    return {'centre': list(p0), 'u': list(px - p0), 'v': list(py - p0), 'size': [260, 65]}
 
 def door_trim(p, d, sx, driver):
     """Trim on one door's inside (d 'f' or 'r', sx +1 left / -1 right), from the video frames
@@ -1025,16 +1071,19 @@ def interior(p):
     out['screen_stand'] = Box(150, 80, 70).moved(Location(tuple(scr_c + [0, -35, 38])))     # the neck into the white block
     # ---- yoke on its column, driver on the left (+x), tilted 22 degrees (seat side view).
     yc = (c['seat_x'], c['yoke'][1], ZF - c['yoke'][0])
-    def place(s):
-        return s.rotate(Axis.Y, 180).rotate(Axis.X, c['yoke_tilt']).moved(Location(yc))
-    rim, chin, pods, wheels = yoke_parts()
+    place = yoke_place
+    rim, pad, chin, face, pods, trims, wheels = yoke_parts()
     t = math.radians(c['yoke_tilt'])
     col_dir = np.array([0, -math.sin(t), math.cos(t)])
     col = Cylinder(30, 300).rotate(Axis.X, c['yoke_tilt']).moved(Location(tuple(np.array(yc) + col_dir * 175)))
     shroud = Box(110, 90, 200).rotate(Axis.X, c['yoke_tilt']).moved(Location(tuple(np.array(yc) + col_dir * 230)))
-    out['yoke'] = place(rim) + col + shroud
+    out['yoke'] = place(rim)
+    out['yoke_pad'] = place(pad)
+    out['yoke_column'] = col + shroud
     out['yoke_chin'] = place(chin)
+    out['yoke_face'] = place(face)
     out['yoke_pods'] = place(pods)
+    out['yoke_trim'] = place(trims)
     out['yoke_keys'] = place(wheels)
     # ---- centre console (manual-storage-34C29DB3, -electronics-2298443C, -886D0FDA, -D54DBA46): front wall
     # and the two wireless chargers leaning on it, two cupholders, the armrest lid, the rear section, and the
@@ -1600,7 +1649,8 @@ if __name__ == '__main__':
             save(part, f'door_{name[5:7]}_int_{name[8:]}', tolerance=2.5, angular=0.7)
         else:
             fine = name in ('seats_front', 'seats_rear')       # their padded crowns are shallow curves: 4.6 degrees a facet
-            save(part, f'int_{name}', tolerance=1.0 if fine else 2.5, angular=0.08 if fine else 0.7)     # flat facets; coarse tessellation keeps the few round parts cheap
+            small = name.startswith('yoke') and name != 'yoke_column'     # held close: its curves and small round parts need fine facets
+            save(part, f'int_{name}', tolerance=0.3 if small else 1.0 if fine else 2.5, angular=0.2 if small else 0.08 if fine else 0.7)     # flat facets; coarse tessellation keeps the few round parts cheap
     for name, part in details(p).items():
         save(part, f'det_{name}')
 
@@ -1621,6 +1671,7 @@ if __name__ == '__main__':
         'planes': [[pt.tolist(), n.tolist()] for pt, n in planes(p).values()],
         'seatEyes': seat_eyes(p),
         'screens': screens(p),
+        'decals': {'yoke_pods': yoke_decal()},
         'doors': {k: {'hinge': h.tolist(), 'openDeg': -65 if k.endswith('l') else 65} for k, (_, h) in regions.items()},
         'hinges': {
             'tailgate': {'hinge': gate_hinge(p).tolist(), 'axis': [1, 0, 0], 'openDeg': -90},

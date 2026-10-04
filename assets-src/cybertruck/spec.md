@@ -293,9 +293,13 @@ the light bar, h height, w half-width. Jobs in measure/int/; the comparison rend
 
 | What | Value | Source | Was |
 |---|---|---|---|
-| Yoke size | 318 x 212 | width through the dash camera on the yoke's plane; height from the straight-on render's 0.667 ratio (manual-steering-E2AF1DEC) | 330 x 252 (screen scale, ignored depth) |
+| Yoke size | 318 x 216 | width through the dash camera on the yoke's plane; height on the straight-on render (manual-steering-E2AF1DEC) at the same scale, 0.844 mm/px | 318 x 212 (the render's 0.667 ratio, read by eye) |
 | Yoke tilt | 22 deg from vertical | seat side view, the rim seen edge-on | 20 |
-| Yoke shape | rim 22 top / 22 bottom / 26 sides; top opening 252 x 46; lower openings bounded by the V pad; pad 136 wide at the top, 76 at the bottom; chin to -96; pods 62 to 134 out; scroll wheels at +-88 | straight-on render, 0.848 mm/px | rounded box |
+| Yoke outline | outer edge and the three openings traced from the render's alpha, averaged with its mirror image (measure/yoke/outline.py -> outline.json); top opening 251 x 51, lower openings 95 x 80 | straight-on render | rounded box with polygon holes |
+| Yoke details | pad +-68.6 at 36 high to +-42.5 at -61, sides bowing in; recessed horn face +-42.5 at 27.8 to +-27.3 at -39.6; silver chin +-40 at -58 to +-27.3 at -90; pods from the pad to a tip at 123 out, 6.7 high (top corner 104.9, 33.7; bottom 111.6, -5 to 59, -15.2), silver strip on their upper outer edge; scroll wheels at +-85.2, 16, 14 across; icons: left pod right/left turn signals with a line between, high beam, four-way; right pod custom (hexagon), gauge, wipers, line, voice | the render on a 10 mm grid; icons from the left and right scroll button pictures (D13A2862, 477E18D7) | pad, chin, pods placed by eye; no icons |
+
+Check (measure/yoke/compare.py, the model rendered straight on through render_cams.py next to the manual's
+render, both scaled to 318 mm): outline IoU 0.965, mean edge distance 1.6 mm, height 214.7 against 215.9.
 | Screen lean | 7 deg | seat side view (edge-on screen); the dash camera's error falls from 4.9 to 3.4 px with less lean | 15 |
 | Screen depth | 1,510 back | moved 10 mm so it sits in front of the white block, as in every frame | 1,500 |
 | Windshield top edge (header front) | 1,739 back, 1,536 high | dash camera, on the roof plane | none |
@@ -378,6 +382,8 @@ Shapes taken from pictures, sizes partly guessed:
   width, the B-pillar trim.
 - Pedal depth along the truck (the dash camera's error grows near the floor), floor mat outlines, carpet.
 - Console width (+-146) and the charger pads' size and lean.
+- The yoke's depths: rim 30 deep and rounded 9 mm front and back (in assemble.py), pad 16 proud, pods 7,
+  chin 9, scroll wheels 4. No picture shows the yoke edge-on closely enough to measure them.
 - The tweeter grille on the A-pillar, seat belts, the drive-mode selector and buttons on the overhead
   console, coat hooks and dome lights: not modelled.
 

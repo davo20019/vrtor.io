@@ -71,6 +71,8 @@ M = {
     'ambient': material('ambient_light', srgb(240, 240, 255), 0.3, emit=(0.85, 0.9, 1.0), emit_strength=3.0),
     'seat': material('seat_black', srgb(30, 30, 31), 0.5, normal_map=PARTS / 'leather_normal.png', normal_strength=0.6),
     'yoke': material('yoke_black', srgb(22, 22, 22), 0.45),
+    'yoke_pod': material('yoke_pod', (1, 1, 1), 0.3, image=PARTS / 'yoke_icons.png'),     # gloss black with the printed symbols
+    'yoke_face': material('yoke_horn_face', srgb(62, 62, 64), 0.4),                          # the recessed face on the pad, lighter in the manual render
     'screen': material('screen_off', srgb(6, 7, 8), 0.08),
     'bezel': material('screen_bezel', srgb(15, 15, 15), 0.4),
     'console': material('console_grey', srgb(70, 70, 72), 0.6),
@@ -243,7 +245,8 @@ cover_panel.name = cover_panel.data.name = 'outlet_cover_panel'      # the node 
 hinged['outlet_cover'] = [cover_panel]
 INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': 'console', 'dash_vent': 'grille', 'ambient': 'ambient',
             'dash_white': 'trim_white', 'dash_lower': 'armrest', 'screen_bezel': 'bezel', 'screen': 'screen_on', 'screen_stand': 'bezel',
-            'yoke': 'yoke', 'yoke_chin': 'silver', 'yoke_pods': 'bezel', 'yoke_keys': 'pedal',
+            'yoke': 'yoke', 'yoke_pad': 'yoke', 'yoke_column': 'yoke', 'yoke_chin': 'silver', 'yoke_face': 'yoke_face',
+            'yoke_pods': 'yoke_pod', 'yoke_trim': 'silver', 'yoke_keys': 'switch_key',
             'console': 'console', 'chargers': 'screen', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
             'seats_front': 'seat', 'seats_rear': 'seat', 'seat_base': 'armrest', 'seat_knobs': 'switch', 'rear_armrest': 'seat',
             'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
@@ -259,6 +262,18 @@ for o in cabin_parts:                    # the screens: the picture spans each s
     if not sc_:
         continue
     c0, u, v, (w, h) = Vector(sc_['centre']), Vector(sc_['u']), Vector(sc_['v']), sc_['size']
+    bm = bmesh.new(); bm.from_mesh(o.data)
+    uvl = bm.loops.layers.uv.verify()
+    for f in bm.faces:
+        for l in f.loops:
+            q = l.vert.co - c0
+            l[uvl].uv = (q.dot(u) / w + 0.5, q.dot(v) / h + 0.5)
+    bm.to_mesh(o.data); bm.free()
+for o in cabin_parts:                    # printed symbols: the texture spans its rectangle on the part's face
+    dc = GEO.get('decals', {}).get(o.name[4:])
+    if not dc:
+        continue
+    c0, u, v, (w, h) = Vector(dc['centre']), Vector(dc['u']).normalized(), Vector(dc['v']).normalized(), dc['size']
     bm = bmesh.new(); bm.from_mesh(o.data)
     uvl = bm.loops.layers.uv.verify()
     for f in bm.faces:
@@ -407,7 +422,7 @@ bpy.context.view_layer.update()
 # second UV set: the app multiplies its lights by it, so corners, footwells and the underside of the roof
 # go dark and the faces open to the windows stay bright, as in the real cabin.
 ROUND = {'seats_front': 24, 'seats_rear': 24, 'rear_armrest': 14, 'dash_white': 28, 'console': 10, 'seat_base': 8,
-         'dash_top': 6, 'dash_lower': 6, 'dash_face': 4, 'yoke': 5, 'visors': 8, 'screen_bezel': 3, 'overhead': 6,
+         'dash_top': 6, 'dash_lower': 6, 'dash_face': 4, 'yoke': 9, 'yoke_column': 5, 'visors': 8, 'screen_bezel': 3, 'overhead': 6,
          'armrest': 14, 'door_lower': 6, 'trim_white': 14, 'cap': 6}
 NO_BAKE = ('screen', 'rear_screen', 'ambient', 'chargers', 'open', 'switch', 'mirror_glass')
 
@@ -417,12 +432,14 @@ def part_key(o):
         return 'open'
     return n.split('_int_', 1)[1] if '_int_' in n else n[4:] if n.startswith('int_') else n
 
-def round_edges(o, width):
+ROUND_SEGMENTS = {'yoke': 5}             # the rim: a padded grip, round in section, not a bevelled plate
+
+def round_edges(o, width, segments=3):
     for m in list(o.modifiers):          # smooth-by-angle would mark the rounded edges sharp again; hardened normals shade instead
         o.modifiers.remove(m)
     mod = o.modifiers.new('round', 'BEVEL')
     mod.width = width
-    mod.segments = 3
+    mod.segments = segments
     mod.limit_method = 'ANGLE'
     mod.angle_limit = math.radians(25)
     mod.harden_normals = True
@@ -528,7 +545,7 @@ inside_parts = cabin_parts + [o for o in all_door_parts if '_int_' in o.name or 
 for o in inside_parts:
     w = ROUND.get(part_key(o))
     if w:
-        round_edges(o, w)
+        round_edges(o, w, ROUND_SEGMENTS.get(part_key(o), 3))
 bake_cabin([o for o in inside_parts if part_key(o) not in NO_BAKE],
            [o for o in bpy.context.scene.objects if o.type == 'MESH' and ('glass' in o.name or part_key(o) in ('ambient', 'screen', 'rear_screen', 'chargers'))])
 

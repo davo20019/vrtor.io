@@ -1,0 +1,10 @@
+{
+ "glbFrame": "y-up", "exposure": 0.6, "samples": 48,
+ "cameras": {
+  "front": {"eye": [390, 1899.2, -841.6], "look": [390, 1150, 1012.8], "fovDeg": 11.2, "size": [1140, 774],
+            "only": ["int_yoke"], "photo": "ref_front.png"},
+  "seat": {"eye": [390, 1411, 435.8], "look": [390, 1150, 1012.8], "fovDeg": 55, "size": [900, 1100]},
+  "pod_left": {"eye": [260, 1330, 520], "look": [475, 1158, 1005], "fovDeg": 30, "size": [800, 1000],
+               "photo": "../../refs/tesla/manual-steering-GUID-D13A2862-37E7-4663-8338-66F7577DFD17-online-en-US.png"}
+ }
+}

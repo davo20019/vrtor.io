@@ -5,3 +5,4 @@ node_modules/
 dist
 # Generated renders and videos (large, regenerable)
 output/
+__pycache__/
