@@ -132,12 +132,15 @@ between them come out flat by construction. Facets, front to back:
 Cuts and fittings on the shell:
 
 - **Wheel arches**: half-hexagon cut-outs (flat top, steep angled sides, vertical lower legs; c022),
-  the same shape front and rear, centred on the axles.
-- **Arch flares**: black cladding bands around each arch, standing proud of the steel. The published
-  body width (2,031.6) is taken across the flares.
+  centred on the axles. The front arch's front leg is steeper and ends on the bumper (see "Front corner,
+  measured").
+- **Arch flares**: black cladding bands around each arch, standing proud of the steel, their outer edges
+  bevelled back to the body. The published body width (2,031.6) is taken across the flares.
 - **Sill rockers**: black cladding between the arches, with the downward tab at each end (behind the
   front wheel, ahead of the rear wheel; c022).
-- **Front bumper**: black, with its grille band and angled lower corners (c032, c150).
+- **Front bumper**: black, with its grille band; its corners are blocks flush with the flares that run back
+  to just ahead of the tyre, with a lower rear tip (c032, c150, c059). A smoked lower lamp strip runs between
+  its top and the steel, amber at its outer ends.
 - **Rear bumper**: black, standing out past the tailgate, with the centre step recess and the hitch
   pocket below it (c069).
 - **Window pockets**: front and rear side windows, the windshield and glass roof, and the rear roof
@@ -173,6 +176,42 @@ Node tree (glTF), all pivots on the axle:
   Its centre plane sits on the track line: wheel centres at w = 886.
 - **Aero cover** (`cover_*`): Tesla's black six-segment cover, about the rim's diameter, a flat faceted
   disc (c057, c106, studio video). Its own node, so it can be hidden to show the bare rim.
+
+## Front corner, measured (2026-10-03)
+
+Measured on c059 (left side, long lens, 18.7 m away) through its solved camera, back-projecting marked pixels
+onto the flare's plane and adding back the photo's ride offset (-53 mm). Check first: the front wheel centre
+came out 18 mm from its known place, the ground under the tyre at 57 mm with the tyre squash and the tyre's
+bulge. c003's camera is close and its height loose (it put the same points 60 to 130 mm higher), so it was
+not used. These override the fitted values in cad.py (after params.json), so a refit can't move them; the
+fit's dark cut-out merges bumper, flare and tyre and never constrained them.
+
+| What | Value | c059 | Before (fitted or guessed) |
+|---|---|---|---|
+| Bumper top at the corner (bumper_f_h) | 650 | 652 to 664 | 571 |
+| Steel's lower edge at the corner (bumper_f_h + lamp_h) | 682 | 684 (the amber light just below it) | 571 |
+| Front flare leg, outer, lower end | s 290, h 682 | s 283 to 307, h 690 to 722 | vertical leg to below the sill at s 237 |
+| Flare outer face top (arch_top_h) | 1,030 | 1,042 to 1,060 to the top of its lit bevel | 1,002 |
+| Flare bevel (flare_bevel) | 30 | the lit strip above the dark face | none |
+| Arch opening top (arch_top_h - flare_band) | 988 | 990 | 949 |
+| Bumper side face, rear end at the top (bumper_side_s) | 352 | 341 to 352 | 257 |
+| Bumper's lower rear tip (spat) | s 300, h 285 | s 300, h 285 | flat bottom at 314 |
+| Bumper side face starts (behind its corner chamfer) | 140 | 105 to 129 | 211 |
+
+The face rake is scaled with the higher bumper top so the front face keeps its fitted slope. The 35-degree
+approach line (tangent to the tyre) passes 292 mm high at the spat's s, consistent with the 285 measured.
+
+Also changed at the same time: tyre shoulder lugs as geometry (40 a side, alternating long and short, up to
+11 mm proud of the sidewall; c025, c085, c147), cheap flat prisms following the sidewall.
+
+Not changed, and why:
+- **The light bar's kink at the corner**: c147 shows the real bar bending where the front face meets the corner
+  facet, as the model does.
+- **The nose height**: c059 suggests the light bar's corner may sit 50 to 100 mm higher than nose_h (950,
+  from the side drawing and kept by the fit). One photo isn't enough to settle it; needs a second side view
+  with a long lens.
+- **Aero covers**: the six-blade covers match c003 (show floor). Other photos (c085, c147) show a different
+  wheel with a hexagonal cap; which one is the default is open.
 
 ## Parameters (P in cad.py)
 
