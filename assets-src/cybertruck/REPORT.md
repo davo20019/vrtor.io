@@ -196,3 +196,14 @@ Remaining differences (before the bolster pass):
 the housing reads thinner than in the dash render because the windshield header sits about 20 px lower in our
 render of that camera (the header measurement may be slightly off); no coat hooks, USB ports or tweeter grille.
 Headset test of this pass: not yet done.
+
+## Console top (review/console)
+
+A headset screenshot showed the console as a flat slab with two separate 8-sided holes and the charger pads
+standing up from it like tombstones. Compared with the manual renders through cameras near theirs
+(`review/console/cams.json`; r1 to r3 beside `before`), it was rebuilt: a deep charger well with the pads
+lying on its sloped front wall, a rib between them and a lip at their foot; the cupholders joined into one
+pocket by a lower bridge, spread to three quarters of the width, with grip tabs on their side walls; a light
+grey rim round both; the lid 50 above the rim (was 22); the lower body narrowing below a crease, its front
+leaning back. Still different: the rim's exact shade, the side crease's step (ours is a taper), the cupholders'
+round lobes (ours are octagons).

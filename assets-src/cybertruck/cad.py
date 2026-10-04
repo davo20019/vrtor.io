@@ -655,7 +655,7 @@ def brake():
 CAB = dict(floor=400.0, wall=60.0, trim_t=110.0, cab_front_s=1250.0, cab_rear_s=3700.0,
            h_front=(2200.0, 771.0), h_rear=(3150.0, None), seat_x=390.0, dash_h=1224.0, dash_s=1480.0,
            yoke=(1683.0, 1150.0), yoke_w=318.0, yoke_hgt=215.3, yoke_tilt=22.0, screen_y=1160.0, screen_s=1510.0,
-           screen_tilt=7.0, arm=(1696.0, 2084.0, 940.0), console_end_s=2600.0, door_arm_h=943.0, back_h=940.0,
+           screen_tilt=7.0, console_end_s=2600.0, door_arm_h=943.0, back_h=940.0,
            head_rear=991.9, head_front=1058.8, hip_half=1453.4 / 2, shoulder_front=1608.0 / 2,
            shoulder_rear=1576.4 / 2, header=(1739.0, 1905.0))
 
@@ -1131,24 +1131,53 @@ def interior(p):
     out['yoke_keys'] = place(wheels)
     for k, key in keys.items():
         out[f'yoke_btn_{k}'] = place(key)
-    # ---- centre console (manual-storage-34C29DB3, -electronics-2298443C, -886D0FDA, -D54DBA46): front wall
-    # and the two wireless chargers leaning on it, two cupholders, the armrest lid, the rear section, and the
-    # rear face with the rear screen in its vent surround. Front measured at 1,494 back, 918 high (dash render).
-    a0, a1, ah = c['arm']
+    # ---- centre console (manual-storage-34C29DB3, -electronics-2298443C, -886D0FDA, -D54DBA46). Front to back:
+    # a deep well holding the two wireless chargers (pads leaning back on its sloped front wall, a thin rib
+    # between them, a lip at their foot), the two cupholders joined into one pocket by a lower bridge, the
+    # armrest lid standing above them, the rear section, and the rear face with the rear screen in its vent
+    # surround. The well and the cupholders sit in a light grey rim that wraps over the top of the sides.
+    # Below a crease the body narrows to the floor and its front face leans back. Front measured at 1,494
+    # back, 918 high (dash camera); the rest scaled from the renders.
     se = c['console_end_s']
     lid0, lid1 = 1880.0, 2330.0                           # the proportions of manual-storage-34C29DB3: tray 35%, lid 40%, rear block 25%
-    side = [(1494, c['floor'] - 2), (1494, 918), (1512, 918), (1516, 872), (lid0 - 25, 872), (lid0, ah), (lid1, ah), (lid1 + 15, ah + 12),
+    rim_h, rim_t, crease = 918.0, 30.0, 700.0
+    ah = rim_h + 50                                       # the lid stands about 50 above the rim (2298443C, scaled by the console's height)
+    side = [(1560, c['floor'] - 2), (1494, 690), (1494, rim_h), (lid0, rim_h), (lid0, ah), (lid1, ah), (lid1 + 15, ah + 12),
             (se, ah + 12), (se, 640), (se - 90, 560), (se - 120, c['floor'] - 2)]
-    frontl = [(-138, c['floor'] - 2), (138, c['floor'] - 2), (146, 820), (146, ah - 25), (124, ah), (-124, ah), (-146, ah - 25), (-146, 820)]
-    con = SH(side, -160, 160) & XH(frontl, 1480, se + 10)
-    for xc in (-56, 56):
-        con -= XS(ngon(xc, 1700, 44, 8, math.pi / 8), 790, 900)
+    frontl = [(-112, c['floor'] - 2), (112, c['floor'] - 2), (146, crease), (146, ah - 25), (124, ah), (-124, ah), (-146, ah - 25), (-146, crease)]
+    shell = SH(side, -160, 160) & XH(frontl, 1480, se + 10)
+    # the charger well: its front wall slopes back 34 degrees from vertical from just under the rim to the floor
+    wf, wb, wfl, ww = 1514.0, 1680.0, 785.0, 124.0
+    A, B = np.array([wf, 904.0]), np.array([1590.0, 790.0])
+    d = (B - A) / np.linalg.norm(B - A)
+    n = np.array([-d[1], d[0]])                           # normal pointing back and up, off the slope into the well
+    if n[0] < 0:
+        n = -n
+    well = SH([(wf, 1000), tuple(A), tuple(B), (B[0], wfl), (wb, wfl), (wb, 1000)], -ww, ww)
+    cups_s, cup_x, cup_r = 1765.0, 72.0, 48.0             # the pair spans three quarters of the rim's width (886D0FDA)
+    cups = Compound([XS(ngon(xc, cups_s, cup_r, 8, math.pi / 8), 800, 1000) for xc in (-cup_x, cup_x)])
+    bridge = XS([(-cup_x, cups_s - 30), (cup_x, cups_s - 30), (cup_x, cups_s + 30), (-cup_x, cups_s + 30)], rim_h - 34, 1000)
+    hollow = well + cups + bridge
+    top = SH([(1480, rim_h - rim_t), (lid0 - 0.5, rim_h - rim_t), (lid0 - 0.5, rim_h + 1), (1480, rim_h + 1)], -200, 200)
+    con = shell - top - hollow
     con -= SH([(lid1 - 2, ah - 6), (lid1 + 2, ah - 6), (lid1 + 2, ah + 20), (lid1 - 2, ah + 20)], -200, 200)     # the lid's seam at its hinge
     out['console'] = con
-    chg = []
-    for xc in (-62, 62):                                 # two pads, leaning back 25 degrees on the front wall
-        chg.append(Box(108, 100, 8).rotate(Axis.X, 25).moved(Location((xc, 912, Z(1512 + 38)))))
-    out['chargers'] = Compound(chg) & XS([(-160, 1500), (160, 1500), (160, 1700), (-160, 1700)], 873, 1000)
+    # the rim: the top of the tray, light grey, with the grip tabs (small wedges) on each cup's inboard and outboard walls
+    rim = (shell & top) - hollow
+    tabs = []
+    for xc in (-cup_x, cup_x):
+        for sd in (-1, 1):
+            x0 = xc + sd * (cup_r - 4)
+            tabs.append(XS([(x0, cups_s - 10), (x0, cups_s + 10), (x0 - sd * 13, cups_s)], rim_h - 70, rim_h - 36))
+    out['console_rim'] = rim + Compound(tabs)
+    # the pads, each 104 wide, lying on the slope; a rib between them and a lip at their foot
+    def on_slope(t0, t1, off0, off1):
+        return [tuple(A + d * t0 + n * off0), tuple(A + d * t1 + n * off0), tuple(A + d * t1 + n * off1), tuple(A + d * t0 + n * off1)]
+    L = float(np.linalg.norm(B - A))
+    out['chargers'] = Compound([SH(on_slope(4, L - 18, 0.05, 6), x0, x1) for x0, x1 in ((-114, -6), (6, 114))])
+    rib = SH(on_slope(2, L, 0.0, 12), -4, 4)
+    lip = SH([(B[0] - 4, wfl - 0.1), (B[0] + 20, wfl - 0.1), (B[0] + 20, wfl + 37), (B[0] + 8, wfl + 37)], -ww, ww)     # stands ~12 proud of the pads' foot
+    out['charger_trim'] = rib + lip
     rs = se + 7                                          # the surround stands 7 mm proud of the rear face
     out['rear_vents'] = SH([(se - 5, 760), (rs, 760), (rs, 935), (se - 5, 935)], -125, 125)
     out['rear_screen'] = SH([(rs - 1, 783), (rs + 1, 783), (rs + 1, 900), (rs - 1, 900)], -104, 104)

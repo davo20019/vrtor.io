@@ -1,0 +1,65 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "cameras": {
+  "charger": {
+   "eye": [
+    420,
+    1250,
+    446
+   ],
+   "look": [
+    -40,
+    880,
+    1016
+   ],
+   "fovDeg": 60,
+   "size": [
+    900,
+    760
+   ],
+   "photo": "../../refs/tesla/manual-electronics-GUID-2298443C-6ED9-46E6-9633-F7D5C24B3389-online-en-US.png"
+  },
+  "top": {
+   "eye": [
+    0,
+    1320,
+    506
+   ],
+   "look": [
+    0,
+    860,
+    1036
+   ],
+   "fovDeg": 55,
+   "size": [
+    900,
+    640
+   ],
+   "photo": "../../refs/tesla/manual-electronics-GUID-886D0FDA-EEEF-4491-B8BF-02CCBEAE520F-online-en-US.png"
+  },
+  "three_quarter": {
+   "eye": [
+    1500,
+    1550,
+    1300
+   ],
+   "look": [
+    0,
+    680,
+    640
+   ],
+   "fovDeg": 45,
+   "size": [
+    800,
+    760
+   ],
+   "only": [
+    "int_console",
+    "int_chargers",
+    "int_rear"
+   ],
+   "photo": "../../refs/tesla/manual-storage-GUID-34C29DB3-42A3-4A63-83C1-8A86DD862C02-online-en-US.png"
+  }
+ }
+}

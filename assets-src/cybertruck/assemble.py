@@ -76,6 +76,7 @@ M = {
     'screen': material('screen_off', srgb(6, 7, 8), 0.08),
     'bezel': material('screen_bezel', srgb(15, 15, 15), 0.4),
     'console': material('console_grey', srgb(70, 70, 72), 0.6),
+    'console_rim': material('console_rim_grey', srgb(120, 120, 122), 0.5),      # the light grey rim round the chargers and cupholders (2298443C)
     'screen_on': material('screen_on', (1, 1, 1), 0.12, emit=(1, 1, 1), emit_strength=0.0, image=PARTS / 'screen.png'),
     'armrest': material('armrest_grey', srgb(52, 52, 54), 0.55, normal_map=PARTS / 'leather_normal.png', normal_strength=0.5),
     'switch': material('switch_grey', srgb(150, 150, 152), 0.35),
@@ -250,7 +251,7 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'yoke': 'yoke', 'yoke_pad': 'yoke', 'yoke_column': 'yoke', 'yoke_chin': 'silver', 'yoke_face': 'yoke_face',
             'yoke_pods': 'yoke_pod', 'yoke_trim': 'silver', 'yoke_keys': 'switch_key',
             'yoke_btn_signal_right': 'yoke_pod', 'yoke_btn_signal_left': 'yoke_pod', 'yoke_btn_high_beam': 'yoke_pod', 'yoke_btn_wiper': 'yoke_pod',
-            'console': 'console', 'chargers': 'screen', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
+            'console': 'console', 'console_rim': 'console_rim', 'charger_trim': 'console', 'chargers': 'screen', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
             'seats_front': 'seat', 'seats_rear': 'seat', 'seat_base': 'armrest', 'seat_knobs': 'switch', 'rear_armrest': 'seat',
             'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
             'overhead': 'overhead', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'pedals': 'pedal', 'pedal_grips': 'yoke', 'pedal_arms': 'tiedown',
@@ -428,7 +429,7 @@ bpy.context.view_layer.update()
 # from an even sky (direct and bounced) is baked into one texture, exported as the glTF occlusion map on a
 # second UV set: the app multiplies its lights by it, so corners, footwells and the underside of the roof
 # go dark and the faces open to the windows stay bright, as in the real cabin.
-ROUND = {'seats_front': 24, 'seats_rear': 24, 'rear_armrest': 14, 'dash_white': 28, 'console': 10, 'seat_base': 8,
+ROUND = {'seats_front': 24, 'seats_rear': 24, 'rear_armrest': 14, 'dash_white': 28, 'console': 10, 'console_rim': 3, 'seat_base': 8,
          'dash_top': 6, 'dash_lower': 6, 'dash_face': 4, 'yoke': 9, 'yoke_column': 5, 'visors': 8, 'screen_bezel': 3, 'overhead': 6,
          'armrest': 14, 'door_lower': 6, 'trim_white': 14, 'cap': 6}
 NO_BAKE = ('screen', 'rear_screen', 'ambient', 'chargers', 'open', 'switch', 'mirror_glass',
