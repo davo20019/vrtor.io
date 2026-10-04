@@ -35,6 +35,9 @@ Several photos fitted together (shared shape parameters, one camera per photo):
                "exclude": [[[x, y], ...], ...] polygons that are sure background for grabcut: a drop shadow, a
                car parked beside it, a sign in front. A few marked pixels also teach grabcut their colour.
     landmarks  {landmark name: [x, y] px in the photo}: measured inner points (wheel centres, light bar)
+    focalPx    optional focal length in px, when known: from EXIF, focal_mm / sensor_width_mm x image width px.
+               Silhouettes alone trade tilt for perspective (a steep view from far looks like a shallow one
+               from near); a known focal length removes most of that
     parts      (with a parts solid) which entry of cad.<viewDark> lists the dark parts this photo sees
     dark       {"valueMax": v} or {"method": "otsu"}: the dark parts (cladding, tyres, glass) cut out inside
                the part by brightness; compared with the model's dark parts, weighted by darkWeightMm.
@@ -85,6 +88,16 @@ def rotation(cam):
     Rz = np.array([[np.cos(rz), -np.sin(rz), 0], [np.sin(rz), np.cos(rz), 0], [0, 0, 1]])
     return Rz @ Rx @ Ry
 
+def fill_holes(m):
+    """Holes are background regions that touch no border. Flood from a 1 px frame round the image: a part
+    that spans the photo's width would otherwise turn the ground below it into a "hole". The cut-outs and
+    the model's renders are both filled, so a see-through gap (inside a loop, between spokes) counts the
+    same on both sides: filling only the photo's made the fit raise cameras until the model's gaps closed."""
+    m = (m > 0).astype(np.uint8)
+    outside = np.pad(m, 1); h, w = outside.shape
+    cv2.floodFill(outside, np.zeros((h + 2, w + 2), np.uint8), (0, 0), 1)
+    return m | (1 - outside[1:-1, 1:-1])
+
 class Photo:
     def __init__(self, c):
         self.c = c
@@ -96,6 +109,7 @@ class Photo:
         self.out = model / 'fit' if LEGACY else model / 'fit' / self.name
         self.out.mkdir(parents=True, exist_ok=True)
         self.marks = {k: np.array(v, float) * self.S for k, v in c.get('landmarks', {}).items()}
+        self.focal = c['focalPx'] * self.S if 'focalPx' in c else None
         self.mark = None                                   # legacy colour landmark (relative to the outlines)
         self.mask_cfg = c.get('mask', {'method': 'hsv', 'hsv': c.get('hsv')})
         self.dark_names = VIEW_DARK.get(c.get('parts'), [])
@@ -123,11 +137,7 @@ class Photo:
     def largest_filled(self, m):
         _, lab, stats, _ = cv2.connectedComponentsWithStats(m.astype(np.uint8))
         m = (lab == 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])).astype(np.uint8)
-        # Holes are background regions that touch no border. Flood from a 1 px frame round the image: a part
-        # that spans the photo's width would otherwise turn the ground below it into a "hole".
-        outside = np.pad(m, 1); h, w = outside.shape
-        cv2.floodFill(outside, np.zeros((h + 2, w + 2), np.uint8), (0, 0), 1)
-        return m | (1 - outside[1:-1, 1:-1])
+        return fill_holes(m)
 
     def below_ground(self):
         g = self.mask_cfg.get('ground')
@@ -252,9 +262,19 @@ def render_photo(ph, geo, cam):
     (tyres flatten where they meet the ground, a round model tyre doesn't)."""
     lab = render(geo, cam, ph.target.shape, ph.dark_names if ph.dark is not None else ())
     lab[ph.ground] = 0
+    if ph.mask_cfg['method'] != 'file':                           # the cut-out's holes are filled: fill the model's
+        lab[(fill_holes(lab) == 1) & (lab == 0)] = 1
     return lab
 
+def with_focal(ph, cam):
+    """A known focal length (EXIF) fixes the distance for each scale: f = s * distance."""
+    cam = np.array(cam, float)
+    if ph.focal:
+        cam[6] = ph.focal / cam[5]
+    return cam
+
 def loss_cam(ph, geo, cam, lms):
+    cam = with_focal(ph, cam)
     lab = render_photo(ph, geo, cam)
     m = (lab > 0).astype(np.uint8)
     iou, edge = score(m, ph.target, 1 / cam[5])
@@ -282,7 +302,26 @@ def refine(ph, geo, cam, lms, n=1500):
             return 1e9
         return loss_cam(ph, geo, c, lms)
     u = minimize(f, np.zeros(len(cam)), method='Powell', options={'xtol': 1e-2, 'ftol': 1e-4, 'maxfev': n}).x
-    return cam + u * step
+    return with_focal(ph, cam + u * step)
+
+def align_box(ph, geo, cam):
+    """Scale and shift the camera so the model's outline has the cut-out's bounding box. A heavy end moves
+    the cut-out's centroid away from the model's centre, and a tilt search from a shifted start picks the
+    tilt that hides the shift."""
+    cam = with_focal(ph, cam)
+    ys, xs = np.nonzero(ph.target)
+    for _ in range(2):
+        m = render_photo(ph, geo, cam) > 0
+        if not m.any():
+            return cam
+        my, mx = np.nonzero(m)
+        k = np.ptp(ys) / max(np.ptp(my), 1) if np.ptp(ys) >= np.ptp(xs) else np.ptp(xs) / max(np.ptp(mx), 1)
+        cam[5] *= k
+        cam = with_focal(ph, cam)
+        my, mx = np.nonzero(render_photo(ph, geo, cam) > 0)
+        cam[3] += (xs.min() + xs.max() - mx.min() - mx.max()) / 2
+        cam[4] += (ys.min() + ys.max() - my.min() - my.max()) / 2
+    return cam
 
 def search(ph, geo, cam, lms):
     view = ph.c.get('view', [0, 0, 0])
@@ -292,7 +331,8 @@ def search(ph, geo, cam, lms):
         sp = ph.c.get('search', {})
         pr = sp.get('pitch', [view[0] - 10, view[0] + 20, 5]); yr = sp.get('yaw', [view[1] - 15, view[1] + 15, 5])
         grid = [(a, b) for a in np.arange(pr[0], pr[1] + 1e-6, pr[2]) for b in np.arange(yr[0], yr[1] + 1e-6, yr[2])]
-    best = min((np.r_[a, b, cam[2:]] for a, b in grid), key=lambda c: loss_cam(ph, geo, c, lms))
+    starts = [align_box(ph, geo, np.r_[a, b, cam[2:]]) for a, b in grid]
+    best = min(starts, key=lambda c: loss_cam(ph, geo, c, lms))
     return refine(ph, geo, best, lms)
 
 def initial_cam(ph, geo):
@@ -303,7 +343,7 @@ def initial_cam(ph, geo):
     span = np.ptp((V - centre) @ rotation(np.r_[view, 0, 0, 1, 1]).T, axis=0)
     dist = ph.c.get('distanceMm', 300.0 if LEGACY else 2.5 * np.ptp(V, axis=0).max())
     cam = [*view, xs.mean(), ys.mean(), (xs.max() - xs.min()) / span[0], dist]
-    return np.array(cam + ([0.0] if RIDE else []), float)
+    return with_focal(ph, cam + ([0.0] if RIDE else []))
 
 photos = [Photo(CFG)] if LEGACY else [Photo(c) for c in CFG['photos']]
 for ph in photos:
