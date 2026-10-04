@@ -1448,7 +1448,7 @@ def interior(p):
     vis = ceiling_band(p, 24.5, 40) & sband(h0 + 10, h1 - 10) & roof_only
     out['visors'] = vis & (Box(640, 3000, 8000).moved(Location((370, 1500, 0))) + Box(640, 3000, 8000).moved(Location((-370, 1500, 0))))
     # Overhead console: a plate from the header down to the rear-view mirror (dash render: its lower corners
-    # ±136 wide at 1,490 high, 1,578 back; the mirror 195 x 50, 1,464 to 1,513 high, 1,621 back).
+    # ±136 wide at 1,490 high, 1,578 back; the mirror below, measured in int-athens-3).
     hy = roof_inner_h(p, h0 + 60, c['wall'] + 20)
     oc = [np.array([30, hy + 30, Z(h0 + 60)]), np.array([-30, hy + 30, Z(h0 + 60)]), np.array([-136, 1490, Z(1578)]), np.array([136, 1490, Z(1578)])]
     ocp = Wire.make_polygon([tuple(q) for q in oc], close=True)
@@ -1480,8 +1480,18 @@ def interior(p):
         a1 = top_c + dirv * 60 + np.array([sd * 36, 0, 0])
         arms.append(rod(a0, a1, -up_n, 18, 14))
     out['overhead_arms'] = Compound(arms)
-    out['rear_mirror'] = Box(195, 50, 28).moved(Location((0, 1489, Z(1621)))) + Box(26, 40, 26).moved(Location((0, 1525, Z(1600))))
-    out['mirror_glass'] = Box(187, 42, 2).moved(Location((0, 1489, Z(1621 + 14.6))))     # its face, toward the cabin: bright in the dash render
+    # The rear-view mirror, turned 18 degrees toward the driver as it is driven: the glass's lower corners through
+    # int-athens-3's camera (measure/console/athens3-mirror.md) with the glass centred on the truck, level, and
+    # as wide as the dash render shows it at that depth (the render looks along it, so it fixes the ray to the
+    # mirror but hardly its depth): 187 x 48, its lower edge 1,450 high (the render's ray: 1,454), the face
+    # 1,664 back. It hung 43 further forward, square to the truck.
+    mw, mh, md, m_face, m_yaw = 187.0, 48.0, 28.0, 1664.0, 18.0
+    fc = np.array([0.0, 1450.0 + mh / 2, Z(m_face)])
+    m_ax = Axis(tuple(fc), (0, 1, 0))                              # turned about the face's centre, the driver's end forward
+    fwd = np.array([-math.sin(math.radians(m_yaw)), 0.0, math.cos(math.radians(m_yaw))])
+    stem = rod((0.0, 1525.0, Z(1600)), fc + fwd * md + np.array([0.0, mh / 2 - 12, 0.0]), (1, 0, 0), 26, 22)
+    out['rear_mirror'] = Box(mw, mh, md).moved(Location(tuple(fc + [0, 0, md / 2]))).rotate(m_ax, -m_yaw) + stem
+    out['mirror_glass'] = Box(mw - 8, mh - 8, 2).moved(Location(tuple(fc - [0, 0, 0.6]))).rotate(m_ax, -m_yaw)     # its face, toward the cabin: bright in the dash render
     # ---- floor: carpet over the cabin floor, mats on it, pedals (brake outboard of the accelerator, x
     # measured in the dash render; their depth along the truck is a guess).
     out['carpet'] = (Box(2400, 12, c['cab_rear_s'] - 1170, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((0, c['floor'] + 0.5, Z(1170)))) & inner) - well
@@ -2002,8 +2012,12 @@ if __name__ == '__main__':
     save(cp['bumper_f_camera'], 'front_camera', tolerance=0.3, angular=0.3)
     save(cp['bumper_f_lens'], 'front_camera_lens', tolerance=0.3, angular=0.3)
     mirrors_rest, mirror_pieces = split_doors(both_sides(mirror_part(p)), regions)     # the mirrors ride on the front doors
+    # Two-tone, as on the truck (c003, dgRcedIkNOM-04): a satin grey cap over the black base and arm, split at
+    # the base's top.
+    cap_zone = Box(6000, 1000, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, mirror_frame(p)['yb'], 0)))
     for k, piece in mirror_pieces.items():
-        save(piece, f'door_{k}_mirror')
+        save(piece - cap_zone, f'door_{k}_mirror')
+        save(piece & cap_zone, f'door_{k}_mirrorcap')
     _, glass_pieces = split_doors(both_sides(mirror_glass_part(p)), regions)
     for k, piece in glass_pieces.items():
         save(piece, f'door_{k}_mirrorglass')

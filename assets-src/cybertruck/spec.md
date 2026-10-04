@@ -352,7 +352,7 @@ render, both scaled to 318 mm): outline IoU 0.965, mean edge distance 1.6 mm, he
 | Windshield top edge (header front) | 1,739 back, 1,536 high | dash camera, on the roof plane | none |
 | Dome light under the header | 1,826 back | dash camera | (was taken as the header) |
 | Overhead console | lower corners +-136 at 1,490 high, 1,578 back | dash camera | none |
-| Rear-view mirror | 195 x 50, 1,464 to 1,513 high, 1,621 back | dash camera | 250 x 72 at the apex |
+| Rear-view mirror | 187 x 48, lower edge 1,450 high, face 1,664 back, turned 18 deg toward the driver | int-athens-3's glass corners with the dash camera's ray (measure/console/athens3-mirror.md) | 195 x 50, 1,464 to 1,513 high, 1,621 back, square (dash camera alone: depth unconstrained) |
 | Console front | 1,614 back at the rim (918), lid front 1,897 | dash camera on the rim's and lid's own heights (measure/int/glove.md); 1,494 before was the dash's lower edge, read on the near-grazing x = 0 plane. int-athens-3's camera solves to 23 px RMS with it (54 with 1,494) | 1,494 |
 | Pedals across | brake w 460, accelerator w 290 (brake outboard) | dash camera | swapped |
 | Pedal shapes | brake: hanging, rounded pad 130 x 80 with eight black rubber strips, arm rising inboard into the dash; accelerator: floor-hinged, 50 x 220 with a rounded top, four strips down its upper part, hinge block on the floor | manual-interior-CC015C4E (14, 15), widths against their 170 mm spacing (3.6 mm/px) | plain boxes 120 x 85 and 55 x 220, fully metallic (read black in the footwell) |
@@ -590,5 +590,6 @@ Fold check: the folded width (2,200.7) brings the outer edge in 106 mm, which a 
 about 64 degrees; folded at that angle the side view lengthens to about 300 to 330, as the street photos show.
 
 Still guesses: the arm's shape under the base (it is mostly hidden), the edge rounding (the facets are left
-sharp), the housing's exact black (the material is the trim black).
+sharp). The housing is two-tone: a satin grey cap (sRGB 70 to 110 in c003 and dgRcedIkNOM-04; built 78, 80, 84)
+over the black base and arm, split at the base's top.
 

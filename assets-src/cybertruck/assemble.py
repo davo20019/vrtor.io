@@ -122,6 +122,7 @@ M = {
     'light_w': material('light_front', srgb(235, 238, 245), 0.2, emit=(1, 1, 1), emit_strength=6.0),
     'light_r': material('light_rear', srgb(70, 8, 8), 0.15, emit=(1, 0.05, 0.03), emit_strength=0.6),
     'mirror': material('mirror_black', srgb(20, 20, 21), 0.35),
+    'mirror_cap': material('mirror_cap_grey', srgb(78, 80, 84), 0.4),     # the door mirrors' satin grey cap (c003, dgRcedIkNOM-04)
     'wiper': material('wiper_black', srgb(18, 18, 18), 0.6),
     'tyre': material('rubber', srgb(30, 30, 30), 0.88, normal_map=PARTS / 'tyre_normal.png'),
     'rim': material('rim_satin_black', srgb(38, 38, 40), 0.45),
@@ -309,7 +310,7 @@ for k in GEO['doors']:
     o.name = o.data.name = f'btn_{k}'
     button_parts.append(o)
 # Doors: everything that swings with each door, by the part's material.
-DOOR_PARTS = {'steel': 'steel', 'glass': 'glass', 'mirror': 'mirror', 'mirrorglass': 'mirror_glass'}
+DOOR_PARTS = {'steel': 'steel', 'glass': 'glass', 'mirror': 'mirror', 'mirrorcap': 'mirror_cap', 'mirrorglass': 'mirror_glass'}
 door_parts = {}
 for k in GEO['doors']:
     door_parts[k] = []

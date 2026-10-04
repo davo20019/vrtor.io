@@ -1,0 +1,5 @@
+{"glbFrame": "y-up", "samples": 16, "cameras": {
+ "driver": {"eye": [390, 1250, 436], "look": [0, 1450, 1200], "fovDeg": 80, "size": [1200, 900]},
+ "mirror_side": {"eye": [-700, 1480, 1000], "look": [0, 1475, 1030], "fovDeg": 40, "size": [1200, 900], "hide": ["door_fr", "door_rr", "steel", "glass"]},
+ "door_mirror": {"eye": [1900, 1500, 600], "look": [1100, 1330, 1100], "fovDeg": 35, "size": [1200, 900]}
+}}
