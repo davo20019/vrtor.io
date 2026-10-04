@@ -1435,6 +1435,11 @@ def interior(p):
         # int-athens-1: dark between the block's end and the door's white panel)
         col = col & Box(2400, 1500, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, 850.0, 0)))
         col = col & Box(2400, 3000, 1600, align=(Align.CENTER, Align.CENTER, Align.MAX)).moved(Location((0, 0, ZF - 950)))
+        # under the glass the window plane leans out past the steel: below the belt the foot stays inside the
+        # shell's inner face (it stood 90 proud of the fender above the front wheel)
+        b0, b1 = (np.array([0.0, belt_h(p, s), ZF - s]) for s in (950.0, 1410.0))
+        above = plane_cut(Box(2400, 3000, 8000), b0, b1, b0 + np.array([100.0, 0, 0]), np.array([0.0, 2500.0, ZF - 1200]))
+        col = (col & above) + ((col - above) & inner)
         apil.append(col)
     out['a_pillar_inner'] = Compound(apil)
     out['rear_wall'] = (SH([(c['cab_rear_s'] - 26, c['floor']), (c['cab_rear_s'] + 5, c['floor']), (c['cab_rear_s'] + 5, 2000), (c['cab_rear_s'] - 26, 2000)], -1300, 1300) & inner)
