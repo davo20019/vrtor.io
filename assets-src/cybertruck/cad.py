@@ -1131,24 +1131,27 @@ def interior(p):
     out['yoke_keys'] = place(wheels)
     for k, key in keys.items():
         out[f'yoke_btn_{k}'] = place(key)
-    # ---- centre console (manual-storage-34C29DB3, -electronics-2298443C, -886D0FDA, -D54DBA46). Front to back:
-    # a deep well holding the two wireless chargers (pads leaning back on its sloped front wall, a thin rib
-    # between them, a lip at their foot), the two cupholders joined into one pocket over a lower bridge, the
-    # thick armrest lid, the rear section, and the rear face with the rear screen in its vent surround. An upper
-    # band in the white trim (2298443C) forms the top of the tray and wraps 60 down the sides the whole length;
-    # below it the dark body steps in 10 and narrows to the floor, its front face leaning back. Front measured at
-    # 1,494 back, 918 high (dash camera); the rest scaled from the renders (spec.md, "Console top").
+    # ---- centre console (refs/web/int-athens-3.jpg, a real truck seen from the driver's seat; manual-storage-34C29DB3,
+    # -electronics-2298443C, -886D0FDA, -D54DBA46). Front to back: a deep well lined in dark felt (its front wall
+    # sloping back, a felt-covered rib down the slope between the two chargers under it, a lip at their foot),
+    # the cupholder pod (one figure-eight pocket, pinched between the cups by faceted wedges from its front and
+    # back walls), the padded grey armrest lid, the rear section, and the rear face with the rear screen in its
+    # vent surround. The top is a satin silver band that wraps 20 down the black sides; under it the body steps
+    # in 10 (2298443C) and narrows to the floor, its front face leaning back. Front measured at 1,494 back, 918
+    # high (dash camera); the rest scaled from the pictures (spec.md, "Console top").
     se = c['console_end_s']
-    # The tray holds a charger well about as long as the cupholder pod (2298443C), and the lid is about twice as
-    # long as it is wide (34C29DB3, open): the lid starts 1,795 back, right behind the pod.
+    # The tray holds a charger well about as long as the cupholder pod (2298443C, int-athens-3), and the lid is
+    # about twice as long as it is wide (34C29DB3, open): the lid starts 1,795 back, right behind the pod.
     lid0, lid1 = 1795.0, 2330.0
-    rim_h, band, step = 918.0, 60.0, 10.0
+    rim_h, band, step = 918.0, 20.0, 10.0
     crease = rim_h - band
-    ah = rim_h + 90                                       # the lid is a box 0.38 of its width thick (34C29DB3), sitting on the band
+    # The lid's top is level with the door armrests (943): from the driver's eye the whole pod shows in front of
+    # it (int-athens-3), which a lid more than ~25 above the rim would hide.
+    ah = c['door_arm_h']
     side = [(1560, c['floor'] - 2), (1494, 690), (1494, rim_h), (lid0, rim_h), (lid0, ah), (lid1, ah), (lid1 + 15, ah + 12),
             (se, ah + 12), (se, 640), (se - 90, 560), (se - 120, c['floor'] - 2)]
-    frontl = [(-112, c['floor'] - 2), (112, c['floor'] - 2), (146 - step, crease), (146, crease), (146, ah - 25), (124, ah),
-              (-124, ah), (-146, ah - 25), (-146, crease), (-146 + step, crease)]
+    frontl = [(-112, c['floor'] - 2), (112, c['floor'] - 2), (146 - step, crease), (146, crease), (146, rim_h), (132, ah + 12),
+              (-132, ah + 12), (-146, rim_h), (-146, crease), (-146 + step, crease)]
     shell = SH(side, -160, 160) & XH(frontl, 1480, se + 10)
     # the charger well: its front wall slopes back 34 degrees from vertical from just under the rim to the floor
     wf, wfl, ww = 1514.0, 785.0, 124.0
@@ -1158,21 +1161,25 @@ def interior(p):
     if n[0] < 0:
         n = -n
     # The cupholders are chamfered octagons, 80 across and 87 along the truck, their pair spanning 0.89 of the
-    # band's width (886D0FDA, near top-down, scaled by the console's width; the along-truck size unforeshortened
-    # by the view's ~50 degree tilt), right in front of the lid with a 15 wall. Between them the bridge, 34 below the rim.
+    # width (886D0FDA, near top-down; the along-truck size corrected for the view's ~50 degree tilt), right in
+    # front of the lid with a 15 wall. Between the cups the pocket narrows to a 36 passage: the front and back
+    # walls come in as wedges whose tops slope down 40 into it (int-athens-3).
     cups_s, cup_x, ca, cb, cc = lid0 - 15 - 43.5, 90.0, 40.0, 43.5, 13.0
     def octagon(xc):
         return [(xc - ca + cc, cups_s - cb), (xc + ca - cc, cups_s - cb), (xc + ca, cups_s - cb + cc), (xc + ca, cups_s + cb - cc),
                 (xc + ca - cc, cups_s + cb), (xc - ca + cc, cups_s + cb), (xc - ca, cups_s + cb - cc), (xc - ca, cups_s - cb + cc)]
     cups = Compound([XS(octagon(xc), 800, 1000) for xc in (-cup_x, cup_x)])
+    gx = cup_x - ca + cc                                  # the pinch spans between the cups' straight sides
+    passage = XS([(-gx, cups_s - 18), (gx, cups_s - 18), (gx, cups_s + 18), (-gx, cups_s + 18)], 800, 1000)
+    pinch = SH([(cups_s - 18, rim_h - 40), (cups_s + 18, rim_h - 40), (cups_s + cb - cc, rim_h + 1), (cups_s - cb + cc, rim_h + 1)], -gx, gx)
     wb = cups_s - cb - 18                                 # the well's back wall, 18 thick, just ahead of the cupholders (886D0FDA)
-    bridge = XS([(-cup_x, cups_s - cb + cc), (cup_x, cups_s - cb + cc), (cup_x, cups_s + cb - cc), (-cup_x, cups_s + cb - cc)], rim_h - 34, 1000)
     well = SH([(wf, 1000), tuple(A), tuple(B), (B[0], wfl), (wb, wfl), (wb, 1000)], -ww, ww)
-    hollow = well + cups + bridge
+    hollow = well + cups + passage + pinch
     top = SH([(1480, crease), (se + 20, crease), (se + 20, rim_h), (1480, rim_h)], -200, 200)
-    con = shell - top - hollow
-    con -= SH([(lid1 - 2, ah - 6), (lid1 + 2, ah - 6), (lid1 + 2, ah + 20), (lid1 - 2, ah + 20)], -200, 200)     # the lid's seam at its hinge
+    lid = SH([(lid0, rim_h), (lid1, rim_h), (lid1, ah + 1), (lid0, ah + 1)], -200, 200)
+    con = shell - top - lid - hollow
     out['console'] = con
+    out['console_lid'] = shell & lid
     # the band, with the grip tabs (small wedges) on each cup's inboard and outboard walls
     rim = (shell & top) - hollow
     tabs = []
@@ -1181,11 +1188,11 @@ def interior(p):
             x0 = xc + sd * (ca - 0.5)
             tabs.append(XS([(x0, cups_s - 10), (x0, cups_s + 10), (x0 - sd * 13, cups_s)], rim_h - 70, rim_h - 36))
     out['console_rim'] = rim + Compound(tabs)
-    # the pads, each 104 wide, lying on the slope; a rib between them and a lip at their foot
+    # the felt lining over the chargers, one piece across the slope; the rib down its middle and the lip at its foot
     def on_slope(t0, t1, off0, off1):
         return [tuple(A + d * t0 + n * off0), tuple(A + d * t1 + n * off0), tuple(A + d * t1 + n * off1), tuple(A + d * t0 + n * off1)]
     L = float(np.linalg.norm(B - A))
-    out['chargers'] = Compound([SH(on_slope(4, L - 18, 0.05, 6), x0, x1) for x0, x1 in ((-114, -6), (6, 114))])
+    out['chargers'] = SH(on_slope(0, L, 0.05, 3), -ww + 0.5, ww - 0.5)
     rib = SH(on_slope(2, L, 0.0, 12), -4, 4)
     lip = SH([(B[0] - 4, wfl - 0.1), (B[0] + 20, wfl - 0.1), (B[0] + 20, wfl + 37), (B[0] + 8, wfl + 37)], -ww, ww)     # stands ~12 proud of the pads' foot
     out['charger_trim'] = rib + lip

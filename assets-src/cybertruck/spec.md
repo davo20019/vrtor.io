@@ -315,11 +315,11 @@ render, both scaled to 318 mm): outline IoU 0.965, mean edge distance 1.6 mm, he
 | Rear backrest | 21 deg | manual-childseats-D8CE20B2, side view | 25 |
 | Door armrest face | w 700 (armrest), lower panel w 727 at hip height | hip room 1,453 | w 792 |
 | Door white panel crease | w 806 front, 790 rear | shoulder room 1,608 / 1,576 | flat panel |
-| Console proportions | tray 1,494 to 1,795 (charger well 1,514 to 1,665, cupholder pod to 1,795), lid 1,795 to 2,330, rear block to 2,600 | the well about as long as the pod (2298443C); the open lid about twice as long as wide (34C29DB3) | tray to 1,880, lid 1,880 to 2,330 (35/40/25 by eye) |
-| Console top | upper band in the white trim, rim 918, wrapping 60 down the sides the whole length; below it the dark body steps in 10 (+-136) and narrows to +-112 at the floor | 2298443C: the band against the console's front height; the step's shadow | light grey rim plate on the tray only, plain taper |
-| Console lid | top 90 above the rim (1,008) | 34C29DB3: the open lid's thickness is 0.38 of its width (~248) | 22, then 50 above the rim |
-| Cupholders | chamfered octagons 80 across, 87 along, chamfer 13, centres +-90, 15 ahead of the lid; bridge between them 34 below the rim; grip tabs on the side walls | 886D0FDA (near top-down): the pair spans 0.89 of the width; along-truck size corrected for the ~50 deg tilt | regular octagons r 48 at +-72 |
-| Charger well | front wall sloping 34 deg back, floor 785, back wall 18 thick ahead of the cupholders; two pads 108 wide either side of an 8 mm rib, a lip at their foot | 2298443C, 886D0FDA | pads standing above a flat top |
+| Console proportions | tray 1,494 to 1,795 (charger well 1,514 to 1,665, cupholder pod to 1,795), lid 1,795 to 2,330, rear block to 2,600 | the well about as long as the pod (2298443C, int-athens-3); the open lid about twice as long as wide (34C29DB3) | tray to 1,880, lid 1,880 to 2,330 (35/40/25 by eye) |
+| Console top | satin silver band, rim 918, wrapping 20 down the black sides the whole length; below it the body steps in 10 (+-136) and narrows to +-112 at the floor | int-athens-3 (a real truck: silver deck, thin silver edge on the side); the step from 2298443C | light grey plate on the tray only; then a 60 white band (2298443C shows a white-trim version) |
+| Console lid | light warm grey padded leather, top 943 (25 above the rim), level with the door armrests | int-athens-3: from the driver's seat the whole cupholder pod shows in front of the lid, which a lid more than ~25 above the rim would hide from the eye (s 2,260, h 1,411) | 22, 50, then 90 above the rim; the 90 came from the open lid's thickness, which includes the part that drops into the bin |
+| Cupholders | one figure-eight pocket: chamfered octagons 80 across, 87 along, chamfer 13, centres +-90, 15 ahead of the lid; between them a 36 passage, the front and back walls coming in as wedges whose tops slope down 40; grip tabs on the side walls | 886D0FDA (pair spans 0.89 of the width); int-athens-3 (the pinch) | separate octagons with a lowered bridge |
+| Charger well | lined in dark felt; front wall sloping 34 deg back, floor 785, back wall 18 thick ahead of the cupholders; a felt-covered rib down the slope, a lip at its foot | int-athens-3, 2298443C, 886D0FDA | black pads standing above a flat top |
 | Rear screen | 208 x 117 (9.4 in), in a vent surround, centre 841 high | manual-electronics-D54DBA46, manual-interior-E5BB028D | 220 x 140 |
 
 Shapes taken from pictures, sizes partly guessed:
@@ -388,7 +388,9 @@ Shapes taken from pictures, sizes partly guessed:
   width, the B-pillar trim.
 - Pedal depth along the truck (the dash camera's error grows near the floor), their lean (brake 35, accelerator 40 deg),
   the brake arm's path inside the dash, floor mat outlines, carpet.
-- Console width (+-146), on which every console size above is scaled; the charger pads' lean and the well's
+- Console width (+-146), on which every console size above is scaled (measure/console/athens3.json tried to
+  solve the photo's camera from the screen corners and the console's front, but its references reproject 54 px
+  RMS, likely the phone's wide lens, so nothing was taken from it); the charger pads' lean and the well's
   depth; the lower body's taper (+-112 at the floor). No picture with known references shows the console, so
   these are ratios in the manual renders, not solved measurements.
 - The yoke's depths: rim 30 deep and rounded 9 mm front and back (in assemble.py), pad 16 proud, pods 7,

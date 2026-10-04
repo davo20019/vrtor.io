@@ -60,6 +60,24 @@
     "int_rear"
    ],
    "photo": "../../refs/tesla/manual-storage-GUID-34C29DB3-42A3-4A63-83C1-8A86DD862C02-online-en-US.png"
+  },
+  "driver_eye": {
+   "eye": [
+    390,
+    1411,
+    436
+   ],
+   "look": [
+    -60,
+    900,
+    1060
+   ],
+   "fovDeg": 62,
+   "size": [
+    1000,
+    750
+   ],
+   "photo": "../../refs/web/int-athens-3.jpg"
   }
  }
 }

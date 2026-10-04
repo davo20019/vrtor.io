@@ -209,5 +209,13 @@ standing up from it like tombstones. Compared with the manual renders through ca
   body steps in 10 under it (the crease). The lid is a thick box (0.38 of its width): 90 above the rim.
 - r5, r6: the cupholder pod sits right in front of the lid, and the well is about as long as the pod, so the
   lid starts at 1,795 (was 1,880) and is about twice as long as wide, as in 34C29DB3.
+- r7: in the headset, from the driver's seat the 90 lid hid the whole cupholder pod and the white band read
+  as a white box. A CC0 photo of a real truck from the driver's seat (refs/web/int-athens-3.jpg, Wikimedia
+  Commons, Mpelas199) showed what the renders could not: the top is satin silver with only a thin edge down
+  the black sides, the well is lined in dark felt (no separate pads show), the cupholders are one pocket
+  pinched by faceted wedges, and the lid is light grey padded leather standing only ~25 above the rim, level
+  with the door armrests. The manual's white band is a white-trim version; the 90 lid came from the open
+  lid's thickness, part of which drops into the bin when closed. Lesson: a photo of the real object from
+  where the visitor sits beats renders read for ratios.
 Still open: every console size scales from its width (+-146), a guess; no picture with known reference points
 shows it, so none is a solved measurement.
