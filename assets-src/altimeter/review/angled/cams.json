@@ -1,0 +1,5 @@
+{"glbFrame": "front+y", "exposure": 0, "samples": 48,
+ "cameras": {
+  "oblique": {"eye": [150, 70, 120], "look": [0, 0, 12], "fovDeg": 22, "size": [1000, 800], "photo": "../../refs/web/Galaxy_allcolors_small_jpg.jpg"},
+  "front_low": {"eye": [10, -40, 230], "look": [0, 0, 14], "fovDeg": 22, "size": [900, 800], "photo": "../../refs/video/frames/bwL-230.jpg"}
+ }}

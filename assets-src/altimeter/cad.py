@@ -16,8 +16,11 @@ import json
 P = dict(
     corner=7.5,          # chamfer across the four corner facets
     corner_round=2.0,    # rounding where the facets meet the sides
-    front_round=3.5,     # rounding of the front edge
     back_round=1.5,      # rounding of the back edge
+    roll=9.0,            # depth over which the front rolls in to the front face (angled photos, by eye)
+    roll_in=2.0,         # how far the front face's flat sides sit inside the case's sides
+    corner_front=15.0,   # the corner cut at the front face: larger than at the back, the corners dome
+    corner_round_front=7.0,  # the rounding of the front face's corners
     scoop_depth=6.0,     # how far the concave strap-side scoops cut into each side
     scoop_front=7.0,     # front lip left between the scoop and the front face
     scoop_back=3.0,      # back lip left between the scoop and the back face
@@ -35,34 +38,55 @@ def save(part, name, tolerance=0.02, angular=0.15):
     """Tessellate to STL. Coarser tolerances for small or round parts keep the triangle budget."""
     export_stl(part, str(OUT / f'{name}.stl'), tolerance=tolerance, angular_tolerance=angular)
 
+def section(z, inset, leg, rnd):
+    """One cross-section of the case at height z: the square, inset all round, with its corners cut back
+    by `leg` along each side and every vertex rounded. Every section has the same 8 sides and 8 arcs, so
+    the loft through them is one smooth surface."""
+    h = W / 2 - inset
+    l = min(leg, h - 1)
+    with BuildSketch(Plane.XY.offset(z)) as sk:
+        Polygon((h - l, h), (h, h - l), (h, -(h - l)), (h - l, -h), (-(h - l), -h), (-h, -(h - l)),
+                (-h, h - l), (-(h - l), h), align=None)
+        fillet(sk.vertices(), radius=min(rnd, 1.6 * l))      # up to 1.6 l: the facet becomes one arc
+    return sk.sketch
+
 def case_solid(p=P):
-    """The case: a square block with flat corner facets, rounded front and back edges, a concave scoop
-    down each strap side (x) with the webbing window in its floor, a dial pocket and a lens seat."""
+    """The case: one loft from the back to the front. The back half keeps the fitted outline (flat corner
+    facets with rounded junctions, what the front photo's outline measures); over the front `roll` mm it
+    rolls in along a quarter ellipse, so the sides meet the front face tangentially and the corners grow
+    rounder toward the front (the angled photos: a narrow front ring round the lens, a broad shoulder).
+    Then a concave scoop down each strap side (x) with the webbing window in its floor, the dial pocket and
+    the lens seat."""
+    import math
+    stations = [section(0, p['back_round'] * 0.4, p['corner'], p['corner_round']),
+                section(p['back_round'], 0, p['corner'], p['corner_round'])]
+    z_roll = D - p['roll']
+    for deg in (0, 30, 50, 65, 78, 90):
+        t = math.radians(deg)
+        k = 1 - math.cos(t)                                    # 0 at the start of the roll, 1 at the front
+        stations.append(section(z_roll + p['roll'] * math.sin(t), p['roll_in'] * k,
+                                p['corner'] + (p['corner_front'] - p['corner']) * k,
+                                p['corner_round'] + (p['corner_round_front'] - p['corner_round']) * k))
+    body = loft(stations)
+
     z0, z1 = p['scoop_back'], D - p['scoop_front']          # the scoop spans z0..z1 on each side
     half, d = (z1 - z0) / 2, p['scoop_depth']
     r = (half**2 + d**2) / (2 * d)                          # cylinder radius through both lips
     zc = (z0 + z1) / 2
-    with BuildPart() as case:
-        with BuildSketch():
-            Rectangle(W, W)
-        extrude(amount=D)
-        chamfer(case.edges().filter_by(Axis.Z), length=p['corner'])
-        fillet(case.edges().filter_by(Axis.Z), radius=p['corner_round'])
-        fillet(case.faces().sort_by(Axis.Z)[-1].edges(), radius=p['front_round'])
-        fillet(case.faces().sort_by(Axis.Z)[0].edges(), radius=p['back_round'])
-        for sx in (1, -1):
-            with Locations(Location((sx * (W / 2 + r - d), 0, zc), (90, 0, 0))):
-                Cylinder(r, W + 2, mode=Mode.SUBTRACT)
-        with Locations((0, 0, zc)):
-            Box(W + 2, SLOT_W, SLOT_T, mode=Mode.SUBTRACT)
-        with Locations((0, 0, D - LENS_T)):
-            Cylinder(LENS_D / 2, LENS_T, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
-        with Locations((0, 0, DIAL_Z)):
-            Cylinder(DIAL_D / 2, D - LENS_T - DIAL_Z, align=(Align.CENTER, Align.CENTER, Align.MIN), mode=Mode.SUBTRACT)
-    return case.part
+    for sx in (1, -1):
+        body -= Cylinder(r, W + 2).moved(Location((sx * (W / 2 + r - d), 0, zc), (90, 0, 0)))
+    body -= Box(W + 2, SLOT_W, SLOT_T).moved(Location((0, 0, zc)))
+    body -= Cylinder(LENS_D / 2, LENS_T, align=(Align.CENTER, Align.CENTER, Align.MIN)).moved(Location((0, 0, D - LENS_T)))
+    body -= Cylinder(DIAL_D / 2, D - LENS_T - DIAL_Z, align=(Align.CENTER, Align.CENTER, Align.MIN)).moved(Location((0, 0, DIAL_Z)))
+    try:                                                    # soften the scoops' lips, as machined
+        lips = [e for e in body.edges() if abs(abs(e.center().X) - (W / 2 - p['roll_in'] * 0)) < 4 and e.length > 20]
+        body = fillet(lips, radius=0.8)
+    except Exception:
+        pass
+    return body
 
 if __name__ == '__main__':
-    save(case_solid(), 'case')
+    save(case_solid(), 'case', tolerance=0.04, angular=0.25)
 
     # Dial: a thin disc; its face gets the printed texture.
     dial = Cylinder(DIAL_D / 2 - 0.05, 0.5, align=(Align.CENTER, Align.CENTER, Align.MIN)).moved(Location((0, 0, DIAL_Z)))

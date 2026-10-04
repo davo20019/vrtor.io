@@ -14,7 +14,7 @@ without the Alti-2 logo or the "ALTIMASTER GALAXY" wordmark.
 | Needle length (axis to tip) | ~18.3 | measured, FOT-5 |
 | Needle tail length | ~7.3 | measured, FOT-5 |
 | Hub diameter | ~6 | measured, FOT-5 |
-| Corner chamfers | ~6, front and back corners | estimated, FOT-5 |
+| Corners | 9.5 cut, 10 rounding (one arc) | outline-insensitive; angled photos and review |
 | Hand-mount webbing width | ~38 | estimated, FOT-5 (strap vs case) |
 | O-ring outer diameter / cord | ~33 / ~2.5 | estimated, FOT-5 |
 
@@ -25,9 +25,21 @@ without the Alti-2 logo or the "ALTIMASTER GALAXY" wordmark.
 - "X1000 METRES" upper left. Cream glow face.
 - Needle: black pointer, white tail and white hub, dark centre pin.
 
+## Case shape (2026-10-04)
+
+The case is one smooth loft: the fitted outline (flat corner facets) holds at the back, and over the front
+9 mm it rolls in along a quarter ellipse to a narrow ring round the lens, the corners growing rounder toward
+the front. Corner rounding is 10 mm on a 9.5 mm corner cut, so each corner reads as one continuous arc.
+
+Why not fitted: the front photo's outline can't tell. With the corner cut at 9.5 mm, every rounding from 1.5
+to 14 mm scored within 0.02 mm of outline error and 0.002 IoU (the fit's 1.57 was arbitrary). The angled
+photos (refs/web/Galaxy_allcolors_small_jpg.jpg, video frame bwL-230) and David's review of the real one
+("rounded, organic, continuous curves") decided it. The roll (9 mm deep, 2 mm in at the flat sides, corner
+cut 15 and rounding 7 at the front face) is set by eye from those photos: review/angled/ compares them.
+
 ## Unknowns (guessed, not sourced)
 
-- No side or back photo: back plate, strap slot and front bevel are guesses.
+- No straight side or back photo: back plate, strap slot and the front roll's exact depth are estimates.
 - Exact case colour: anodised orange matched to FOT-5.
 
 ## Budget

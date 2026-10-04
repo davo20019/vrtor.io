@@ -40,18 +40,14 @@
     "params": {
       "corner": [
         3,
-        12
+        14
       ],
       "corner_round": [
         0.5,
-        6
-      ],
-      "front_round": [
-        0.5,
-        6
+        16
       ]
     },
-    "_params": "only what a front photo can see; the side scoops are not constrained by it",
+    "_params": "what a front photo's outline can see (the case's widest section, near the back); the front roll-off (roll, roll_in, corner_front, corner_round_front) is set from the angled photos",
     "landmark": {
       "point": [
         0,
