@@ -655,7 +655,7 @@ def brake():
 CAB = dict(floor=400.0, wall=60.0, trim_t=110.0, cab_front_s=1250.0, cab_rear_s=3700.0,
            h_front=(2200.0, 771.0), h_rear=(3150.0, None), seat_x=390.0, dash_h=1224.0, dash_s=1480.0,
            yoke=(1683.0, 1150.0), yoke_w=318.0, yoke_hgt=215.3, yoke_tilt=22.0, screen_y=1160.0, screen_s=1510.0,
-           screen_tilt=7.0, console_end_s=2600.0, door_arm_h=943.0, back_h=940.0,
+           screen_tilt=7.0, console_end_s=2600.0, pedal_s=1348.0, door_arm_h=943.0, back_h=940.0,
            head_rear=991.9, head_front=1058.8, hip_half=1453.4 / 2, shoulder_front=1608.0 / 2,
            shoulder_rear=1576.4 / 2, header=(1739.0, 1905.0))
 
@@ -707,10 +707,10 @@ def rear_h_point(p):
     a = math.radians(8)
     def from_head_room(s, head):
         run = head - 102.0
-        return roof_inner_h(p, s + run * math.sin(a), c['wall'] + 12) - run * math.cos(a)
-    # The same rule gives the front H-point 26 mm below the one measured on the seat render (771): correct
-    # the rear by the front's error, so both rows share the measured seat.
-    return from_head_room(s, c['head_rear']) + (c['h_front'][1] - from_head_room(c['h_front'][0], c['head_front']))
+        return roof_inner_h(p, s + run * math.sin(a), c['wall']) - run * math.cos(a)
+    # Over the back seat the ceiling is the deck's inner face (no headliner there): the line ends on it.
+    # (measure/cabin/audit.py checks the result on the built parts.)
+    return from_head_room(s, c['head_rear'])
 
 def cavity(p):
     """The cabin volume cut out of the shell: the hull moved in by the wall thickness, from the firewall
@@ -853,8 +853,17 @@ def front_seat(xc, outboard):
     # The cushion's centre is padded too: 14 mm proud between the side bolsters.
     above = XH([(xc - 196, 737), (xc + 196, 737), (xc + 196, 800), (xc - 196, 800)], 1750, 2320) & SH(cushion_side, xc - 300, xc + 300)
     cushion = cushion + pillow((1765, 738), (2300, 738), (0, 1), xc, 196, 14.0, above)
-    base = SH([(1785, 646), (1800, 495), (2440, 485), (2470, 646)], xc - 250, xc + 250)
-    stand = XS([(xc - 180, 1850), (xc + 180, 1850), (xc + 180, 2420), (xc - 180, 2420)], CAB['floor'] - 2, 488)
+    # Under the cushion's rear half the base is lifted and the seat stands on two rails, so the feet of the
+    # passenger behind slide under it as far as the published rear leg room has them (L51, 1,038.8: the ankle
+    # at s 2,393, measure/cabin/audit.py): the toes stop on the mechanism's block under the front half, which
+    # ends at 2,138 for that. Shapes: guesses.
+    base = SH([(1785, 646), (1800, 495), (2138, 489), (2195, 580), (2460, 580), (2470, 646)], xc - 250, xc + 250)
+    fl = CAB['floor'] - 2
+    stand = [XS([(xc - 180, 1850), (xc + 180, 1850), (xc + 180, 2138), (xc - 180, 2138)], fl, 492)]
+    for x0 in (xc - 180, xc + 140):
+        stand.append(XS([(x0, 1850), (x0 + 40, 1850), (x0 + 40, 2420), (x0, 2420)], fl, fl + 42))
+        stand.append(XS([(x0, 2380), (x0 + 40, 2380), (x0 + 40, 2420), (x0, 2420)], fl, 584))
+    stand = Compound(stand)
     knobs = []                                            # the three adjustment controls on the outboard side
     xo = xc + outboard * 251
     for s0, s1, h0, h1 in ((1880, 1940, 585, 600), (1955, 1972, 570, 610), (1980, 2010, 575, 605)):
@@ -1052,8 +1061,8 @@ def door_trim(p, d, sx, driver):
     white = SH([(s0, ya - 2), (s1, ya - 2), (s1, bt1), (s0, bt0)], hip - 40, xw)
     # Crease: front door from high at the front to low at the back; rear door the other way (a chevron).
     hc_hi, hc_lo = (lambda s: belt_h(p, s) - 70), ya + 25
-    c0 = np.array([sh + 2, hc_hi(s0) if d == 'f' else hc_lo, Z(s0)])
-    c1 = np.array([sh + 2, hc_lo if d == 'f' else hc_hi(s1), Z(s1)])
+    c0 = np.array([sh, hc_hi(s0) if d == 'f' else hc_lo, Z(s0)])
+    c1 = np.array([sh, hc_lo if d == 'f' else hc_hi(s1), Z(s1)])
     # Each facet's third point is the corner the crease leaves: bottom-front and top-rear on the front door.
     lo_s, hi_s = (s0, s1) if d == 'f' else (s1, s0)
     out_pt = np.array([2000, 1000, Z((s0 + s1) / 2)])
@@ -1255,7 +1264,13 @@ def interior(p):
         return Box(2400, 2400, s1 - s0, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((0, 0, Z(s0))))
     h0, h1 = c['header']
     roof_only = Box(1300, 700, 8000).moved(Location((0, 1650, 0)))       # |x| < 650, above 1,300: the roof's layer only
-    beams = [band & sband(h0, h1) & roof_only, band & sband(p['apex_s'] - 40, p['apex_s'] + 40) & roof_only]
+    # The beam across the roof at the apex: its front face is where the front head room's line (8 degrees
+    # behind vertical from the measured H-point, 1,058.8 - 102 long) meets the ceiling, so the published head
+    # room holds; under the glass ahead of it the line would run 43 mm further. Its rear edge is a guess.
+    a8 = math.radians(8)
+    apex_front = c['h_front'][0] + (c['head_front'] - 102.0) * math.sin(a8)
+    # It fills up to the glass (10 mm inside the skin), so nothing shows between them.
+    beams = [band & sband(h0, h1) & roof_only, ceiling_band(p, 10 - c['wall'], 24) & sband(apex_front, p['apex_s'] + 40) & roof_only]
     rails = []
     for ka, kb, s0, s1, reach in (('roof', 'window_l', 1000, p['apex_s'], 45), ('deck', 'window_l', p['apex_s'], c['cab_rear_s'] - 10, 45),
                                   ('roof', 'window_r', 1000, p['apex_s'], 45), ('deck', 'window_r', p['apex_s'], c['cab_rear_s'] - 10, 45)):
@@ -1333,17 +1348,21 @@ def interior(p):
         return body, strips
     bp, bg = pad(130, 80, 14, 9, 8, 7, 9, 9)
     ap, ag = pad(50, 220, 12, 14, 4, 5, 14, 80)
-    bloc = Location((460, c['floor'] + 150, Z(1330)))
-    aloc = Location((290, c['floor'] + 100, Z(1290)))
+    # Along the truck they're placed by the published front leg room (L34: ankle to H-point + 254 = 1,043.6),
+    # with the heel on the mat against the accelerator's hinge block and the ankle 95 above it
+    # (measure/cabin/audit.py): 58 behind where they were guessed. The brake 40 behind the accelerator.
+    sa = c['pedal_s']
+    bloc = Location((460, c['floor'] + 150, Z(sa + 40)))
+    aloc = Location((290, c['floor'] + 100, Z(sa)))
     out['pedals'] = Compound([bp.rotate(Axis.X, 35).moved(bloc), ap.rotate(Axis.X, 40).moved(aloc)])
     out['pedal_grips'] = Compound([g.rotate(Axis.X, 35).moved(bloc) for g in bg] + [g.rotate(Axis.X, 40).moved(aloc) for g in ag])
     # the brake arm, from the pad's back near its inboard edge up and forward into the dash; the accelerator's
     # hinge block on the floor at its foot
     r35 = math.radians(35)
-    a0 = (420, c['floor'] + 150 + 30 * math.cos(r35) - 7 * math.sin(r35), Z(1330) + 30 * math.sin(r35) + 7 * math.cos(r35))
+    a0 = (420, c['floor'] + 150 + 30 * math.cos(r35) - 7 * math.sin(r35), Z(sa + 40) + 30 * math.sin(r35) + 7 * math.cos(r35))
     out['pedal_arms'] = Compound([
         rod(a0, (395, c['floor'] + 470, Z(1210)), (0, 0, 1), 18, 8),
-        Box(56, 22, 40).moved(Location((290, c['floor'] + 11, Z(1290) - 110 * math.sin(math.radians(40)) + 6)))])
+        Box(56, 22, 40).moved(Location((290, c['floor'] + 11, Z(sa) - 110 * math.sin(math.radians(40)) + 6)))])
     return out
 
 def screen_offset(a):

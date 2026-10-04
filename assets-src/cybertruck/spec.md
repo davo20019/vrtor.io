@@ -311,7 +311,11 @@ render, both scaled to 318 mm): outline IoU 0.965, mean edge distance 1.6 mm, he
 | Pedals across | brake w 460, accelerator w 290 (brake outboard) | dash camera | swapped |
 | Pedal shapes | brake: hanging, rounded pad 130 x 80 with eight black rubber strips, arm rising inboard into the dash; accelerator: floor-hinged, 50 x 220 with a rounded top, four strips down its upper part, hinge block on the floor | manual-interior-CC015C4E (14, 15), widths against their 170 mm spacing (3.6 mm/px) | plain boxes 120 x 85 and 55 x 220, fully metallic (read black in the footwell) |
 | Front seat side profile | back's rear edge (2,447, 675) (2,493, 812) (2,626, 1,316), headrest tip 1,637 high at 2,470; front face (2,300, 760) to (2,425, 1,225); cushion front 1,765, top 742 to 760 front, 716 rear | seat side view at 4.58 | slab and box |
-| Rear H-point height | 738 | rear head room (SAE H63: 8 deg line + 102) under the deck, corrected by the front's error (the same rule gives the front 745 against the measured 771) | 771 (the front's) |
+| Rear H-point height | 724 | rear head room (SAE H63: 8 deg line + 102) to the deck's inner face, which is the ceiling there | 738 (with a correction from the front row, dropped once the front's head room held on the built roof); 771 (the front's) |
+| Roof beam at the apex | front face 2,333 back, filling up to 10 under the glass | front head room: the 8 deg line from the measured H-point (771) runs 957 to it; under the bare glass it ran 43 further (1,102) | 2,386 to 2,466, 22 thick |
+| Pedal depth | accelerator centre 1,348 back, brake 40 behind it (both 58 further back than guessed) | front leg room (SAE L34: ankle to H-point + 254 = 1,043.6), heel on the mat against the accelerator's hinge block, ankle 95 above it | 1,290 / 1,330 (guess) |
+| Front seat base | the mechanism block under the front half ends at 2,138; behind it the base is lifted to 580 on two rails | rear leg room (L51, 1,038.8): the back passenger's toes stop on that block with the ankle at 2,393 | a solid block to 485 over the whole seat, leaving no room for feet (shape still a guess) |
+| Door white panel crease | at the shoulder room's half width exactly | shoulder room 1,608 / 1,576 measured 1,609.7 / 1,577.5 | 2 mm outboard of it |
 | Rear backrest | 21 deg | manual-childseats-D8CE20B2, side view | 25 |
 | Door armrest face | w 700 (armrest), lower panel w 727 at hip height | hip room 1,453 | w 792 |
 | Door white panel crease | w 806 front, 790 rear | shoulder room 1,608 / 1,576 | flat panel |
@@ -379,6 +383,18 @@ Shapes taken from pictures, sizes partly guessed:
   45% of the open sky shows at full brightness, the median cabin surface (9%) at 0.45, a footwell at 0.15. The
   app (apps/cyb main.js) applies it to its lights as well as its reflections.
 
+### The cabin against the published room dimensions
+
+measure/cabin/audit.py measures the built parts by SAE J1100's definitions (audit.md has the last run). After
+the changes above every published figure holds within 2 mm: head room 1,058.8 / 991.9, leg room 1,043.3 /
+1,038.8, shoulder room 1,609.7 / 1,577.5, hip room 1,453.4 / 1,453.4. J1100 itself isn't public, so the ankle
+point used for leg room (95 above the heel on the mat) is an assumption; head, shoulder and hip room need none.
+
+The windshield: Tesla publishes no rake or size. The model's comes from the fitted body: the glass rises from the
+cowl (954 back, 1,374 high) to the roof apex (2,426 back, 1,794 high, the published height) at 15.9 deg from
+horizontal, 1,530 along the slope, 1,331 wide at its base; its top edge (the header, 1,739 back) and its lower
+corners were measured through the dash render's solved camera.
+
 ### Still guesses
 
 - Rear H-point s (3,150): set so the 21 deg backrest fits against the cab's back wall (cab_rear_s 3,700,
@@ -386,7 +402,7 @@ Shapes taken from pictures, sizes partly guessed:
 - Seat, cushion and bench widths; cushion thicknesses; the seat base and stand.
 - Header depth behind 1,826 (the beam is 1,739 to 1,905), sun visors (stowed under it), the roof rails'
   width, the B-pillar trim.
-- Pedal depth along the truck (the dash camera's error grows near the floor), their lean (brake 35, accelerator 40 deg),
+- Pedals: their lean (brake 35, accelerator 40 deg),
   the brake arm's path inside the dash, floor mat outlines, carpet.
 - Console width (+-146), on which every console size above is scaled (measure/console/athens3.json tried to
   solve the photo's camera from the screen corners and the console's front, but its references reproject 54 px

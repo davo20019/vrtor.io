@@ -1,0 +1,10 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "cameras": {
+  "driver_eye": {"eye": [390, 1411, 436], "look": [390, 1260, 3436], "fovDeg": 100, "size": [1200, 800]},
+  "driver_up": {"eye": [390, 1411, 436], "look": [390, 2400, -300], "fovDeg": 100, "size": [1200, 800]},
+  "rear_feet": {"eye": [445, 1050, -204], "look": [445, 430, 446], "fovDeg": 80, "size": [1000, 800], "hide": ["door_"]},
+  "pedals": {"eye": [60, 760, 796], "look": [340, 470, 1300], "fovDeg": 70, "size": [1000, 800]}
+ }
+}
