@@ -3877,7 +3877,8 @@
       "int_yoke_keys",
       "int_yoke_btn_signal_right",
       "int_yoke_btn_signal_left",
-      "int_yoke_btn_high_beam"
+      "int_yoke_btn_high_beam",
+      "int_yoke_btn_wiper"
     ],
     "column": "int_yoke_column",
     "controls": {
@@ -3893,13 +3894,31 @@
       ],
       "high_beam": [
         "int_yoke_btn_high_beam"
+      ],
+      "wiper": [
+        "int_yoke_btn_wiper"
       ]
     },
     "signals": {
       "left": "det_marker_amber_l",
       "right": "det_marker_amber_r"
     },
-    "note": "parts turn together about the column; the column stays. controls: press the centre pad for the horn (manual, Steering: \"press and hold the center pad\"); the left pod's keys are the turn signals (right above, left below) and the high beam, each its own mesh over its printed symbol. signals: the amber corner lamps (lower lamp strip ends) on each side, which blink with that turn signal"
+    "note": "parts turn together about the column; the column stays. controls: press the centre pad for the horn (manual, Steering: \"press and hold the center pad\"); the left pod's keys are the turn signals (right above, left below) and the high beam, the right pod's top outer key the wiper (a quick press: one wipe), each its own mesh over its printed symbol. signals: the amber corner lamps (lower lamp strip ends) on each side, which blink with that turn signal"
+  },
+  "wiper": {
+    "node": "wiper_arm",
+    "pivot": [
+      0.760423538085059,
+      1.3776619998912512,
+      1.7294700000000003
+    ],
+    "axis": [
+      -0.0,
+      0.9616629351449006,
+      0.2742342049571763
+    ],
+    "sweepDeg": 82.59677144097404,
+    "note": "wiper_arm turns about axis (the windshield glass normal, glTF frame) through its pivot; parked it lies up the driver's A-pillar; one wipe turns it sweepDeg toward the passenger side, to horizontal along the cowl, and back (Owner's Manual, Windshield Wiper and Washers)"
   },
   "cabin": "node \"cabin\": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); the glass is see-through (alpha 0.3)"
 }

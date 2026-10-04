@@ -1,12 +1,13 @@
 // The yoke's controls, worked from the driver's seat (Owner's Manual, Steering): press the centre pad for
 // the horn ("press and hold the center pad"); on the left pod, the turn signals (right above, left below)
-// and the high beam. The model names each control's meshes and the amber lamps the signals blink
+// and the high beam; on the right pod, the wiper (Windshield Wiper and Washers: "press and quickly release
+// the wiper button ... to wipe the windshield", once, from parked up the pillar to horizontal and back). The model names each control's meshes and the amber lamps the signals blink
 // (cybertruck.json "yoke"); here they get pick targets, a glow under the pointer, and what they do.
 //
 // Estimated (not published): the horn's two tones and their loudness, the signal's tick, and how the
 // pod's symbols light (the manual shows them only unlit). The flash rate is the legal one's middle:
 // FMVSS 108 allows 60 to 120 flashes a minute.
-import { Color3, MeshBuilder } from '@babylonjs/core';
+import { Color3, Matrix, MeshBuilder, Quaternion, Vector3 } from '@babylonjs/core';
 
 const HOVER = Color3.FromHexString('#ffb020');
 const GREEN = new Color3(0.15, 0.95, 0.3);
@@ -14,6 +15,7 @@ const BLUE = new Color3(0.2, 0.45, 1);
 const FLASH_S = 60 / 85;                       // one on-and-off, at 85 flashes a minute
 const HORN_HZ = [415, 520];                    // a two-tone car horn, about a major third apart (estimate)
 const HORN_S = 0.5;
+const WIPE_S = 1.4;                            // one wipe, out and back (estimate: the continuous-slow pace)
 const TARGET_M = 0.035;                        // the pick target round each key: its symbols sit 16 mm apart
 
 let audio = null;
@@ -106,7 +108,27 @@ export function createYokeControls(scene, byName, info, { onHighBeam = () => {} 
     lamps[side] = { mat: mesh.material, rest: mesh.material.emissiveColor.clone() };
   }
 
-  const state = { signal: null, phase: 0, lit: false, highBeam: false, hovered: null, active: false };
+  const state = { signal: null, phase: 0, lit: false, highBeam: false, hovered: null, active: false, wipe: -1 };
+
+  // The wiper's arm turns about the glass's normal; which way is toward the passenger is found by trying it.
+  const w = info.wiper && byName(info.wiper.node);
+  let wiper = null;
+  if (w) {
+    w.rotationQuaternion ??= Quaternion.Identity();
+    const rest = w.rotationQuaternion.clone(), axis = Vector3.FromArray(info.wiper.axis);
+    const blade = w.getChildMeshes()[0];
+    const across = () => {                             // the blade's middle, left (+x) to right in the truck's frame
+      w.computeWorldMatrix(true);
+      blade.computeWorldMatrix(true);
+      const root = w.parent.computeWorldMatrix(true);
+      return Vector3.TransformCoordinates(blade.getBoundingInfo().boundingBox.centerWorld, Matrix.Invert(root)).x;
+    };
+    const x0 = across();
+    w.rotationQuaternion = rest.multiply(Quaternion.RotationAxis(axis, 0.1));
+    const sign = across() < x0 ? 1 : -1;
+    w.rotationQuaternion = rest.clone();
+    wiper = { node: w, rest, axis, sweep: (sign * info.wiper.sweepDeg * Math.PI) / 180 };
+  }
 
   function paint() {
     for (const [key, parts] of Object.entries(controls)) {
@@ -157,14 +179,23 @@ export function createYokeControls(scene, byName, info, { onHighBeam = () => {} 
         state.lit = false;
         if (state.signal) setLit(true);
         else paint();
+      } else if (key === 'wiper') {
+        if (wiper && state.wipe < 0) state.wipe = 0;
       } else if (key === 'high_beam') {
         state.highBeam = !state.highBeam;
         onHighBeam(state.highBeam);
         paint();
       }
     },
-    /** dt in seconds: the signal's flashing. */
+    get wiping() { return state.wipe >= 0; },
+    /** dt in seconds: the signal's flashing and the wiper's sweep. */
     tick(dt) {
+      if (wiper && state.wipe >= 0) {
+        state.wipe = Math.min(1, state.wipe + dt / WIPE_S);
+        const e = (1 - Math.cos(2 * Math.PI * state.wipe)) / 2;     // out and back, easing at both ends
+        wiper.node.rotationQuaternion = wiper.rest.multiply(Quaternion.RotationAxis(wiper.axis, wiper.sweep * e));
+        if (state.wipe >= 1) state.wipe = -1;
+      }
       if (!state.signal) return;
       state.phase = (state.phase + dt / FLASH_S) % 1;
       setLit(state.phase < 0.5);

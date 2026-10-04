@@ -190,6 +190,7 @@ lr = stl('light_rear', M['light_r'])
 clad = stl('cladding', M['clad'])
 mirrors = stl('mirrors', M['mirror'], smooth_angle=30) if (PARTS / 'mirrors.stl').exists() else None
 wiper = stl('wiper', M['wiper'])
+wiper_blade = stl('wiper_blade', M['wiper'])           # the arm and blade, on their own node (wiper_arm)
 # The bed: its liner (the floor faces ribbed, along the truck), the LED strips, the switch on the left sail.
 liner = stl('bed_liner', M['bed'])
 liner.data.materials.append(M['bed_floor'])
@@ -247,7 +248,7 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'dash_white': 'trim_white', 'dash_lower': 'armrest', 'screen_bezel': 'bezel', 'screen': 'screen_on', 'screen_stand': 'bezel',
             'yoke': 'yoke', 'yoke_pad': 'yoke', 'yoke_column': 'yoke', 'yoke_chin': 'silver', 'yoke_face': 'yoke_face',
             'yoke_pods': 'yoke_pod', 'yoke_trim': 'silver', 'yoke_keys': 'switch_key',
-            'yoke_btn_signal_right': 'yoke_pod', 'yoke_btn_signal_left': 'yoke_pod', 'yoke_btn_high_beam': 'yoke_pod',
+            'yoke_btn_signal_right': 'yoke_pod', 'yoke_btn_signal_left': 'yoke_pod', 'yoke_btn_high_beam': 'yoke_pod', 'yoke_btn_wiper': 'yoke_pod',
             'console': 'console', 'chargers': 'screen', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
             'seats_front': 'seat', 'seats_rear': 'seat', 'seat_base': 'armrest', 'seat_knobs': 'switch', 'rear_armrest': 'seat',
             'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
@@ -347,7 +348,7 @@ disc = stl('brake_disc', M['disc'], smooth_angle=50)
 caliper = stl('caliper', M['caliper'])
 templates = (tyre, rim, lugs, cover, disc, caliper)
 all_door_parts = [o for v in door_parts.values() for o in v]
-for o in [x for x in (body, glass, tonneau, lf, lr, clad, mirrors, wiper, slat) if x] + [*cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
+for o in [x for x in (body, glass, tonneau, lf, lr, clad, mirrors, wiper, wiper_blade, slat) if x] + [*cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
     o.data.transform(TO_BLENDER)         # UVs and materials were set in the model frame; now move to Blender's
 
 def empty(name, loc=(0, 0, 0), parent=None):
@@ -361,6 +362,10 @@ root = empty('cybertruck')
 body_node = empty('body', parent=root)
 for o in [x for x in (body, glass, tonneau, lf, lr, clad, mirrors, wiper) if x] + [*detail_parts, *button_parts, *bed_parts]:
     o.parent = body_node
+wiper_pivot = Vector(to_blender(GEO['wiper']['pivot']))
+wiper_node = empty('wiper_arm', loc=wiper_pivot, parent=root)
+wiper_blade.parent = wiper_node
+wiper_blade.location = -wiper_pivot
 for k, h in GEO['hinges'].items():
     hinge = Vector(to_blender(h['hinge']))
     node = empty(k, loc=hinge, parent=root)
@@ -426,7 +431,7 @@ ROUND = {'seats_front': 24, 'seats_rear': 24, 'rear_armrest': 14, 'dash_white': 
          'dash_top': 6, 'dash_lower': 6, 'dash_face': 4, 'yoke': 9, 'yoke_column': 5, 'visors': 8, 'screen_bezel': 3, 'overhead': 6,
          'armrest': 14, 'door_lower': 6, 'trim_white': 14, 'cap': 6}
 NO_BAKE = ('screen', 'rear_screen', 'ambient', 'chargers', 'open', 'switch', 'mirror_glass',
-           'yoke_btn_signal_right', 'yoke_btn_signal_left', 'yoke_btn_high_beam')     # the yoke's keys: baked alone they came out darker than the pod round them
+           'yoke_btn_signal_right', 'yoke_btn_signal_left', 'yoke_btn_high_beam', 'yoke_btn_wiper')     # the yoke's keys: baked alone they came out darker than the pod round them
 
 def part_key(o):
     n = o.name
@@ -582,12 +587,14 @@ info = {
                 'lights': 'bed_lights',
                 'note': 'path is [z, y] in metres on the centreline, arc its length from the first point. Opening by u metres puts slat i at arc closedArc[i] + u, with x = 0 and its rotation about +x so its +z follows the path forward (rotation.x = atan2(-dy, dz)). travel opens it fully. The switch is on the left sail by the tail light: open, close, tailgate (front to back). bed_lights: the LED strips along the bed walls.'},
     'yoke': {'parts': ['int_yoke', 'int_yoke_pad', 'int_yoke_chin', 'int_yoke_face', 'int_yoke_pods', 'int_yoke_trim', 'int_yoke_keys',
-                       'int_yoke_btn_signal_right', 'int_yoke_btn_signal_left', 'int_yoke_btn_high_beam'],
+                       'int_yoke_btn_signal_right', 'int_yoke_btn_signal_left', 'int_yoke_btn_high_beam', 'int_yoke_btn_wiper'],
              'column': 'int_yoke_column',
              'controls': {'horn': ['int_yoke_pad', 'int_yoke_face'], 'signal_right': ['int_yoke_btn_signal_right'],
-                          'signal_left': ['int_yoke_btn_signal_left'], 'high_beam': ['int_yoke_btn_high_beam']},
+                          'signal_left': ['int_yoke_btn_signal_left'], 'high_beam': ['int_yoke_btn_high_beam'], 'wiper': ['int_yoke_btn_wiper']},
              'signals': {'left': 'det_marker_amber_l', 'right': 'det_marker_amber_r'},
-             'note': 'parts turn together about the column; the column stays. controls: press the centre pad for the horn (manual, Steering: "press and hold the center pad"); the left pod\'s keys are the turn signals (right above, left below) and the high beam, each its own mesh over its printed symbol. signals: the amber corner lamps (lower lamp strip ends) on each side, which blink with that turn signal'},
+             'note': 'parts turn together about the column; the column stays. controls: press the centre pad for the horn (manual, Steering: "press and hold the center pad"); the left pod\'s keys are the turn signals (right above, left below) and the high beam, the right pod\'s top outer key the wiper (a quick press: one wipe), each its own mesh over its printed symbol. signals: the amber corner lamps (lower lamp strip ends) on each side, which blink with that turn signal'},
+    'wiper': {'node': 'wiper_arm', 'pivot': [v * 0.001 for v in GEO['wiper']['pivot']], 'axis': GEO['wiper']['axis'], 'sweepDeg': GEO['wiper']['sweepDeg'],
+              'note': 'wiper_arm turns about axis (the windshield glass normal, glTF frame) through its pivot; parked it lies up the driver\'s A-pillar; one wipe turns it sweepDeg toward the passenger side, to horizontal along the cowl, and back (Owner\'s Manual, Windshield Wiper and Washers)'},
     'cabin': 'node "cabin": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); the glass is see-through (alpha 0.3)',
 }
 (OUT / 'cybertruck.json').write_text(json.dumps(info, indent=2))

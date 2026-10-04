@@ -417,8 +417,25 @@ def wiper(p):
     # The glass's face is 1 mm under the facet: the blade's rubber sits 0.1 mm above it, 22 wide, 18 tall.
     blade = rod(at(s0, 64, 8.1), at(s1, 48, 8.1), n, 22, 18)
     arm = rod(at(p['cowl_s'] + 20, 66, 24), at(s0 + 0.5 * (s1 - s0), 58, 24), n, 26, 14)
-    pivot = rod(at(p['cowl_s'] - 45, 68, 12), at(p['cowl_s'] + 70, 66, 12), n, 46, 52)
-    return blade + arm + pivot
+    housing = rod(at(p['cowl_s'] - 45, 68, 12), at(p['cowl_s'] + 70, 66, 12), n, 46, 52)
+    return housing, arm + blade
+
+def wiper_pivot(p):
+    """Where the arm turns: the housing's middle on the glass, about the glass's normal; and how far one wipe
+    goes, from parked up the pillar to horizontal along the cowl (the manual: in rain the blade "may pause
+    in the horizontal position"), in degrees."""
+    pl = planes(p)
+    n = pl['roof'][1]
+    def at(s, inboard):
+        z = ZF - s
+        e = edge_point(pl['roof'], pl['window_l'], z)
+        return on_plane(pl['roof'], x=e[0] - inboard, z=z)
+    pivot = at(p['cowl_s'] + 12, 67)
+    s1 = p['cowl_s'] + 60 + 1220 * abs(n[1])
+    tip = at(s1, 48) - pivot
+    across = np.array([-1.0, 0, 0])                       # toward the passenger's side, along the cowl
+    sweep = math.degrees(math.acos(np.dot(tip, across) / np.linalg.norm(tip)))
+    return pivot, n / np.linalg.norm(n), sweep
 
 def panels(p):
     """Polygons sunk into the facets: name -> (points, outward normal, pocket depth, inset under the steel, kind)."""
@@ -891,8 +908,9 @@ def rear_bench(p):
 
 YOKE_OUTLINE = json.loads((HERE / 'measure/yoke/outline.json').read_text())
 YOKE_WHEELS = (-85.2, 16.0)                                   # scroll wheel centres at +-85.2, 16 high (left one measured)
-# The left pod's keys the app works (icon centres, as drawn in textures.py): right and left turn signals, high beam.
-YOKE_KEYS = {'signal_right': (-98.1, 25.3), 'signal_left': (-104.0, 9.8), 'high_beam': (-74.2, 27.8)}
+# The keys the app works (icon centres, as drawn in textures.py): right and left turn signals, high beam.
+YOKE_KEYS = {'signal_right': (-98.1, 25.3), 'signal_left': (-104.0, 9.8), 'high_beam': (-74.2, 27.8),
+             'wiper': (98.1, 25.3)}                     # and on the right pod, the wiper
 
 def yoke_parts():
     """The yoke, built facing +z (toward the driver) around its centre, x to the driver's right: the outer
@@ -1651,7 +1669,9 @@ if __name__ == '__main__':
         save(piece, f'door_{k}_mirrorglass')
     if mirrors_rest is not None and mirrors_rest.volume > 1:
         save(mirrors_rest, 'mirrors')
-    save(wiper(p), 'wiper')
+    wiper_housing, wiper_arm = wiper(p)
+    save(wiper_housing, 'wiper')
+    save(wiper_arm, 'wiper_blade')
     for name, part in interior(p).items():
         if part is None or part.volume < 1:
             continue
@@ -1681,6 +1701,7 @@ if __name__ == '__main__':
         'planes': [[pt.tolist(), n.tolist()] for pt, n in planes(p).values()],
         'seatEyes': seat_eyes(p),
         'screens': screens(p),
+        'wiper': dict(zip(('pivot', 'axis', 'sweepDeg'), (lambda q: (q[0].tolist(), q[1].tolist(), q[2]))(wiper_pivot(p)))),
         'decals': {n: yoke_decal() for n in ['yoke_pods'] + [f'yoke_btn_{k}' for k in YOKE_KEYS]},
         'doors': {k: {'hinge': h.tolist(), 'openDeg': -65 if k.endswith('l') else 65} for k, (_, h) in regions.items()},
         'hinges': {

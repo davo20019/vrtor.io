@@ -156,6 +156,7 @@ Cuts and fittings on the shell:
 - **Mirrors**: black faceted housings on a dark base, at the front lower corner of each front window,
   unfolded as when driving; the span is 2,413.3 across them. See "Door mirrors, measured".
 - **Wiper**: the single wiper parked up the driver's A-pillar (c150, c027, c085): pivot housing at the cowl in the glass's lower corner; the blade lies on the glass 50 to 65 mm inboard of the pillar crease, toward the apex; the arm covers its lower half. Blade 48 in = 1,220 mm (Tesla part 1853252; notateslaapp.com blade-size table); arm about 50 in (Auto Connected Car News, measured). A 62 in figure (theautopian.com) is unsourced and longer than the glass from cowl to apex (1,530 along the slope).
+  It turns: the arm and blade are their own node (wiper_arm) pivoting at the housing's middle about the glass's normal; one wipe (the yoke's wiper key: "press and quickly release", Owner's Manual, Windshield Wiper and Washers, refs/tesla/manual-wipers.html) sweeps 82.6 deg, from parked to horizontal along the cowl (the manual's rain pause "in the horizontal position"), and back in 1.4 s (estimate).
 - Not modelled: cameras, the charge port door and the body-side antennae (too small for the budget,
   and not visible beyond a few metres).
 
