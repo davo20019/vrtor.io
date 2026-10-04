@@ -17,6 +17,8 @@ args = sys.argv[sys.argv.index('--') + 1:]
 glb, outdir, review_json = args[:3]
 cams = args[3:]
 cfg = json.load(open(review_json))
+if 'frontFrameMm' not in cfg:
+    sys.exit('render_views.py: review.json needs frontFrameMm, the width of the front render in mm (a little over the object)')
 frame = cfg['frontFrameMm'] / 1000
 k = cfg['frontFrameMm'] / 75                                    # the views were tuned on a 75 mm frame
 
