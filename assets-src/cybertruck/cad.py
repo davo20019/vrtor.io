@@ -37,7 +37,7 @@ P = dict(
     roof_half=650.0, tail_half=930.5, side_tail_h=1259.1,
     arch_top_h=980.0, arch_top_half=310.0, arch_knee_h=660.0, arch_foot_half=590.0, flare_band=75.0,
     bumper_r_h=600.0, bumper_r_out=60.0,
-    rear_bar_h=60.0, front_bar_h=22.0,
+    front_bar_h=22.0,
     roofglass_end_s=3000.0, a_pillar_s=1420.0, c_pillar_s=3617.0,
     seam_1=1503.0, seam_2=2636.0, seam_3=3638.0,
     squash=15.0, cover_dish=15.0,
@@ -89,6 +89,25 @@ P.update(
     bumper_side_s=352.0,             # the bumper's side face ends just ahead of the tyre (c059: 341 to 352 at the top)
     spat=(300.0, 285.0),             # its lower rear tip in front of the tyre, s and h (c059: 300, 285)
     bumper_side_front_s=140.0,       # where its side face starts, behind the corner chamfer (c059: 105 to 129)
+)
+# The rear, measured on c069 through its solved camera (measure/rear/: 7.6 px RMS, about 5 mm; the licence plate comes
+# out 305 x 151 at its depth, centred) and checked on c006 and c080 (spec.md, "Rear, measured"). The bumper's top is
+# 650 at its rear face; the dark the side fit read up to 679 is the black strip under the tailgate (its steel ends at
+# 692), with the red lamps in it.
+P.update(bumper_r_h=650.0, bumper_r_bot=490.0)
+BED['gate_bottom'] = 692.0
+REAR = dict(
+    upper_out=(917.0, 877.0),        # the upper tier's rear face: half-width at its top and at its bottom (outer ends fall inward)
+    pocket_half=330.0, pocket_depth=186.0, pocket_floor=526.0,     # the plate pocket: plate wall 186 in from the rear face
+    lower=(657.0, 624.0, 370.0), lower_set=40.0,  # lower tier: half-width at its top (490) and bottom, its bottom; set in (guess)
+    hitch=(0.0, 435.0, 64.0),        # receiver mouth: x, centre height, size (c069 62 x 68 on the rear face; a 2.5 in tube)
+    reverse=(147.0, 276.0, 590.0, 610.0),          # reverse lamps on the pocket wall either side of the plate: x from, to, h from, to
+    band_bot=1205.0, band_top_gap=8.0,              # the smoked band: bottom; its top under the face's top edge
+    strip=(1280.0, 1299.0),          # tail strip: bottom, top (c006 lit; c069 shows its top edge as a line at 1,299)
+    cap_x=806.0,                     # end caps from here out (c069: the seam at 801; band_half)
+    brake=(350.0, 1259.0, 1277.0),   # braking: the middle bar's half-width, bottom, top (c080, foreshortening not undone)
+    low=(690.0, 810.0, 658.0, 690.0),               # red lamps under the tailgate: x from, to, h from, to
+    camera=(25.0, 1214.0, 1250.0),   # the rear camera's housing in the band's middle: half-width at its foot, foot, apex
 )
 
 # The front bumper's face, measured on c150 (measure/bumper/): widths at its crease scale (1.445 mm/px, the
@@ -398,20 +417,38 @@ def cladding_parts(p):
     out['bumper_f_intake'] = Box(2 * ih - 1, i1 - i0 - 1, 1, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(
         Location((0, i0 + 0.5, zf - F['intake_depth'] + 0.1)))
     xo = BW + 6                                              # stands just proud of the steel it covers
-    # Rear bumper: stands out past the tailgate, centre step recess, lower valance with the hitch pocket.
-    zt = ZR
+    # Rear bumper (REAR; c069, c006, c080): two tiers. The upper stands out past the tailgate and wraps forward to
+    # the rear arch; its rear face's outer ends fall inward, a facet cut back from the corner chamfer to the bottom.
+    # A pocket across its middle holds the plate on its back wall, floored by the step. The lower tier, set in under
+    # it, narrows to its bottom and holds the hitch receiver.
+    R = REAR
+    zt, top, bot = ZR, p['bumper_r_h'], p['bumper_r_bot']
+    ot, ob = R['upper_out']
     za = AXLES['r'] - p['arch_foot_half'] + 20               # wraps the corner forward to the rear arch
-    plan = [(-xo, za), (xo, za), (xo, zt + 40), (xo - 65, zt), (-xo + 65, zt), (-xo, zt + 40)]
-    w = Wire.make_polygon([(x, p['bumper_r_bot'], z) for x, z in plan], close=True)
-    br = extrude(Face(w), amount=p['bumper_r_h'] - p['bumper_r_bot'], dir=(0, 1, 0))
-    br = br - Box(560, 70, 90).moved(Location((0, p['bumper_r_h'] - 34, zt + 44)))
-    val = Box(2 * BW - 300, p['bumper_r_bot'] - 300 + 1, 300, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, 300, zt + 210)))
-    val = val - Box(180, 80, 60).moved(Location((0, 340, zt + 60)))
-    out['bumper_r'] = br + val
+    ch = xo - ot                                             # the corner chamfer, 45 degrees, to the rear face's measured top corner
+    plan = [(-xo, za), (xo, za), (xo, zt + ch), (ot, zt), (-ot, zt), (-xo, zt + ch)]
+    w = Wire.make_polygon([(x, bot, z) for x, z in plan], close=True)
+    br = extrude(Face(w), amount=top - bot, dir=(0, 1, 0))
+    inside = np.array([0.0, (top + bot) / 2, zt + 100])
+    for sx in (1, -1):
+        a, b = np.array([sx * ot, top, zt]), np.array([sx * ob, bot, zt])
+        br = plane_cut(br, a, b, a + np.array([sx * ch, 0, ch]), inside)
+    ph, pd, pf = R['pocket_half'], R['pocket_depth'], R['pocket_floor']
+    br = br - Box(2 * ph, top - pf + 10, pd + 1, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(Location((0, pf, zt - 1)))
+    lt, lb, lbot = R['lower']
+    zl = zt + R['lower_set']
+    low = XH([(-lt, bot + 1), (lt, bot + 1), (lb, lbot), (-lb, lbot)], ZF - (zl + 300), ZF - zl)
+    hx, hh, hs = R['hitch']
+    low = low - Box(hs, hs, 120).moved(Location((hx, hh, zl)))
+    out['bumper_r'] = br + low
+    out['rear_hitch'] = Box(hs - 2, hs - 2, 2).moved(Location((hx, hh, zl + 58)))       # the receiver's dark inside
+    r0, r1, h0, h1 = R['reverse']
+    out['rear_reverse'] = Compound([Box(r1 - r0, h1 - h0, 3, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((sx * (r0 + r1) / 2, h0, zt + pd + 0.5)))
+                                    for sx in (1, -1)])
     return out
 
 def cladding(p):
-    return [v for k, v in cladding_parts(p).items() if not k.startswith('bumper_f_')]
+    return [v for k, v in cladding_parts(p).items() if not k.startswith(('bumper_f_', 'rear_'))]
 
 def wheel_centre(p, axle, side):
     return np.array([side * TRACK / 2, TYRE_R - p['squash'], AXLES[axle]])
@@ -605,16 +642,52 @@ def panels(p):
         pts = [top_in, top_out, top_out - [0, fb, 0], top_in - [0, fb, 0]]
         pts = [on_plane(pl[key], x=q[0], y=q[1]) for q in pts]
         out['light_f_' + key[-1]] = (pts if sx > 0 else pts[::-1], pl[key][1], 6, 1.0, 'light_w')
-    # Rear light band across the top of the tailgate, and the red corner lights above the bumper.
-    rb = p['rear_bar_h']
+    # The smoked band across the top of the rear face, its edges under the face's outline (the lamps sit on it:
+    # rear_lights), and the black strip under the tailgate down to the bumper, which holds the red lamps.
+    out['band_r'] = (band_outline(p), pl['rear'][1], 8, 1.0, 'band')
     zt = ZR + p['bumper_r_out']
-    y1 = on_plane(pl['sail_l'], x=BW, z=zt)[1] - 8                 # just under the sail's lower corner
-    out['light_r'] = ([np.array(q) for q in ((-BW + 6, y1, zt), (BW - 6, y1, zt), (BW - 6, y1 - rb, zt), (-BW + 6, y1 - rb, zt))], pl['rear'][1], 8, 1.0, 'light_r')
-    for sx in (1, -1):
-        x0, x1 = sx * (BW - 70), sx * (BW - 260)
-        y0 = p['bumper_r_h'] + 12
-        pts = [np.array(q) for q in ((x0, y0 + 32, zt), (x1, y0 + 32, zt), (x1, y0, zt), (x0, y0, zt))]
-        out['light_r_' + ('l' if sx > 0 else 'r')] = (pts if sx > 0 else pts[::-1], pl['rear'][1], 6, 1.0, 'light_r')
+    y0, y1 = p['bumper_r_h'] + 2, BED['gate_bottom'] - 3
+    out['band_low'] = ([np.array(q) for q in ((-BW + 6, y1, zt), (BW - 6, y1, zt), (BW - 6, y0, zt), (-BW + 6, y0, zt))], pl['rear'][1], 8, 1.0, 'band')
+    return out
+
+def band_outline(p):
+    """The smoked band on the rear face (REAR): from band_bot up to band_top_gap under the face's top edge (the
+    deck across the middle, the sails at the corners), band_top_gap in from the sides."""
+    pl = planes(p)
+    BW, g = body_w(p), REAR['band_top_gap']
+    zt = ZR + p['bumper_r_out']
+    ys = on_plane(pl['sail_l'], x=BW - g, z=zt)[1] - g                  # at the side, under the sail
+    xc = on_plane(pl['sail_l'], y=p['tail_h'] - g, z=zt)[0] - g         # where the sail meets the deck, moved in
+    yb = REAR['band_bot']
+    q = [(-xc, p['tail_h'] - g), (xc, p['tail_h'] - g), (BW - g, ys), (BW - g, yb), (-BW + g, yb), (-BW + g, ys)]
+    return [np.array([x, y, zt]) for x, y in q]
+
+def rear_lights(p):
+    """The rear lamps (REAR), each its own part so the app can light them by function, standing 0.6 mm proud of
+    the smoked band and clipped to it: the tail strip in three (gate_light across the tailgate's middle,
+    light_rear_l and _r in the end caps), the end caps around the strip (brake and turn signal), the brake bar in
+    the middle under the strip, the red lamps under the tailgate, and the camera's housing in the band's middle."""
+    R = REAR
+    zt = ZR + p['bumper_r_out']
+    n = np.array([0.0, 0.0, -1.0])
+    clip = prism(band_outline(p), n, out=5.0, depth=5.0)
+    def rect(x0, x1, y0, y1, out=-0.4, depth=1.0, clipped=True):
+        pts = [np.array(q) for q in ((min(x0, x1), y1, zt), (max(x0, x1), y1, zt), (max(x0, x1), y0, zt), (min(x0, x1), y0, zt))]
+        part = prism(pts, n, out=out, depth=depth)
+        return part & clip if clipped else part
+    s0, s1 = R['strip']
+    cx, edge = R['cap_x'], body_w(p)
+    out = {'gate_light': rect(-cx + 3, cx - 3, s0, s1)}
+    for side, sx in (('l', 1), ('r', -1)):
+        out[f'light_rear_{side}'] = rect(sx * (cx + 3), sx * edge, s0, s1)
+        out[f'light_cap_{side}'] = rect(sx * (cx + 3), sx * edge, R['band_bot'] + 2, s0 - 2) + rect(sx * (cx + 3), sx * edge, s1 + 2, 2000)
+    bx, b0, b1 = R['brake']
+    out['gate_brake'] = rect(-bx, bx, b0, b1)
+    x0, x1, h0, h1 = R['low']
+    out['light_low'] = Compound([rect(sx * x0, sx * x1, h0, h1, out=-0.4, depth=9.0, clipped=False) for sx in (1, -1)])   # on the strip under the gate
+    w, c0, c1 = R['camera']
+    tri = [np.array(q) for q in ((0, c1, zt), (w, c0, zt), (-w, c0, zt))]
+    out['gate_camera'] = prism(tri, n, out=2.0, depth=1.0)
     return out
 
 def tyre_cylinder(p, axle, side):
@@ -626,7 +699,7 @@ VIEW_DARK = {
              'tyre_fl', 'tyre_rl', 'mirror_l', 'well_f_l', 'well_r_l'],
     'front': ['bumper_f', 'windshield', 'side_glass_l', 'side_glass_r', 'flare_f_l', 'flare_f_r', 'tyre_fl', 'tyre_fr',
               'mirror_l', 'mirror_r'],
-    'rear': ['bumper_r', 'tonneau', 'tonneau_bay', 'tonneau_rail_l', 'tonneau_rail_r', 'light_r', 'rear_glass', 'flare_r_l', 'flare_r_r', 'tyre_rl', 'tyre_rr'],
+    'rear': ['bumper_r', 'tonneau', 'tonneau_bay', 'tonneau_rail_l', 'tonneau_rail_r', 'band_r', 'band_low', 'rear_glass', 'flare_r_l', 'flare_r_r', 'tyre_rl', 'tyre_rr'],
 }
 VIEW_DARK['right'] = ['flare_f_r', 'flare_r_r', 'rocker_r', 'bumper_f', 'bumper_r', 'side_glass_r', 'windshield', 'rear_glass',
                       'tyre_fr', 'tyre_rr', 'mirror_r', 'well_f_r', 'well_r_r']
@@ -636,7 +709,7 @@ def fit_parts(p=P):
     parts = {'steel': shell(p)}
     parts.update(cladding_parts(p))
     for name, (pts, n, depth, inset, kind) in panels(p).items():
-        if kind in ('glass', 'tonneau', 'bay', 'light_r'):
+        if kind in ('glass', 'tonneau', 'bay', 'band'):
             parts[name] = prism(pts, n, out=1.5, depth=0.5)     # a sheet just proud of the facet, painted over the steel
     m = mirror_part(p)
     parts['mirror_l'], parts['mirror_r'] = m, m.mirror(Plane.YZ)
@@ -1962,7 +2035,7 @@ if __name__ == '__main__':
     for h in through_holes(p):
         body = body - h
 
-    groups = {'glass': [], 'tonneau': [], 'bay': [], 'light_w': [], 'light_r': []}
+    groups = {'glass': [], 'tonneau': [], 'bay': [], 'light_w': [], 'band': []}
     for name, (pts, n, depth, inset, kind) in panels(p).items():
         body, panel = recess(body, inner if inset == 1.0 else hull(p, inset=inset), pts, n, depth)
         groups[kind].append(panel)
@@ -2022,9 +2095,11 @@ if __name__ == '__main__':
     if ton_gate is not None and ton_gate.volume > 1:
         save(ton_gate, 'gate_tonneau')
     save(Compound(groups['light_w']), 'light_front')
-    lr_rest, lr_gate = cut(Compound(groups['light_r']), gate)
-    save(lr_rest, 'light_rear')
-    save(lr_gate, 'gate_light')
+    band_rest, band_gate = cut(Compound(groups['band']), gate)
+    save(band_rest, 'rear_band')
+    save(band_gate, 'gate_band')
+    for name, part in rear_lights(p).items():           # gate_*: on the tailgate's band, they drop with it
+        save(part, name)
     save(Compound([c - tub_cav for c in cladding(p)]), 'cladding')
     cp = cladding_parts(p)
     save(cp['bumper_f_intake'], 'intake_back')
@@ -2032,6 +2107,8 @@ if __name__ == '__main__':
     save(Compound(cp['bumper_f_tow']), 'tow_covers')
     save(cp['bumper_f_camera'], 'front_camera', tolerance=0.3, angular=0.3)
     save(cp['bumper_f_lens'], 'front_camera_lens', tolerance=0.3, angular=0.3)
+    save(cp['rear_hitch'], 'rear_hitch')
+    save(cp['rear_reverse'], 'light_reverse')
     mirrors_rest, mirror_pieces = split_doors(both_sides(mirror_part(p)), regions)     # the mirrors ride on the front doors
     # Two-tone, as on the truck (c003, dgRcedIkNOM-04): a satin grey cap over the black base and arm, split at
     # the base's top.

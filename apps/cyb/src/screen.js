@@ -103,7 +103,7 @@ const store = (key, value) => {
  * onChange(): something on the screen changed that the scene may care about (the fan, say).
  * The back seat's small screen (int_rear_screen) takes taps too.
  */
-export function createScreen(scene, screenMesh, { controls = () => [], action = () => null, loading = () => null, onChange = () => {} } = {}) {
+export function createScreen(scene, screenMesh, { controls = () => [], action = () => null, loading = () => null, gear = () => 'P', onChange = () => {} } = {}) {
   const front = surface(scene, screenMesh, 'cyb-screen', W, H);
   const rear = surface(scene, scene.getMeshByName('int_rear_screen'), 'cyb-rear-screen', RW, RH);
   const surfaces = [front, rear].filter((s) => s.mesh);
@@ -187,7 +187,7 @@ export function createScreen(scene, screenMesh, { controls = () => [], action = 
       else drawParkedMap(ctx, hit, ui);
     }
     drawStatus(ctx, ui, !!ride, hit);
-    drawDriveStrip(ctx, ride && !ride.state.done ? 'D' : 'P');
+    drawDriveStrip(ctx, ride ? (ride.state.done ? 'P' : 'D') : gear());
     drawMediaCard(ctx, radio, hit, ui, open('radio'));
     const big = action();
     if (big && !ui.panel && !wait) drawAction(ctx, big, hit, ui);
@@ -847,8 +847,8 @@ function drawControlsPanel(ctx, items, display, hit, ui) {
   ctx.fillText(CATEGORIES.find(([id]) => id === ui.tab)[1], page.x, page.y + 18);
   const y = page.y + 36;
   const byLabel = (...names) => items.filter((it) => names.includes(it.label));
-  if (ui.tab === 'quick') tiles(ctx, page, y, items.filter((it) => it.label !== 'Ambient light'), 2, 72, hit, ui, 'quick');
-  if (ui.tab === 'lights') tiles(ctx, page, y, byLabel('Lights', 'Ambient light'), 2, 72, hit, ui, 'lights');
+  if (ui.tab === 'quick') tiles(ctx, page, y, items.filter((it) => !['Ambient light', 'Hazards', 'Gear'].includes(it.label)), 2, 72, hit, ui, 'quick');
+  if (ui.tab === 'lights') tiles(ctx, page, y, byLabel('Lights', 'Hazards', 'Gear', 'Ambient light'), 2, 72, hit, ui, 'lights');
   if (ui.tab === 'locks') {
     tiles(ctx, page, y, [
       { label: 'Lock', value: ui.locked ? 'Locked · tap to unlock' : 'Unlocked · tap to lock', active: ui.locked, onClick: () => (ui.locked = !ui.locked) },

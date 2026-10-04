@@ -67,10 +67,11 @@ Guesses (no photo constrains them):
 
 Known faults in the model:
 
-- The rear bumper is a prism; the real one has more facets and the step is simpler. (The front bumper's face
-  was measured and built on 2026-10-04: spec.md, "Front bumper face, measured".)
+- The rear bumper was a prism; measured and rebuilt on 2026-10-04 (spec.md, "Rear, measured"): two tiers, the
+  plate pocket and step, reverse lamps, hitch. Still guessed: how far the lower tier is set in, the pocket's
+  side walls (vertical here; c069 hints they slant). (The front bumper's face was measured on 2026-10-04.)
 - The cladding steps on the flares (their bevelled outer faces) are flat bands.
-- The tonneau's rails and the light-band end caps are missing; the tonneau is one sunk panel.
+- The tonneau's rails are dark panels on the deck either side of the slats; the band's end caps are built (2026-10-04).
 - Review renders through the photo cameras don't apply the per-photo ride offset, so the side pairs on
   the sheet show the body 50 to 60 mm higher than the fit did.
 

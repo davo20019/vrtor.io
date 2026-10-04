@@ -141,16 +141,18 @@ Cuts and fittings on the shell:
 - **Front bumper**: black, with its grille band; its corners are blocks flush with the flares that run back
   to just ahead of the tyre, with a lower rear tip (c032, c150, c059). A smoked lower lamp strip runs between
   its top and the steel, amber at its outer ends.
-- **Rear bumper**: black, standing out past the tailgate, with the centre step recess and the hitch
-  pocket below it (c069).
+- **Rear bumper**: black, standing out past the tailgate, in two tiers: the upper with a plate pocket
+  across its middle, floored by the step, the lower set in under it with the hitch (c069, c006, c080;
+  "Rear, measured").
 - **Window pockets**: front and rear side windows, the windshield and glass roof, and the rear roof
   glass. Each is a shallow pocket holding a dark glass panel 1 mm below the steel (no coplanar faces).
   Black trim and pillars are the same panel.
 - **Tonneau pocket**: from the end of the rear glass to the tail, between the sails, holding the black
   tonneau panel. Its slats come from a normal map.
-- **Light bars**: front, a thin white emissive strip on the light bar edge; rear, a dark red strip
-  across the full width under the tonneau (c069, c006), plus the small red lights in the rear bumper
-  corners and amber marker lights at the front corners.
+- **Light bars**: front, a thin white emissive strip on the light bar edge; rear, a smoked black band
+  across the full width under the tonneau with end caps over the pillars, a thin red tail strip in it,
+  red lamps under the tailgate and reverse lamps in the plate pocket ("Rear, measured"); amber marker
+  lights at the front corners.
 - **Panel seams**: 4 mm grooves for the front door, B-pillar and rear door seams, the tailgate and the
   frunk lid.
 - **Mirrors**: black faceted housings on a dark base, at the front lower corner of each front window,
@@ -269,6 +271,41 @@ Materials: the amber corner lamps no longer glow at rest. Unlit, they are a dark
 them only while a turn signal blinks. The headlamps are a slightly lighter lens than the strip. The steel's
 roughness streaks are a third as strong: at full strength they read as wood grain from a few metres away.
 
+## Rear, measured (2026-10-04)
+
+c069 (straight rear, CC0, iPhone 15 Pro Max, 24 mm equivalent: focal 3,028 px at the 3,840 copy, from its EXIF
+on Commons) through a camera solved by `measure/rear/solve_c069.py`: the deck's tail corners (tail_half 930.5,
+tail_h 1,319.5) fix the scale, the tailgate's side edges (x = +-926) fix the pitch through their convergence, and
+the gate's two heights are left free. 7.6 px RMS over six points (about 5 mm; gate_half 900 or 945 gives 12 and
+18 px). The solve puts the gate's top at 1,198 (the model had 1,200) and its bottom at 692 (it had 735). Points in
+`measure/rear/c069-rear.md`, on the bumper's rear face (z = ZR) or the tailgate's (ZT).
+
+Checks: the licence plate, on the pocket's back wall, comes out 274 x 136 on the bumper's face, 2.01 to 1 like a
+US plate (305 x 152); at 186 mm in it is 305 x 151 and centred (x -7). The hitch receiver mouth 62 x 68 (a 2.5 in
+tube). On c080 (another truck, braking) the red lamps under the gate are 0.41 of the plate's width, as on c069;
+the pocket is 2.2 plates wide (c069 2.4, c080 seen at an angle).
+
+| Feature | Measured | Notes |
+|---|---|---|
+| Bumper top at the rear face | 650 (649 at the corner, 645 at the body) | the side fit's 679 read the black strip under the gate as bumper |
+| Black strip under the tailgate | 650 to 692 | holds the red lamps, 690 to 810 out, 658 to 690 high |
+| Upper tier rear face | 917 out at the top, 877 at its bottom, 490 | a facet cut back from the corner chamfer (c006 shows it) |
+| Plate pocket | +-330, floor (the step) 526, back wall 186 in | the plate 506 to 657 |
+| Reverse lamps | 147 to 276 out, 590 to 610 high, on the pocket wall | white lenses either side of the plate (InsideEVs; c069) |
+| Lower tier | 657 out at 490, 624 at its bottom, 370 | set in 40: a guess (c006 shows it in, not by how much) |
+| Hitch | centre 435 high | |
+| Smoked band | 1,205 to the face's top edge (1,311 at the centre) | end caps from 806 out (seam at 801) |
+| Tail strip | 1,280 to 1,299, across the band and both caps | c006 (lit, Moab): about 0.18 of the band high, its top 0.12 down; c069 shows its unlit top edge as a line at 1,299 |
+| Rear camera | a small A-shaped housing in the band's middle, 1,214 to 1,250 | |
+
+What the lamps do (two articles plus two photos of different trucks): with the lights on, one long thin strip
+(c006; The Drive, The Autopian). Braking, the strip's middle goes out and the end caps fill solid red with a
+shorter bar in the middle (c080, stopped at a red light; The Drive: "replaced by a shorter light just beneath
+it"; The Autopian: "three very bright segments"). The bar is +-350 and just under the strip: read on c080, whose
+angle isn't undone, so its width is approximate. Turn signals: the caps, red on US trucks (The Autopian; the UK
+reports on red indicators; The Drive says amber, which matches neither photo). Inside the pillars, red lamps face
+the open tailgate (already modelled, pillar_red).
+
 ## Parameters (P in cad.py)
 
 Fixed (Tesla): L = 5,682.9, H = 1,793.8, wheelbase 3,635.0, front overhang 878.3, clearance 257.0,
@@ -300,9 +337,8 @@ track 1,772.0, width across flares 2,031.6, mirror span 2,413.3, tyre 878.5 x 28
 | arch_knee_h | 660 | 560-760 | where the angled side becomes vertical | c022 | side |
 | arch_foot_half | 590 | 520-660 | half-length of the arch at sill level | c022 | side |
 | flare_band | 75 | 50-110 | flare width seen from the side | c022 | side |
-| bumper_r_h | 600 | 520-680 | top of the rear bumper | c069 | side, rear |
+| bumper_r_h | 600 | 520-680 | top of the rear bumper (fitted 679; replaced by the measured 650: "Rear, measured") | c069 | side, rear |
 | bumper_r_out | 60 | 20-120 | rear bumper stand-out past the tailgate | c022 | side |
-| rear_bar_h | 60 | 40-90 | height of the rear light bar band | c069 | rear (not fitted: inner feature) |
 | front_bar_h | 22 | 15-35 | height of the front light strip | c150, c001 | not fitted: inner feature |
 | roofglass_end_s | 3,000 | 2,600-3,400 | end of the rear roof glass, start of the tonneau | c134, c140 | not fitted (no straight top view); measured |
 | a_pillar_s | 1,420 | 1,300-1,550 | front tip of the side glass on the beltline | c022 | measured on c022 |

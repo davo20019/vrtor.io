@@ -120,7 +120,14 @@ M = {
     'tiedown': material('tiedown_metal', srgb(70, 70, 72), 0.45, metallic=0.7),
     'outlets': material('bed_outlets', (1, 1, 1), 0.5, image=PARTS / 'outlets.png'),
     'light_w': material('light_front', srgb(235, 238, 245), 0.2, emit=(1, 1, 1), emit_strength=6.0),
-    'light_r': material('light_rear', srgb(70, 8, 8), 0.15, emit=(1, 0.05, 0.03), emit_strength=0.6),
+    # The rear band is smoked black; its lamps are dark red lenses under it, lit by the app by function (main.js):
+    # the tail strip glows with the lights on (its emission here), the caps, brake bar and reverse lamps only
+    # when braking, signalling or reversing (c069 unlit, c006 tail lights, c080 braking).
+    'band': material('rear_band_smoked', srgb(9, 9, 10), 0.1),
+    'light_r': material('light_rear', srgb(34, 5, 5), 0.1, emit=(1, 0.04, 0.02), emit_strength=0.8),
+    'light_cap': material('light_rear_cap', srgb(22, 6, 6), 0.1),
+    'light_low': material('light_rear_low', srgb(120, 14, 12), 0.15, emit=(1, 0.04, 0.02), emit_strength=0.5),
+    'light_rev': material('light_reverse', srgb(150, 150, 154), 0.1),
     'mirror': material('mirror_black', srgb(20, 20, 21), 0.35),
     'mirror_cap': material('mirror_cap_grey', srgb(78, 80, 84), 0.4),     # the door mirrors' satin grey cap (c003, dgRcedIkNOM-04)
     'wiper': material('wiper_black', srgb(18, 18, 18), 0.6),
@@ -201,7 +208,10 @@ classify(body)
 glass = stl('glass', M['glass'])
 tonneau = stl('tonneau', M['tonneau']); box_uv(tonneau, tile_mm=800)
 lf = stl('light_front', M['light_w'])
-lr = stl('light_rear', M['light_r'])
+# The rear band and its lamps (cad.py rear_lights; the gate_* ones ride on the tailgate, below).
+rear_parts = [stl('rear_band', M['band']), stl('light_rear_l', M['light_r']), stl('light_rear_r', M['light_r']),
+              stl('light_cap_l', M['light_cap']), stl('light_cap_r', M['light_cap']), stl('light_low', M['light_low']),
+              stl('light_reverse', M['light_rev']), stl('rear_hitch', M['intake'])]
 clad = stl('cladding', M['clad'])
 intake = stl('intake_back', M['intake'])
 intake_grille = stl('intake_grille', M['grille'])
@@ -252,7 +262,8 @@ for f in bm.faces:
     for l in f.loops:
         l[uvl].uv = (l.vert.co.y / 800, l.vert.co.x / 800)
 bm.to_mesh(gate_liner.data); bm.free()
-hinged = {'tailgate': [gate_steel, gate_liner, stl('gate_light', M['light_r']), stl('gate_release', M['door_button'])]}
+hinged = {'tailgate': [gate_steel, gate_liner, stl('gate_band', M['band']), stl('gate_light', M['light_r']), stl('gate_brake', M['light_cap']),
+                       stl('gate_camera', M['clad'], smooth_angle=10), stl('gate_release', M['door_button'])]}
 if (PARTS / 'gate_tonneau.stl').exists():
     o = stl('gate_tonneau', M['tonneau']); box_uv(o, tile_mm=800); hinged['tailgate'].append(o)
 lid = stl('lid_liner', M['bed_floor']); box_uv(lid, tile_mm=800)
@@ -366,7 +377,7 @@ disc = stl('brake_disc', M['disc'], smooth_angle=50)
 caliper = stl('caliper', M['caliper'])
 templates = (tyre, rim, lugs, cover, disc, caliper)
 all_door_parts = [o for v in door_parts.values() for o in v]
-for o in [x for x in (body, glass, tonneau, lf, lr, clad, intake, intake_grille, mirrors, wiper, wiper_blade, slat) if x] + [*front_bits, *cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
+for o in [x for x in (body, glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper, wiper_blade, slat) if x] + [*front_bits, *rear_parts, *cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
     o.data.transform(TO_BLENDER)         # UVs and materials were set in the model frame; now move to Blender's
 
 def empty(name, loc=(0, 0, 0), parent=None):
@@ -378,7 +389,7 @@ def empty(name, loc=(0, 0, 0), parent=None):
 
 root = empty('cybertruck')
 body_node = empty('body', parent=root)
-for o in [x for x in (body, glass, tonneau, lf, lr, clad, intake, intake_grille, mirrors, wiper) if x] + [*front_bits, *detail_parts, *button_parts, *bed_parts]:
+for o in [x for x in (body, glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper) if x] + [*front_bits, *rear_parts, *detail_parts, *button_parts, *bed_parts]:
     o.parent = body_node
 wiper_pivot = Vector(to_blender(GEO['wiper']['pivot']))
 wiper_node = empty('wiper_arm', loc=wiper_pivot, parent=root)
@@ -601,7 +612,12 @@ info = {
     'steer': {'nodes': ['steer_fl', 'steer_fr', 'steer_rl', 'steer_rr'], 'axis': [0, 1, 0],
               'note': 'steer_*.rotation.y = angle; pivot is the vertical line through the wheel centre (the real kingpin axis is not published). Rear steer limits are not published either.'},
     'covers': {'nodes': [f'cover_{k}' for k in GEO['wheels']], 'note': 'aero covers: set visible = false to show the bare rims'},
-    'lights': {'front': 'light_front (emissive white)', 'rear': 'light_rear (emissive red, low)'},
+    'lights': {'front': 'light_front (emissive white)',
+               'tail': ['light_rear_l', 'gate_light', 'light_rear_r', 'light_low'],
+               'brake': ['light_cap_l', 'light_cap_r', 'gate_brake', 'light_rear_l', 'light_rear_r', 'light_low'],
+               'turn': {'left': ['light_cap_l', 'light_rear_l'], 'right': ['light_cap_r', 'light_rear_r']},
+               'reverse': ['light_reverse'],
+               'note': 'tail: the thin strip across the band and the red lamps under the tailgate, lit with the lights (their emission in the GLB). Braking (c080; The Drive, The Autopian): the middle of the strip goes out and the end caps fill solid red with a shorter bar under it in the middle. The turn signals are the end caps, red on US trucks. Reverse: white lamps either side of the plate. gate_* parts ride on the tailgate node'},
     'material': 'brushed stainless is metallic: the scene needs environment lighting',
     'seatEyes': {k: [v * 0.001 for v in c] for k, c in GEO['seatEyes'].items()},
     'doors': {k: {'node': f'door_{k}', 'hinge': [v * 0.001 for v in d['hinge']], 'openDeg': d['openDeg'],

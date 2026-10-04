@@ -109,7 +109,7 @@ export function createYokeControls(scene, byName, info, { onHighBeam = () => {} 
     lamps[side] = { mat: mesh.material, rest: mesh.material.emissiveColor.clone() };
   }
 
-  const state = { signal: null, phase: 0, lit: false, highBeam: false, hovered: null, active: false, wipe: -1 };
+  const state = { signal: null, hazard: false, phase: 0, lit: false, highBeam: false, hovered: null, active: false, wipe: -1 };
 
   // The wiper's arm turns about the glass's normal; which way is toward the passenger is found by trying it.
   const w = info.wiper && byName(info.wiper.node);
@@ -135,7 +135,7 @@ export function createYokeControls(scene, byName, info, { onHighBeam = () => {} 
     for (const [key, parts] of Object.entries(controls)) {
       let c = null;
       if (key === state.hovered) c = HOVER;
-      else if (key === `signal_${state.signal}` && state.lit) c = GREEN;
+      else if ((key === `signal_${state.signal}` || (state.hazard && key.startsWith('signal_'))) && state.lit) c = GREEN;
       else if (key === 'high_beam' && state.highBeam) c = BLUE;
       for (const p of parts) {
         p.mesh.material.emissiveTexture = c && p.symbols ? p.symbols : p.restTexture;
@@ -143,8 +143,13 @@ export function createYokeControls(scene, byName, info, { onHighBeam = () => {} 
       }
     }
     for (const [side, l] of Object.entries(lamps)) {
-      l.mat.emissiveColor = side === state.signal && state.lit ? AMBER_LIT.clone() : l.rest.clone();
+      l.mat.emissiveColor = blink(side) ? AMBER_LIT.clone() : l.rest.clone();
     }
+  }
+
+  /** Whether a side's signal lamps are lit just now: its turn signal or the hazards, in the on half of a flash. */
+  function blink(side) {
+    return state.lit && (state.hazard || state.signal === side);
   }
 
   function setLit(lit) {
@@ -157,6 +162,16 @@ export function createYokeControls(scene, byName, info, { onHighBeam = () => {} 
   return {
     targets,
     get signal() { return state.signal; },
+    get hazard() { return state.hazard; },
+    blink,
+    /** The hazard flashers (Owner's Manual, Lights: the button on the overhead console): every signal lamp flashes. */
+    setHazard(on) {
+      state.hazard = on;
+      state.phase = 0;
+      state.lit = false;
+      if (on || state.signal) setLit(true);
+      else paint();
+    },
     get highBeam() { return state.highBeam; },
     set active(on) {
       state.active = on;
@@ -178,7 +193,7 @@ export function createYokeControls(scene, byName, info, { onHighBeam = () => {} 
         state.signal = state.signal === side ? null : side;    // the same key again turns it off
         state.phase = 0;
         state.lit = false;
-        if (state.signal) setLit(true);
+        if (state.signal || state.hazard) setLit(true);
         else paint();
       } else if (key === 'wiper') {
         if (wiper && state.wipe < 0) state.wipe = 0;
@@ -197,7 +212,7 @@ export function createYokeControls(scene, byName, info, { onHighBeam = () => {} 
         wiper.node.rotationQuaternion = wiper.rest.multiply(Quaternion.RotationAxis(wiper.axis, wiper.sweep * e));
         if (state.wipe >= 1) state.wipe = -1;
       }
-      if (!state.signal) return;
+      if (!state.signal && !state.hazard) return;
       state.phase = (state.phase + dt / FLASH_S) % 1;
       setLit(state.phase < 0.5);
     },

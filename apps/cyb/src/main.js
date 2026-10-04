@@ -876,7 +876,12 @@ let screen = null;
 /** The yoke's horn, turn signals and high beam (yoke.js), live in the driver's seat. */
 let yokeControls = null;
 /** The light bar front and back, and the cabin's ambient strips: their materials and how they glow. */
-const glows = { lights: [], ambient: [], lightsOn: true, highBeam: false, colour: 0 };
+const glows = { lights: [], ambient: [], rear: {}, lightsOn: true, highBeam: false, colour: 0 };
+/** The gear, set from the screen while parked in the showroom (on the road the drive is in D until it arrives). */
+let gear = 'P';
+const GEARS = ['P', 'R', 'N', 'D'];
+const REAR_RED = new Color3(2.2, 0.03, 0.015);      // a lit brake or turn lamp: far brighter than the tail strip
+const REVERSE_WHITE = new Color3(2.4, 2.4, 2.4);
 const AMBIENT = [
   { name: 'White', color: null },
   { name: 'Amber', color: new Color3(1, 0.55, 0.12) },
@@ -894,8 +899,45 @@ function setUpGlows() {
     return { mat: m.material, rest: m.material.emissiveColor?.clone() ?? Color3.White() };
   };
   const meshes = (name) => truck.root.getChildMeshes().filter((m) => m.name === name || m.name.startsWith(`${name}_primitive`));
-  glows.lights = ['light_front', 'light_rear'].flatMap((n) => meshes(n).map(own).filter(Boolean).map((g) => ({ ...g, front: n === 'light_front' })));
+  glows.lights = meshes('light_front').map(own).filter(Boolean).map((g) => ({ ...g, front: true }));
+  // The rear lamps, one part per function (cybertruck.json "lights"): the tail strip in three, the end caps, the
+  // brake bar, the red lamps under the tailgate, the reverse lamps.
+  for (const n of ['light_rear_l', 'light_rear_r', 'gate_light', 'light_cap_l', 'light_cap_r', 'gate_brake', 'light_low', 'light_reverse']) {
+    glows.rear[n] = meshes(n).map(own).filter(Boolean);
+  }
   glows.ambient = truck.root.getChildMeshes().filter((m) => /(^|_)int_ambient/.test(m.name)).map(own).filter(Boolean);
+}
+
+/** Braking: on the road while it slows or stands in D (the car holds the brake), and in the showroom out of P
+ *  and N (shifting takes a foot on the brake, and it stays there: the truck doesn't creep in the showroom). */
+function braking() {
+  if (ride.world === 'bigsur' && ride.drive) {
+    const c = ride.drive.car.state;
+    return !ride.drive.state.done && (c.v < 0.3 || c.ax < -0.8);
+  }
+  return gear === 'R' || gear === 'D';
+}
+
+/** The rear lamps each frame, as the real truck does them (The Drive, The Autopian; c006 lit, c080 braking): with
+ *  the lights on, a thin strip across the band and the lamps under the tailgate. Braking, the strip's middle goes
+ *  out and the end caps fill solid red with a bar in the middle; a turn signal or the hazards flash the caps (red,
+ *  as on US trucks). In R the reverse lamps beside the plate. */
+function applyRear() {
+  const set = (name, color) => {
+    for (const g of glows.rear[name] ?? []) g.mat.emissiveColor = color;
+  };
+  const tail = (name) => (glows.lightsOn ? glows.rear[name]?.[0]?.rest ?? Color3.Black() : Color3.Black());
+  const brake = braking();
+  for (const side of ['l', 'r']) {
+    const signalling = yokeControls && (yokeControls.hazard || yokeControls.signal === (side === 'l' ? 'left' : 'right'));
+    const on = signalling ? yokeControls.blink(side === 'l' ? 'left' : 'right') : brake;
+    set(`light_cap_${side}`, on ? REAR_RED : Color3.Black());
+    set(`light_rear_${side}`, on ? REAR_RED : tail(`light_rear_${side}`));
+  }
+  set('gate_light', brake ? Color3.Black() : tail('gate_light'));
+  set('gate_brake', brake ? REAR_RED : Color3.Black());
+  set('light_low', brake ? REAR_RED : tail('light_low'));
+  set('light_reverse', gear === 'R' && ride.world === 'showroom' ? REVERSE_WHITE : Color3.Black());
 }
 
 function applyGlows() {
@@ -935,6 +977,8 @@ function screenControls() {
     { label: 'Tailgate', value: tonneauLocked() ? 'Shift to Park to open' : (hinged.tailgate?.target ?? 0) > 0.5 ? 'Open · lift it to close' : 'Closed · tap to open', active: (hinged.tailgate?.target ?? 0) > 0.5, disabled: tonneauLocked() || (hinged.tailgate?.target ?? 0) > 0.5, onClick: () => setTailgate(true) },
     { label: 'Tonneau', value: tonneauLocked() ? 'Shift to Park to open' : tonneauState(), active: tonneau.u > 0 || tonneau.dir !== 0, disabled: tonneauLocked(), onClick: () => tonneauPress('toggle') },
     { label: 'Lights', value: glows.lightsOn ? 'On' : 'Off', active: glows.lightsOn, onClick: () => ((glows.lightsOn = !glows.lightsOn), applyGlows()) },
+    { label: 'Hazards', value: yokeControls?.hazard ? 'Flashing' : 'Off', active: !!yokeControls?.hazard, disabled: !yokeControls, onClick: () => yokeControls?.setHazard(!yokeControls.hazard) },
+    ...(ride.world === 'showroom' ? [{ label: 'Gear', value: gear === 'P' ? 'Park · tap to shift' : `${gear} · tap to shift`, active: gear !== 'P', onClick: () => (gear = GEARS[(GEARS.indexOf(gear) + 1) % GEARS.length]) }] : []),
     { label: 'Ambient light', value: AMBIENT[glows.colour].name, active: AMBIENT[glows.colour].name !== 'Off', onClick: () => ((glows.colour = (glows.colour + 1) % AMBIENT.length), applyGlows()) },
   ];
 }
@@ -1329,6 +1373,7 @@ async function startRide() {
   // From outside, it seats you at the wheel first.
   if (seat === 'outside') await sitIn('driver');
   ride.world = 'loading';
+  gear = 'P';                                      // the ride shifts itself into D
   ride.error = null;
   ride.shown = -1;
   cardOpen = true;
@@ -1582,11 +1627,13 @@ async function start() {
     controls: screenControls,
     action: screenAction,
     loading: () => (ride.world === 'loading' ? { progress: rideProgress(), detail: downloadDetail() } : null),
+    gear: () => gear,
   });
   screen.show(true);
   setUpMirrors(truck.byName);
   scene.onBeforeRenderObservable.add(() => screen.tick(engine.getDeltaTime() / 1000));
   setUpGlows();
+  scene.onBeforeRenderObservable.add(applyRear);
   yokeControls = createYokeControls(scene, truck.byName, truck.info, {
     onHighBeam: (on) => {
       glows.highBeam = on;
@@ -1708,4 +1755,4 @@ start().catch((err) => {
 });
 
 // For automated checks in a browser.
-window.__cyb = { get yoke() { return yokeControls; }, mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, tonneauPress, tonneau, hinged, setTailgate, hingePress, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };
+window.__cyb = { get yoke() { return yokeControls; }, controls: screenControls, mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, tonneauPress, tonneau, hinged, setTailgate, hingePress, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };

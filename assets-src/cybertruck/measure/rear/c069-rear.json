@@ -1,0 +1,328 @@
+{
+ "_": "c069 (straight rear, iPhone 15 Pro Max, 24 mm eq.): the bumper, the lamps and the light band. Camera from solve_c069.py (7.6 px RMS): the tail corners and the gate edges at x +-926, gate heights solved.",
+ "photo": "../../refs/web/c069-rear.jpg",
+ "focal": 3028.0,
+ "refs": {
+  "tail L": {
+   "px": [
+    210.0,
+    821.0
+   ],
+   "mm": [
+    930.5,
+    1319.5,
+    -2873.4
+   ]
+  },
+  "tail R": {
+   "px": [
+    3536.0,
+    829.0
+   ],
+   "mm": [
+    -930.5,
+    1319.5,
+    -2873.4
+   ]
+  },
+  "gate TL": {
+   "px": [
+    266.0,
+    1036.0
+   ],
+   "mm": [
+    926.0,
+    1198.0,
+    -2873.4
+   ]
+  },
+  "gate TR": {
+   "px": [
+    3489.0,
+    1046.0
+   ],
+   "mm": [
+    -926.0,
+    1198.0,
+    -2873.4
+   ]
+  },
+  "gate BL": {
+   "px": [
+    371.0,
+    1849.0
+   ],
+   "mm": [
+    926.0,
+    691.8,
+    -2873.4
+   ]
+  },
+  "gate BR": {
+   "px": [
+    3396.0,
+    1899.0
+   ],
+   "mm": [
+    -926.0,
+    691.8,
+    -2873.4
+   ]
+  }
+ },
+ "queries": {
+  "bumper outer top L": {
+   "px": [
+    289,
+    1987
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "bumper outer end low L": {
+   "px": [
+    387,
+    2219
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "bumper bottom at valance L": {
+   "px": [
+    745,
+    2247
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "crease R end (x 1271)": {
+   "px": [
+    1271,
+    1999
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "bumper top back edge (x 700)": {
+   "px": [
+    700,
+    1925
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "valance outer bottom L": {
+   "px": [
+    816,
+    2404
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "valance bottom x1350": {
+   "px": [
+    1350,
+    2439
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "pocket edge top L": {
+   "px": [
+    1268,
+    1990
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "pocket edge low L": {
+   "px": [
+    1268,
+    2210
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "step rear edge L": {
+   "px": [
+    1332,
+    2197
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "step rear edge R": {
+   "px": [
+    2334,
+    2219
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "plate TL": {
+   "px": [
+    1627,
+    1878
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "plate BR": {
+   "px": [
+    2101,
+    2105
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "reverse lamp L outer top": {
+   "px": [
+    1427,
+    1944
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "reverse lamp L inner bottom": {
+   "px": [
+    1627,
+    1976
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "reverse lamp R inner top": {
+   "px": [
+    2102,
+    1944
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "reverse lamp R outer bottom": {
+   "px": [
+    2307,
+    1976
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "hitch TL": {
+   "px": [
+    1795,
+    2295
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "hitch BR": {
+   "px": [
+    1900,
+    2400
+   ],
+   "plane": {
+    "z": -2987.1
+   }
+  },
+  "red lamp L outer top": {
+   "px": [
+    550,
+    1849
+   ],
+   "plane": {
+    "z": -2873.4
+   }
+  },
+  "red lamp L inner bottom": {
+   "px": [
+    743,
+    1906
+   ],
+   "plane": {
+    "z": -2873.4
+   }
+  },
+  "band top (centre)": {
+   "px": [
+    1855,
+    839
+   ],
+   "plane": {
+    "z": -2873.4
+   }
+  },
+  "band bottom (centre)": {
+   "px": [
+    1855,
+    1030
+   ],
+   "plane": {
+    "z": -2873.4
+   }
+  },
+  "band line (x 700)": {
+   "px": [
+    700,
+    861
+   ],
+   "plane": {
+    "z": -2873.4
+   }
+  },
+  "end cap seam L": {
+   "px": [
+    456,
+    950
+   ],
+   "plane": {
+    "z": -2873.4
+   }
+  },
+  "camera top": {
+   "px": [
+    1855,
+    950
+   ],
+   "plane": {
+    "z": -2873.4
+   }
+  },
+  "camera bottom L": {
+   "px": [
+    1815,
+    1012
+   ],
+   "plane": {
+    "z": -2873.4
+   }
+  }
+ },
+ "distances": [
+  [
+   "plate TL",
+   "plate BR"
+  ],
+  [
+   "hitch TL",
+   "hitch BR"
+  ]
+ ]
+}
