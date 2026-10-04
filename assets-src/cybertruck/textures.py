@@ -58,7 +58,36 @@ for k in range(8):
     d.rectangle([0, y, S * SS, y + 10], fill=40)
 h = h.filter(ImageFilter.GaussianBlur(2)).resize((S, S), Image.LANCZOS)
 normal_from_height(np.array(h), 4.0).save(OUT / 'tonneau_normal.png')
-print('textures: wrote steel_rough.png, tyre_normal.png, tonneau_normal.png')
+# Bed floor: raised ribs along the truck, 9 to the 800 mm tile (~89 mm apart: 14 across the manual's top view).
+h = Image.new('L', (S * SS, S * SS), 90)
+d = ImageDraw.Draw(h)
+for k in range(9):
+    y = k * S * SS / 9
+    d.rectangle([0, y + 8, S * SS, y + S * SS / 9 * 0.45], fill=200)
+h = h.filter(ImageFilter.GaussianBlur(3)).resize((S, S), Image.LANCZOS)
+normal_from_height(np.array(h), 4.0).save(OUT / 'bedfloor_normal.png')
+print('textures: wrote steel_rough.png, tyre_normal.png, tonneau_normal.png, bedfloor_normal.png')
+
+# The bed's outlet plate (manual, Cargo Bed Outlets): two 120 V 20 A outlets (NEMA 5-20: one T slot, one
+# straight, a round ground) over one 240 V outlet (NEMA 14-50: a straight slot either side, the neutral
+# across the top, a round ground), light grey faces on a dark plate. 256 x 512, top of the plate at the top.
+OW, OH = 256, 512
+img = Image.new('RGB', (OW * SS, OH * SS), (40, 40, 42))
+d = ImageDraw.Draw(img)
+k = SS
+def face(cx, cy, w, h):
+    d.rounded_rectangle([(cx - w / 2) * k, (cy - h / 2) * k, (cx + w / 2) * k, (cy + h / 2) * k], radius=14 * k, fill=(196, 196, 192))
+def slot(cx, cy, w, h):
+    d.rectangle([(cx - w / 2) * k, (cy - h / 2) * k, (cx + w / 2) * k, (cy + h / 2) * k], fill=(22, 22, 24))
+for cy in (100, 215):                                   # NEMA 5-20
+    face(128, cy, 120, 100)
+    slot(100, cy - 12, 8, 34); slot(156, cy - 12, 8, 34); slot(148, cy - 12, 24, 8)
+    d.ellipse([(128 - 12) * k, (cy + 18) * k, (128 + 12) * k, (cy + 42) * k], fill=(22, 22, 24))
+d.ellipse([(128 - 74) * k, (380 - 74) * k, (128 + 74) * k, (380 + 74) * k], fill=(196, 196, 192))   # NEMA 14-50
+slot(86, 362, 10, 46); slot(170, 362, 10, 46); slot(128, 340, 34, 10)
+d.ellipse([(128 - 14) * k, (402 - 14) * k, (128 + 14) * k, (402 + 14) * k], fill=(22, 22, 24))
+img.resize((OW, OH), Image.LANCZOS).save(OUT / 'outlets.png')
+print('textures: wrote outlets.png')
 
 # Centre screen (also used, smaller, on the rear screen): a vehicle panel on the left with the truck's
 # outline drawn from its side profile, a map on the right, a dock along the bottom. No logos or wordmarks.

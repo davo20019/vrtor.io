@@ -5,6 +5,7 @@
 import { Axis, Matrix, Quaternion, TransformNode, Vector3 } from '@babylonjs/core';
 import { createCabinSound } from './sound.js';
 import { ACCEL, DECEL, TRACK, WHEELBASE, createVehicle, laneOf, plan } from './steering.js';
+import { createRide } from './surface.js';
 
 const ROLLING_RADIUS = 0.424;          // m
 /** Stopping when asked (a door button, Stop here): firm but comfortable, about 5 s from 55 mph. */
@@ -14,6 +15,9 @@ export function createDrive(scene, { pose, truckInfo, nodes, screen, road }) {
   const p = plan(road);
   const at = laneOf(road, p);
   const car = createVehicle(at, { start: p.start, end: p.end, accel: ACCEL, decel: DECEL });
+  // The body over the road's last few millimetres (surface.js).
+  const ride = createRide();
+  let feel = { heave: 0, pitch: 0, roll: 0 };
 
   // Wheels and their steering knuckles, from the model's json.
   const rest = new Map();
@@ -51,13 +55,14 @@ export function createDrive(scene, { pose, truckInfo, nodes, screen, road }) {
 
   const state = { s: p.start, end: p.end, v: 0, heading: 0, yoke: 0, running: false, paused: false, done: false, heldUntil: 0, engagedAt: 0 };
 
-  /** The truck where the physics has it: on the road's surface under its axles, leaning on its springs. */
+  /** The truck where the physics has it: on the road's surface under its axles, leaning on its springs
+   *  and riding its bumps. */
   function placeTruck() {
     const c = car.state;
     const f = at(c.s + WHEELBASE / 2), r = at(c.s - WHEELBASE / 2);
     const grade = -Math.atan2(f.y - r.y, WHEELBASE);     // nose up on a climb
-    pose.position.set(c.x, (f.y + r.y) / 2, c.z);
-    pose.rotationQuaternion = Quaternion.RotationYawPitchRoll(c.yaw, grade + c.pitch, c.roll);
+    pose.position.set(c.x, (f.y + r.y) / 2 + feel.heave, c.z);
+    pose.rotationQuaternion = Quaternion.RotationYawPitchRoll(c.yaw, grade + c.pitch + feel.pitch, c.roll + feel.roll);
     Object.assign(state, { s: c.s, v: c.v, heading: c.yaw, yoke: c.yoke });
   }
 
@@ -81,8 +86,14 @@ export function createDrive(scene, { pose, truckInfo, nodes, screen, road }) {
     yoke?.turn(car.state.yoke);
   }
 
+  function settle() {
+    ride.reset();
+    feel = ride.step(car.state.s, 0);
+  }
+
   function reset() {
     car.reset();
+    settle();
     state.running = false;
     state.paused = false;
     state.done = false;
@@ -100,12 +111,22 @@ export function createDrive(scene, { pose, truckInfo, nodes, screen, road }) {
     state.running = false;
     state.paused = false;
     car.reset();
+    settle();
     pose.position.copyFrom(home);
     pose.rotationQuaternion = homeTurn.clone();
     car.state.yoke = 0;
     setWheels(0, 0);
     screen.setRide(null);
     audio.stop();
+  }
+
+  /** How much rock or bank is beside the truck on each side, 0 to 1 (bigsur.js). */
+  function wallsAt(s) {
+    const w = road.walls;
+    if (!w) return undefined;
+    const f = Math.max(0, Math.min(road.n - 1.001, s / road.step));
+    const i = Math.floor(f), t = f - i;
+    return { left: w.left[i] * (1 - t) + w.left[i + 1] * t, right: w.right[i] * (1 - t) + w.right[i + 1] * t };
   }
 
   /** Your head in the truck's frame (position, forward, up), for placing the sounds around you. */
@@ -127,7 +148,10 @@ export function createDrive(scene, { pose, truckInfo, nodes, screen, road }) {
     const driving = state.running && now >= state.heldUntil;
     // Physics in small steps, so a slow frame doesn't make the yoke overshoot.
     const steps = Math.max(1, Math.ceil(dt / (1 / 120)));
-    for (let i = 0; i < steps; i++) car.step(dt / steps, driving, state.paused ? STOP_DECEL : undefined);
+    for (let i = 0; i < steps; i++) {
+      car.step(dt / steps, driving, state.paused ? STOP_DECEL : undefined);
+      feel = ride.step(car.state.s, dt / steps);
+    }
     if (state.running && car.done()) {
       state.running = false;
       state.done = true;
@@ -144,7 +168,8 @@ export function createDrive(scene, { pose, truckInfo, nodes, screen, road }) {
     // The cabin's sound, heard from where your head is in the truck.
     const rearRate = dt > 0 ? (c.rear - lastRear) / dt : 0;
     lastRear = c.rear;
-    audio.update({ v: c.v, ax: c.ax, rearRate, s: c.s, dt, fan: screen.fan }, headInTruck());
+    const parked = !state.running && c.v < 0.05;
+    audio.update({ v: c.v, ax: c.ax, rearRate, s: c.s, dt, fan: screen.fan, parked, walls: wallsAt(c.s) }, headInTruck());
     const after = pose.computeWorldMatrix(true);
     let dyaw = state.heading - heading0;
     dyaw = Math.atan2(Math.sin(dyaw), Math.cos(dyaw));
@@ -170,7 +195,11 @@ export function createDrive(scene, { pose, truckInfo, nodes, screen, road }) {
     jumpTo(s) {
       const a = at(s);
       Object.assign(car.state, { x: a.x, z: a.z, yaw: a.heading, s, v: a.v, yokeRate: 0 });
-      for (let i = 0; i < 240; i++) car.step(1 / 120, true);
+      settle();
+      for (let i = 0; i < 240; i++) {
+        car.step(1 / 120, true);
+        feel = ride.step(car.state.s, 1 / 120);
+      }
       placeTruck();
     },
     /** Stops where it is, in its lane (to open a door, to step out). */

@@ -196,7 +196,35 @@ export async function buildBigSur(scene, { meta, map, files }, onStep) {
   for (const m of root.getChildMeshes()) if (m.material && !byMaterial.has(m.material)) byMaterial.set(m.material, m);
   await Promise.all([...byMaterial].map(([mat, m]) => mat.forceCompilationAsync(m)));
   await step();
-  return { root, meta, road: { px, py, pz, rx, rz, n, step: road.step, laneWidth: road.laneWidth, map }, ground: [asphalt] };
+  const walls = wallsBeside(road.corridor, buffers[meta.levels.length], py, road.step);
+  return { root, meta, road: { px, py, pz, rx, rz, n, step: road.step, laneWidth: road.laneWidth, map, walls }, ground: [asphalt] };
+}
+
+/**
+ * How much of each side, seen from the right-hand lane, is rock or bank rather than open air, 0 to 1,
+ * at every road point: the steepest rise of the lidar strip past the pavement's edge, as an angle over
+ * a right angle, averaged over ~20 m of road (a wall reflects from a stretch, not a point). The road's
+ * noise comes back off it.
+ */
+function wallsBeside(info, heights, py, step) {
+  const rows = info.rows, cols = info.offsets.length, LANE = 1.8, EDGE = 6;
+  const raw = { left: new Float32Array(rows), right: new Float32Array(rows) };
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const d = info.offsets[j];
+      if (Math.abs(d) < EDGE) continue;
+      const fill = Math.max(0, Math.atan2(heights[i * cols + j] - py[i], Math.abs(d - LANE)) / (Math.PI / 2));
+      const side = d < 0 ? raw.left : raw.right;
+      side[i] = Math.max(side[i], fill);
+    }
+  }
+  const half = Math.round(10 / step);
+  const smooth = (a) => a.map((_, i) => {
+    let sum = 0, k = 0;
+    for (let j = Math.max(0, i - half); j <= Math.min(rows - 1, i + half); j++, k++) sum += a[j];
+    return sum / k;
+  });
+  return { left: smooth(raw.left), right: smooth(raw.right) };
 }
 
 /** Cells along a ground tile's side: about 320 m of l0, 2.5 km of l1, 20 km of l2. */

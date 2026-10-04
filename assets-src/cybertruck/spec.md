@@ -80,8 +80,8 @@ than the real tyre. Open: to be read off the straight front photo (c150) in the 
 - **Back faces of the wheels**, brake calipers and discs beyond what shows between the spokes.
 - **Interior**: measured on the Owner's Manual's CAD renders where they show it; what they don't show is
   listed under "Interior, measured", "Still guesses".
-- **Bed interior**: tonneau closed in the target configuration, so only the bed drawing and c056 cover it;
-  not modelled.
+- **Bed interior**: built from the manual's bed drawing and Cargo Bed page (see "Bed and tonneau,
+  measured"); what they don't show is listed there.
 - **Exact cross-sections of small parts**: the light bar's lens profile, the mirror housing, the door
   handles (there are none: buttons, see the manual's exterior page), the wiper at rest, the cladding step
   depths. Sizes will come from the photos with a parameter each; their depths are only partly visible.
@@ -331,3 +331,34 @@ Shapes taken from pictures, sizes partly guessed:
 - Console width (+-146) and the charger pads' size and lean.
 - The tweeter grille on the A-pillar, seat belts, the drive-mode selector and buttons on the overhead
   console, coat hooks and dome lights: not modelled.
+
+## Bed and tonneau, measured (2026-10-03)
+
+Sources: the Owner's Manual's Cargo Bed page (refs/tesla/manual-cargobed.html, its overview render and the
+switch close-ups, fetched from tesla.cn) and the bed drawing in the dimensions page (side and top views,
+measured by pixel at 8.2 mm/px from the truck's length; enlargements in measure/bed/).
+
+| What | Value | Source |
+|---|---|---|
+| Floor height | tail_h - 503.8 = 815.7 | Manual, cargo bed B (drawing: ~794) |
+| Floor length | 1,791 built (spec 1,824.6) | front wall foot held at s 3,720, 20 mm behind the cab's back wall (drawing: 3,651) |
+| Tailgate inside face | s 5,511 | drawing |
+| Canister rear face | s 3,925, vertical down to h 1,350, then the wall slopes forward to the floor | drawing (bed top front at 3,913), overview render (vertical face under the open cover) |
+| Wheel-well humps | foot s 3,970 / 5,085, top s 4,188 / 4,876, top h 1,074 | drawing |
+| Width at floor, between humps | 1,295.4 | Manual, cargo bed C |
+| Side walls, inside | 1,350 built (drawing: ~1,473) | held in: see below |
+| Slats | 16 at 102 mm, 10 mm thick, 1,410 wide | pitch from the close-up video's slat lines (the old normal map); count from the bay's length |
+| Switch | left sail by the tail light, three keys front to back: open, close, tailgate | Manual, Cargo Bed, items 3 and "Accessing the Cargo Bed" |
+| LED strips | along the top of each side wall | Manual, Cargo Bed, item 2; lit on Auto when the cover is open (Lights page) |
+| Behaviour | full press opens or closes fully; a second press stops it; only in Park; also Controls > Tonneau | Manual, Cargo Bed |
+
+Deliberate differences: the fitted sails (from the side and rear photos; there is no straight top view) are
+about 80 mm a side narrower at the bed's front than the manual's top view, so the slats and bed walls are
+held inside them (cover half-width 705, walls 675). The real cover runs between parallel rails; here too,
+with the taper out to the sails filled by fixed dark rails.
+
+Still guesses: the canister's coil (radius 100 mm, hidden in the steel between the cab and the canister
+face), the travel time (16 s), the liner's colour, the switch pad's size (156 x 52) and position on the sail
+(150 mm ahead of the tailgate, 48 mm down from the sail's top edge). Not modelled: the under-bed
+compartment, L-tracks, tie-downs, outlets, and the tailgate opening (its key is on the switch but does
+nothing).

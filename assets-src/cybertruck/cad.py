@@ -34,7 +34,7 @@ P = dict(
     cowl_s=1150.0, cowl_h=1410.0, apex_s=2400.0, tail_h=1337.0,
     belt_h_front=1150.0, belt_h_rear=1285.0, crease_h=480.0, tuck=60.0,
     flare_proud=35.0, nose_flat_half=760.0, corner_s=200.0, shoulder_drop=80.0,
-    roof_half=650.0, tail_half=960.0,
+    roof_half=650.0, tail_half=930.5, side_tail_h=1259.1,
     arch_top_h=980.0, arch_top_half=310.0, arch_knee_h=660.0, arch_foot_half=590.0, flare_band=75.0,
     bumper_r_h=600.0, bumper_r_out=60.0,
     rear_bar_h=60.0, front_bar_h=22.0,
@@ -43,6 +43,30 @@ P = dict(
     squash=15.0, cover_dish=15.0,
     win_margin=40.0, rocker_h=110.0, tab_drop=45.0, bumper_f_bot=330.0, bumper_r_bot=400.0,
 )
+# The cargo bed and the powered tonneau, in spec.md's s and h (see "Bed and tonneau, measured").
+BED = dict(
+    floor_below_tail=503.8,     # Manual, cargo bed B: floor to the top of the tailgate
+    front_s=3720.0,             # foot of the front wall (drawing: 3,651; held 20 mm behind the cab's back wall)
+    canister_s=3925.0,          # the canister's rear face, where the slats come out (drawing: the bed's top front, 3,913)
+    canister_h=1350.0,          # the canister's rear face is vertical down to here, then the wall slopes to the floor
+    tailgate_s=5511.0,          # inside face of the tailgate (drawing)
+    half=735.0,                 # side walls, inside (manual's top view: 1,470 between them, all along)
+    floor_half=1295.4 / 2,      # Manual, cargo bed C: width at the floor, between the wheel-well humps
+    hump=(3970.0, 4188.0, 4876.0, 5085.0), hump_h=1074.0,      # wheel-well humps (drawing): foot, top, top, foot
+    cover_half=760.0,           # the slats, across: 25 mm over each wall into the rails' tracks
+    slat_pitch=100.0, slat_t=10.0, slat_gap=2.0,                # slats every ~100 mm (close-up video), 10 mm thick
+    coil_s=3810.0, coil_r=100.0, coil_step=13.0,                # the canister's coil: centre s, outer radius, growth a turn
+    # The tailgate (c069, rear, tonneau shut; c056, open): the steel panel nearly the truck's width, from
+    # just above the red corner lights to the light band, and the band's middle above it, between the
+    # pillars' corner blocks. Hinged on its outer face so that open, its inside lies level with the floor.
+    gate_half=926.0, gate_bottom=735.0, band_h=1200.0, band_half=806.0,
+    # The under-bed compartment (manual: 97 L, lid hinged at its front edge, handle at the back).
+    tub=(5095.0, 5480.0, 540.0, 590.0),        # s0, s1, half-width, bottom h
+    lid=(5080.0, 5495.0, 560.0),               # s0 (hinge), s1, half-width
+    # The outlet cover on the left wall (manual, Cargo Bed Outlets: two 120 V over one 240 V; pull its back edge).
+    outlets=(5350.0, 5455.0, 920.0, 1130.0),   # s0 (hinge), s1, h0, h1
+)
+
 PARAMS = HERE / 'params.json'
 if PARAMS.exists():
     P.update(json.loads(PARAMS.read_text()))
@@ -90,9 +114,12 @@ def planes(p):
         'tuck': plane3(V(BW, p['crease_h'], 0), V(BW, p['crease_h'], 1), V(BW - p['tuck'], CLEAR, 0)),
         'window': plane3(V(BW, p['belt_h_front'], p['a_pillar_s']), V(BW, p['belt_h_rear'], p['c_pillar_s']),
                          V(p['roof_half'], H, p['apex_s'])),
-        # The sail shares the crease from the roof corner at the apex down to the C-pillar base with the
-        # window facet, so the two meet on that line: glass ahead of it, the steel sail behind.
-        'sail': plane3(V(p['roof_half'], H, p['apex_s']), V(BW, p['belt_h_rear'], p['c_pillar_s']),
+        # The sail: through the C-pillar base (where it meets the window facet) and its crease with the side
+        # at the tail (side_tail_h, both fitted to the side photos), and out to the deck's corner at the tail
+        # (tail_half, from the manual's top view: its crease with the deck runs 823 to 925 mm off the
+        # centreline from s 3,700 to 5,500, which this plane reproduces within 6 mm). Ahead of where it meets
+        # the deck and window, the window facet bounds the deck.
+        'sail': plane3(V(BW, p['belt_h_rear'], p['c_pillar_s']), V(BW, p['side_tail_h'], LT),
                        V(p['tail_half'], p['tail_h'], LT)),
         'corner': plane3(V(nfh, nh, 0), V(BW, nh, p['corner_s']), V(nfh, p['bumper_f_h'], p['face_rake'])),
         'shoulder': plane3(V(nfh, nh, 0), V(nfh, p['cowl_h'], p['cowl_s']), V(BW, nh - p['shoulder_drop'], 0)),
@@ -318,7 +345,16 @@ def panels(p):
             q.append((x, z))
         return [on_plane(pl['deck'], x=x, z=z) for x, z in (q[0], q[1], (-q[1][0], q[1][1]), (-q[0][0], q[0][1]))]
     out['rear_glass'] = (deck_poly(p['apex_s'] + 40, p['roofglass_end_s'], m), pl['deck'][1], 8, 1.0, 'glass')
-    out['tonneau'] = (deck_poly(p['roofglass_end_s'] + 30, L - p['bumper_r_out'] - 25, 30), pl['deck'][1], 14, 2.0, 'tonneau')
+    # The tonneau: a fixed lid over the canister, then the bay the slats run in (cut, no panel: the slats are
+    # their own parts), between dark rails that fill the taper out to the sails (the manual's top view).
+    s_can, s_end = BED['canister_s'], L - p['bumper_r_out'] - 25
+    out['tonneau'] = (deck_poly(p['roofglass_end_s'] + 30, s_can, 30), pl['deck'][1], 14, 2.0, 'tonneau')
+    out['tonneau_bay'] = (deck_poly(s_can, s_end, 30), pl['deck'][1], 14, 2.0, 'bay')
+    rail = [(BED['cover_half'] + 1, s_can), (BED['cover_half'] + 1, s_end)]
+    rail += [(deck_poly(s, s, 30)[0][0], s) for s in (s_end, s_can)]
+    rail = [on_plane(pl['deck'], x=x, z=ZF - s) for x, s in rail]
+    out['tonneau_rail_l'] = (rail[::-1], pl['deck'][1], 14, 2.0, 'tonneau')
+    out['tonneau_rail_r'] = ([q * [-1, 1, 1] for q in rail], pl['deck'][1], 14, 2.0, 'tonneau')
     # Side glass (both windows and the black B-pillar, one panel): beltline up to the roof edge.
     def belt(s):
         return p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (s - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
@@ -365,7 +401,7 @@ VIEW_DARK = {
              'tyre_fl', 'tyre_rl', 'mirror_l', 'well_f_l', 'well_r_l'],
     'front': ['bumper_f', 'windshield', 'side_glass_l', 'side_glass_r', 'flare_f_l', 'flare_f_r', 'tyre_fl', 'tyre_fr',
               'mirror_l', 'mirror_r'],
-    'rear': ['bumper_r', 'tonneau', 'light_r', 'rear_glass', 'flare_r_l', 'flare_r_r', 'tyre_rl', 'tyre_rr'],
+    'rear': ['bumper_r', 'tonneau', 'tonneau_bay', 'tonneau_rail_l', 'tonneau_rail_r', 'light_r', 'rear_glass', 'flare_r_l', 'flare_r_r', 'tyre_rl', 'tyre_rr'],
 }
 VIEW_DARK['right'] = ['flare_f_r', 'flare_r_r', 'rocker_r', 'bumper_f', 'bumper_r', 'side_glass_r', 'windshield', 'rear_glass',
                       'tyre_fr', 'tyre_rr', 'mirror_r', 'well_f_r', 'well_r_r']
@@ -375,7 +411,7 @@ def fit_parts(p=P):
     parts = {'steel': shell(p)}
     parts.update(cladding_parts(p))
     for name, (pts, n, depth, inset, kind) in panels(p).items():
-        if kind in ('glass', 'tonneau', 'light_r'):
+        if kind in ('glass', 'tonneau', 'bay', 'light_r'):
             parts[name] = prism(pts, n, out=1.5, depth=0.5)     # a sheet just proud of the facet, painted over the steel
     m = mirror_part(p)
     parts['mirror_l'], parts['mirror_r'] = m, m.mirror(Plane.YZ)
@@ -539,10 +575,23 @@ def cavity(p):
 
 def through_holes(p):
     """Behind every glass panel, open the shell from the glass's inner face into the cabin."""
+    pl = planes(p)
     holes = []
     for name, (pts, n, depth, inset, kind) in panels(p).items():
         if kind == 'glass':
-            holes.append(prism(inset_polygon(pts, n, 3.0), n, out=-(depth - 1.0), depth=320))   # starts above the pocket floor, so it removes it
+            hole = prism(inset_polygon(pts, n, 3.0), n, out=-(depth - 1.0), depth=320)   # starts above the pocket floor, so it removes it
+            if name.startswith('side_glass_'):
+                # The side glass's outline reaches the deck edge, but the hull clips the glass at the window/sail
+                # crease. Stop the hole there too (3 mm in, like its other edges), or it takes the sail's skin
+                # behind the rear window with it and the cabin shows through.
+                win, sail = pl['window_' + name[-1]], pl['sail_' + name[-1]]
+                a, b = edge_point(win, sail, ZF - p['apex_s']), edge_point(win, sail, ZF - p['c_pillar_s'])
+                c = np.cross(b - a, win[1])
+                c /= np.linalg.norm(c)
+                if np.dot(sum(pts) / len(pts) - a, c) > 0:
+                    c = -c                               # toward the sail, away from the glass
+                hole = halfspace_cut(hole, a, c, 3.0)
+            holes.append(hole)
     return holes
 
 def ceiling_band(p, t0, t1):
@@ -1129,6 +1178,214 @@ def split_doors(part, regions):
             rest = rest - reg
     return rest, pieces
 
+# ---------------------------------------------------------------- the cargo bed and the powered tonneau
+
+def deck_h(p, s):
+    return on_plane(planes(p)['deck'], x=0, z=Z(s))[1]
+
+def bed_floor(p):
+    return p['tail_h'] - BED['floor_below_tail']
+
+def bed_outline(p, t=0.0):
+    """The bed's side outline in (z, h), moved in by t: the floor, the tailgate's inside, the canister's
+    vertical rear face and the sloped wall under it, open far above the deck."""
+    b, f = BED, bed_floor(p)
+    pts = [(b['front_s'], f), (b['tailgate_s'], f), (b['tailgate_s'], 2100.0), (b['canister_s'], 2100.0), (b['canister_s'], b['canister_h'])]
+    q = inset_polygon([np.array([0.0, h, Z(s)]) for s, h in pts], np.array([1.0, 0, 0]), [t, t, -50, t, t])
+    return [(v[2], v[1]) for v in q]
+
+def bed_humps(p, grow=0.0):
+    """The wheel-well humps standing in from each side wall, grown by `grow` (the liner's thickness)."""
+    b = BED
+    s0, s1, s2, s3 = b['hump']
+    f, top = bed_floor(p), b['hump_h']
+    k = (s1 - s0) / (top - f)                        # the sloped ends, run per rise
+    lo = f - 120
+    pts = [np.array([0.0, h, Z(s)]) for s, h in ((s0 - (f - lo) * k, lo), (s1, top), (s2, top), (s3 + (f - lo) * k, lo))]
+    q = inset_polygon(pts, np.array([1.0, 0, 0]), [-grow, -grow, -grow, 0])
+    poly = [(v[2], v[1]) for v in q]
+    return both_sides(side_prism(poly, b['floor_half'] - grow, b['half'] + 50))
+
+def bed_cavity(p, t=0.0):
+    """The bed's volume, moved in by t from its walls."""
+    b = BED
+    return side_prism(bed_outline(p, t), -(b['half'] - t), b['half'] - t) - bed_humps(p, grow=t)
+
+def bed_liner(p):
+    """The dark moulded liner on every inside face of the bed, 4 mm thick and 0.1 mm off the steel, up to
+    just under the tonneau's rails."""
+    return (bed_cavity(p, 0.1) - bed_cavity(p, 4.0)) & hull(p, inset=14.3)
+
+def bed_lights(p):
+    """The LED strips along the top of each side wall (manual, Cargo Bed, item 2), parallel to the deck."""
+    b = BED
+    s0, s1 = b['canister_s'] + 70, b['tailgate_s'] - 60
+    x1 = b['half'] - 4.0
+    def strip(sx):
+        poly = [(Z(s), deck_h(p, s) - dy) for s in (s0, s1) for dy in (60, 78)]
+        poly = [poly[0], poly[2], poly[3], poly[1]]
+        return side_prism(poly, sx * x1 - (6 if sx > 0 else 0), sx * x1 + (0 if sx > 0 else 6))
+    return strip(1) + strip(-1)
+
+def tonneau_slats(p):
+    """(slat, centres): one slat built round its own centre (across x, along z, thickness y), and the closed
+    position of every slat's centre in (z, h), front first. The slats sit in the bay, 2 to 12 mm under the deck."""
+    b = BED
+    pl = planes(p)
+    n = pl['deck'][1]
+    s0, s1 = b['canister_s'] + 1, L - p['bumper_r_out'] - 25
+    a, c = on_plane(pl['deck'], x=0, z=Z(s0)), on_plane(pl['deck'], x=0, z=Z(s1))
+    run = np.linalg.norm(c - a)
+    k = round(run / b['slat_pitch'])
+    pitch = run / k
+    d = (c - a) / run
+    off = -n * (2 + b['slat_t'] / 2)
+    centres = [(a + d * pitch * (i + 0.5) + off) for i in range(k)]
+    slat = Box(2 * b['cover_half'], b['slat_t'], pitch - b['slat_gap'])
+    return slat, [[q[2], q[1]] for q in centres], pitch
+
+def tonneau_path(p, centres, pitch):
+    """The track every slat's centre follows, from the rearmost slat's closed place forward under the
+    canister lid, then round the coil inside the canister: [(z, h)] every 5 mm, with the arc length of each
+    point. Opening by u mm moves every slat u mm along it."""
+    b = BED
+    rear = np.array(centres[-1]) + (np.array(centres[-1]) - np.array(centres[-2])) / 2      # behind the last slat
+    hD = deck_h(p, b['coil_s']) - 2 - b['slat_t'] / 2
+    D = np.array([Z(b['coil_s']), hD])
+    pts = [rear]
+    dist = np.linalg.norm(D - rear)
+    for i in range(1, int(dist / 5) + 1):
+        pts.append(rear + (D - rear) * (i * 5 / dist))
+    C = D - [0, b['coil_r']]
+    need = len(centres) * pitch + 200
+    phi, run = 0.0, 0.0
+    while run < need:                                    # an Archimedean spiral, winding inward
+        r = b['coil_r'] - b['coil_step'] * phi / (2 * math.pi)
+        phi += 5 / r
+        r = b['coil_r'] - b['coil_step'] * phi / (2 * math.pi)
+        pts.append(C + [r * math.sin(phi), r * math.cos(phi)])   # forward (+z) and down: the coil's front side first
+        run += 5
+    arc = [0.0]
+    for i in range(1, len(pts)):
+        arc.append(arc[-1] + float(np.linalg.norm(pts[i] - pts[i - 1])))
+    return [[float(q[0]), float(q[1])] for q in pts], arc
+
+def tonneau_switch(p):
+    """The exterior cargo bed switch (manual, Cargo Bed, item 3 and "Accessing the Cargo Bed"): a black pad on
+    the left sail by the tail light with three keys in a row, front to back: tonneau open, tonneau close,
+    tailgate. {name: solid}."""
+    pl = planes(p)
+    sail = pl['sail_l']
+    n = sail[1]
+    s_c = L - p['bumper_r_out'] - 150
+    e0, e1 = edge_point(pl['deck'], sail, Z(s_c + 100)), edge_point(pl['deck'], sail, Z(s_c - 100))
+    u = (e0 - e1) / np.linalg.norm(e0 - e1)              # along the sail's top edge, forward
+    v = np.cross(n, u)                                   # in the face, perpendicular to the edge
+    if v[1] > 0:
+        v = -v                                           # down the face
+    edge = edge_point(pl['deck'], sail, Z(s_c))
+    ctr = edge + v * 48
+    def quad(c, hu, hv):
+        q = [c + u * hu * a + v * hv * b for a, b in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
+        return q if np.dot(np.cross(q[1] - q[0], q[2] - q[0]), n) > 0 else q[::-1]
+    out = {'tonneau_switch': prism(quad(ctr, 78, 26), n, out=1.5, depth=1)}
+    for i, name in enumerate(('btn_tonneau_open', 'btn_tonneau_close', 'btn_tailgate')):
+        out[name] = prism(quad(ctr + u * (48 - 48 * i), 21, 18), n, out=3.0, depth=1.0)
+    return out
+
+def gate_hinge(p):
+    """The tailgate's hinge line (along x): on its outer face, 58 mm (its thickness) under the floor
+    liner's top, so that turned down 90 degrees its inside lies level with the floor (c056)."""
+    LT = L - p['bumper_r_out']
+    return np.array([0.0, bed_floor(p) + 4.3 - (LT - BED['tailgate_s']), Z(LT)])
+
+def gate_region(p):
+    """Everything that drops with the tailgate: the steel panel and the light band's middle."""
+    b = BED
+    LT = L - p['bumper_r_out']
+    lo = SH([(b['tailgate_s'], b['gate_bottom']), (LT + 5, b['gate_bottom']), (LT + 5, b['band_h']), (b['tailgate_s'], b['band_h'])], -b['gate_half'], b['gate_half'])
+    hi = SH([(b['tailgate_s'], b['band_h']), (LT + 5, b['band_h']), (LT + 5, 2000.0), (b['tailgate_s'], 2000.0)], -b['band_half'], b['band_half'])
+    return lo + hi
+
+def gate_liner_region(p):
+    """The liner's face on the tailgate: inside its edges, above the floor liner."""
+    b = BED
+    return SH([(b['tailgate_s'] - 6, bed_floor(p) + 4.5), (b['tailgate_s'] + 1, bed_floor(p) + 4.5), (b['tailgate_s'] + 1, 2000.0), (b['tailgate_s'] - 6, 2000.0)], -b['half'] + 4.5, b['half'] - 4.5)
+
+def pillar_backs(p):
+    """The pillars' rear faces behind the tailgate, black (c056, the manual's bed render), with a red light
+    near the top of each, under the band's corner block. Just inside the gate while it's shut."""
+    b = BED
+    s0 = b['tailgate_s'] + 0.3
+    out = {'black': [], 'red': []}
+    for sx in (1, -1):
+        def box(x0, x1, h0, h1, t=1.0):
+            return SH([(s0, h0), (s0 + t, h0), (s0 + t, h1), (s0, h1)], min(sx * x0, sx * x1), max(sx * x0, sx * x1))
+        out['black'].append(box(b['half'] + 0.5, b['gate_half'] - 0.5, b['gate_bottom'] + 0.5, b['band_h'] - 0.5))
+        out['black'].append(box(b['half'] + 0.5, b['band_half'] - 0.5, b['band_h'] - 0.5, deck_h(p, s0) - 20))
+        out['red'].append(box(b['half'] + 30, b['gate_half'] - 30, b['band_h'] - 70, b['band_h'] - 40, t=2.0))
+    return {k: Compound(v) for k, v in out.items()}
+
+def strut_anchors(p):
+    """Each tailgate strut, from the pillar's rear face high up to the gate's inside near its hinge (c056)."""
+    b = BED
+    out = {}
+    for side, sx in (('l', 1), ('r', -1)):
+        out[side] = {'body': [sx * 905.0, 1110.0, Z(b['tailgate_s'] + 2)], 'gate': [sx * 905.0, gate_hinge(p)[1] + 120.0, Z(b['tailgate_s'] + 6)]}
+    return out
+
+def tub_parts(p):
+    """(cavity, liner, plug): the under-bed compartment cut out of the body and bumper, its 4 mm liner and the
+    drain plug in its floor (manual: turn it and pull it up)."""
+    s0, s1, hw, bot = BED['tub']
+    top = bed_floor(p) + 1
+    cav = SH([(s0, bot), (s1, bot), (s1, top), (s0, top)], -hw, hw)
+    inner = SH([(s0 + 4, bot + 4), (s1 - 4, bot + 4), (s1 - 4, top + 10), (s0 + 4, top + 10)], -hw + 4, hw - 4)
+    liner = SH([(s0 + 0.1, bot + 0.1), (s1 - 0.1, bot + 0.1), (s1 - 0.1, top - 1.2), (s0 + 0.1, top - 1.2)], -hw + 0.1, hw - 0.1) - inner
+    plug = Cylinder(22, 8, rotation=(90, 0, 0)).moved(Location((0, bot + 4 + 3, Z((s0 + s1) / 2))))
+    return cav, liner, plug
+
+def lid_parts(p):
+    """(lid region in the floor liner, the lid's own under-panel, its handle): the lid is the liner's floor
+    there, on a 20 mm panel, with a dark grip at its back edge."""
+    s0, s1, hw = BED['lid']
+    f = bed_floor(p)
+    region = SH([(s0, f - 1), (s1, f - 1), (s1, f + 10), (s0, f + 10)], -hw, hw)
+    gap = SH([(s0 - 2, f - 1), (s1 + 2, f - 1), (s1 + 2, f + 10), (s0 - 2, f + 10)], -hw - 2, hw + 2)
+    under = SH([(s0, f - 20), (s1, f - 20), (s1, f + 0.05), (s0, f + 0.05)], -hw, hw)
+    grip = SH([(s1 - 40, f + 4.1), (s1 - 12, f + 4.1), (s1 - 12, f + 7), (s1 - 40, f + 7)], -70, 70)
+    return region, gap, under, grip
+
+def outlet_parts(p):
+    """(pocket, plate, cover): on the left wall, a pocket 12 mm deep through the liner, the outlet plate at
+    its bottom (its face drawn in textures.py) and the cover over it, flush with the liner."""
+    s0, s1, h0, h1 = BED['outlets']
+    x_face = BED['half'] - 4                          # the liner's inside face; the wall is outboard (+x)
+    pocket = SH([(s0, h0), (s1, h0), (s1, h1), (s0, h1)], x_face - 0.5, BED['half'] + 8)
+    plate = SH([(s0 + 0.5, h0 + 0.5), (s1 - 0.5, h0 + 0.5), (s1 - 0.5, h1 - 0.5), (s0 + 0.5, h1 - 0.5)], BED['half'] + 6, BED['half'] + 7.5)
+    cover = SH([(s0 + 1, h0 + 1), (s1 - 1, h0 + 1), (s1 - 1, h1 - 1), (s0 + 1, h1 - 1)], x_face + 0.2, BED['half'])
+    return pocket, plate, cover
+
+def tiedowns(p):
+    """The four tie-down anchors, one at each bottom corner of the bed (manual, Securing Cargo): a pocketed
+    plate on each side wall at the floor with a folded ring."""
+    f = bed_floor(p)
+    out = []
+    for s in (BED['front_s'] + 80, BED['tailgate_s'] - 70):
+        for sx in (1, -1):
+            x = sx * (BED['half'] - 4)
+            plate = SH([(s - 35, f + 8), (s + 35, f + 8), (s + 35, f + 60), (s - 35, f + 60)], min(x, x - sx * 6), max(x, x - sx * 6))
+            ring = SH([(s - 22, f + 14), (s + 22, f + 14), (s + 22, f + 22), (s - 22, f + 22)], min(x - sx * 6, x - sx * 16), max(x - sx * 6, x - sx * 16))
+            out += [plate, ring]
+    return Compound(out)
+
+def release(p):
+    """The tailgate's emergency release (manual: a flip-up cover over a pull strap), on its inside, low and
+    toward the left (the manual's bed render, item 6)."""
+    z = Z(BED['tailgate_s'] - 4)
+    f = bed_floor(p)
+    return Box(70, 45, 6).moved(Location((440.0, f + 90, z + 3)))
+
 # ---------------------------------------------------------------- build
 
 if __name__ == '__main__':
@@ -1151,10 +1408,51 @@ if __name__ == '__main__':
     for h in through_holes(p):
         body = body - h
 
-    groups = {'glass': [], 'tonneau': [], 'light_w': [], 'light_r': []}
+    groups = {'glass': [], 'tonneau': [], 'bay': [], 'light_w': [], 'light_r': []}
     for name, (pts, n, depth, inset, kind) in panels(p).items():
         body, panel = recess(body, inner if inset == 1.0 else hull(p, inset=inset), pts, n, depth)
         groups[kind].append(panel)
+
+    # The bed, under the tonneau's bay: its liner, lights, the slats' tracks along the bay's edges (on the
+    # pocket floor, under the slats), the slats and the path they run on, and the switch on the left sail.
+    body = body - bed_cavity(p)
+    tub_cav, tub_liner, plug = tub_parts(p)
+    lid_region, lid_gap, lid_under, lid_grip = lid_parts(p)
+    pocket, outlet_plate, outlet_cover = outlet_parts(p)
+    body = body - tub_cav - pocket
+    liner = bed_liner(p) - pocket
+    lid_liner = liner & lid_region
+    liner = liner - lid_gap
+    save(tub_liner, 'bed_tub', tolerance=1.0, angular=0.5)
+    save(plug, 'bed_plug', tolerance=1.0, angular=0.5)
+    save(lid_liner, 'lid_liner'); save(lid_under, 'lid_under'); save(lid_grip, 'lid_grip')
+    save(outlet_plate, 'outlet_plate'); save(outlet_cover, 'outlet_cover')
+    save(tiedowns(p), 'bed_tiedowns')
+    for k, part in pillar_backs(p).items():
+        save(part, f'pillar_{k}')
+    save(bed_lights(p), 'bed_lights')
+    # The tailgate: the steel, the liner on its inside, the band's middle and the rails' ends over it drop with it.
+    def cut(part, region):
+        piece = part & region
+        return part - region, piece
+    gate = gate_region(p)
+    body, gate_steel = cut(body, gate)
+    liner, gate_liner = cut(liner, gate_liner_region(p))
+    save(liner, 'bed_liner', tolerance=1.0, angular=0.5)
+    save(gate_steel, 'gate_steel', tolerance=0.5, angular=0.5)
+    save(gate_liner, 'gate_liner', tolerance=1.0, angular=0.5)
+    save(release(p), 'gate_release')
+    deck = planes(p)['deck']
+    s_can, s_end = BED['canister_s'], L - p['bumper_r_out'] - 25
+    for sx in (1, -1):
+        x0, x1 = BED['half'] - 0.5, BED['cover_half'] + 0.5
+        pts = [on_plane(deck, x=sx * x, z=Z(s)) for x, s in ((x0, s_can), (x1, s_can), (x1, s_end), (x0, s_end))]
+        groups['tonneau'].append(prism(pts, deck[1], out=-12.6, depth=13.9))
+    slat, centres, pitch = tonneau_slats(p)
+    save(slat, 'slat')
+    path, arc = tonneau_path(p, centres, pitch)
+    for name, part in tonneau_switch(p).items():
+        save(part, f'det_{name}')
 
     regions = door_regions(p)
     body, door_steel = split_doors(body, regions)
@@ -1165,10 +1463,15 @@ if __name__ == '__main__':
         save(piece, f'door_{k}_glass')
     save(body, 'body', tolerance=0.5, angular=0.5)
     save(glass, 'glass')
-    save(Compound(groups['tonneau']), 'tonneau')
+    ton_rest, ton_gate = cut(Compound(groups['tonneau']), gate)
+    save(ton_rest, 'tonneau')
+    if ton_gate is not None and ton_gate.volume > 1:
+        save(ton_gate, 'gate_tonneau')
     save(Compound(groups['light_w']), 'light_front')
-    save(Compound(groups['light_r']), 'light_rear')
-    save(Compound(cladding(p)), 'cladding')
+    lr_rest, lr_gate = cut(Compound(groups['light_r']), gate)
+    save(lr_rest, 'light_rear')
+    save(lr_gate, 'gate_light')
+    save(Compound([c - tub_cav for c in cladding(p)]), 'cladding')
     mirrors_rest, mirror_pieces = split_doors(both_sides(mirror_part(p)), regions)     # the mirrors ride on the front doors
     for k, piece in mirror_pieces.items():
         save(piece, f'door_{k}_mirror')
@@ -1207,6 +1510,14 @@ if __name__ == '__main__':
         'seatEyes': seat_eyes(p),
         'screens': screens(p),
         'doors': {k: {'hinge': h.tolist(), 'openDeg': -65 if k.endswith('l') else 65} for k, (_, h) in regions.items()},
+        'hinges': {
+            'tailgate': {'hinge': gate_hinge(p).tolist(), 'axis': [1, 0, 0], 'openDeg': -90},
+            'bedlid': {'hinge': [0.0, bed_floor(p) + 4.3, Z(BED['lid'][0])], 'axis': [1, 0, 0], 'openDeg': 80},
+            'outlet_cover': {'hinge': [BED['half'] - 3.8, (BED['outlets'][2] + BED['outlets'][3]) / 2, Z(BED['outlets'][0] + 1)], 'axis': [0, 1, 0], 'openDeg': 100},
+        },
+        'struts': strut_anchors(p),
+        'tonneau': {'slats': centres, 'path': path, 'arc': arc, 'travel': len(centres) * pitch,
+                    'closedArc': [float(np.linalg.norm(np.array(c) - np.array(path[0]))) for c in centres]},
     }
     (OUT / 'geometry.json').write_text(json.dumps(geo, indent=1))
     print('cad: wrote', sorted(q.name for q in OUT.glob('*.stl')))

@@ -232,6 +232,7 @@ async function loadTruck() {
   for (const [k, p] of Object.entries(info.seatEyes)) eyes[k] = Vector3.TransformCoordinates(Vector3.FromArray(p), world);
   covers = container.transformNodes.filter((n) => n.name.startsWith('cover_')).concat(container.meshes.filter((m) => m.name.startsWith('cover_')));
   setUpDoors(container, info);
+  setUpTonneau(container, info);
   shadows.getShadowMap().refreshRate = RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
   const byName = (name) => container.transformNodes.find((n) => n.name === name) ?? container.meshes.find((m) => m.name === name);
   return { root, info, byName };
@@ -290,6 +291,112 @@ function setDoorsAll(open) {
   for (const d of Object.values(doors)) d.target = open ? 1 : 0;
   render();
 }
+
+// ---------------------------------------------------------------- the powered tonneau cover
+
+/** Full travel, either way. */
+const TONNEAU_SECONDS = 16;
+/** The cover over the bed: its slats run forward along a track into the canister behind the cab and coil up
+ *  there (the model's json: tonneau.path). u is how far open (0 shut, 1 open); dir is +1 opening, -1 closing,
+ *  0 still. As on the truck (Owner's Manual, Cargo Bed), a press while it moves stops it, and it only moves
+ *  in Park: the switch on the left sail by the tail light, or Controls > Tonneau on the touchscreen. */
+const tonneau = { slats: [], u: 0, dir: 0, last: -1, buttons: {}, lights: null, lightsOn: null, path: null };
+
+function setUpTonneau(container, info) {
+  const t = info.tonneau;
+  if (!t) return;
+  const byName = (name) => container.transformNodes.find((n) => n.name === name) ?? container.meshes.find((m) => m.name === name);
+  tonneau.path = t;
+  tonneau.slats = t.slats.map((name, i) => ({ node: byName(name), at: t.closedArc[i] })).filter((s) => s.node);
+  // The model's nodes are in millimetres under its root (scaled 0.001); the json's path is in metres.
+  const s0 = tonneau.slats[0];
+  tonneau.unit = s0 ? s0.node.position.y / pointOnTrack(s0.at).y : 1000;
+  for (const [which, name] of Object.entries({ open: t.buttons.open, close: t.buttons.close })) {
+    const button = byName(name);
+    if (!button) continue;
+    button.material = button.material.clone(`${name}-mat`);
+    const key = `tonneau:${which}`;
+    tonneau.buttons[key] = [button];
+    // Smaller targets than the doors': the two keys are 48 mm apart.
+    const target = MeshBuilder.CreateBox(`${name}-target`, { size: 0.05 }, scene);
+    target.visibility = 0;
+    target.isPickable = true;
+    target.setParent(null);
+    target.position.copyFrom(button.getBoundingInfo().boundingBox.centerWorld);
+    target.setParent(button);
+    doorTargets.set(target, key);
+    doorTargets.set(button, key);
+  }
+  const lights = byName(t.lights);
+  if (lights) {
+    lights.material = lights.material.clone('bed-lights-mat');
+    tonneau.lights = lights.material;
+    tonneau.lightsOn = lights.material.emissiveColor.clone();
+  }
+  placeSlats();
+}
+
+/** The track at arc length a (metres): its point on the centreline and its heading there. */
+function pointOnTrack(a) {
+  const { path, arc } = tonneau.path;
+  a = Math.min(Math.max(a, 0), arc[arc.length - 1] - 1e-6);
+  let lo = 1, hi = arc.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (arc[mid] < a) lo = mid + 1;
+    else hi = mid;
+  }
+  const [z0, y0] = path[lo - 1], [z1, y1] = path[lo];
+  const k = (a - arc[lo - 1]) / Math.max(arc[lo] - arc[lo - 1], 1e-9);
+  return { z: z0 + (z1 - z0) * k, y: y0 + (y1 - y0) * k, angle: Math.atan2(-(y1 - y0), z1 - z0) };
+}
+
+function placeSlats() {
+  const shift = tonneau.u * tonneau.path.travel;
+  for (const s of tonneau.slats) {
+    const p = pointOnTrack(s.at + shift);
+    s.node.position.set(0, p.y * tonneau.unit, p.z * tonneau.unit);
+    s.node.rotationQuaternion = Quaternion.RotationAxis(Vector3.Right(), p.angle);
+  }
+  // Bed lights on Auto: lit while the bed is open.
+  tonneau.lights?.emissiveColor.copyFrom(tonneau.u > 0.01 ? tonneau.lightsOn : Color3.Black());
+}
+
+const tonneauLocked = () => ride.world === 'bigsur' && !ride.drive?.stopped;
+
+/** 'open', 'close' (the switch's keys) or 'toggle' (the touchscreen). */
+function tonneauPress(which) {
+  if (!tonneau.slats.length || tonneauLocked()) return;
+  if (tonneau.dir) {
+    tonneau.dir = 0;                                   // a second press stops it where it is
+  } else if (which === 'open') {
+    if (tonneau.u < 1) tonneau.dir = 1;
+  } else if (which === 'close') {
+    if (tonneau.u > 0) tonneau.dir = -1;
+  } else {
+    tonneau.dir = tonneau.u <= 0 ? 1 : tonneau.u >= 1 ? -1 : -tonneau.last;
+  }
+  if (tonneau.dir) tonneau.last = tonneau.dir;
+  render();
+}
+
+function tonneauState() {
+  if (tonneau.dir > 0) return 'Opening · tap to stop';
+  if (tonneau.dir < 0) return 'Closing · tap to stop';
+  if (tonneau.u <= 0) return 'Closed · tap to open';
+  if (tonneau.u >= 1) return 'Open · tap to close';
+  return `Stopped ${Math.round(tonneau.u * 100)}% · tap to ${tonneau.last > 0 ? 'close' : 'open'}`;
+}
+
+scene.onBeforeRenderObservable.add(() => {
+  if (!tonneau.dir) return;
+  tonneau.u = Math.min(1, Math.max(0, tonneau.u + (tonneau.dir * engine.getDeltaTime()) / 1000 / TONNEAU_SECONDS));
+  if (tonneau.u === 0 || tonneau.u === 1) {
+    tonneau.dir = 0;
+    render();
+  }
+  placeSlats();
+});
 
 // ---------------------------------------------------------------- getting in through an open door
 
@@ -374,13 +481,20 @@ let hovered = null;
 function hover(key) {
   if (key === hovered) return;
   for (const k of [hovered, key]) {
-    if (!k || !doors[k]) continue;
-    for (const b of doors[k].buttons) b.material.emissiveColor = k === key ? GLOW : Color3.Black();
+    const buttons = k && (doors[k]?.buttons ?? tonneau.buttons[k]);
+    if (!buttons) continue;
+    for (const b of buttons) b.material.emissiveColor = k === key ? GLOW : Color3.Black();
   }
   hovered = key;
   canvas.style.cursor = key && !inXr() ? 'pointer' : '';
 }
 
+let screenHeld = false;
+function letGoOfScreen(pick) {
+  screenHeld = false;
+  camera.inputs.attached.pointers?.attachControl(true);
+  screen.up(pick);
+}
 scene.onPointerObservable.add((info) => {
   const pick = info.pickInfo;
   const key = doorTargets.get(pick?.pickedMesh) ?? null;
@@ -394,11 +508,27 @@ scene.onPointerObservable.add((info) => {
     if (!inXr()) canvas.style.cursor = key || sitTo || onScreen ? 'pointer' : '';
     return;
   }
+  // The screens' buttons go on down and up, not on Babylon's tap, which a press longer than a moment or
+  // a finger that slides a few pixels never makes. While one is held, the view doesn't turn under it.
+  if (!xrPointer && info.type === PointerEventTypes.POINTERDOWN) {
+    if (screenHeld) letGoOfScreen(null);               // an up that never came (the pointer cancelled)
+    if (!key && !sitTo && screen?.down(pick)) {
+      screenHeld = true;
+      camera.inputs.attached.pointers?.detachControl();
+    }
+    return;
+  }
+  if (!xrPointer && info.type === PointerEventTypes.POINTERUP) {
+    // Picked again here, on the screens alone: Babylon skips the pick on an up that moved.
+    if (screenHeld) letGoOfScreen(scene.pick(scene.pointerX, scene.pointerY, (m) => screen.meshes.includes(m)));
+    return;
+  }
   const press = (xrPointer && info.type === PointerEventTypes.POINTERDOWN) || (!xrPointer && info.type === PointerEventTypes.POINTERTAP);
   if (!press) return;
-  if (key) toggleDoor(key);
+  if (key?.startsWith('tonneau:')) tonneauPress(key.slice(8));
+  else if (key) toggleDoor(key);
   else if (sitTo) sitIn(sitTo);
-  else screen?.tap(pick);
+  else if (xrPointer) screen?.tap(pick);
 });
 
 // ---------------------------------------------------------------- mirrors
@@ -537,6 +667,7 @@ function screenAction() {
 function screenControls() {
   return [
     { label: 'Doors', value: anyDoorOpen() ? 'Open · tap to close' : 'Closed · tap to open', active: anyDoorOpen(), onClick: () => setDoorsAll(!anyDoorOpen()) },
+    { label: 'Tonneau', value: tonneauLocked() ? 'Shift to Park to open' : tonneauState(), active: tonneau.u > 0 || tonneau.dir !== 0, disabled: tonneauLocked(), onClick: () => tonneauPress('toggle') },
     { label: 'Lights', value: glows.lightsOn ? 'On' : 'Off', active: glows.lightsOn, onClick: () => ((glows.lightsOn = !glows.lightsOn), applyGlows()) },
     { label: 'Ambient light', value: AMBIENT[glows.colour].name, active: AMBIENT[glows.colour].name !== 'Off', onClick: () => ((glows.colour = (glows.colour + 1) % AMBIENT.length), applyGlows()) },
   ];
@@ -613,6 +744,7 @@ function content() {
     // The way forward last (on the right): one primary button, the ride.
     ...(seat !== 'outside' ? [{ label: 'Step out', onClick: () => sitIn('outside') }] : []),
     { label: anyDoorOpen() ? 'Close doors' : 'Open doors', onClick: () => setDoorsAll(!anyDoorOpen()) },
+    { label: tonneau.dir ? 'Stop the cover' : tonneau.u > 0 ? 'Close the bed' : 'Open the bed', onClick: () => tonneauPress(tonneau.dir ? 'stop' : tonneau.u > 0 ? 'close' : 'open') },
     { label: coversOn ? 'Wheel covers off' : 'Wheel covers on', onClick: toggleCovers },
     ...(seat !== 'driver' ? [{ label: "Driver's seat", onClick: () => sitIn('driver') }] : []),
     ...(seat !== 'rear' ? [{ label: 'Back seat', onClick: () => sitIn('rear') }] : []),
@@ -631,7 +763,7 @@ function content() {
     kicker: 'Full size',
     title: where,
     body: seat === 'outside'
-      ? 'Built from the maker’s dimensions and photos. No door handles: press the black button on the pillar behind a door, then step in where it says Sit here.'
+      ? 'Built from the maker’s dimensions and photos. No door handles: press the black button on the pillar behind a door, then step in where it says Sit here. The cover over the bed rolls into its canister: use the switch on the left by the tail light, or Controls on the touchscreen.'
       : 'The dash shelf, the yoke, the touchscreen and the glass roof. Tap Start self-driving on the screen for 5 km of Highway 1 in Big Sur.',
     fact: inXr()
       ? menuFact
@@ -1146,6 +1278,7 @@ async function start() {
   // Before createXr: the headset rig starts the log too, and only the first start's state() is kept.
   startHeadsetLog(() => ({ fps: Math.round(engine.getFps()), seat, xr: inXr(), covers: covers[0]?.isEnabled(),
     world: ride.world, s: ride.drive ? Math.round(ride.drive.state.s) : undefined, v: ride.drive ? +ride.drive.state.v.toFixed(1) : undefined,
+    tonneau: +tonneau.u.toFixed(2),
     doorsOpen: Object.entries(doors).filter(([, d]) => d.target > 0.5).map(([k]) => k).join(',') }));
   truck = await loadTruck();
   // Only the door buttons take the pointer: from a seat, the dash and yoke would catch every press
@@ -1260,4 +1393,4 @@ start().catch((err) => {
 });
 
 // For automated checks in a browser.
-window.__cyb = { mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };
+window.__cyb = { mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, tonneauPress, tonneau, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };

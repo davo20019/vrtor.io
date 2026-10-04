@@ -95,6 +95,13 @@ M = {
     'marker_red': material('marker_red', srgb(150, 15, 12), 0.2, emit=(1.0, 0.05, 0.03), emit_strength=0.4),
     'clad': material('cladding_black', srgb(32, 32, 34), 0.72),
     'tonneau': material('tonneau_black', srgb(26, 26, 28), 0.5, normal_map=PARTS / 'tonneau_normal.png', normal_strength=0.6),
+    'slat': material('tonneau_slat', srgb(26, 26, 28), 0.5),
+    'bed': material('bed_liner', srgb(34, 34, 36), 0.8),
+    'bed_floor': material('bed_floor', srgb(34, 34, 36), 0.8, normal_map=PARTS / 'bedfloor_normal.png', normal_strength=0.8),
+    'bed_light': material('bed_light', srgb(235, 238, 245), 0.2, emit=(1, 1, 1), emit_strength=4.0),
+    'switch_key': material('switch_key', srgb(40, 40, 42), 0.3),
+    'tiedown': material('tiedown_metal', srgb(70, 70, 72), 0.45, metallic=0.7),
+    'outlets': material('bed_outlets', (1, 1, 1), 0.5, image=PARTS / 'outlets.png'),
     'light_w': material('light_front', srgb(235, 238, 245), 0.2, emit=(1, 1, 1), emit_strength=6.0),
     'light_r': material('light_rear', srgb(70, 8, 8), 0.15, emit=(1, 0.05, 0.03), emit_strength=0.6),
     'mirror': material('mirror_black', srgb(20, 20, 21), 0.35),
@@ -180,6 +187,59 @@ lr = stl('light_rear', M['light_r'])
 clad = stl('cladding', M['clad'])
 mirrors = stl('mirrors', M['mirror'], smooth_angle=30) if (PARTS / 'mirrors.stl').exists() else None
 wiper = stl('wiper', M['wiper'])
+# The bed: its liner (the floor faces ribbed, along the truck), the LED strips, the switch on the left sail.
+liner = stl('bed_liner', M['bed'])
+liner.data.materials.append(M['bed_floor'])
+bm = bmesh.new(); bm.from_mesh(liner.data)
+floor_h = min(v.co.y for v in bm.verts)
+for f in bm.faces:
+    if f.normal.y > 0.9 and f.calc_center_median().y < floor_h + 10:
+        f.material_index = 1
+bm.to_mesh(liner.data); bm.free()
+box_uv(liner, tile_mm=800)
+bed_lights = stl('bed_lights', M['bed_light'])
+bed_parts = [liner, bed_lights, stl('det_tonneau_switch', M['door_button'])]
+for k in ('tonneau_open', 'tonneau_close', 'tailgate'):
+    o = stl(f'det_btn_{k}', M['switch_key'], smooth_angle=20)
+    o.name = o.data.name = f'btn_{k}'
+    bed_parts.append(o)
+M['outlets'].node_tree.nodes['Principled BSDF'].inputs['Emission Strength'].default_value = 0.0   # printed, not lit
+bed_parts += [stl('bed_tub', M['bed']), stl('bed_plug', M['clad']), stl('bed_tiedowns', M['tiedown'], smooth_angle=30),
+              stl('pillar_black', M['clad']), stl('pillar_red', M['light_r'])]
+slat = stl('slat', M['slat'])
+
+def planar_uv(o, axes, flip_u=False):
+    """UVs spanning a flat part: u, v along the model axes given (0 x, 1 y, 2 z), 0 to 1 across it."""
+    bm = bmesh.new(); bm.from_mesh(o.data)
+    uvl = bm.loops.layers.uv.verify()
+    lo = [min(v.co[a] for v in bm.verts) for a in axes]; hi = [max(v.co[a] for v in bm.verts) for a in axes]
+    for f in bm.faces:
+        for l in f.loops:
+            u, v = ((l.vert.co[a] - lo[i]) / (hi[i] - lo[i]) for i, a in enumerate(axes))
+            l[uvl].uv = (1 - u if flip_u else u, v)
+    bm.to_mesh(o.data); bm.free()
+
+# Hinged parts (GEO['hinges']): the tailgate with its steel, liner, light band, rail ends and emergency
+# release; the under-bed compartment's lid; the outlet cover on the left wall.
+gate_steel = stl('gate_steel', M['steel'])
+box_uv(gate_steel); classify(gate_steel)
+gate_liner = stl('gate_liner', M['bed_floor'])
+bm = bmesh.new(); bm.from_mesh(gate_liner.data)            # ribs run up the gate: along the floor once it's down
+uvl = bm.loops.layers.uv.verify()
+for f in bm.faces:
+    for l in f.loops:
+        l[uvl].uv = (l.vert.co.y / 800, l.vert.co.x / 800)
+bm.to_mesh(gate_liner.data); bm.free()
+hinged = {'tailgate': [gate_steel, gate_liner, stl('gate_light', M['light_r']), stl('gate_release', M['door_button'])]}
+if (PARTS / 'gate_tonneau.stl').exists():
+    o = stl('gate_tonneau', M['tonneau']); box_uv(o, tile_mm=800); hinged['tailgate'].append(o)
+lid = stl('lid_liner', M['bed_floor']); box_uv(lid, tile_mm=800)
+hinged['bedlid'] = [lid, stl('lid_under', M['bed']), stl('lid_grip', M['door_button'])]
+plate = stl('outlet_plate', M['outlets']); planar_uv(plate, (2, 1))
+bed_parts.append(plate)
+cover_panel = stl('outlet_cover', M['bed'])
+cover_panel.name = cover_panel.data.name = 'outlet_cover_panel'      # the node is 'outlet_cover'
+hinged['outlet_cover'] = [cover_panel]
 INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': 'console', 'dash_vent': 'grille', 'ambient': 'ambient',
             'dash_white': 'trim_white', 'dash_lower': 'armrest', 'screen_bezel': 'bezel', 'screen': 'screen_on', 'screen_stand': 'bezel',
             'yoke': 'yoke', 'yoke_chin': 'silver', 'yoke_pods': 'bezel', 'yoke_keys': 'pedal',
@@ -270,7 +330,7 @@ disc = stl('brake_disc', M['disc'], smooth_angle=50)
 caliper = stl('caliper', M['caliper'])
 templates = (tyre, rim, lugs, cover, disc, caliper)
 all_door_parts = [o for v in door_parts.values() for o in v]
-for o in [x for x in (body, glass, tonneau, lf, lr, clad, mirrors, wiper) if x] + [*cabin_parts, *detail_parts, *button_parts, *all_door_parts, *templates]:
+for o in [x for x in (body, glass, tonneau, lf, lr, clad, mirrors, wiper, slat) if x] + [*cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
     o.data.transform(TO_BLENDER)         # UVs and materials were set in the model frame; now move to Blender's
 
 def empty(name, loc=(0, 0, 0), parent=None):
@@ -282,8 +342,32 @@ def empty(name, loc=(0, 0, 0), parent=None):
 
 root = empty('cybertruck')
 body_node = empty('body', parent=root)
-for o in [x for x in (body, glass, tonneau, lf, lr, clad, mirrors, wiper) if x] + [*detail_parts, *button_parts]:
+for o in [x for x in (body, glass, tonneau, lf, lr, clad, mirrors, wiper) if x] + [*detail_parts, *button_parts, *bed_parts]:
     o.parent = body_node
+for k, h in GEO['hinges'].items():
+    hinge = Vector(to_blender(h['hinge']))
+    node = empty(k, loc=hinge, parent=root)
+    for o in hinged[k]:
+        o.parent = node
+        o.location = -hinge
+# The tailgate's struts: the app draws each between these two points, one on the body, one on the gate.
+for side, a in GEO['struts'].items():
+    empty(f'strut_body_{side}', loc=to_blender(a['body']), parent=body_node)
+    gate_node = bpy.data.objects['tailgate']
+    empty(f'strut_gate_{side}', loc=Vector(to_blender(a['gate'])) - gate_node.location, parent=gate_node)
+# The tonneau's slats, one mesh shared, each on its own node at its closed place: the app moves each one
+# along the track (GEO['tonneau']['path']) and turns it to the track's direction there.
+TON = GEO['tonneau']
+cover_node = empty('tonneau_cover', parent=root)
+for i, (z, h) in enumerate(TON['slats']):
+    (z0, h0), (z1, h1) = TON['path'][0], TON['path'][1]
+    o = slat.copy()
+    o.name = f'slat_{i:02d}'
+    bpy.context.scene.collection.objects.link(o)
+    o.parent = cover_node
+    o.location = to_blender((0, h, z))
+    o.rotation_euler = (math.atan2(-(h1 - h0), z1 - z0), 0, 0)    # its front edge along the deck, toward the cab
+bpy.data.objects.remove(slat)
 # Each door hangs on a node at its hinge (its front edge); turning that node about its own +y swings it.
 for k, d in GEO['doors'].items():
     hinge = Vector(to_blender(d['hinge']))
@@ -472,6 +556,14 @@ info = {
                   'buttons': [f'btn_{k}', f'open_{k}'],
                   'note': 'door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle'}
               for k, d in GEO['doors'].items()},
+    'hinged': {k: {'node': k, 'hinge': [v * 0.001 for v in h['hinge']], 'axis': h['axis'], 'openDeg': h['openDeg']} for k, h in GEO['hinges'].items()},
+    'hingedNote': 'each node turns about its own axis (glTF frame) by openDeg to open: tailgate (drops to level with the bed floor; struts strut_body_<l|r> to strut_gate_<l|r>), bedlid (the under-bed compartment, lifts from its front edge), outlet_cover (the left wall: two 120 V and one 240 V outlets behind it)',
+    'tonneau': {'node': 'tonneau_cover', 'slats': [f'slat_{i:02d}' for i in range(len(TON['slats']))],
+                'path': [[z * 0.001, h * 0.001] for z, h in TON['path']], 'arc': [a * 0.001 for a in TON['arc']],
+                'closedArc': [a * 0.001 for a in TON['closedArc']], 'travel': TON['travel'] * 0.001,
+                'buttons': {'open': 'btn_tonneau_open', 'close': 'btn_tonneau_close', 'tailgate': 'btn_tailgate'},
+                'lights': 'bed_lights',
+                'note': 'path is [z, y] in metres on the centreline, arc its length from the first point. Opening by u metres puts slat i at arc closedArc[i] + u, with x = 0 and its rotation about +x so its +z follows the path forward (rotation.x = atan2(-dy, dz)). travel opens it fully. The switch is on the left sail by the tail light: open, close, tailgate (front to back). bed_lights: the LED strips along the bed walls.'},
     'cabin': 'node "cabin": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); the glass is see-through (alpha 0.3)',
 }
 (OUT / 'cybertruck.json').write_text(json.dumps(info, indent=2))

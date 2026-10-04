@@ -8,7 +8,7 @@
 // Along the bottom, the dock: the car's controls, the cabin temperature, the climate, the radio
 // (radio.js) and the volume. Each opens its panel over the map.
 // Our own drawing in the spirit of the maker's screen, not a copy of it.
-import { Color3, DynamicTexture, StandardMaterial, Texture } from '@babylonjs/core';
+import { Color3, DynamicTexture, ImageProcessingConfiguration, StandardMaterial, Texture } from '@babylonjs/core';
 import { drawLoader } from './loader.js';
 import { createRadio } from './radio.js';
 
@@ -25,6 +25,11 @@ const LIMIT_MPH = 55;                              // California's limit on two-
 const DESTINATION = 'Little Sur River';
 const FAN_MAX = 10;
 const RW = 640, RH = 360;                          // the back seat's screen, 16:9 like its glass
+/** Canvas pixels per drawing unit: a seat's eye on a sharp display sees more than 1024 across the screen.
+ *  The headset sees about that, and uploads every frame drawn, so it gets less. */
+const SCALE = /OculusBrowser|Quest/.test(navigator.userAgent) ? 1.5 : 2;
+/** How far outside a button (drawing units) a press still counts: the screen is seen at an angle, and fingers are wide. */
+const SLOP = 10;
 /** An open panel closes itself after this long without a tap. */
 const PANEL_SECONDS = 15;
 /** Parked in the showroom: the truck at the origin, standing still. */
@@ -73,6 +78,7 @@ export function createScreen(scene, screenMesh, { controls = () => [], action = 
     const hit = front.hit;
     front.hits = [];
     ctx.save();
+    ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
     ctx.fillStyle = '#e8e9eb';
     ctx.fillRect(0, 0, W, H);
     if (ride) {
@@ -94,21 +100,24 @@ export function createScreen(scene, screenMesh, { controls = () => [], action = 
     if (ui.panel) hit(W - 70, 22, 44, 44, 'close', () => (ui.panel = null));
     drawDock(ctx, ui, radio, hit, toggle);
     ctx.restore();
-    if (ui.dark) darken(ctx, W, H);
+    if (ui.dark) darken(ctx);
     front.tex.update();
   }
 
   function drawRear() {
     if (!rear.mesh) return;
     rear.hits = [];
+    rear.ctx.save();
+    rear.ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
     drawRearScreen(rear.ctx, ui, radio, rear.hit);
+    rear.ctx.restore();
     rear.tex.update();
   }
 
   /** The dark display: the light one with its lightness turned over and its hues kept (the map's sea stays blue). */
-  function darken(ctx, w, h) {
-    scratch.width = w;
-    scratch.height = h;
+  function darken(ctx) {
+    scratch.width = ctx.canvas.width;
+    scratch.height = ctx.canvas.height;
     scratch.getContext('2d').drawImage(ctx.canvas, 0, 0);
     ctx.save();
     ctx.filter = 'invert(1) hue-rotate(180deg) brightness(0.92)';
@@ -124,13 +133,28 @@ export function createScreen(scene, screenMesh, { controls = () => [], action = 
     // vScale -1 samples the texture at 1 - v, and the canvas's top row is at texture v = 1: so the
     // mesh's v is straight down the canvas (measured on a pick: the big button, low on the screen, at v 0.67).
     const px = uv.x * s.w, py = uv.y * s.h;
-    // Last drawn is on top.
+    // Last drawn is on top; a press just outside every button goes to the nearest within SLOP.
     for (let i = s.hits.length - 1; i >= 0; i--) {
       const [x, y, w, h] = s.hits[i];
       if (px >= x && px <= x + w && py >= y && py <= y + h) return s.hits[i];
     }
-    return null;
+    let near = null, best = SLOP;
+    for (let i = s.hits.length - 1; i >= 0; i--) {
+      const [x, y, w, h] = s.hits[i];
+      const d = Math.hypot(Math.max(x - px, 0, px - x - w), Math.max(y - py, 0, py - y - h));
+      if (d < best) [near, best] = [s.hits[i], d];
+    }
+    return near;
   }
+
+  function run(h) {
+    lastTap = performance.now();
+    h[5]();
+    changed();
+  }
+
+  /** The button under a mouse or finger that went down, until it comes up. */
+  let held = null;
 
   return {
     mesh: screenMesh,
@@ -171,14 +195,29 @@ export function createScreen(scene, screenMesh, { controls = () => [], action = 
       drawFront();
       if (full) drawRear();
     },
-    /** A press on either screen: true if it landed on something. */
+    /** A press on either screen, all at once (a controller's trigger): true if it landed on something. */
     tap(pick) {
       const h = hitAt(pick);
       if (!h) return false;
-      lastTap = performance.now();
-      h[5]();
-      changed();
+      run(h);
       return true;
+    },
+    /** A mouse or finger down on either screen: true if it's on a button (it lights up until it comes up). */
+    down(pick) {
+      held = hitAt(pick)?.[4] ?? null;
+      if (held) {
+        ui.hover = held;
+        dirty = true;
+      }
+      return !!held;
+    },
+    /** ...and up: the button goes off if it's still the one under it, however long it was held or the hand wobbled. */
+    up(pick) {
+      const h = hitAt(pick);
+      if (held && h?.[4] === held) run(h);
+      held = null;
+      ui.hover = null;
+      dirty = true;
     },
     /** The pointer over either screen: true if it's over something tappable (it lights up). */
     hover(pick) {
@@ -195,9 +234,14 @@ export function createScreen(scene, screenMesh, { controls = () => [], action = 
   };
 }
 
+const AS_DRAWN = new ImageProcessingConfiguration();
+AS_DRAWN.toneMappingEnabled = false;
+
 /** A screen in the model: its canvas, drawn as light (unlit), and what's tappable on it. */
 function surface(scene, mesh, name, w, h) {
-  const tex = new DynamicTexture(name, { width: w, height: h }, scene, true);
+  const tex = new DynamicTexture(name, { width: w * SCALE, height: h * SCALE }, scene, true);
+  // Sharp when seen from the side, as from the driver's seat.
+  tex.anisotropicFilteringLevel = 16;
   // The model's screen UVs run bottom-up from a canvas: flip it.
   tex.wrapV = Texture.WRAP_ADDRESSMODE;
   tex.vScale = -1;
@@ -206,6 +250,8 @@ function surface(scene, mesh, name, w, h) {
   mat.emissiveTexture = tex;
   mat.diffuseColor = Color3.Black();
   mat.specularColor = Color3.Black();
+  // A screen gives out its own light: shown as drawn, not tone-mapped like the lit cabin (which greys its white).
+  mat.imageProcessingConfiguration = AS_DRAWN;
   /** hits: [x, y, w, h, id, onTap], from the last frame drawn. */
   const s = { mesh, tex, mat, original: mesh?.material, ctx: tex.getContext(), w, h, hits: [] };
   s.hit = (x, y, hw, hh, id, onTap) => s.hits.push([x, y, hw, hh, id, onTap]);
@@ -762,7 +808,7 @@ function drawView(ctx, state, at, here) {
       ctx.globalAlpha = 1;
     }
   }
-  drawTruck(ctx, here, project);
+  drawTruck(ctx, here, project, [0, high, ORIGIN_S + back]);
   // Fade the far road into the sky.
   const fade = ctx.createLinearGradient(0, 150, 0, 185);
   fade.addColorStop(0, 'rgba(223,225,228,1)');
@@ -801,31 +847,147 @@ function drawView(ctx, state, at, here) {
   ctx.fillText(state.running ? 'Self-driving' : state.done || state.parked ? 'Parked' : state.paused ? (state.v > 0.05 ? 'Stopping' : 'Stopped') : 'Ready', VW - 54, 140);
 }
 
-/** The truck from behind: its flat tail, the bed's lid, and the cab's long sloping roof. */
-function drawTruck(ctx, here, project) {
+// The truck as the model measures it (assets-src/cybertruck/spec.md, params.json), in metres: w across
+// from the centre line (right +), h up from the ground, s back from the front light bar.
+const ORIGIN_S = 2.696;                            // the midpoint between the axles: where the truck's position is
+const AXLE_S = [0.878, 4.513];
+const TAIL_S = 5.57;                               // the tailgate; the bumper stands out past it to 5.683
+const RIGHT = {
+  nose: [0.852, 0.95, 0], noseCorner: [0.962, 0.87, 0.16], low: [0.962, 0.55, 0.16],
+  cowl: [0.8, 1.374, 0.954], fender: [0.962, 1.24, 0.954], beltA: [0.962, 1.209, 1.514],
+  apex: [0.608, 1.794, 2.426], beltC: [0.962, 1.29, 3.64],
+  tailTop: [0.909, 1.32, TAIL_S], tailCorner: [0.962, 1.25, TAIL_S], tailLow: [0.962, 0.68, TAIL_S], lowRear: [0.962, 0.55, TAIL_S],
+};
+const LEFT = Object.fromEntries(Object.entries(RIGHT).map(([k, [w, h, s]]) => [k, [-w, h, s]]));
+const STEEL = [222, 225, 228], GLASS = [40, 45, 52], BLACK = [42, 45, 50], TYRE = [26, 27, 30];
+const SUN = norm([-0.35, 1, 0.45]);                // from above, a little left and behind
+
+function norm([x, y, z]) {
+  const l = Math.hypot(x, y, z) || 1;
+  return [x / l, y / l, z / l];
+}
+
+/**
+ * The truck from behind and above, faceted like the real one: the flat tailgate with its red light bar,
+ * the rear deck (the roof glass, then the black tonneau) rising to the roof's apex, the sails and side
+ * glass leaning in, the windshield and hood beyond, the black bumper, arch flares and tyres standing
+ * out past the steel. Each solid is convex, so a face is drawn only if it faces the eye.
+ */
+function drawTruck(ctx, here, project, eye) {
   const h = here.heading;
   const fx = Math.sin(h), fz = Math.cos(h), rx = Math.cos(h), rz = -Math.sin(h);
-  const P = (side, up, ahead) => project(here.x + rx * side + fx * ahead, here.y + up, here.z + rz * side + fz * ahead);
-  const poly = (pts, fill, stroke) => {
-    if (pts.some((p) => !p)) return;
+  const P = ([w, y, s]) => {
+    const ahead = ORIGIN_S - s;
+    return project(here.x + rx * w + fx * ahead, here.y + y, here.z + rz * w + fz * ahead);
+  };
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  // The outward normal of a face of a convex solid with the given centre, or null if it faces away from the eye.
+  const facing = (pts, centre) => {
+    let n = norm(cross(sub(pts[1], pts[0]), sub(pts[2], pts[0])));
+    if (dot(n, sub(pts[0], centre)) < 0) n = n.map((v) => -v);
+    return dot(n, sub(eye, pts[0])) > 0 ? n : null;
+  };
+  const fill = (pts, rgb, stroke) => {
+    const q = pts.map(P);
+    if (q.some((p) => !p)) return;
     ctx.beginPath();
-    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    q.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
     ctx.closePath();
-    ctx.fillStyle = fill;
+    ctx.fillStyle = typeof rgb === 'string' ? rgb : `rgb(${rgb.map((v) => Math.round(Math.min(255, v))).join(',')})`;
     ctx.fill();
     if (stroke) {
       ctx.strokeStyle = stroke;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 0.8;
+      ctx.lineJoin = 'round';
       ctx.stroke();
     }
   };
-  const w = 1.0, tail = -2.85, nose = 2.85;
-  // Shadow, then the roof slope down to the tail, then the tail with its light bar.
-  poly([P(-w - 0.15, 0, tail - 0.2), P(w + 0.15, 0, tail - 0.2), P(w + 0.15, 0, nose), P(-w - 0.15, 0, nose)], 'rgba(0,0,0,0.12)');
-  poly([P(-w, 1.25, tail), P(w, 1.25, tail), P(w * 0.82, 1.79, 0.55), P(-w * 0.82, 1.79, 0.55)], '#f4f5f6', '#8d9399');
-  poly([P(-w * 0.82, 1.79, 0.55), P(w * 0.82, 1.79, 0.55), P(w * 0.9, 1.15, nose), P(-w * 0.9, 1.15, nose)], '#ffffff', '#8d9399');
-  poly([P(-w, 0.45, tail), P(w, 0.45, tail), P(w, 1.25, tail), P(-w, 1.25, tail)], '#dfe2e5', '#8d9399');
-  poly([P(-w, 1.08, tail - 0.01), P(w, 1.08, tail - 0.01), P(w, 1.13, tail - 0.01), P(-w, 1.13, tail - 0.01)], '#d23a30');
+  const lit = (rgb, n, spread) => rgb.map((v) => v * (1 - spread + spread * Math.max(0, dot(n, SUN))));
+  const face = (pts, centre, rgb, spread = 0.35, stroke = 'rgba(70,76,82,0.55)') => {
+    const n = facing(pts, centre);
+    if (n) fill(pts, lit(rgb, n, spread), stroke);
+    return !!n;
+  };
+  const box = ([w0, w1], [h0, h1], [s0, s1], rgb, spread) => {
+    const c = [(w0 + w1) / 2, (h0 + h1) / 2, (s0 + s1) / 2];
+    const v = (i, j, k) => [[w0, w1][i], [h0, h1][j], [s0, s1][k]];
+    for (const f of [
+      [v(0, 0, 0), v(1, 0, 0), v(1, 1, 0), v(0, 1, 0)], [v(0, 0, 1), v(1, 0, 1), v(1, 1, 1), v(0, 1, 1)],
+      [v(0, 0, 0), v(0, 1, 0), v(0, 1, 1), v(0, 0, 1)], [v(1, 0, 0), v(1, 1, 0), v(1, 1, 1), v(1, 0, 1)],
+      [v(0, 1, 0), v(1, 1, 0), v(1, 1, 1), v(0, 1, 1)],
+    ]) face(f, c, rgb, spread, null);
+  };
+
+  // Its shadow on the road.
+  ctx.save();
+  ctx.filter = 'blur(3px)';
+  fill([[-1.12, 0, 0.1], [1.12, 0, 0.1], [1.12, 0, 5.9], [-1.12, 0, 5.9]], 'rgba(0,0,0,0.16)');
+  ctx.restore();
+
+  // The far wheels first: tyres, then the flares over them.
+  for (const a of AXLE_S) {
+    for (const side of [-1, 1]) {
+      const span = (lo, hi) => (side > 0 ? [lo, hi] : [-hi, -lo]);
+      box(span(0.743, 1.029), [0.02, 0.86], [a - 0.42, a + 0.42], TYRE, 0.3);
+      box(span(0.93, 1.016), [0.86, 1.0], [a - 0.4, a + 0.4], BLACK, 0.4);
+    }
+  }
+
+  // The steel shell.
+  const C = [0, 0.9, 2.84];
+  const R = RIGHT, L = LEFT;
+  face([L.tailTop, R.tailTop, R.tailCorner, R.tailLow, L.tailLow, L.tailCorner], C, STEEL);
+  face([L.nose, R.nose, R.cowl, L.cowl], C, STEEL);
+  for (const S of [L, R]) {
+    face([S.nose, S.noseCorner, S.fender, S.cowl], C, STEEL);
+    face([S.cowl, S.fender, S.beltA, S.apex], C, STEEL);
+    face([S.apex, S.beltC, S.tailCorner, S.tailTop], C, STEEL);
+    face([S.noseCorner, S.low, S.lowRear, S.tailLow, S.tailCorner, S.beltC, S.beltA, S.fender], C, STEEL);
+  }
+  const deck = face([L.apex, R.apex, R.tailTop, L.tailTop], C, STEEL);
+  face([L.cowl, R.cowl, R.apex, L.apex], C, GLASS, 0.25);
+  for (const S of [L, R]) {
+    // The side glass, inset in its facet.
+    const mid = [0, 1, 2].map((i) => (S.apex[i] + S.beltA[i] + S.beltC[i]) / 3);
+    const inset = (p) => p.map((v, i) => mid[i] + (v - mid[i]) * 0.82);
+    if (facing([S.apex, S.beltA, S.beltC], C)) fill([S.apex, S.beltA, S.beltC].map(inset), GLASS);
+  }
+
+  if (deck) {
+    // On the deck: the rear roof glass, then the tonneau sunk between the sails, its slats across.
+    const at = (s, inset) => {
+      const t = (s - RIGHT.apex[2]) / (TAIL_S - RIGHT.apex[2]);
+      const w = RIGHT.apex[0] + (RIGHT.tailTop[0] - RIGHT.apex[0]) * t - inset;
+      const y = RIGHT.apex[1] + (RIGHT.tailTop[1] - RIGHT.apex[1]) * t;
+      return [[-w, y, s], [w, y, s]];
+    };
+    const panel = (s0, s1, inset, rgb) => {
+      const [a, b] = at(s0, inset), [c, d] = at(s1, inset);
+      fill([a, b, d, c], rgb);
+    };
+    panel(2.5, 3.58, 0.07, GLASS);
+    panel(3.66, TAIL_S - 0.06, 0.08, [30, 33, 37]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 0.8;
+    for (let s = 3.9; s < TAIL_S - 0.1; s += 0.25) {
+      const [a, b] = at(s, 0.1).map(P);
+      if (!a || !b) continue;
+      ctx.beginPath();
+      ctx.moveTo(a[0], a[1]);
+      ctx.lineTo(b[0], b[1]);
+      ctx.stroke();
+    }
+  }
+  // The light bar, full width under the tonneau, and the black bumper below the tailgate.
+  fill([[-0.95, 1.205, TAIL_S + 0.002], [0.95, 1.205, TAIL_S + 0.002], [0.95, 1.24, TAIL_S + 0.002], [-0.95, 1.24, TAIL_S + 0.002]], [214, 46, 38]);
+  box([-0.96, 0.96], [0.36, 0.68], [TAIL_S, 5.683], BLACK, 0.4);
+  // Its small red lights at the bumper's corners.
+  for (const side of [-1, 1]) {
+    const x0 = side * 0.78, x1 = side * 0.92;
+    fill([[x0, 0.6, 5.684], [x1, 0.6, 5.684], [x1, 0.64, 5.684], [x0, 0.64, 5.684]], [190, 40, 34]);
+  }
 }
 
 function sign(ctx, x, y) {
