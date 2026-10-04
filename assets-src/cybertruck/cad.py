@@ -1251,9 +1251,31 @@ def interior(p):
             XS([(-140, 1330), (-640, 1330), (-690, 1420), (-690, 2080), (-140, 2080)], c['floor'] + 13, c['floor'] + 22),
             XS([(-690, 2690), (690, 2690), (690, 2700 + 300), (640, 3050), (-640, 3050), (-690, 3000)], c['floor'] + 13, c['floor'] + 22)]
     out['mats'] = Compound(mats) - out['console']
-    out['pedals'] = Compound([
-        Box(120, 85, 16).rotate(Axis.X, 35).moved(Location((460, c['floor'] + 150, Z(1330)))),
-        Box(55, 220, 14).rotate(Axis.X, 35).moved(Location((290, c['floor'] + 140, Z(1300))))])
+    # Shapes from the manual's cabin render (CC015C4E, 14 and 15): sizes from the pads' widths against their
+    # 170 mm spacing (47 px, 3.6 mm/px). The brake is a hanging pedal, a rounded aluminium pad 130 wide with
+    # eight black rubber strips running up it, on a thin arm rising inboard into the dash. The accelerator is
+    # floor-hinged, 50 wide with a rounded top and four strips down its upper two thirds.
+    def pad(w, h, t, r, n, gw, top, bot):
+        """A pad facing the driver (-z) in its own frame, centred; n strips gw wide, from top to bot below its top."""
+        body = Box(w, h, t)
+        body = fillet(body.edges().filter_by(Axis.Z), r)
+        pitch = (w - 2 * 10) / n
+        strips = [Box(gw, h - top - bot, 2).moved(Location((-w / 2 + 10 + pitch * (i + 0.5), (bot - top) / 2, -t / 2 - 0.6)))
+                  for i in range(n)]
+        return body, strips
+    bp, bg = pad(130, 80, 14, 9, 8, 7, 9, 9)
+    ap, ag = pad(50, 220, 12, 14, 4, 5, 14, 80)
+    bloc = Location((460, c['floor'] + 150, Z(1330)))
+    aloc = Location((290, c['floor'] + 100, Z(1290)))
+    out['pedals'] = Compound([bp.rotate(Axis.X, 35).moved(bloc), ap.rotate(Axis.X, 40).moved(aloc)])
+    out['pedal_grips'] = Compound([g.rotate(Axis.X, 35).moved(bloc) for g in bg] + [g.rotate(Axis.X, 40).moved(aloc) for g in ag])
+    # the brake arm, from the pad's back near its inboard edge up and forward into the dash; the accelerator's
+    # hinge block on the floor at its foot
+    r35 = math.radians(35)
+    a0 = (420, c['floor'] + 150 + 30 * math.cos(r35) - 7 * math.sin(r35), Z(1330) + 30 * math.sin(r35) + 7 * math.cos(r35))
+    out['pedal_arms'] = Compound([
+        rod(a0, (395, c['floor'] + 470, Z(1210)), (0, 0, 1), 18, 8),
+        Box(56, 22, 40).moved(Location((290, c['floor'] + 11, Z(1290) - 110 * math.sin(math.radians(40)) + 6)))])
     return out
 
 def screen_offset(a):
@@ -1693,7 +1715,7 @@ if __name__ == '__main__':
             save(part, f'door_{name[5:7]}_int_{name[8:]}', tolerance=2.5, angular=0.7)
         else:
             fine = name in ('seats_front', 'seats_rear')       # their padded crowns are shallow curves: 4.6 degrees a facet
-            small = name.startswith('yoke') and name != 'yoke_column'     # held close: its curves and small round parts need fine facets
+            small = name.startswith(('yoke', 'pedal')) and name != 'yoke_column'     # held close: its curves and small round parts need fine facets
             save(part, f'int_{name}', tolerance=0.3 if small else 1.0 if fine else 2.5, angular=0.2 if small else 0.08 if fine else 0.7)     # flat facets; coarse tessellation keeps the few round parts cheap
     for name, part in details(p).items():
         save(part, f'det_{name}')

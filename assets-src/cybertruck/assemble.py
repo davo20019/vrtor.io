@@ -86,7 +86,8 @@ M = {
     'overhead': material('mirror_mount_grey', srgb(118, 118, 120), 0.6),
     'mirror_glass': material('mirror_glass', srgb(235, 235, 235), 0.04, metallic=1.0),    # the mirror mount's housing, light grey in the dash render
     'grille': material('speaker_grille', srgb(28, 28, 30), 0.9),
-    'pedal': material('pedal_metal', srgb(140, 140, 142), 0.35, metallic=1.0),
+    # brushed aluminium, light in the manual render; fully metallic it mirrored the dark footwell and read black
+    'pedal': material('pedal_metal', srgb(176, 176, 178), 0.4, metallic=0.6),
     'silver': material('satin_silver', srgb(168, 168, 170), 0.35, metallic=0.6),
     'carpet': material('carpet_black', srgb(26, 26, 27), 1.0, normal_map=PARTS / 'carpet_normal.png', normal_strength=0.8),
     'door_dark': material('door_panel_dark', srgb(34, 34, 36), 0.7),
@@ -252,7 +253,7 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'console': 'console', 'chargers': 'screen', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
             'seats_front': 'seat', 'seats_rear': 'seat', 'seat_base': 'armrest', 'seat_knobs': 'switch', 'rear_armrest': 'seat',
             'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
-            'overhead': 'overhead', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'pedals': 'pedal',
+            'overhead': 'overhead', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'pedals': 'pedal', 'pedal_grips': 'yoke', 'pedal_arms': 'tiedown',
             'piping': 'piping', 'belts': 'belt', 'belt_hw': 'bezel',
             'overhead_strip': 'bezel', 'overhead_keys': 'switch', 'overhead_arms': 'overhead', 'mirror_glass': 'mirror_glass', 'tweeters': 'grille', 'usb': 'screen',
             # on the doors (door_<k>_int_<name>)

@@ -309,6 +309,7 @@ render, both scaled to 318 mm): outline IoU 0.965, mean edge distance 1.6 mm, he
 | Rear-view mirror | 195 x 50, 1,464 to 1,513 high, 1,621 back | dash camera | 250 x 72 at the apex |
 | Console front | 1,494 back, top 918 | dash camera | 1,480 |
 | Pedals across | brake w 460, accelerator w 290 (brake outboard) | dash camera | swapped |
+| Pedal shapes | brake: hanging, rounded pad 130 x 80 with eight black rubber strips, arm rising inboard into the dash; accelerator: floor-hinged, 50 x 220 with a rounded top, four strips down its upper part, hinge block on the floor | manual-interior-CC015C4E (14, 15), widths against their 170 mm spacing (3.6 mm/px) | plain boxes 120 x 85 and 55 x 220, fully metallic (read black in the footwell) |
 | Front seat side profile | back's rear edge (2,447, 675) (2,493, 812) (2,626, 1,316), headrest tip 1,637 high at 2,470; front face (2,300, 760) to (2,425, 1,225); cushion front 1,765, top 742 to 760 front, 716 rear | seat side view at 4.58 | slab and box |
 | Rear H-point height | 738 | rear head room (SAE H63: 8 deg line + 102) under the deck, corrected by the front's error (the same rule gives the front 745 against the measured 771) | 771 (the front's) |
 | Rear backrest | 21 deg | manual-childseats-D8CE20B2, side view | 25 |
@@ -381,7 +382,8 @@ Shapes taken from pictures, sizes partly guessed:
 - Seat, cushion and bench widths; cushion thicknesses; the seat base and stand.
 - Header depth behind 1,826 (the beam is 1,739 to 1,905), sun visors (stowed under it), the roof rails'
   width, the B-pillar trim.
-- Pedal depth along the truck (the dash camera's error grows near the floor), floor mat outlines, carpet.
+- Pedal depth along the truck (the dash camera's error grows near the floor), their lean (brake 35, accelerator 40 deg),
+  the brake arm's path inside the dash, floor mat outlines, carpet.
 - Console width (+-146) and the charger pads' size and lean.
 - The yoke's depths: rim 30 deep and rounded 9 mm front and back (in assemble.py), pad 16 proud, pods 7,
   chin 9, scroll wheels 4. No picture shows the yoke edge-on closely enough to measure them.
