@@ -1440,6 +1440,27 @@ def interior(p):
         b0, b1 = (np.array([0.0, belt_h(p, s), ZF - s]) for s in (950.0, 1410.0))
         above = plane_cut(Box(2400, 3000, 8000), b0, b1, b0 + np.array([100.0, 0, 0]), np.array([0.0, 2500.0, ZF - 1200]))
         col = (col & above) + ((col - above) & inner)
+        # Ahead of the post it is only a strip down the windshield's edge to the dash: between them a triangle of
+        # the side glass shows over the dash (int-athens-1, dgRcedIkNOM 6:16). The strip's lower edge on the side
+        # glass through int-athens-1's camera (measure/console/athens1-strip.md): 1,260 back at 1,363 high where it
+        # leaves the post, 1,136 at 1,321, the dash at 947, 1,254: the glass's top edge (-3 to +16 from it), so the
+        # trim starts where the glass ends and laps it by 8. Its upper edge is the windshield's (athens1-glassedge.md
+        # reads it on the crease), so it covers the steel between the two glasses, in to the windshield's opening.
+        # The post's front face stands on its measured front edge (1,373 back, 796 out at the dash; 1,514, 680 out
+        # at 1,397), square to the glass.
+        L1, L2 = (wpt(q, side_glass_top(p, q) - 8, 10) for q in (1260.0, 947.0))
+        P1, P2 = np.array([sx * 796.0, 1215.0, ZF - 1373]), np.array([sx * 680.0, 1397.0, ZF - 1514])
+        ahead = plane_cut(Box(2400, 3000, 8000), P1, P2, P1 + wn * 100, np.array([sx * 900.0, 1300.0, ZF - 1000]))
+        ahead = ahead & Box(2400, 1500, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, 1215.0, 0)))
+        strip = plane_cut(blk, wpt(1200, 1200, 10), wpt(1600, 1200, 10), wpt(1400, 1500, 10), inside)
+        ws = panels(p)['windshield'][0]
+        w0, w1 = (ws[0], ws[1]) if sx > 0 else (ws[3], ws[2])
+        w0, w1 = w0 - np.array([sx * 6.0, 0, 0]), w1 - np.array([sx * 6.0, 0, 0])
+        strip = plane_cut(strip, w0, w1, w0 + rn * 100, np.array([sx * 1000.0, 1300.0, ZF - 1100]))           # out of the windshield's opening
+        strip = plane_cut(strip, r0, r0 + np.cross(rn, [1, 0, 0]) * 100, r0 + np.array([100.0, 0, 0]), inside)
+        strip = plane_cut(strip, L1, L2, L1 + inward * 100, wpt(1100, 1450, 20))                                 # from its edge up
+        strip = strip & ahead & Box(2400, 3000, 1600, align=(Align.CENTER, Align.CENTER, Align.MAX)).moved(Location((0, 0, ZF - 800)))
+        col = (col - ahead) + strip
         apil.append(col)
     out['a_pillar_inner'] = Compound(apil)
     out['rear_wall'] = (SH([(c['cab_rear_s'] - 26, c['floor']), (c['cab_rear_s'] + 5, c['floor']), (c['cab_rear_s'] + 5, 2000), (c['cab_rear_s'] - 26, 2000)], -1300, 1300) & inner)
