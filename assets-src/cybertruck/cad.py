@@ -1153,10 +1153,6 @@ def door_trim(p, d, sx, driver):
             keys.append(Box(26, 6, 34).moved(Location((x, hk, Z(s)))))
     out['switch'] = keys
     out['open'] = [Box(24, 8, 30).moved(Location((hip + 15, ya + 3, Z(arm_s0 + 160))))]   # the door-open button, ahead of the pull pocket
-    # On the front door the white panel, cap and ambient line reach forward past the door's edge to the dash's
-    # end, closing the gap (int-athens-3: no dark seam between them).
-    if d == 'f':
-        s0 = s0 - 20
     white = SH([(s0, ya - 2), (s1, ya - 2), (s1, bt1), (s0, bt0)], hip - 40, xw)
     # Crease: front door from high at the front to low at the back; rear door the other way (a chevron).
     hc_hi, hc_lo = (lambda s: belt_h(p, s) - 70), ya + 25
@@ -1211,17 +1207,18 @@ def interior(p):
     out['dash_vent'] = across([(1430, 1179.5), (1447, 1179.5), (1447, 1190.5), (1430, 1190.5)])
     out['ambient'] = across([(1440, 1157.5), (1469, 1157.5), (1469, 1161.5), (1440, 1161.5)])
     white = across([(1467, 1159), (1488, 1118), (1492, 1062), (1462, 1028), (1300, 1028), (1300, 1159)])
-    # At each door the block ends in a point (int-athens-3, dgRcedIkNOM-14, -15): its top chamfer drops 34 over the
-    # last 120 and its bottom one rises 97 over the last 85, meeting at 1,125 high (read on int-athens-3 against
-    # the block's 131 mm height at that end); in plan the end also turns forward 60 into the door.
-    E = white.bounding_box().max.X
-    def ht(x): return 1159 - (x - (E - 120)) * 34 / 120
-    def hb(x): return 1028 + (x - (E - 85)) * 97 / 85
+    # At each door the block ends in a point, measured on its face through int-athens-1's solved camera
+    # (measure/console/athens1-whiteend.md): the top corner 783 out at 1,162, the tip 832 out at 1,120, the
+    # bottom corner 750 out at 1,027 (its top and bottom read 1,167 and 1,027 there, the model's 1,159 and 1,028).
+    # The end faces run straight back along the truck (dgRcedIkNOM 3:14: the end is flat toward the door).
+    def line_h(p0, p1, x):
+        return p0[1] + (x - p0[0]) * (p1[1] - p0[1]) / (p1[0] - p0[0])
+    TC, TIP, BC = (783.0, 1162.0), (832.0, 1120.0), (750.0, 1027.0)
     cuts = []
     for sx in (1, -1):
-        cuts.append(XH([(sx * (E - 130), ht(E - 130)), (sx * (E + 30), ht(E + 30)), (sx * (E + 30), 1220), (sx * (E - 130), 1220)], 1250, 1550))
-        cuts.append(XH([(sx * (E - 95), hb(E - 95)), (sx * (E + 30), hb(E + 30)), (sx * (E + 30), 990), (sx * (E - 95), 990)], 1250, 1550))
-        cuts.append(XS([(sx * (E - 60), 1510), (sx * (E + 20), 1510), (sx * (E + 20), 1510 - 80 - 38)], 1000, 1180))
+        up = [(sx * 770, line_h(TC, TIP, 770)), (sx * 1000, line_h(TC, TIP, 1000)), (sx * 1000, 1250), (sx * 770, 1250)]
+        lo = [(sx * 740, line_h(BC, TIP, 740)), (sx * 1000, line_h(BC, TIP, 1000)), (sx * 1000, 980), (sx * 740, 980)]
+        cuts += [XH(up, 1250, 1550), XH(lo, 1250, 1550), XH([(sx * TIP[0], 980), (sx * 1000, 980), (sx * 1000, 1250), (sx * TIP[0], 1250)], 1250, 1550)]
     out['dash_white'] = white - Compound(cuts)
     lower = across([(1462, 1029), (1430, 880), (1390, 700), (1170, 700), (1170, 1029)])
     # The glovebox: a slim drawer face right under the white block, from just outboard of the screen to near the
@@ -1407,25 +1404,38 @@ def interior(p):
     b0, b1 = p['seam_2'] - PILLAR_HALF + 2, p['seam_2'] + PILLAR_HALF - 2
     bpil = SH([(b0, c['floor']), (b1, c['floor']), (b1, 2000), (b0, 2000)], -1300, 1300) & (hull(p, inset=c['wall'] - 3) - hull(p, inset=c['wall'] + 40))
     out['pillar_trim'] = bpil - Box(1520, 3000, 8000)                 # only the sides, outboard of 760
-    # The A-pillar's inner trim: a wide suede panel just inside the side glass, covering its front part from the
-    # dash up to the roof edge; the window opening seen from the cabin starts behind it. Its rear edge, through
-    # int-athens-3's solved camera (measure/console/athens-opening.md): 1,390 back at the beltline, rising to a
-    # rounded corner at 1,445, 1,462 high, then along the glass's top.
+    # The A-pillar's inner trim (int-athens-1, -3; dgRcedIkNOM 6:16, 3:12): one suede pillar filling the corner
+    # between the side glass and the windshield, from the dash's end up under the roof edge, its face toward the
+    # cabin about 130 deep. Its rear face is the window opening's edge, through int-athens-1's solved camera
+    # (5.9 px RMS, measure/console/athens1-pillar.md): 1,410 back at the dash, 1,470 at 1,370 high, the rounded
+    # corner at 1,496 and 1,399. The glass ahead of it (the side glass's front part) is hidden from the cabin.
     apil = []
     for key in ('window_l', 'window_r'):
-        wp, wn = pl[key]
-        wn = np.array(wn) * (1 if np.dot(wn, [1 if key == 'window_l' else -1, 0, 0]) > 0 else -1)     # outward
-        def wpt(s, h):
-            return on_plane(pl[key], y=h, z=ZF - s) - wn * 14
-        def belt(s):
-            return p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (s - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
-        def ridge(s):
-            z = ZF - s
-            return edge_point(pl['roof'], pl[key], z)[1] - 5
-        outline = [(1000, belt(1000) - 20), (1390, belt(1390) - 20), (1392, belt(1392) + 12), (1418, 1400), (1430, 1440),
-                   (1445, 1462), (1450, ridge(1450)), (1000, ridge(1000))]
-        w = Wire.make_polygon([tuple(wpt(s, h)) for s, h in outline], close=True)
-        apil.append(extrude(Face(w), amount=16, dir=tuple(-wn)))
+        sx = 1 if key == 'window_l' else -1
+        wn = np.array(pl[key][1], float)
+        wn = wn if np.dot(wn, [sx, 0, 0]) > 0 else -wn                  # outward
+        def wpt(s, h, off=0.0):
+            return on_plane(pl[key], y=h, z=ZF - s) - wn * off
+        inside = np.array([0.0, 1200.0, ZF - 1600])
+        blk = Box(1200, 900, 1200).moved(Location((sx * 700, 1500, ZF - 1100)))
+        A, B = wpt(1410, 1221, 10), wpt(1496, 1399, 10)
+        inward = -wn
+        col = plane_cut(blk, wpt(1200, 1200, 10), wpt(1600, 1200, 10), wpt(1400, 1500, 10), inside)            # inside the glass
+        # Its inner face: through the post's front corner at the dash (1,373 back, 796 out) and its edge on the
+        # windshield (829 out at 1,124 back, 1,410 high; 684 at 1,498, 1,517), all through int-athens-1's camera
+        # (measure/console/athens1-post.md, -glassedge.md).
+        ip = [np.array([sx * 796.0, 1215.0, ZF - 1373]), np.array([sx * 829.0, 1410.0, ZF - 1124]), np.array([sx * 684.0, 1517.0, ZF - 1498])]
+        col = plane_cut(col, ip[0], ip[1], ip[2], np.array([sx * 950.0, 1300.0, ZF - 1300]))
+        rp = pl['roof']
+        rn = np.array(rp[1], float); rn = rn if rn[1] > 0 else -rn
+        r0 = np.array(rp[0], float) - rn * 12
+        col = plane_cut(col, r0, r0 + np.cross(rn, [1, 0, 0]) * 100, r0 + np.array([100.0, 0, 0]), inside)        # under the windshield
+        col = plane_cut(col, A, B, A + inward * 100, np.array([sx * 700.0, 1300.0, ZF - 1200]))                  # ahead of the opening
+        # below the dash it carries on as a dark foot beside the white block's end, down to 850 (dgRcedIkNOM 3:12,
+        # int-athens-1: dark between the block's end and the door's white panel)
+        col = col & Box(2400, 1500, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, 850.0, 0)))
+        col = col & Box(2400, 3000, 1600, align=(Align.CENTER, Align.CENTER, Align.MAX)).moved(Location((0, 0, ZF - 950)))
+        apil.append(col)
     out['a_pillar_inner'] = Compound(apil)
     out['rear_wall'] = (SH([(c['cab_rear_s'] - 26, c['floor']), (c['cab_rear_s'] + 5, c['floor']), (c['cab_rear_s'] + 5, 2000), (c['cab_rear_s'] - 26, 2000)], -1300, 1300) & inner)
     # Sun visors, stowed flat under the header (dgRcedIkNOM-31; the manual's dash render shows none over the
