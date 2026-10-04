@@ -283,7 +283,7 @@ for o in cabin_parts:                    # printed symbols: the texture spans it
             q = l.vert.co - c0
             l[uvl].uv = (q.dot(u) / w + 0.5, q.dot(v) / h + 0.5)
     bm.to_mesh(o.data); bm.free()
-DETAILS = {'pillars': 'pillar', 'lamp_lower': 'lamp_lower', 'marker_amber_l': 'marker_amber', 'marker_amber_r': 'marker_amber', 'marker_red': 'marker_red'}
+DETAILS = {'pillars': 'pillar', 'frit': 'pillar', 'lamp_lower': 'lamp_lower', 'marker_amber_l': 'marker_amber', 'marker_amber_r': 'marker_amber', 'marker_red': 'marker_red'}
 detail_parts = [stl(f'det_{n}', M[m], smooth_angle=20) for n, m in DETAILS.items()]
 # The outside door-release buttons, one object each (btn_fl...), so the app can tell which was pressed.
 button_parts = []

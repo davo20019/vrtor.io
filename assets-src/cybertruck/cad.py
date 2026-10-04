@@ -1293,6 +1293,20 @@ def details(p):
     strip = extrude(Face(w), amount=p['lamp_h'] - 0.6, dir=(0, 1, 0))
     ends = both_sides(Box(400, 200, 800, align=(Align.MIN, Align.CENTER, Align.MAX)).moved(Location((BW - 75, y0 + 50, ZF - fr + 50))))
     out['lamp_lower'] = [strip - ends]
+    # The windshield's black frit: an opaque band printed on the glass's inner face, so the A-pillar and dash
+    # trim don't show through at its edges (c134). Measured on c134 against the glass's 1,581 mm bottom
+    # width and 1,472 mm slant: about 75 wide down the sides, 65 along the cowl, 280 under the roof edge,
+    # the clear area's lower corners cut off (about 380 along the cowl, 110 up the side).
+    ws, wn = panels(p)['windshield'][:2]
+    clear = inset_polygon(ws, wn, [75.0, 280.0, 75.0, 65.0])
+    def cut_corner(i, along_bottom, along_side):
+        c, b, s = clear[i], clear[3 if i == 0 else 0], clear[1 if i == 0 else 2]
+        return [c + (s - c) / np.linalg.norm(s - c) * along_side, c + (b - c) / np.linalg.norm(b - c) * along_bottom]
+    lo_l, lo_r = cut_corner(0, 380.0, 110.0), cut_corner(3, 380.0, 110.0)
+    clear = [lo_l[1], lo_l[0], clear[1], clear[2], lo_r[0], lo_r[1]]
+    # Inside the glass (its outer face 1 mm under the facet, its inner face 7.8 mm under): a 0.6 mm layer
+    # near the inner face, so the tinted glass lies over it seen from outside.
+    out['frit'] = [prism(inset_polygon(ws, wn, 0.6), wn, out=-6.8, depth=7.4) - prism(clear, wn, out=-6.0, depth=9.0)]
     amber = strip & ends                                    # one per side, so each turn signal blinks alone
     half = Box(2000, 2000, 8000, align=(Align.MIN, Align.CENTER, Align.CENTER))
     out['marker_amber_l'] = [amber & half]
