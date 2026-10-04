@@ -1,0 +1,46 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "exposure": 1.5,
+ "cameras": {
+  "v376": {
+   "eye": [
+    150,
+    1300,
+    645.8000000000002
+   ],
+   "look": [
+    -700,
+    1150,
+    1195.8000000000002
+   ],
+   "fovDeg": 75,
+   "size": [
+    1280,
+    720
+   ],
+   "photo": "/tmp/vf/f_376.jpg"
+  },
+  "passenger_eye": {
+   "eye": [
+    -390,
+    1250,
+    436.8000000000002
+   ],
+   "look": [
+    -450,
+    1050,
+    1395.8000000000002
+   ],
+   "fovDeg": 90,
+   "size": [
+    1280,
+    900
+   ]
+  },
+  "athens_solved": {
+   "measure": "../../measure/console/athens3b.camera.json",
+   "photo": "../../refs/web/int-athens-3.jpg"
+  }
+ }
+}

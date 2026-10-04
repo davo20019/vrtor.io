@@ -485,8 +485,11 @@ are one truck, so each interior change was also checked on the video's truck:
 - Mats differ between the trucks (Athens: ribbed rubber all-weather; the video's truck and Tesla's render:
   carpet), so they are an option; the model keeps carpet.
 
-Not yet matched: the real door sill under the glass is grey and deeper than the black cap; the mirror shows
-through the window opening in int-athens-3 but not through the model's.
+| Door sill under the glass | 58 deep (belt - 52 to belt + 6), grey suede like the pillar trim, the white panel starting under it | dgRcedIkNOM 6:16 (40 px against the white panel's 175), int-athens-3 |
+
+The mirror shows through the window opening from the seats (review/footwell/f1). Through int-athens-3's solved
+camera it doesn't: that camera (23 px RMS, an ultra-wide lens) sits at 1,910 back, level with the mirror, which
+c003 puts where the model has it (front about 1,580 to 1,600).
 
 ### Still guesses
 

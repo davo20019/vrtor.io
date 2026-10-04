@@ -1130,7 +1130,9 @@ def door_trim(p, d, sx, driver):
     sh = c['shoulder_front'] if d == 'f' else c['shoulder_rear']
     ya = c['door_arm_h']
     out = {}
-    bt0, bt1 = belt_h(p, s0) - 34, belt_h(p, s1) - 34
+    # The sill under the glass is ~52 deep, the white panel starting under it (dgRcedIkNOM 6:16: 40 px against the
+    # white panel's 175; int-athens-3 about the same), dark grey like the pillar trim
+    bt0, bt1 = belt_h(p, s0) - 52, belt_h(p, s1) - 52
     lower = XH([(xw, c['floor'] + 25), (hip + 33, c['floor'] + 25), (hip + 33, 640), (hip, 720), (hip, 872), (xw, 872)], s0, s1)
     out['door_lower'] = [lower]
     arm_s0 = s0 + (110 if d == 'f' else 70)

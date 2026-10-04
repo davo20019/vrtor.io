@@ -274,7 +274,7 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'overhead_strip': 'bezel', 'overhead_keys': 'switch', 'overhead_arms': 'overhead', 'mirror_glass': 'mirror_glass', 'tweeters': 'grille', 'usb': 'screen',
             # on the doors (door_<k>_int_<name>)
             'armrest': 'armrest', 'door_lower': 'door_dark', 'switch_pod': 'bezel', 'switch': 'door_button', 'open': 'door_button',
-            'cap': 'pillar', 'grilles': 'grille'}
+            'cap': 'dash_top', 'grilles': 'grille'}
 cabin_parts = [stl(f'int_{n}', M[m], smooth_angle=25) for n, m in INTERIOR.items() if (PARTS / f'int_{n}.stl').exists()]
 for o in cabin_parts:                    # the screens: the picture spans each screen's face
     sc_ = GEO['screens'].get(o.name[4:])
