@@ -1367,10 +1367,12 @@ PILLAR_HALF = 35.0          # the fixed B-pillar strip between the doors, where 
 def door_spans(p):
     return {'f': (p['seam_1'], p['seam_2'] - PILLAR_HALF), 'r': (p['seam_2'] + PILLAR_HALF, p['seam_3'])}
 
-def door_regions(p):
+def door_regions(p, glass=True):
     """{door: (region solid, hinge point)} for fl, rl, fr, rr. A door is everything between its seams that is
-    below the roof and deck (minus the glass pockets' depth) and either outboard of the side window's plane
-    or below the beltline: its skin, its window and frame, its trim, armrest and handle. Never the roof."""
+    below the beltline: its skin, trim, armrest and handle; with glass, also what's below the roof and deck
+    (minus the glass pockets' depth) outboard of the side window's plane: its window, which is frameless
+    (it drops a little as the door opens), so the steel above the belt (the pocket's lip under the roof
+    edge) stays on the body and nothing hangs over the door with its window down. Never the roof."""
     pl = planes(p)
     BW = body_w(p)
     c = CAB
@@ -1386,8 +1388,9 @@ def door_regions(p):
         belt = plane3(V(BW, p['belt_h_front'], p['a_pillar_s']), V(BW, p['belt_h_rear'], p['c_pillar_s']), V(0, p['belt_h_front'], p['a_pillar_s']))
         if belt[1][1] < 0:
             belt = (belt[0], -belt[1])
-        b = halfspace_cut(prism_l, belt[0] + belt[1] * 2, belt[1])
-        region = a + b
+        # The steel's own top is the side glass's bottom edge (belt + 12), so no sliver of it stays on the body.
+        b = halfspace_cut(prism_l, belt[0] + belt[1] * (2 if glass else 13), belt[1])
+        region = a + b if glass else b
         hinge = np.array([BW - 20, 900.0, ZF - s0])
         out[f'{d}l'] = (region, hinge)
         out[f'{d}r'] = (region.mirror(Plane.YZ), hinge * [-1, 1, 1])
@@ -1680,7 +1683,7 @@ if __name__ == '__main__':
         save(part, f'det_{name}')
 
     regions = door_regions(p)
-    body, door_steel = split_doors(body, regions)
+    body, door_steel = split_doors(body, door_regions(p, glass=False))
     glass, door_glass = split_doors(Compound(groups['glass']), regions)
     for k, piece in door_steel.items():
         save(piece, f'door_{k}_steel', tolerance=0.5, angular=0.5)
