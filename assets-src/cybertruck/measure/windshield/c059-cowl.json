@@ -1,0 +1,15 @@
+{
+ "photo": "../../refs/web/c059-side-L.jpg",
+ "camera": "../../fit/c059-left/camera.json",
+ "queries": {
+  "cowl corner (hood crease meets the A-pillar), on the A-pillar's plane": {
+   "px": [
+    662,
+    1336
+   ],
+   "plane": {
+    "x": 829.2
+   }
+  }
+ }
+}

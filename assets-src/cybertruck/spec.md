@@ -390,10 +390,24 @@ the changes above every published figure holds within 2 mm: head room 1,058.8 / 
 1,038.8, shoulder room 1,609.7 / 1,577.5, hip room 1,453.4 / 1,453.4. J1100 itself isn't public, so the ankle
 point used for leg room (95 above the heel on the mat) is an assumption; head, shoulder and hip room need none.
 
-The windshield: Tesla publishes no rake or size. The model's comes from the fitted body: the glass rises from the
-cowl (954 back, 1,374 high) to the roof apex (2,426 back, 1,794 high, the published height) at 15.9 deg from
-horizontal, 1,530 along the slope, 1,331 wide at its base; its top edge (the header, 1,739 back) and its lower
-corners were measured through the dash render's solved camera.
+The windshield: Tesla publishes no rake or size (searched: glass shops, the service manual's windshield
+procedure, part 2040106-00-A). The model's comes from the fitted body: the glass rises from the cowl (954 back,
+1,374 high) to the roof apex (2,426 back, 1,794 high, the published height) at 15.9 deg from horizontal, 1,530
+along the slope, 1,331 wide at its base; its top edge (the header, 1,739 back) and its lower corners were
+measured through the dash render's solved camera. Checks:
+- Rake. The Owner's Manual's side drawing (manual-dimensions-D2BB952D, 11.39 mm/px along, 11.21 up from L and H):
+  the glass line fits at 16.4 deg (0.4 px RMS; about +-0.4 deg at that resolution), the hood at 20.5. The Body
+  Repair Manual's side-body drawing (refs/tesla/bodyrepair/dims-side-body.jpg, orthographic: its four labelled
+  diagonals all give 3.08 mm/px, the sill level to 1 px) has the body side's roof rail at 17.8 deg, but that is the
+  bare steel rail, not the glass. A reader's protractor figure of 18 (theautopian.com) is unsourced. The model's
+  15.9 is within about half a degree of Tesla's exterior drawing.
+- Cowl (the hood/glass break). Unsettled: the fit put it at its lower bound (950); the manual drawing's
+  centreline break is at about 1,153 back, 1,439 high; the corner where the hood crease meets the A-pillar in
+  c059 measures 724 back, 1,264 high through that photo's fitted camera (measure/windshield/c059-cowl.json),
+  i.e. the side corner may sit well ahead of and below the centreline break, which the model's one transverse
+  cowl line can't do. Left as is until a view that shows the cowl line across the hood is measured.
+- Top view (dims-top.jpg, 4.11 mm/px; 1,427, 1,549 and the 1,751 diagonal agree to 2 mm) and the A- and
+  B-pillar widths (dims-pillars.jpg: 1,543, 1,689, 1,691, 1,629 diagonal) are saved for checking the cab.
 
 ### Still guesses
 
