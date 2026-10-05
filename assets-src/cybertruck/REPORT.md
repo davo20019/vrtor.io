@@ -221,3 +221,19 @@ standing up from it like tombstones. Compared with the manual renders through ca
   where the visitor sits beats renders read for ratios.
 Still open: every console size scales from its width (+-146), a guess; no picture with known reference points
 shows it, so none is a solved measurement.
+
+## Windshield dimensions, support and lower corner (2026-10-04)
+
+Real-vehicle NHTSA measurements corrected the pane from 15.92 degrees, 1,159/1,581 mm widths and 1,457 mm
+slant height to 19.9 degrees, 1,433/1,785 mm and 1,780 mm (O20244500, TR-P44392-01-NC, pp.10 and 25).
+The broader pane has a continuous clear-glass lower corner, a bowed black border from Tesla's service drawing,
+and a lower cowl/dash junction. Hood and windshield facets are bounded to their own longitudinal regions.
+
+The black support is bounded by both Athens still photos, with the video's post-depth constraint removed.
+Its upright terminates in the diagonal strip; the moulded return is rounded with 14 mm/four segments.
+All seven clear-corner probes pass through an actual glass mesh without hitting opaque steel, dash or frit.
+All three adjacent Athens 2 trim controls now hit the support. References, measured/estimated distinctions,
+comparison renders and final validation: review/windshield/report.md. Exact trim depth remains uncertified.
+
+Lesson: a well-fitting exterior silhouette did not constrain the actual windshield's dimensions. The real
+vehicle report was needed to resolve the structural mismatch; bevels alone could not do it.

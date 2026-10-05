@@ -1,0 +1,20 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "exposure": 1.5,
+ "cameras": {
+  "athens1": {
+   "measure": "../../measure/console/athens1.camera.json",
+   "photo": "../../refs/web/int-athens-1.jpg"
+  },
+  "athens2": {
+   "measure": "../../measure/console/athens2-f921.camera.json",
+   "photo": "../../refs/web/int-athens-2.jpg"
+  },
+  "exterior": {
+   "measure": "../../measure/windshield/c134-cowl.camera.json",
+   "photo": "../../refs/web/c134-front-high.jpg",
+   "exposure": 0
+  }
+ }
+}

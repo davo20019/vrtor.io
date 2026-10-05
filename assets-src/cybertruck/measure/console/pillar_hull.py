@@ -20,6 +20,9 @@ def ray(c, px):
 inside_post = np.array([880.0, 1300.0, 2695.8 - 1420])
 inside_strip = np.array([800.0, 1450.0, 2695.8 - 1100])
 SPEC = {
+    # Independent, solved still photo; do not use the cross-cab video's post outline for depth.
+    'post athens2':  ('athens2-f921.camera.json', (352, 950), (355, 1105), False, inside_post),
+    'strip upper athens2': ('athens2-f921.camera.json', (360, 700), (631, 1066), False, np.array([700.0, 1330.0, 1420.0])),
     'post athens1':  ('athens1.camera.json', (461, 440), (464, 530), False, inside_post),
     'post d32':      ('d32f1100.camera.json', (137, 22), (130, 165), False, inside_post),
     'strip athens1': ('athens1.camera.json', (475, 440), (595, 541), False, inside_strip),

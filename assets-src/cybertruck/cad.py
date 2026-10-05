@@ -3,8 +3,8 @@
 Frame: front faces +z, up +y, +x is the truck's left side. Origin on the ground, midway between the axles.
 spec.md's s (distance back from the light bar), h (height) and w (half-width) map to z = ZF - s, y = h, x = w.
 
-Every steel face of the truck is flat and the shell is convex apart from the arches and the bumpers, so the
-shell is the intersection of half-spaces, one per facet (see spec.md, "Structure"). Uncertain sizes live in P
+The steel faces are flat. The side facets use half-spaces; the hood and windshield are bounded to
+their own regions because their documented junction is concave (see spec.md, "Structure"). Uncertain sizes live in P
 and are fitted to the photos by scripts/3d/fit_silhouette.py, which writes params.json.
 """
 import json, math
@@ -90,6 +90,19 @@ P.update(
     spat=(300.0, 285.0),             # its lower rear tip in front of the tyre, s and h (c059: 300, 285)
     bumper_side_front_s=140.0,       # where its side face starts, behind the corner chamfer (c059: 105 to 129)
 )
+# Windshield measurements from the real 2024 Cybertruck, NHTSA O20244500 (TR-P44392-01-NC,
+# data sheets 3 and 15): 19.9 degrees from horizontal, 1,433 top width, 1,785 bottom width,
+# 1,780 height in the glass plane. These override the silhouette fit's undersized, 15.9-degree pane.
+# Its top remains 40 mm ahead of the fitted roof apex; that absolute placement is still photo-derived.
+PILLAR_REFERENCE = dict(P)  # preserve the camera-measured cabin trim location while correcting the pane
+WS_MEASURED = dict(angle_deg=19.9, top_width=1433.0, bottom_width=1785.0, slant_height=1780.0)
+_ws_angle = math.radians(WS_MEASURED['angle_deg'])
+_ws_corner_s = P['apex_s'] - 40 - WS_MEASURED['slant_height'] * math.cos(_ws_angle)
+P.update(shoulder_cowl_s=P['cowl_s'], shoulder_cowl_h=P['cowl_h'])
+P.update(cowl_s=_ws_corner_s - 30,
+         cowl_h=H - (P['apex_s'] - (_ws_corner_s - 30)) * math.tan(_ws_angle),
+         roof_half=743.0)   # pane's 716.5 half-width plus the surrounding steel at its top
+
 # The rear, measured on c069 through its solved camera (measure/rear/: 7.6 px RMS, about 5 mm; the licence plate comes
 # out 305 x 151 at its depth, centred) and checked on c006 and c080 (spec.md, "Rear, measured"). The bumper's top is
 # 650 at its rear face; the dark the side fit read up to 679 is the black strip under the tailgate (its steel ends at
@@ -123,6 +136,7 @@ BUMPER_F = dict(
     grille_set=25.0, grille_pitch=163.0,          # the grille's face behind the bumper's; its vertical bars' spacing
     tow=(510.0, 617.0, 416.0, 446.0),             # tow-hook covers: x from, x to, bottom, top
     camera=(-176.0, 16.0),                        # the front camera at the intake's top: x, housing radius
+    front_plate=(-8.0, 469.0, 305.0, 152.0),      # the licence plate: centre x, foot, width, height
     chamfer_a=(640.0, 404.0), chamfer_b=(864.0, 438.0), chamfer_p=(720.0, 245.0),
     chamfer_depth=120.0,                          # how far back the chamfer is at the block's outer edge: guess
     lamp_head=(386.0, 625.0), lamp_cells=4,       # the headlamps' projector row on the centre face: x from and to, cells (c150 px 1,000 to 1,165)
@@ -179,7 +193,7 @@ def planes(p):
         'sail': plane3(V(BW, p['belt_h_rear'], p['c_pillar_s']), V(BW, p['side_tail_h'], LT),
                        V(p['tail_half'], p['tail_h'], LT)),
         'corner': plane3(V(nfh, nh, 0), V(BW, nh, p['corner_s']), V(nfh, p['bumper_f_h'], p['face_rake'])),
-        'shoulder': plane3(V(nfh, nh, 0), V(nfh, p['cowl_h'], p['cowl_s']), V(BW, nh - p['shoulder_drop'], 0)),
+        'shoulder': plane3(V(nfh, nh, 0), V(nfh, p.get('shoulder_cowl_h', p['cowl_h']), p.get('shoulder_cowl_s', p['cowl_s'])), V(BW, nh - p['shoulder_drop'], 0)),
     }
     for k, v in side.items():
         pl[k + '_l'] = v
@@ -190,11 +204,19 @@ def halfspace_cut(part, pt, n, inset=0.0):
     return part.split(Plane(origin=tuple(pt - n * inset), z_dir=tuple(n)), keep=Keep.BOTTOM)
 
 def hull(p, inset=0.0):
-    """The convex shell: a big box cut by every facet plane (moved inward by inset)."""
+    """The faceted shell, with hood and roof bounded to their own regions (planes inset normally)."""
     part = Box(2400, 2200, 6400, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, 0, (ZF + ZR) / 2)))
-    for pt, n in planes(p).values():
-        part = halfspace_cut(part, pt, n, inset)
-    return part
+    pl = planes(p)
+    for key, (pt, n) in pl.items():
+        if key not in ('hood', 'roof'):
+            part = halfspace_cut(part, pt, n, inset)
+    # The documented windshield is steeper than the hood. Their junction is concave in side view,
+    # so intersecting both infinite planes clips the nose away and can erase the windshield pocket.
+    # Limit each facet to its own longitudinal region, with their common edge at the cowl.
+    cut = np.array([0.0, 0.0, ZF - p['cowl_s']])
+    front = halfspace_cut(halfspace_cut(part, *pl['hood'], inset), cut, np.array([0.0, 0.0, -1.0]))
+    back = halfspace_cut(halfspace_cut(part, *pl['roof'], inset), cut, np.array([0.0, 0.0, 1.0]))
+    return front + back
 
 def on_plane(pl, x=None, y=None, z=None):
     """Complete a point on a plane given two of its coordinates."""
@@ -415,6 +437,12 @@ def cladding_parts(p):
     housing = Cylinder(cr, 25, align=(Align.CENTER, Align.CENTER, Align.MAX)).moved(Location((cxm, i1 - cr - 2, zf - 12)))
     out['bumper_f_camera'] = housing
     out['bumper_f_lens'] = Cylinder(cr * 0.45, 2, align=(Align.CENTER, Align.CENTER, Align.MIN)).moved(Location((cxm, i1 - cr - 2, zf - 12 - 0.5)))
+    # The front plate (c094, c150): US size, centred on the seat's middle (c150 -8), standing 2 mm proud of the
+    # face. Its foot is at the c150 seat's lower edge (469) and its top at 621 (c094: its top 57 px over the
+    # intake's top, at 0.9 mm per px of the plate's own width); it hangs over the intake's top edge, as on the truck.
+    fx, fb, fw, fh = F['front_plate']
+    fplate = Box(fw, fh, 2.0, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(Location((fx, fb, zf + 2.0)))
+    out['front_plate'] = fillet(fplate.edges().filter_by(Axis.Z), radius=10.0)
     # the intake's back, near black so it reads as an opening
     out['bumper_f_intake'] = Box(2 * ih - 1, i1 - i0 - 1, 1, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(
         Location((0, i0 + 0.5, zf - F['intake_depth'] + 0.1)))
@@ -579,14 +607,59 @@ def side_glass_tip(p):
     about over the front wheel, 799 back, where the A-pillar's lower edge comes down to the beltline."""
     return 800.0
 
-SIDE_TOP_SEEN = [(947.0, 1254.0), (1136.0, 1321.0), (1260.0, 1363.0)]     # (s, h) from int-athens-1, see side_glass_top
+SIDE_TOP_SEEN = [(947.0, 1254.0), (1136.0, 1321.0), (1260.0, 1363.0)]     # (s, h) from int-athens-1, see side_glass_seen
 
-def side_glass_top(p, s):
-    """The side glass's top edge at s: from the tip up along the A-pillar's lower edge, the steel band above it
-    about 60 deep at the door's front seam (c003: 40 to 45 px at 1.45 mm/px), then the roof edge less the margin
-    from there to the apex (the band narrowing to it). Between the tip and the seam it runs through where the
-    glass ends seen from the driver's seat (int-athens-1 through its solved camera, the A-pillar strip's lower
-    edge: measure/console/athens1-strip.md): 1,254 high at 947 back, 1,321 at 1,136, 1,363 at 1,260."""
+# Bow and frit proportions from Tesla's windshield service drawing (GUID-CAFA82BC).
+# Absolute glass dimensions and slope are measured on NHTSA's real test vehicle, above.
+WINDSHIELD = dict(bottom_bow=60.0, bottom_segments=12,
+                  side_band=75.0, top_band=280.0, bottom_band=65.0,
+                  corner_along_bottom=250.0, corner_along_side=110.0)
+
+def windshield_outline(p):
+    """Planar glass with a sampled bowed bottom; first four points are the four main corners.
+
+    The remaining points run from the right bottom corner back to the left, so existing pillar
+    attachment code can keep using the first four corners. The service drawing's wiper notch is
+    hidden by the separate wiper housing and is not reproduced here.
+    """
+    roof, win = planes(p)['roof'], planes(p)['window_l']
+    sc = p['cowl_s'] + 30.0
+    zc, zt = ZF - sc, ZF - p['apex_s'] + 40
+    xc = WS_MEASURED['bottom_width'] / 2
+    xt = WS_MEASURED['top_width'] / 2
+    xz = [(xc, zc), (xt, zt), (-xt, zt), (-xc, zc)]
+    for t in np.linspace(-1.0, 1.0, WINDSHIELD['bottom_segments'] + 1)[1:-1]:
+        s = sc - WINDSHIELD['bottom_bow'] * (1 - t * t)
+        xz.append((xc * t, ZF - s))
+    return [on_plane(roof, x=x, z=z) for x, z in xz]
+
+def windshield_clear(p):
+    """The frit's clear opening, following the bow and trimming each lower corner along the edge."""
+    ws, wn = windshield_outline(p), planes(p)['roof'][1]
+    w = WINDSHIELD
+    clear = inset_polygon(ws, wn, [w['side_band'], w['top_band'], w['side_band']] +
+                          [w['bottom_band']] * (len(ws) - 3))
+    def along(path, distance):
+        for i, (a, b) in enumerate(zip(path, path[1:])):
+            length = np.linalg.norm(b - a)
+            if distance <= length:
+                return a + (b - a) * distance / length, i + 1
+            distance -= length
+        raise ValueError('Windshield corner cutoff exceeds the lower edge')
+    # Walk both ways along the sampled bottom; the 250 mm cutoff spans multiple segments.
+    bottom = clear[3:] + [clear[0]]
+    r, ri = along(bottom, w['corner_along_bottom'])
+    l, li = along(bottom[::-1], w['corner_along_bottom'])
+    left_side = clear[0] + (clear[1] - clear[0]) / np.linalg.norm(clear[1] - clear[0]) * w['corner_along_side']
+    right_side = clear[3] + (clear[2] - clear[3]) / np.linalg.norm(clear[2] - clear[3]) * w['corner_along_side']
+    return [left_side, clear[1], clear[2], right_side, r, *bottom[ri:len(bottom) - li], l]
+
+def side_glass_seen(p, s):
+    """Where int-athens-1 sees the side glass end from the driver's seat, from the tip up along the A-pillar
+    strip's lower edge: 1,254 high at 947 back, 1,321 at 1,136, 1,363 at 1,260 (measure/console/athens1-strip.md),
+    then to the 60-deep steel band at the door's front seam (c003: 40 to 45 px at 1.45 mm/px) and on to the apex.
+    That is the trim's edge, which covers the glass from inside. The A-pillar strip's sight planes pivot on it;
+    the glass itself is side_glass_top."""
     pl = planes(p)
     def belt(q):
         return p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (q - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
@@ -597,6 +670,21 @@ def side_glass_top(p, s):
     pts = [(t, belt(t) + 12), *SIDE_TOP_SEEN, (sm, crease(sm) - 60), (p['apex_s'], crease(p['apex_s']) - p['win_margin'])]
     return float(np.interp(s, [q for q, _ in pts], [h for _, h in pts]))
 
+def side_glass_top(p, s):
+    """The side glass's own top edge at s: one straight line from the front tip to the roof edge less the margin
+    at the apex, as on the real truck (c003: the window is a long wedge whose top edge runs straight from the roof's
+    peak to its tip, over a straight beltline). The int-athens-1 readings (side_glass_seen) are the A-pillar trim's
+    edge, which hides the glass from inside, so they don't bend this edge."""
+    pl = planes(p)
+    def belt(q):
+        return p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (q - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
+    def crease(q):
+        z = ZF - q
+        return min(edge_point(pl['roof'], pl['window_l'], z)[1], edge_point(pl['deck'], pl['window_l'], z)[1])
+    t, a = side_glass_tip(p), p['apex_s']
+    h0, h1 = belt(t) + 12, crease(a) - p['win_margin']
+    return h0 + (h1 - h0) * (s - t) / (a - t)
+
 def panels(p):
     """Polygons sunk into the facets: name -> (points, outward normal, pocket depth, inset under the steel, kind)."""
     pl = planes(p)
@@ -604,9 +692,7 @@ def panels(p):
     m = p['win_margin']
     out = {}
     # Windshield and glass roof: the roof facet from the cowl to the apex, inside the A-pillars.
-    za, zb = ZF - p['cowl_s'] - 30, ZF - p['apex_s'] + 40
-    xa, xb = edge_point(pl['roof'], pl['window_l'], za)[0] - m, edge_point(pl['roof'], pl['window_l'], zb)[0] - m
-    out['windshield'] = ([on_plane(pl['roof'], x=x, z=z) for x, z in ((xa, za), (xb, zb), (-xb, zb), (-xa, za))], pl['roof'][1], 8, 1.0, 'glass')
+    out['windshield'] = (windshield_outline(p), pl['roof'][1], 8, 1.0, 'glass')
     # Rear roof glass and the tonneau on the deck, between the sails.
     def deck_poly(s0, s1, margin):
         q = []
@@ -633,7 +719,7 @@ def panels(p):
         z = ZF - s
         return min(edge_point(pl['roof'], pl['window_l'], z)[1], edge_point(pl['deck'], pl['window_l'], z)[1]) - m
     s0 = side_glass_tip(p)
-    side_pts = [(s0, belt(s0) + 12), *SIDE_TOP_SEEN, (1553.0, side_glass_top(p, 1553.0)), (p['apex_s'], top(p['apex_s'])), (p['c_pillar_s'], top(p['c_pillar_s'])),
+    side_pts = [(s0, belt(s0) + 12), (p['apex_s'], top(p['apex_s'])), (p['c_pillar_s'], top(p['c_pillar_s'])),
                 (p['c_pillar_s'], belt(p['c_pillar_s']) + 12)]
     for key, sx in (('window_l', 1), ('window_r', -1)):
         pts = [on_plane(pl[key], y=h, z=ZF - s) for s, h in side_pts]
@@ -898,13 +984,18 @@ def pillar_planes(sx, p=None):
     data = json.loads((HERE / 'measure' / 'console' / 'pillar_hull.json').read_text())
     out = {k: (M @ np.array(v['point']), M @ np.array(v['normal'])) for k, v in data.items()}
     if p is not None:
+        # The two independently solved still cameras disagree by ~13 mm at the strip's lower face.
+        # Allow 18 mm on Athens 1's front envelope (about 10 px here); Athens 2 still bounds the face.
+        # This is calibration tolerance, not an exact trim-depth measurement.
+        pt, n = out['strip upper athens1']
+        out['strip upper athens1'] = (pt + n * 18.0, n)
         # The strip's lower sight planes pivot on its edge on the glass (the glass's top edge, which int-athens-1
         # reads directly; less 3, the opening's inset): each passes through that edge and its camera. The
         # passenger-seat camera sets only the underside's tilt (its outline meets the glass up to 25 mm off).
         pl = planes(p)
         key = 'window_l' if sx > 0 else 'window_r'
         wn = np.array(pl[key][1], float); wn = wn if np.dot(wn, [sx, 0, 0]) > 0 else -wn
-        L1, L2 = (on_plane(pl[key], y=side_glass_top(p, q) - 3, z=ZF - q) - wn * 10 for q in (1260.0, 947.0))
+        L1, L2 = (on_plane(pl[key], y=side_glass_seen(p, q) - 3, z=ZF - q) - wn * 10 for q in (1260.0, 947.0))
         for k in ('strip athens1', 'strip passenger seat'):
             C, n0 = out[k]
             n = np.cross(L2 - L1, C - L1); n /= np.linalg.norm(n)
@@ -1315,8 +1406,10 @@ def interior(p):
         rest, _ = split_doors(part, regions)               # whatever reaches into a door's opening stays out of it
         return rest
     # ---- dash. The shelf: a dark slab rising from its front lip (1,224 high, 1,480 back) to the windshield.
-    d0, d1 = c['cab_front_s'] - 80, c['dash_s']
-    front = on_plane(pl['roof'], x=0, z=ZF - p['cowl_s'] - 40)[1] - c['wall'] - 25
+    d0, d1 = 900.0, c['dash_s']
+    # At the corner the real pad lies below the glass. Keep the measured rear lip, and follow
+    # the documented windshield slope at the front rather than retaining the old raised cowl ledge.
+    front = min(c['dash_h'] + 8, on_plane(pl['roof'], x=0, z=ZF - d0)[1] - 24)
     top = plane3(V(0, c['dash_h'], d1), V(1, c['dash_h'], d1), V(0, front, d0))
     if top[1][1] < 0:
         top = (top[0], -top[1])
@@ -1537,12 +1630,13 @@ def interior(p):
     # (5.9 px RMS, measure/console/athens1-pillar.md): 1,410 back at the dash, 1,470 at 1,370 high, the rounded
     # corner at 1,496 and 1,399.
     apil = []
+    trim_pl = planes(PILLAR_REFERENCE)
     for key in ('window_l', 'window_r'):
         sx = 1 if key == 'window_l' else -1
-        wn = np.array(pl[key][1], float)
+        wn = np.array(trim_pl[key][1], float)
         wn = wn if np.dot(wn, [sx, 0, 0]) > 0 else -wn                  # outward
         def wpt(s, h, off=0.0):
-            return on_plane(pl[key], y=h, z=ZF - s) - wn * off
+            return on_plane(trim_pl[key], y=h, z=ZF - s) - wn * off
         inside = np.array([0.0, 1200.0, ZF - 1600])
         blk = Box(1200, 900, 1200).moved(Location((sx * 700, 1500, ZF - 1100)))
         A, B = wpt(1410, 1221, 10), wpt(1496, 1399, 10)
@@ -1552,10 +1646,10 @@ def interior(p):
         # RMS), dgRcedIkNOM-32 (9 px) and, mirrored, dgRcedIkNOM at 6:16 (measure/console/pillar_hull.py), so it
         # shows those outlines from those cameras. Its faces are rounded, so each camera's outline is a different
         # line on them (crossing two outlines as if one edge put it outside the glass).
-        hull_pl = pillar_planes(sx, p)
-        for k in ('post athens1', 'post d32', 'post passenger seat'):
+        hull_pl = pillar_planes(sx, PILLAR_REFERENCE)
+        for k in ('post athens1', 'post athens2', 'post d32'):
             col = halfspace_cut(col, *hull_pl[k])
-        rp = pl['roof']
+        rp = trim_pl['roof']
         rn = np.array(rp[1], float); rn = rn if rn[1] > 0 else -rn
         r0 = np.array(rp[0], float) - rn * 12
         col = plane_cut(col, r0, r0 + np.cross(rn, [1, 0, 0]) * 100, r0 + np.array([100.0, 0, 0]), inside)        # under the windshield
@@ -1569,6 +1663,10 @@ def interior(p):
         b0, b1 = (np.array([0.0, belt_h(p, s), ZF - s]) for s in (950.0, 1410.0))
         above = plane_cut(Box(2400, 3000, 8000), b0, b1, b0 + np.array([100.0, 0, 0]), np.array([0.0, 2500.0, ZF - 1200]))
         col = (col & above) + ((col - above) & inner)
+        # The rear upright terminates in the diagonal bar, rather than continuing as a separate
+        # slab toward the roof. An 18 mm overlap under its moulded return keeps their union closed.
+        post_join, post_join_n = hull_pl['strip athens1']
+        col = halfspace_cut(col, post_join - post_join_n * 18.0, -post_join_n)
         # The strip: a rounded suede bar over the steel between the two glasses, under the windshield, drawn up to
         # the sight planes through its two outlines in int-athens-1 (measure/console/pillar_hull.py): the lower
         # one on the side glass's top edge (athens1-strip.md), the upper one hanging under the windshield (its
@@ -1577,15 +1675,18 @@ def interior(p):
         # outline at 6:16, from the passenger's seat, which sets how far its underside rises inboard.
         strip = plane_cut(Box(1200, 900, 2000).moved(Location((sx * 700, 1500, ZF - 1300))), wpt(1200, 1200, 10), wpt(1600, 1200, 10), wpt(1400, 1500, 10), inside)
         strip = plane_cut(strip, r0, r0 + np.cross(rn, [1, 0, 0]) * 100, r0 + np.array([100.0, 0, 0]), inside)
-        for k in ('strip athens1', 'strip upper athens1', 'strip passenger seat'):
+        for k in ('strip athens1', 'strip upper athens1', 'strip upper athens2', 'strip passenger seat'):
             strip = halfspace_cut(strip, *hull_pl[k])                                                          # its two outlines
         # It runs on up the windshield's edge to the roof's apex, covering the glass's black band (its inner edge
         # 75 in from the glass's edge, as c134 shows it from outside): int-athens-2 shows suede right up to clear
         # glass all the way up, post and strip one surface above the glass triangle. Behind the window opening it
         # keeps to the crease (no deeper than the roof-edge rail), so it doesn't stand out over the side window.
-        ws = panels(p)['windshield'][0]
-        w0, w1 = (ws[0], ws[1]) if sx > 0 else (ws[3], ws[2])
-        c0, c1 = w0 - np.array([sx * 75.0, 0, 0]), w1 - np.array([sx * 75.0, 0, 0])
+        # The strip's measured inner face is independent of the newly corrected pane width.
+        # Keep the original sight-plane attachment, then cap it against the physical pane below.
+        old_r, old_w = trim_pl['roof'], trim_pl[key]
+        w0, w1 = [on_plane(old_r, x=sx * (abs(edge_point(old_r, old_w, ZF - q)[0]) - PILLAR_REFERENCE['win_margin']),
+                           z=ZF - q) for q in (PILLAR_REFERENCE['cowl_s'] + 30, p['apex_s'] - 40)]
+        c0, c1 = w0 - np.array([sx * 100.0, 0, 0]), w1 - np.array([sx * 100.0, 0, 0])
         strip = plane_cut(strip, c0, c1, c0 + rn * 100, np.array([sx * 1000.0, 1300.0, ZF - 1100]))            # out to the clear glass
         strip = strip & Box(2400, 3000, p['apex_s'] - 800, align=(Align.CENTER, Align.CENTER, Align.MIN)).moved(Location((0, 0, ZF - p['apex_s'])))
         fwd = plane_cut(Box(2400, 3000, 8000), A, B, A + inward * 100, np.array([sx * 700.0, 1300.0, ZF - 1200]))
@@ -1593,6 +1694,13 @@ def interior(p):
         strip = strip & Box(2400, 1500, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, 1254.0, 0)))   # ends on the dash, where its lower edge meets it
         strip = strip & Box(2400, 3000, 1600, align=(Align.CENTER, Align.CENTER, Align.MAX)).moved(Location((0, 0, ZF - 800)))
         col = col + strip
+        # The upright merges into the diagonal support; it must not leave a separate spike in the
+        # windshield opening. Both still photographs bound the complete assembly's front outline.
+        for k in ('strip upper athens1', 'strip upper athens2'):
+            col = halfspace_cut(col, *hull_pl[k])
+        actual_ws, actual_n = panels(p)['windshield'][:2]
+        col = col - prism(actual_ws, actual_n, out=400.0, depth=10.0)
+        col = col & hull(p, inset=10.0)  # the trim must stay inside the corrected physical body
         apil.append(col)
     out['a_pillar_inner'] = Compound(apil)
     out['rear_wall'] = (SH([(c['cab_rear_s'] - 26, c['floor']), (c['cab_rear_s'] + 5, c['floor']), (c['cab_rear_s'] + 5, 2000), (c['cab_rear_s'] - 26, 2000)], -1300, 1300) & inner)
@@ -1772,15 +1880,11 @@ def details(p):
     out['lamp_cells'] = cells
     # The windshield's black frit: an opaque band printed on the glass's inner face, so the A-pillar and dash
     # trim don't show through at its edges (c134). Measured on c134 against the glass's 1,581 mm bottom
-    # width and 1,472 mm slant: about 75 wide down the sides, 65 along the cowl, 280 under the roof edge,
-    # the clear area's lower corners cut off (about 380 along the cowl, 110 up the side).
+    # width and 1,472 mm slant: about 75 wide down the sides, 65 along the cowl, 280 under the roof edge.
+    # The bowed bottom and smaller corner cutoffs now follow Tesla's service drawing (GUID-CAFA82BC),
+    # scaled to this pane: 250 along the bottom, 110 up the side (the former 380 was too broad).
     ws, wn = panels(p)['windshield'][:2]
-    clear = inset_polygon(ws, wn, [75.0, 280.0, 75.0, 65.0])
-    def cut_corner(i, along_bottom, along_side):
-        c, b, s = clear[i], clear[3 if i == 0 else 0], clear[1 if i == 0 else 2]
-        return [c + (s - c) / np.linalg.norm(s - c) * along_side, c + (b - c) / np.linalg.norm(b - c) * along_bottom]
-    lo_l, lo_r = cut_corner(0, 380.0, 110.0), cut_corner(3, 380.0, 110.0)
-    clear = [lo_l[1], lo_l[0], clear[1], clear[2], lo_r[0], lo_r[1]]
+    clear = windshield_clear(p)
     # Inside the glass (its outer face 1 mm under the facet, its inner face 7.8 mm under): a 0.6 mm layer
     # near the inner face, so the tinted glass lies over it seen from outside.
     out['frit'] = [prism(inset_polygon(ws, wn, 0.6), wn, out=-6.8, depth=7.4) - prism(clear, wn, out=-6.0, depth=9.0)]
@@ -2097,7 +2201,12 @@ if __name__ == '__main__':
     groups = {'glass': [], 'tonneau': [], 'bay': [], 'light_w': [], 'band': []}
     for name, (pts, n, depth, inset, kind) in panels(p).items():
         body, panel = recess(body, inner if inset == 1.0 else hull(p, inset=inset), pts, n, depth)
-        groups[kind].append(panel)
+        if name == 'windshield':
+            save(panel, 'windshield_glass')
+        elif name == 'rear_glass':                  # the glass roof: its own tint (assemble.py GLASS_VLT)
+            save(panel, 'roof_glass')
+        else:
+            groups[kind].append(panel)
     # The plate pocket runs up under the tailgate: the plate's top (657) stands above the bumper's (c069, c006).
     zt, ph, pd = ZR + p['bumper_r_out'], REAR['pocket_half'], REAR['pocket_depth']
     body = body - Box(2 * ph, BED['gate_bottom'] - 2 - (p['bumper_r_h'] - 10), ZR + pd - zt + 2, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(Location((0, p['bumper_r_h'] - 10, zt - 1)))
@@ -2172,6 +2281,7 @@ if __name__ == '__main__':
     save(cp['rear_hitch'], 'rear_hitch')
     save(cp['rear_reverse'], 'light_reverse')
     save(cp['rear_plate'], 'rear_plate', tolerance=0.3, angular=0.3)
+    save(cp['front_plate'], 'front_plate', tolerance=0.3, angular=0.3)
     mirrors_rest, mirror_pieces = split_doors(both_sides(mirror_part(p)), regions)     # the mirrors ride on the front doors
     # Two-tone, as on the truck (c003, dgRcedIkNOM-04): a satin grey cap over the black base and arm, split at
     # the base's top.
@@ -2214,6 +2324,8 @@ if __name__ == '__main__':
         'wellX': WELL_X, 'bodyHalf': BW,
         'wheels': {f'{a}{"l" if s > 0 else "r"}': wheel_centre(p, a, s).tolist() for a in AXLES for s in (1, -1)},
         'planes': [[pt.tolist(), n.tolist()] for pt, n in planes(p).values()],
+        'facetPlanes': {k: [pt.tolist(), n.tolist()] for k, (pt, n) in planes(p).items()},
+        'cowlZ': ZF - p['cowl_s'],
         'seatEyes': seat_eyes(p),
         'screens': screens(p),
         'wiper': dict(zip(('pivot', 'axis', 'sweepDeg'), (lambda q: (q[0].tolist(), q[1].tolist(), q[2]))(wiper_pivot(p)))),

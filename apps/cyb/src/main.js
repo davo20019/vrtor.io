@@ -238,6 +238,11 @@ async function loadTruck() {
   // wherever the surroundings change brightness. Filtering it per pixel blurs it smoothly, as a real
   // brushed finish does; 8 samples is enough for it and cheap enough for Quest.
   for (const mat of container.materials) {
+    if (mat.name === 'windshield_clear') {
+      // Clear head-on, with stronger reflections at the windshield's shallow viewing angle.
+      mat.useLinearAlphaFresnel = true;
+      mat.backFaceCulling = true;
+    }
     if (mat.ambientTexture) mat.ambientTextureImpactOnAnalyticalLights = 1;
     if (mat.metallic >= 0.5 && !mat.reflectionTexture) {
       mat.realTimeFiltering = true;
@@ -948,14 +953,20 @@ function applyGlows() {
 }
 
 /**
- * The windows, which share one dark tinted material (each door pane its own copy, for its clip plane). From outside the tint is the truck's look; from a
- * seat the eye has adjusted to it, so the view out is kept close to clear (a windscreen passes most light).
+ * The windows, each tinted as the new truck's glass is (the model's materials carry the factory light transmission:
+ * front side glass 72%, rear side 23%, roof 3%; each door pane has its own copy, for its clip plane). From outside
+ * they show as they are. From a seat the eye has adjusted to the tint, so the view out is kept close to clear: no
+ * pane is darker than 0.35. The B-pillar glass between the doors is opaque black and stays so.
  */
-let glass = null;
+let roofGlass = null;
+const restAlpha = new Map();
 function updateGlass() {
-  const alpha = seat === 'outside' ? 1 : 0.35;
-  if (glass) glass.alpha = alpha;
-  for (const w of Object.values(panes)) w.mat.alpha = alpha;
+  const alpha = (mat) => {
+    if (!restAlpha.has(mat)) restAlpha.set(mat, mat.alpha);
+    return seat === 'outside' ? restAlpha.get(mat) : Math.min(restAlpha.get(mat), 0.35);
+  };
+  if (roofGlass) roofGlass.alpha = alpha(roofGlass);
+  for (const w of Object.values(panes)) w.mat.alpha = alpha(w.mat);
 }
 
 /** The screen's big button: start the ride from a seat, drive on after a stop, drive it again. */
@@ -1642,7 +1653,7 @@ async function start() {
       if (cardOpen) render();
     },
   });
-  glass = truck.root.getChildMeshes().find((m) => m.name === 'glass')?.material ?? null;
+  roofGlass = truck.root.getChildMeshes().find((m) => m.name === 'roof_glass')?.material ?? null;
   setUpSeatSpots();
   for (const m of truck.root.getChildMeshes()) m.isPickable = doorTargets.has(m) || screen.meshes.includes(m);
   if (yokeControls) {

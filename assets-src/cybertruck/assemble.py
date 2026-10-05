@@ -60,10 +60,26 @@ def material(name, color, rough, metallic=0.0, emit=None, emit_strength=0.0, nor
         nt.links.new(nm.outputs['Normal'], p.inputs['Normal'])
     return m
 
+# Factory visible-light transmission of each glass, measured on a new truck with a calibrated meter (+-2%): windshield
+# 76, front side windows and A-pillar triangles 72, rear side windows 23, roof glass 3 (rb92gt, Cybertruck Owners
+# Club, "Window Tint VLT From Factory"; the rear bed window 26 there, 24.9 by SCTesla at a tint shop; the model has
+# no bed window). Blended in the display's gamma space (the app tone-maps before it blends), a pane of
+# transmission T passes T^(1/2.2) of what is behind it, so its alpha is 1 - T^(1/2.2).
+GLASS_VLT = {'windshield': 0.76, 'front_side': 0.72, 'rear_side': 0.23, 'roof': 0.03}
+
+def glass_alpha(vlt):
+    return round(1 - vlt ** (1 / 2.2), 3)
+
 M = {
     'steel': material('brushed_stainless', srgb(196, 196, 192), 0.33, metallic=1.0, rough_map=PARTS / 'steel_rough.png'),
     'liner': material('wheel_well_black', srgb(22, 22, 23), 0.85),
-    'glass': material('glass_tinted', srgb(8, 9, 10), 0.04, alpha=0.3),      # see-through, so the cabin shows and a visitor inside sees out
+    # Glass is neutral-density black at the opacity that passes the real truck's light. The B-pillar between the
+    # doors is black glass, opaque.
+    'glass': material('glass_pillar', srgb(8, 9, 10), 0.04),
+    'glass_front': material('glass_front', srgb(8, 9, 10), 0.04, alpha=glass_alpha(GLASS_VLT['front_side'])),
+    'glass_rear': material('glass_rear', srgb(8, 9, 10), 0.04, alpha=glass_alpha(GLASS_VLT['rear_side'])),
+    'glass_roof': material('glass_roof', srgb(8, 9, 10), 0.04, alpha=glass_alpha(GLASS_VLT['roof'])),
+    'windshield': material('windshield_clear', srgb(65, 79, 80), 0.035, alpha=glass_alpha(GLASS_VLT['windshield'])),
     'cabin': material('cabin_charcoal', srgb(38, 38, 40), 0.85),
     'trim_white': material('trim_white', srgb(222, 222, 216), 0.5),
     # The dash top and pillars are mid-grey suede in the walkaround frames (dgRcedIkNOM-14, -30, -31), not charcoal.
@@ -190,10 +206,11 @@ def inside(pt, poly, grow=2.0):
 body = stl('body', M['steel'])
 body.name = body.data.name = 'steel'      # the node 'body' is the group holding every body part
 box_uv(body)
-PLANES = [(Vector(pt), Vector(n)) for pt, n in GEO['planes']]
+PLANES = {k: (Vector(pt), Vector(n)) for k, (pt, n) in GEO['facetPlanes'].items()}
 def depth(c):
-    """How far inside the outer skin a point is (mm): the least distance to any facet plane."""
-    return min(-(c - pt).dot(n) for pt, n in PLANES)
+    """Distance under the active outer facets (mm), respecting the concave cowl junction."""
+    inactive = 'roof' if c.z >= GEO['cowlZ'] else 'hood'
+    return min(-(c - pt).dot(n) for k, (pt, n) in PLANES.items() if k != inactive)
 def classify(o):
     """Steel outside; wheel-well walls and the underside black; the cabin's walls (and seams) dark trim."""
     if len(o.data.materials) < 3:
@@ -211,6 +228,8 @@ def classify(o):
 classify(body)
 
 glass = stl('glass', M['glass'])
+roof_glass = stl('roof_glass', M['glass_roof'])
+windshield_glass = stl('windshield_glass', M['windshield'])
 tonneau = stl('tonneau', M['tonneau']); box_uv(tonneau, tile_mm=800)
 lf = stl('light_front', M['light_w'])
 # The rear band and its lamps (cad.py rear_lights; the gate_* ones ride on the tailgate, below).
@@ -279,6 +298,9 @@ bed_parts.append(plate)
 licence = stl('rear_plate', M['plate'], smooth_angle=10)
 planar_uv(licence, (0, 1), flip_u=True)             # seen from behind, the truck's left (+x) is the plate's left
 rear_parts.append(licence)
+front_licence = stl('front_plate', M['plate'], smooth_angle=10)
+planar_uv(front_licence, (0, 1))                    # seen from the front, the truck's left (+x) is the plate's right
+front_bits.append(front_licence)
 cover_panel = stl('outlet_cover', M['bed'])
 cover_panel.name = cover_panel.data.name = 'outlet_cover_panel'      # the node is 'outlet_cover'
 hinged['outlet_cover'] = [cover_panel]
@@ -335,6 +357,7 @@ door_parts = {}
 for k in GEO['doors']:
     door_parts[k] = []
     files = [(sfx, M[m]) for sfx, m in DOOR_PARTS.items()]
+    files = [(sfx, M['glass_front' if k[0] == 'f' else 'glass_rear'] if sfx == 'glass' else mat) for sfx, mat in files]    # front doors 72%, rear 23%
     files += sorted((f.stem[len(f'door_{k}_'):], M[INTERIOR[f.stem[len(f'door_{k}_int_'):]]]) for f in PARTS.glob(f'door_{k}_int_*.stl'))
     for suffix, mat in files:
         f = PARTS / f'door_{k}_{suffix}.stl'
@@ -386,7 +409,7 @@ disc = stl('brake_disc', M['disc'], smooth_angle=50)
 caliper = stl('caliper', M['caliper'])
 templates = (tyre, rim, lugs, cover, disc, caliper)
 all_door_parts = [o for v in door_parts.values() for o in v]
-for o in [x for x in (body, glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper, wiper_blade, slat) if x] + [*front_bits, *rear_parts, *cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
+for o in [x for x in (body, glass, roof_glass, windshield_glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper, wiper_blade, slat) if x] + [*front_bits, *rear_parts, *cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
     o.data.transform(TO_BLENDER)         # UVs and materials were set in the model frame; now move to Blender's
 
 def empty(name, loc=(0, 0, 0), parent=None):
@@ -398,7 +421,7 @@ def empty(name, loc=(0, 0, 0), parent=None):
 
 root = empty('cybertruck')
 body_node = empty('body', parent=root)
-for o in [x for x in (body, glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper) if x] + [*front_bits, *rear_parts, *detail_parts, *button_parts, *bed_parts]:
+for o in [x for x in (body, glass, roof_glass, windshield_glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper) if x] + [*front_bits, *rear_parts, *detail_parts, *button_parts, *bed_parts]:
     o.parent = body_node
 wiper_pivot = Vector(to_blender(GEO['wiper']['pivot']))
 wiper_node = empty('wiper_arm', loc=wiper_pivot, parent=root)
@@ -467,7 +490,11 @@ bpy.context.view_layer.update()
 # go dark and the faces open to the windows stay bright, as in the real cabin.
 ROUND = {'seats_front': 24, 'seats_rear': 24, 'rear_armrest': 14, 'dash_white': 28, 'console': 10, 'console_rim': 3, 'console_lid': 16, 'seat_base': 8,
          'dash_top': 6, 'dash_lower': 6, 'dash_face': 4, 'yoke': 9, 'yoke_column': 5, 'visors': 8, 'screen_bezel': 3, 'overhead': 6,
-         'armrest': 14, 'door_lower': 6, 'trim_white': 14, 'cap': 6}
+         'armrest': 14, 'door_lower': 6, 'trim_white': 14, 'cap': 6,
+         # The removed trim in Tesla's windshield service photos has rolled edges. The sight-plane
+         # hull in cad.py fixes the silhouettes; a small inward bevel softens its angular section.
+         # Radius is an approximation, not a depth measurement from the unsolved cross-cab video.
+         'a_pillar_inner': 14}
 NO_BAKE = ('screen', 'rear_screen', 'ambient', 'open', 'switch', 'mirror_glass',
            'yoke_btn_signal_right', 'yoke_btn_signal_left', 'yoke_btn_high_beam', 'yoke_btn_wiper')     # the yoke's keys: baked alone they came out darker than the pod round them
 
@@ -477,7 +504,7 @@ def part_key(o):
         return 'open'
     return n.split('_int_', 1)[1] if '_int_' in n else n[4:] if n.startswith('int_') else n
 
-ROUND_SEGMENTS = {'yoke': 5}             # the rim: a padded grip, round in section, not a bevelled plate
+ROUND_SEGMENTS = {'yoke': 5, 'a_pillar_inner': 4}             # the rim: a padded grip, round in section, not a bevelled plate
 
 def round_edges(o, width, segments=3):
     for m in list(o.modifiers):          # smooth-by-angle would mark the rounded edges sharp again; hardened normals shade instead
@@ -604,6 +631,8 @@ inside_parts = cabin_parts + [o for o in all_door_parts if '_int_' in o.name or 
 for o in inside_parts:
     w = ROUND.get(part_key(o))
     if w:
+        if part_key(o) == 'a_pillar_inner':
+            flat_faces(o)
         round_edges(o, w, ROUND_SEGMENTS.get(part_key(o), 3))
 bake_cabin([o for o in inside_parts if part_key(o) not in NO_BAKE],
            [o for o in bpy.context.scene.objects if o.type == 'MESH' and ('glass' in o.name or part_key(o) in ('ambient', 'screen', 'rear_screen'))])
@@ -652,7 +681,7 @@ info = {
              'note': 'parts turn together about the column; the column stays. controls: press the centre pad for the horn (manual, Steering: "press and hold the center pad"); the left pod\'s keys are the turn signals (right above, left below) and the high beam, the right pod\'s top outer key the wiper (a quick press: one wipe), each its own mesh over its printed symbol. signals: the amber corner lamps (lower lamp strip ends) on each side, which blink with that turn signal'},
     'wiper': {'node': 'wiper_arm', 'pivot': [v * 0.001 for v in GEO['wiper']['pivot']], 'axis': GEO['wiper']['axis'], 'sweepDeg': GEO['wiper']['sweepDeg'],
               'note': 'wiper_arm turns about axis (the windshield glass normal, glTF frame) through its pivot; parked it lies up the driver\'s A-pillar; one wipe turns it sweepDeg toward the passenger side, to horizontal along the cowl, and back (Owner\'s Manual, Windshield Wiper and Washers)'},
-    'cabin': 'node "cabin": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); the glass is see-through (alpha 0.3)',
+    'cabin': 'node "cabin": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); glass alpha from the factory light transmission: windshield 76%, front side 72%, rear side 23%, roof 3% (GLASS_VLT in assemble.py); the B-pillar glass is opaque',
 }
 (OUT / 'cybertruck.json').write_text(json.dumps(info, indent=2))
 print('assemble: wrote', OUT / 'cybertruck.glb')

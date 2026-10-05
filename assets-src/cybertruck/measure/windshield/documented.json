@@ -1,0 +1,32 @@
+{
+  "source": "NHTSA O20244500, TR-P44392-01-NC, data sheets 3 and 15",
+  "documented": {
+    "angle_deg": 19.9,
+    "top_width": 1433.0,
+    "bottom_width": 1785.0,
+    "slant_height": 1780.0
+  },
+  "previous_nominal": {
+    "angle_deg": 15.92,
+    "top_width": 1158.83,
+    "bottom_width": 1581.1,
+    "slant_height": 1457.14
+  },
+  "updated_nominal": {
+    "angle_deg": 19.9,
+    "top_width": 1433.0,
+    "bottom_width": 1785.0,
+    "slant_height": 1780.0
+  },
+  "corner_station_mm": 711.9,
+  "body_change": "piecewise hood and windshield facets; fitted shoulder retained",
+  "estimated": [
+    "absolute top placement",
+    "lower bow",
+    "frit widths and cutoff",
+    "glass thickness and tint",
+    "support cross-section and return depth",
+    "14 mm support rounding"
+  ],
+  "trim_camera_tolerance_mm": 18
+}

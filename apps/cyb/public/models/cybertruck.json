@@ -3935,17 +3935,17 @@
   "wiper": {
     "node": "wiper_arm",
     "pivot": [
-      0.760423538085059,
-      1.3776619998912512,
-      1.7294700000000003
+      0.892158680891376,
+      1.1669286937249224,
+      2.0019028660785456
     ],
     "axis": [
       -0.0,
-      0.9616629351449006,
-      0.2742342049571763
+      0.940288127010419,
+      0.34037955021305016
     ],
-    "sweepDeg": 82.59677144097404,
+    "sweepDeg": 84.15205034463318,
     "note": "wiper_arm turns about axis (the windshield glass normal, glTF frame) through its pivot; parked it lies up the driver's A-pillar; one wipe turns it sweepDeg toward the passenger side, to horizontal along the cowl, and back (Owner's Manual, Windshield Wiper and Washers)"
   },
-  "cabin": "node \"cabin\": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); the glass is see-through (alpha 0.3)"
+  "cabin": "node \"cabin\": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); glass alpha from the factory light transmission: windshield 76%, front side 72%, rear side 23%, roof 3% (GLASS_VLT in assemble.py); the B-pillar glass is opaque"
 }

@@ -1,0 +1,168 @@
+{
+ "athens1": [
+  {
+   "px": [
+    700,
+    470
+   ],
+   "glass": "windshield_glass",
+   "glassPointMm": [
+    661.9,
+    1330.9,
+    1526.2
+   ],
+   "firstOpaque": null,
+   "pointMm": null,
+   "distanceMm": null
+  },
+  {
+   "px": [
+    700,
+    480
+   ],
+   "glass": "windshield_glass",
+   "glassPointMm": [
+    672.4,
+    1322.3,
+    1549.8
+   ],
+   "firstOpaque": null,
+   "pointMm": null,
+   "distanceMm": null
+  },
+  {
+   "px": [
+    720,
+    480
+   ],
+   "glass": "windshield_glass",
+   "glassPointMm": [
+    650.3,
+    1322.0,
+    1550.6
+   ],
+   "firstOpaque": null,
+   "pointMm": null,
+   "distanceMm": null
+  },
+  {
+   "px": [
+    740,
+    490
+   ],
+   "glass": "windshield_glass",
+   "glassPointMm": [
+    637.9,
+    1312.5,
+    1576.8
+   ],
+   "firstOpaque": null,
+   "pointMm": null,
+   "distanceMm": null
+  },
+  {
+   "px": [
+    760,
+    500
+   ],
+   "glass": "windshield_glass",
+   "glassPointMm": [
+    624.5,
+    1302.3,
+    1604.9
+   ],
+   "firstOpaque": null,
+   "pointMm": null,
+   "distanceMm": null
+  },
+  {
+   "px": [
+    800,
+    490
+   ],
+   "glass": "windshield_glass",
+   "glassPointMm": [
+    569.1,
+    1311.6,
+    1579.4
+   ],
+   "firstOpaque": null,
+   "pointMm": null,
+   "distanceMm": null
+  }
+ ],
+ "athens2-f921": [
+  {
+   "px": [
+    500,
+    1000
+   ],
+   "glass": "windshield_glass",
+   "glassPointMm": [
+    767.4,
+    1349.8,
+    1473.8
+   ],
+   "firstOpaque": "int_a_pillar_inner",
+   "pointMm": [
+    722.9,
+    1343.7,
+    1401.1
+   ],
+   "distanceMm": 761.2
+  },
+  {
+   "px": [
+    550,
+    1020
+   ],
+   "glass": "windshield_glass",
+   "glassPointMm": [
+    745.5,
+    1337.5,
+    1507.7
+   ],
+   "firstOpaque": "int_a_pillar_inner",
+   "pointMm": [
+    695.6,
+    1331.7,
+    1417.7
+   ],
+   "distanceMm": 761.0
+  },
+  {
+   "px": [
+    600,
+    1040
+   ],
+   "glass": "windshield_glass",
+   "glassPointMm": [
+    721.6,
+    1324.1,
+    1544.9
+   ],
+   "firstOpaque": "int_a_pillar_inner",
+   "pointMm": [
+    666.9,
+    1319.2,
+    1435.1
+   ],
+   "distanceMm": 762.4
+  },
+  {
+   "px": [
+    650,
+    1060
+   ],
+   "glass": "windshield_glass",
+   "glassPointMm": [
+    695.2,
+    1309.3,
+    1585.8
+   ],
+   "firstOpaque": null,
+   "pointMm": null,
+   "distanceMm": null
+  }
+ ]
+}

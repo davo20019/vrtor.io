@@ -104,12 +104,12 @@ the published 257 clearance and 1,793.8 height to 1%) and on c022 (side, 3.0 mm/
 c150 (front) and c069 (rear). Tesla's front drawing is a perspective render (its tyres come out 2,265
 wide), so widths are not taken from it.
 
-### Body shell: one convex solid of planar facets
+### Body shell: planar facets with a bounded hood and windshield
 
-Every steel surface of the Cybertruck is flat, and the shell is convex apart from the wheel arches and
-the black bumpers, which are separate cuts and parts. So the shell is built as the **convex hull of a
-small set of named corner points** (mirrored left/right). Each parameter moves a corner; the facets
-between them come out flat by construction. Facets, front to back:
+The steel facets are flat. The side planes clip the shell; the hood applies ahead of the cowl and the
+windshield plane behind it. The documented 19.9-degree windshield is steeper than the hood, so their
+concave junction cannot be modelled by intersecting both infinite planes. Named corner points and
+facet planes remain mirrored left/right. Facets, front to back:
 
 1. **Front face**: a centre panel below the light bar, leaning back to the bumper top, plus an angled
    corner facet on each side (the face is chamfered in plan, c032, c150).
@@ -117,13 +117,13 @@ between them come out flat by construction. Facets, front to back:
    full width; its outer ends turn down and back along the corner facets (c150, c001).
 3. **Hood**: one plane from the light bar up to the windshield base; a narrow **shoulder facet** on each
    side drops to the fender line (c150).
-4. **Windshield and glass roof**: one plane, slightly flatter than the hood (drawing: hood ~0.38, glass
-   ~0.30 rise per run), up to the **roof apex**, a straight transverse edge at full height.
+4. **Windshield and glass roof**: a 19.9-degree plane, from NHTSA's real-vehicle measurement, up to
+   the **roof apex**, a straight transverse edge at full height.
 5. **Rear deck**: from the apex a single plane falls to the top of the tailgate (drawing: 0.14 rise per
    run). It holds the rear roof glass, then the **tonneau** (a black slatted cover sunk between the
    sails).
 6. **Flanks**: flat vertical body sides from a lower crease up to the beltline. Above it the **greenhouse
-   and sail facets** lean inward: narrow at the apex (roof about 1,300 wide, c150), almost full width at
+   and sail facets** lean inward: narrow at the apex (roof edge now 1,486 wide around the documented 1,433 mm pane), almost full width at
    the tail (c069). The hull splits this into a window facet and a sail facet.
 7. **Lower tuck**: below the crease, a facet leaning inward to the sill (the darker band at the bottom
    of the doors in c022).
@@ -147,6 +147,13 @@ Cuts and fittings on the shell:
 - **Window pockets**: front and rear side windows, the windshield and glass roof, and the rear roof
   glass. Each is a shallow pocket holding a dark glass panel 1 mm below the steel (no coplanar faces).
   Black trim and pillars are the same panel.
+- **Glass tint** (2026-10-04): each glass passes the light the new truck's does, from a calibrated meter (+-2%)
+  on a factory truck (rb92gt, Cybertruck Owners Club, "Window Tint VLT From Factory"): windshield 76%, front side
+  windows and A-pillar triangles 72%, rear side windows 23%, glass roof 3%, rear bed window 26% (24.9% at a tint
+  shop, SCTesla). One owner's truck, no model year given. The model has no bed window. `GLASS_VLT` in assemble.py
+  turns each into an alpha of 1 - T^(1/2.2), since the app tone-maps before it blends. The B-pillar glass between
+  the doors is opaque black. In a seat the app lifts the darker panes to alpha 0.35 so the view out stays usable.
+  This replaces the single alpha-0.3 glass, which the app drew fully opaque from outside.
 - **Tonneau pocket**: from the end of the rear glass to the tail, between the sails, holding the black
   tonneau panel. Its slats come from a normal map.
 - **Light bars**: front, a thin white emissive strip on the light bar edge; rear, a smoked black band
@@ -241,6 +248,7 @@ measured (650). Jobs and crops are in measure/bumper/.
 | Steel's lower edge at the side | 682 (lamp_h 32, unchanged) | c059 684; c150 shows it falling along the corner facets |
 | Top band | 650 to 564 | manual 564; c150 58 px |
 | Plate recess | 320 x 70, 570 to 640, 8 deep | c150 314 wide, 71 high; manual 340 to 360 wide (perspective) |
+| Front plate | 305 x 152, centre x -8, 469 to 621, 2 thick, 2 proud of the face; the same Virginia BELLA plate as the rear (Virginia issues two) | foot from c150's plate seat (469); top from c094 (57 px over the intake's top at 0.9 mm per px of the plate's width, 621). It hangs over the intake's top edge. Open: c150's seat (469 to 565) and the built recess (570 to 640) disagree, left as is |
 | Intake | +-640, 414 to 564, 60 deep | at the creases in c150 (px 990, 1,877); manual 414 |
 | Grille | vertical bars every 163 mm, two horizontal at thirds | c150 113 px pitch |
 | Tow-hook covers | 510 to 617 out, 422 to 490 high | c150 px 1,005 to 1,080, at 0.49 to 0.95 of the intake's height |
@@ -503,7 +511,7 @@ front: measure/console/athens3b.md), the dash render's camera, and frames dgRced
 | Centre ribs | six brushed aluminium ribs along the truck, 28 wide over +-125, black between, from the dash's lower edge (881 high, 1,444 back) down to the floor at 1,640 and on under the console | dash camera (the ribs' ends above the console); dgRcedIkNOM-16, -25; int-athens-3. Slope and rib height: guess |
 | Dash block ends | pointed, on the block's face: top corner 783 out at 1,162, tip 832 out at 1,120, bottom corner 750 out at 1,027; the end faces run straight back | int-athens-1 through its solved camera (measure/console/athens1-whiteend.md; the block's top and bottom read within 8 mm of the model there); int-athens-3, dgRcedIkNOM-15, 3:14 |
 | Front door trim | starts 12 behind the door's edge as before (the 20 mm reach forward is undone: the pillar's foot fills the corner) | int-athens-1, dgRcedIkNOM 3:12, 3:14 |
-| Side glass tip | 800 back on the beltline, about over the front wheel; the glass's top edge through where it ends seen from the driver's seat (1,254 high at 947 back, 1,321 at 1,136, 1,363 at 1,260), 60 under the roof edge at the door's front seam (1,553), then the margin to the apex | c003 through its fitted camera (measure/windshield/c003-sidetip.md), c022; the three points between: int-athens-1 through its solved camera (measure/console/athens1-strip.md). It was 1,514 with a straight top edge to the apex, which left a steel triangle where the glass is; then a straight line from the tip to the seam, up to 16 low at the front |
+| Side glass tip | 800 back on the beltline, about over the front wheel; the glass's top edge through where it ends seen from the driver's seat (1,254 high at 947 back, 1,321 at 1,136, 1,363 at 1,260), 60 under the roof edge at the door's front seam (1,553), then the margin to the apex | c003 through its fitted camera (measure/windshield/c003-sidetip.md), c022; the three points between: int-athens-1 through its solved camera (measure/console/athens1-strip.md). It was 1,514 with a straight top edge to the apex, which left a steel triangle where the glass is; then a straight line from the tip to the seam, up to 16 low at the front. **Now (2026-10-04):** the glass's own top edge is one straight line from the tip to the roof edge less the margin at the apex (`side_glass_top`, no deviation from the line along its length), as on the real truck, where the window is a wedge with straight top and bottom edges meeting in a sharp tip (c003, c027); the kinked edge through the int-athens-1 points read as a visible bend from outside. Those points are the A-pillar trim's lower edge, which covers the glass from inside, so they now only place the strip (`side_glass_seen`), unchanged. The straight edge runs 23 under them at 947 back, 22 at 1,136 and 20 at 1,260, and 30 over the 1,553 seam point (60 under the roof edge, 1,418): from the driver's seat expect a thin dark sliver between the glass and the strip's lower edge there, which int-athens-1 does not show. Not yet rebuilt or checked against int-athens-1/-2 |
 | Front door glass | reaches forward with the glass to the tip, so it opens with the door | as the real truck |
 | A-pillar inner trim | a suede post at the door's front edge and, ahead of it, a strip down the windshield's edge to the dash, with a triangle of the side glass showing between them over the dash; above the triangle post and strip are one surface running up the windshield's edge to the roof apex, covering the glass's black band out to the clear glass. Post: rear face on the window opening's edge (1,410 back at the dash, 1,470 at 1,370, corner at 1,496, 1,399); its front and inner sides drawn up to the sight planes through its outline in int-athens-1 and dgRcedIkNOM-32, and (mirrored) dgRcedIkNOM at 6:16, so it shows those outlines from those cameras. Strip: drawn up to the sight planes through its two outlines in int-athens-1 (the lower one on the side glass's top edge, the upper one hanging under the windshield) and its lower outline at 6:16; its lower sight planes pivot on its edge on the glass; it ends on the dash at 1,254 high. Body steel under the strip ahead of the firewall carved away (the glass openings left a wedge of shell there that showed) | measure/console/pillar_hull.py (cameras: int-athens-1 5.9 px RMS; dgRcedIkNOM-32 9 px, the edge holding within 15 mm over 924 to 1,300 px of focal; 6:16 8.5 px, focal fixed at what the video's 7:13 frame solves to). Checked by casting each camera's rays through the model: int-athens-1, post edge 464 against the photo's 461 to 464 px, the triangle's edges within 2 to 6 px, the strip's upper outline within a few px; int-athens-2 (not used to build it, 6.9 px) matches its photo row by row to one 25 px grid step. Supersedes the athens-3 reading and the post's 130-deep inner-face guess (athens1-post.md) |
 | Windshield black band from the cabin | matte black (it was the exterior pillars' gloss, which reflected the sky as a light sliver at the lower corner) | int-athens-1, -2: a dark lip beside the A-pillar trim |
@@ -545,15 +553,52 @@ c003 puts where the model has it (front about 1,580 to 1,600).
   these are ratios in the manual renders, not solved measurements.
 - The yoke's depths: rim 30 deep and rounded 9 mm front and back (in assemble.py), pad 16 proud, pods 7,
   chin 9, scroll wheels 4. No picture shows the yoke edge-on closely enough to measure them.
-- A-pillar post's depth along the truck and the strip's cross-section between its outlines: every interior photo
-  looks at them from behind or below, so only their outlines are measured (drawn up to them). The video's
-  cross-cab frames (7:13, 6:16) can't be solved closer than 30 to 50 px on that side of the frame (their references
-  disagree by up to 200 px even with lens distortion solved), so they set only the strip underside's tilt.
-- The windshield's lower outer corner: int-athens-1 and -2 both see clear glass just outboard of the strip's lower
-  end along rays that cross the windshield's plane 800 to 960 back, ahead of the model's windshield bottom (984,
-  from the exterior fit). The model shows the cowl's steel there. Needs an exterior photo of that corner.
+- A-pillar post's depth along the truck and the strip's section between the measured outlines. Tesla's
+  windshield service photos now show the removed trim and its returns (refs/tesla/service-windshield/),
+  so this is no longer hidden in every reference. They support a moulded, rounded return (14 mm rounding),
+  but have no reliable scale or solved camera for the depth. The radius is approximate. The video's
+  cross-cab frames (7:13, 6:16) still miss by 30 to 50 px on that side, so they cannot establish an exact section.
+- Windshield placement relative to the roof apex remains photo-derived. The glass's own width, slant height,
+  and slope now follow real-vehicle NHTSA measurements rather than the earlier exterior silhouette fit.
+  The bow and black-border corner transitions follow Tesla's service drawing and remain proportional estimates.
+  The rejected c134 camera is retained as diagnostic evidence, not as a source of absolute dimensions.
 - The tweeter grille on the A-pillar, seat belts, the drive-mode selector and buttons on the overhead
   console, coat hooks and dome lights: not modelled.
+
+### Windshield and support rework (2026-10-04)
+
+The real 2024 Cybertruck NHTSA test report (O20244500, TR-P44392-01-NC) provides measurements missed by the
+silhouette fit. Printed page 10, data sheet 3, gives WA = 19.9 degrees from horizontal. Printed page 25,
+data sheet 15, gives A = 1,433 mm top width, C = 1,785 mm bottom width and D = 1,780 mm pane height.
+The diagram distinguishes these from protected-zone B, E and F. The saved two-page excerpt is
+refs/nhtsa/windshield-measurements.pdf; report URL and conventions are in refs/nhtsa/SOURCES.md.
+
+The pane now has those dimensions and slope. Its top stays 40 mm ahead of the fitted roof apex: that absolute
+placement is a photo estimate. The larger pane requires a wider roof edge and an earlier, lower cowl. The
+hood and windshield meet in a concave side profile, so hull construction bounds each plane to its own
+longitudinal region. The fitted shoulder facets remain independent. The dash retains its measured rear lip
+and follows the lower glass at the front, removing the former opaque ledge across the photographed corner.
+
+Tesla's windshield service procedure supplies the bowed lower edge, clear-glass boundary and removed
+forward-trim shape. The bow remains about 60 mm, using twelve segments; the frit has a 250 mm lower corner
+transition. Those small dimensions are estimates from the drawing, not Tesla dimension callouts. The
+windshield is its own continuous, roughly 7 mm deep solid pane with a faint blue-green, alpha-blended glass
+material; the opaque fired border is a separate mesh. Tint, thickness and border widths are appearance
+estimates. No reference image is shipped as a texture.
+
+The black support is bounded by the solved Athens 1 and Athens 2 outlines, with d32 retained for the post
+and the cross-cab video's lower outline used only for underside tilt. The passenger-seat video's post plane
+is no longer used to set depth. The upright terminates in the diagonal bar instead of leaving an angular
+projection into the windshield. Its inboard return reaches 100 mm from the former pane attachment line,
+with the two still-photo outlines constraining its visible width. A 14 mm, four-segment rounding softens
+its moulded section; these section/return dimensions are estimates, not documented trim measurements.
+The assembly is capped below the actual glass only within the glass footprint.
+
+Tesla's Collision Repair Manual gives body widths between marked structural holes; these must not be used
+as trim dimensions. Saved diagrams and measurement conventions are in refs/tesla/body-dimensions/.
+Review and verification: review/windshield/report.md and comparison.png. Exact post depth still needs
+scaled views or direct measurements of the removed trim. The earlier c134 camera is rejected for dimensions.
+
 
 ## Bed and tonneau, measured (2026-10-03)
 
@@ -637,4 +682,3 @@ about 64 degrees; folded at that angle the side view lengthens to about 300 to 3
 Still guesses: the arm's shape under the base (it is mostly hidden), the edge rounding (the facets are left
 sharp). The housing is two-tone: a satin grey cap (sRGB 70 to 110 in c003 and dgRcedIkNOM-04; built 78, 80, 84)
 over the black base and arm, split at the base's top.
-

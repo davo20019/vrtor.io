@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-04",
+  "model_bytes": 2861372,
+  "model_sha256": "66e13971cab7240e5efbf276d25f5173a7a7f00d6d9761130105aeffd8b2d478",
+  "unique_mesh_triangles": 73174,
+  "triangle_budget": 60000,
+  "triangle_budget_met": false,
+  "baseline_unique_mesh_triangles": 71488,
+  "size_budget_bytes": 3000000,
+  "size_budget_met": true,
+  "glass_probes_passed": 7,
+  "support_probes_passed": 3,
+  "documented_dimensions": "PASS (documented.json)",
+  "full_model_build": "PASS (CAD, textures, Blender AO, Meshopt/WebP)",
+  "app_build": "PASS; existing Vite chunk-size warning",
+  "desktop_browser": "PASS; driver view renders, no console errors or warnings",
+  "headset_tested": false,
+  "copies": {
+    "cybertruck.glb": {
+      "source_matches_public": true,
+      "public_matches_dist": true
+    },
+    "cybertruck.json": {
+      "source_matches_public": true,
+      "public_matches_dist": true
+    }
+  },
+  "limits": [
+    "absolute pane placement remains photo-derived",
+    "support cross-section, depth and rounding remain photo estimates"
+  ]
+}
