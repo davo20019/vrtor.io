@@ -653,6 +653,27 @@ face), the travel time (16 s), the liner's colour, the switch pad's size (156 x 
 size (105 x 210), the tie-downs' shape. Not modelled: the L-tracks (optional equipment), the charge port's
 manual release on the left pillar, the attachment points under the rail appliques.
 
+## Door window edge and A-pillar post, measured (2026-10-04)
+
+On the real truck the front door's frameless glass starts right at the mirror, at a black rounded edge on the body;
+ahead of it the glass triangle is fixed to the body, with the suede A-pillar post standing inside it. With the door
+open the door carries only the glass behind the edge (c166). The model had the post 250 mm too far forward, ending
+at the door seam, and the door carrying the whole triangle, so the mirror stood alone with clear glass behind it.
+
+| What | Value | Source |
+|---|---|---|
+| Window edge (glass triangle / door glass) | 1,710 to 1,785 back, belt to the roof edge less 20, 14 to 64 inside the window plane, on the body | c164 (Miami, side) 1,730 and c165 (Hong Kong, side) 1,763, each scaled from the two front-door seams (1,503, 2,636); c003 through its solved camera 1,722 to 1,797 after its seam bias (measure/doorframe/c003-post.md) |
+| A-pillar post | moved 250 back above the dash (rear face 1,660 at 1,221 high to 1,746 at 1,399), 170 deep; its foot below the dash and the strip down the windshield's edge stay | the window edge above; int-athens-1's camera, which located the post, was solved from the dash and screen only and sat at 1,945 back, ahead of where a driver's eye can be (hip point 2,200, back reclined 22 deg), so what it placed off to the side came out too far forward |
+| Front door glass | starts at the window edge (1,785); the triangle ahead is body glass with the front side windows' tint | c166 |
+| Mirror, rechecked | base underside 0 to 5 above the door top (model 10), base 68 to 70 tall (63), top 194 above the underside (190); tip within 10 to 18 of the photo's from the seam | c003 (measure/doorframe/c003-mirror.md) |
+
+Checked against the whole cabin: the published front head room (1,058.8) holds only with the hip point where it is
+(moving the cabin 200 back drops it to 943), so the dash, yoke and seats stay; c003's apparent screen position
+(behind the yoke) was a misread. Guesses: the edge's depth into the cabin (50), the post's depth (170, its pre-move
+value). Not done: the edge's top curving back into the roof rail (c003, dgRcedIkNOM-11). int-athens-1, -2 and the
+6:16 frame were not re-solved; through their cameras the moved post now reads wider than before, close to the
+photos' width but no longer fitted to them.
+
 ## Door mirrors, measured (2026-10-03)
 
 Tesla folds the mirrors when the truck locks, and most parked street photos show them folded: c022, c059,

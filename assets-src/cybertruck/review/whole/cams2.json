@@ -1,0 +1,125 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "cameras": {
+  "athens1": {
+   "measure": "../../measure/console/athens1.camera.json",
+   "photo": "../../refs/web/int-athens-1.jpg",
+   "hide": [
+    "door_fl"
+   ]
+  },
+  "athens2": {
+   "measure": "../../measure/console/athens2-f921.camera.json",
+   "photo": "../../refs/web/int-athens-2.jpg",
+   "hide": [
+    "door_fl"
+   ]
+  },
+  "athens3": {
+   "measure": "../../measure/console/athens3b.camera.json",
+   "photo": "../../refs/web/int-athens-3.jpg"
+  },
+  "d32": {
+   "measure": "../../measure/console/d32f1100.camera.json",
+   "photo": "../../refs/video/frames/dgRcedIkNOM-32.jpg"
+  },
+  "v376": {
+   "measure": "../../measure/console/v376f838.camera.json",
+   "photo": "../../refs/video/frames/dgRcedIkNOM-376s.jpg"
+  },
+  "dash_manual": {
+   "measure": "../../measure/int/dash-cam.camera.json",
+   "photo": "../../refs/tesla/manual-interior-GUID-CC015C4E-DAD0-4235-9D66-AE0EB87D4452-online-en-US.png"
+  },
+  "c003": {
+   "measure": "../../measure/windshield/c003-sidetip.camera.json",
+   "photo": "../../refs/web/c003-side-R.jpg"
+  },
+  "c059": {
+   "measure": "../../measure/windshield/c059-cowl.camera.json",
+   "photo": "../../refs/web/c059-side-L.jpg"
+  },
+  "side_r": {
+   "eye": [
+    -4200,
+    1250,
+    1500
+   ],
+   "look": [
+    -1100,
+    1350,
+    1560
+   ],
+   "fovDeg": 30,
+   "size": [
+    1400,
+    800
+   ]
+  },
+  "side_l": {
+   "eye": [
+    4200,
+    1250,
+    1500
+   ],
+   "look": [
+    1100,
+    1350,
+    1560
+   ],
+   "fovDeg": 30,
+   "size": [
+    1400,
+    800
+   ]
+  },
+  "user_view": {
+   "eye": [
+    -2600,
+    1500,
+    3600
+   ],
+   "look": [
+    -1000,
+    1250,
+    1500
+   ],
+   "fovDeg": 40,
+   "size": [
+    900,
+    1400
+   ]
+  }
+ },
+ "lights": [
+  {
+   "at": [
+    0,
+    1650,
+    900
+   ],
+   "watts": 150,
+   "size": 800
+  },
+  {
+   "at": [
+    0,
+    1650,
+    -500
+   ],
+   "watts": 120,
+   "size": 800
+  },
+  {
+   "at": [
+    0,
+    900,
+    1300
+   ],
+   "watts": 40,
+   "size": 400
+  }
+ ],
+ "exposure": 0.8
+}

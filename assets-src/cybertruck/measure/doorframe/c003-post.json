@@ -1,0 +1,14 @@
+{
+ "photo": "../../refs/web/c003-side-R.jpg",
+ "camera": "../../fit/c003-right/camera.json",
+ "queries": {
+  "post front edge, x -700": {"px": [2756, 1390], "plane": {"x": -700}},
+  "post front edge, x -800": {"px": [2756, 1390], "plane": {"x": -800}},
+  "post rear edge, x -700": {"px": [2706, 1390], "plane": {"x": -700}},
+  "post rear edge, x -800": {"px": [2706, 1390], "plane": {"x": -800}},
+  "glass rear edge at belt, glass plane": {"px": [2925, 1466], "plane": {"point": [-961.92, 1209.34, 1181.94], "normal": [-0.92398, 0.38175, 0.022857]}},
+  "mirror tip bottom": {"px": [2905, 1450], "plane": {"x": -1110}},
+  "mirror rear face bottom": {"px": [2660, 1450], "plane": {"x": -1110}},
+  "belt at 2650": {"px": [2650, 1462], "plane": {"x": -961.92}}
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "photo": "../../refs/web/c059-side-L.jpg",
+ "camera": "../../fit/c059-left/camera.json",
+ "queries": {
+  "post front edge at belt, glass plane": {"px": [1056, 1318], "plane": {"point": [961.92, 1209.34, 1181.94], "normal": [0.92398, 0.38175, 0.022857]}},
+  "post front edge at belt, x 800": {"px": [1056, 1318], "plane": {"x": 800}},
+  "post front edge at belt, x 650": {"px": [1056, 1318], "plane": {"x": 650}},
+  "seam at belt, glass plane": {"px": [1050, 1335], "plane": {"point": [961.92, 1209.34, 1181.94], "normal": [0.92398, 0.38175, 0.022857]}},
+  "door glass front edge at belt, glass plane": {"px": [1268, 1298], "plane": {"point": [961.92, 1209.34, 1181.94], "normal": [0.92398, 0.38175, 0.022857]}},
+  "door glass front edge at belt, x 800": {"px": [1268, 1298], "plane": {"x": 800}},
+  "quarter glass bottom, glass plane": {"px": [1030, 1322], "plane": {"point": [961.92, 1209.34, 1181.94], "normal": [0.92398, 0.38175, 0.022857]}}
+ }
+}

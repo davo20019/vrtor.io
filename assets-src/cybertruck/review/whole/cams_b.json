@@ -1,0 +1,52 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "cameras": {
+  "v376_noframe": {
+   "measure": "../../measure/console/v376f838.camera.json",
+   "photo": "../../refs/video/frames/dgRcedIkNOM-376s.jpg",
+   "hide": [
+    "door_fr_int_window_frame",
+    "door_fl_int_window_frame"
+   ]
+  },
+  "d32_noframe": {
+   "measure": "../../measure/console/d32f1100.camera.json",
+   "photo": "../../refs/video/frames/dgRcedIkNOM-32.jpg",
+   "hide": [
+    "door_fr_int_window_frame",
+    "door_fl_int_window_frame"
+   ]
+  }
+ },
+ "lights": [
+  {
+   "at": [
+    0,
+    1650,
+    900
+   ],
+   "watts": 150,
+   "size": 800
+  },
+  {
+   "at": [
+    0,
+    1650,
+    -500
+   ],
+   "watts": 120,
+   "size": 800
+  },
+  {
+   "at": [
+    0,
+    900,
+    1300
+   ],
+   "watts": 40,
+   "size": 400
+  }
+ ],
+ "exposure": 0.8
+}

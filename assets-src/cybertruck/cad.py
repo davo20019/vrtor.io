@@ -1393,6 +1393,39 @@ def door_trim(p, d, sx, driver):
         out = {k: [q.mirror(Plane.YZ) for q in v] for k, v in out.items()}
     return out
 
+# The door window's front edge: the body's black rounded edge where the fixed glass triangle ends and the front
+# door's frameless glass begins, right at the mirror. Three photos, each scaled from the two front-door seams
+# (s 1,503 and 2,636): the Miami side view (refs/web/c164, 1,730), the Hong Kong showroom side view (c165, 1,763),
+# and c003 through its solved camera (the edge's two sides at 1,722 and 1,797 after the seam bias;
+# measure/doorframe/c003-post.md). With the door open (c166) the door carries only the glass behind it, and the
+# edge and the glass triangle stay on the body. 75 wide (c003); its depth into the cabin (50) is a guess.
+WINDOW_EDGE = dict(s_front=1710.0, width=75.0, depth=50.0, inset=14.0)
+
+def window_edge(p, sx):
+    """The black edge from the belt to the roof edge, in the window plane and inside the glass; on the body."""
+    pl = planes(p)
+    key = 'window_l' if sx > 0 else 'window_r'
+    wn = np.array(pl[key][1], float); wn = wn if np.dot(wn, [sx, 0, 0]) > 0 else -wn
+    f = WINDOW_EDGE
+    s0, s1 = f['s_front'], f['s_front'] + f['width']
+    def top(s):
+        return edge_point(pl['roof'], pl[key], ZF - s)[1] - 20.0
+    pts = [on_plane(pl[key], y=belt_h(p, s0) - 8.0, z=ZF - s0), on_plane(pl[key], y=belt_h(p, s1) - 8.0, z=ZF - s1),
+           on_plane(pl[key], y=top(s1), z=ZF - s1), on_plane(pl[key], y=top(s0), z=ZF - s0)]
+    pts = [q - wn * f['inset'] for q in pts]
+    edge = extrude(Face(Wire.make_polygon([tuple(q) for q in pts], close=True)), amount=f['depth'], dir=tuple(-wn))
+    try:
+        edge = fillet(edge.edges().filter_by(lambda e: e.length > 20), 12.0)
+    except Exception:
+        pass
+    return edge
+
+# The A-pillar post stands 250 further back than int-athens-1's camera put it: its rear face is the window edge
+# above (1,746 at the rounded corner, against the photos' 1,730 to 1,763). That camera, solved from the dash and
+# screen only, sat at 1,945 back, ahead of where a driver's eye can be (the hip point is at 2,200 and the back
+# reclines 22 degrees), so whatever it located off to the side came out too far forward by the same amount.
+POST_SHIFT = 250.0
+
 def interior(p):
     """Fixed interior parts by name -> solid, and door-mounted ones as 'door_<k>_<name>'. assemble.py gives
     each name its material (INTERIOR there)."""
@@ -1618,7 +1651,7 @@ def interior(p):
     # surface 2.5 mm proud. Its size and height: guesses from that frame.
     tw = []
     for kb in ('window_l', 'window_r'):
-        tw.append(ceiling_band(p, 21.5, 24) & edge_wedge(p, 'roof', kb, 45) & sband(1460, 1540))
+        tw.append(ceiling_band(p, 21.5, 24) & edge_wedge(p, 'roof', kb, 45) & sband(1460 + POST_SHIFT, 1540 + POST_SHIFT))
     out['tweeters'] = fixed(Compound(tw))
     # B-pillar trim between the doors (fixed), the cab's back wall above the rear seat.
     b0, b1 = p['seam_2'] - PILLAR_HALF + 2, p['seam_2'] + PILLAR_HALF - 2
@@ -1642,6 +1675,9 @@ def interior(p):
         A, B = wpt(1410, 1221, 10), wpt(1496, 1399, 10)
         inward = -wn
         col = plane_cut(blk, wpt(1200, 1200, 10), wpt(1600, 1200, 10), wpt(1400, 1500, 10), inside)            # inside the glass
+        back = np.array([0.0, 0.0, -POST_SHIFT])
+        A2, B2 = A + back, B + back
+        up = plane_cut(Box(1200, 900, 1600).moved(Location((sx * 700, 1500, ZF - 1250))), wpt(1200, 1200, 10), wpt(1800, 1200, 10), wpt(1500, 1500, 10), inside)
         # Its front and inner sides: drawn up to the sight planes through its outline in int-athens-1 (5.9 px
         # RMS), dgRcedIkNOM-32 (9 px) and, mirrored, dgRcedIkNOM at 6:16 (measure/console/pillar_hull.py), so it
         # shows those outlines from those cameras. Its faces are rounded, so each camera's outline is a different
@@ -1649,15 +1685,24 @@ def interior(p):
         hull_pl = pillar_planes(sx, PILLAR_REFERENCE)
         for k in ('post athens1', 'post athens2', 'post d32'):
             col = halfspace_cut(col, *hull_pl[k])
+            up = halfspace_cut(up, hull_pl[k][0] + back, hull_pl[k][1])
         rp = trim_pl['roof']
         rn = np.array(rp[1], float); rn = rn if rn[1] > 0 else -rn
         r0 = np.array(rp[0], float) - rn * 12
         col = plane_cut(col, r0, r0 + np.cross(rn, [1, 0, 0]) * 100, r0 + np.array([100.0, 0, 0]), inside)        # under the windshield
         col = plane_cut(col, A, B, A + inward * 100, np.array([sx * 700.0, 1300.0, ZF - 1200]))                  # ahead of the opening
+        up = plane_cut(up, r0, r0 + np.cross(rn, [1, 0, 0]) * 100, r0 + np.array([100.0, 0, 0]), inside)
+        up = plane_cut(up, A2, B2, A2 + inward * 100, np.array([sx * 700.0, 1300.0, ZF - 1400]))             # ahead of the window edge
+        # Its front face parallel to its rear, 170 ahead: the post's depth where the photos measured it (s 1,367
+        # to 1,534 at 1,400 high, before the move); without it the moved post filled the glass triangle.
+        A3, B3 = A2 - back * (170.0 / POST_SHIFT), B2 - back * (170.0 / POST_SHIFT)
+        up = plane_cut(up, A3, B3, A3 + inward * 100, np.array([sx * 700.0, 1300.0, ZF - 1800]))
+        col = col & Box(2400, 1500, 8000, align=(Align.CENTER, Align.MAX, Align.CENTER)).moved(Location((0, c['dash_h'], 0)))
+        up = up & Box(2400, 1500, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, c['dash_h'], 0)))
         # below the dash it carries on as a dark foot beside the white block's end, down to 850 (dgRcedIkNOM 3:12,
         # int-athens-1: dark between the block's end and the door's white panel)
         col = col & Box(2400, 1500, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, 850.0, 0)))
-        col = col & Box(2400, 3000, 1600, align=(Align.CENTER, Align.CENTER, Align.MAX)).moved(Location((0, 0, ZF - 950)))
+        col = col & Box(2400, 3000, 1600 + POST_SHIFT, align=(Align.CENTER, Align.CENTER, Align.MAX)).moved(Location((0, 0, ZF - 950)))
         # under the glass the window plane leans out past the steel: below the belt the foot stays inside the
         # shell's inner face (it stood 90 proud of the fender above the front wheel)
         b0, b1 = (np.array([0.0, belt_h(p, s), ZF - s]) for s in (950.0, 1410.0))
@@ -1665,8 +1710,6 @@ def interior(p):
         col = (col & above) + ((col - above) & inner)
         # The rear upright terminates in the diagonal bar, rather than continuing as a separate
         # slab toward the roof. An 18 mm overlap under its moulded return keeps their union closed.
-        post_join, post_join_n = hull_pl['strip athens1']
-        col = halfspace_cut(col, post_join - post_join_n * 18.0, -post_join_n)
         # The strip: a rounded suede bar over the steel between the two glasses, under the windshield, drawn up to
         # the sight planes through its two outlines in int-athens-1 (measure/console/pillar_hull.py): the lower
         # one on the side glass's top edge (athens1-strip.md), the upper one hanging under the windshield (its
@@ -1698,11 +1741,14 @@ def interior(p):
         # windshield opening. Both still photographs bound the complete assembly's front outline.
         for k in ('strip upper athens1', 'strip upper athens2'):
             col = halfspace_cut(col, *hull_pl[k])
+            col = Compound(col) if isinstance(col, list) else col          # the foot and the strip are separate pieces now
         actual_ws, actual_n = panels(p)['windshield'][:2]
+        col = col + up
         col = col - prism(actual_ws, actual_n, out=400.0, depth=10.0)
         col = col & hull(p, inset=10.0)  # the trim must stay inside the corrected physical body
         apil.append(col)
     out['a_pillar_inner'] = Compound(apil)
+    out['window_edge'] = Compound([window_edge(p, 1), window_edge(p, -1)])
     out['rear_wall'] = (SH([(c['cab_rear_s'] - 26, c['floor']), (c['cab_rear_s'] + 5, c['floor']), (c['cab_rear_s'] + 5, 2000), (c['cab_rear_s'] - 26, 2000)], -1300, 1300) & inner)
     # Sun visors, stowed flat under the header (dgRcedIkNOM-31; the manual's dash render shows none over the
     # glass). Sizes are guesses.
@@ -1941,7 +1987,8 @@ def door_regions(p, glass=True):
         poly = [(ZF - s0, 480.0), (ZF - s1, 480.0), (ZF - s1, 2100.0), (ZF - s0, 2100.0)]
         prism_l = side_prism(poly, x_in, 1300)
         # the front door's window reaches forward past its seam to the glass's tip, over the fender
-        ga = side_glass_tip(p) - 20 if d == 'f' else s0
+        # the front door's glass starts at the window edge: the glass triangle ahead of it stays on the body (c166)
+        ga = WINDOW_EDGE['s_front'] + WINDOW_EDGE['width'] if d == 'f' else s0
         prism_a = side_prism([(ZF - ga, 480.0), (ZF - s1, 480.0), (ZF - s1, 2100.0), (ZF - ga, 2100.0)], x_in, 1300)
         a = halfspace_cut(prism_a, pl['roof'][0] - pl['roof'][1] * 12, pl['roof'][1])
         a = halfspace_cut(a, pl['deck'][0] - pl['deck'][1] * 12, pl['deck'][1])
@@ -2260,7 +2307,11 @@ if __name__ == '__main__':
     for k, piece in door_glass.items():
         save(piece, f'door_{k}_glass')
     save(body, 'body', tolerance=0.5, angular=0.5)
-    save(glass, 'glass')
+    # The glass triangles ahead of the window edge stay on the body but are the front side windows' glass
+    # (assemble.py tints them as such); the rest of the body's glass is the black B-pillar glass.
+    ahead = Box(2400, 3000, 4000, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(Location((0, 0, ZF - WINDOW_EDGE['s_front'] - WINDOW_EDGE['width'])))
+    save(glass & ahead, 'quarter_glass')
+    save(glass - ahead, 'glass')
     ton_rest, ton_gate = cut(Compound(groups['tonneau']), gate)
     save(ton_rest, 'tonneau')
     if ton_gate is not None and ton_gate.volume > 1:

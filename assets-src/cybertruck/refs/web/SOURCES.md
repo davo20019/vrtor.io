@@ -45,6 +45,9 @@ Comparison only, never shipped. Images over 3840 px wide were fetched as 3840 px
 | c055-lightbar.jpg | lightbar | Everything Electric Canada 2024 (53981201032).jpg | CC BY 2.0 | GoToVan from Vancouver, Canada | 5472x3648 |
 | c012-3q-front.jpg | 3q-front | 2024 Tesla Cybertruck.jpg | CC BY-SA 4.0 | Calreyn88 | 14966x9672 |
 | c084-3q-front.jpg | 3q-front | Tesla Cybertruck (53877996258).jpg | CC BY 2.0 | David Merrett from Daventry, England | 5737x3654 |
+| c164-side-L.jpg | side-L | Cybertruck in Brickell, Miami, Florida, 6 March 2026.jpg | CC BY 4.0 | Phillip Pessar | 3658x2743 |
+| c165-side-L.jpg | side-L | HK SKD 西貢北 Sai Kung North 海映路 Hoi Ying Road 西沙 Go Park Sai Sha shop TESLA Showroom June 2025 R12S 01.jpg | CC0 | Littootze 622 Miammoel | 4000x3000 |
+| c166-front-doors-open.jpg | front, doors open | Both Doors Open (53520230190).jpg | CC BY 2.0 | crudmucosa | 4498x2999 |
 | int-athens-1.jpg | interior, driver's seat | Tesla Cybertruck - Interior - Tesla Store Athens 2024.jpg | CC0 | Mpelas199 | 4032x3024 (1920 thumb) |
 | int-athens-2.jpg | interior, driver's seat | Tesla Cybertruck - Interior 2 - Tesla Store Athens 2024.jpg | CC0 | Mpelas199 | 3024x4032 (1920 thumb) |
 | int-athens-3.jpg | interior, console from the driver's seat | Tesla Cybertruck - Interior 3 - Tesla Store Athens 2024.jpg | CC0 | Mpelas199 | 4032x3024 (1920 thumb) |

@@ -1,0 +1,11 @@
+{
+ "photo": "../../refs/web/c003-side-R.jpg",
+ "camera": "../../fit/c003-right/camera.json",
+ "queries": {
+  "screen top, far corner (x +199)": {"px": [2570, 1357], "plane": {"x": 199}},
+  "screen top, near corner (x -199)": {"px": [2620, 1372], "plane": {"x": -199}},
+  "screen bottom, near corner (x -199)": {"px": [2600, 1450], "plane": {"x": -199}},
+  "seam at belt": {"px": [2930, 1466], "plane": {"x": -961.9}},
+  "door top at screen": {"px": [2600, 1452], "plane": {"x": -961.9}}
+ }
+}

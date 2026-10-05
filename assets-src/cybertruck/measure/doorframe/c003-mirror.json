@@ -1,0 +1,14 @@
+{
+ "photo": "../../refs/web/c003-side-R.jpg",
+ "camera": "../../fit/c003-right/camera.json",
+ "queries": {
+  "mirror top, rear corner": {"px": [2763, 1342], "plane": {"x": -1110}},
+  "cap/base split, rear": {"px": [2731, 1431], "plane": {"x": -1110}},
+  "base underside, rear": {"px": [2733, 1480], "plane": {"x": -1110}},
+  "cap/base split, front": {"px": [2902, 1431], "plane": {"x": -1110}},
+  "base underside, front": {"px": [2895, 1478], "plane": {"x": -1110}},
+  "door top under mirror": {"px": [2800, 1487], "plane": {"x": -961.9}},
+  "cap front top (slope foot)": {"px": [2902, 1430], "plane": {"x": -1110}},
+  "cap top front end of flat": {"px": [2800, 1342], "plane": {"x": -1110}}
+ }
+}

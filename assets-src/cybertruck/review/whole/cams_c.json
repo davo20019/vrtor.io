@@ -1,0 +1,2 @@
+{"glbFrame": "y-up", "samples": 24, "cameras": {"c134": {"measure": "../../measure/windshield/c134-cowl.camera.json", "hide": ["windshield_glass", "glass", "door_fl_glass", "door_fr_glass"]}},
+ "lights": [{"at": [0,1650,900], "watts": 150, "size": 800}], "exposure": 0.8}

@@ -228,6 +228,7 @@ def classify(o):
 classify(body)
 
 glass = stl('glass', M['glass'])
+quarter_glass = stl('quarter_glass', M['glass_front'])        # the triangles ahead of the window edge, on the body
 roof_glass = stl('roof_glass', M['glass_roof'])
 windshield_glass = stl('windshield_glass', M['windshield'])
 tonneau = stl('tonneau', M['tonneau']); box_uv(tonneau, tile_mm=800)
@@ -314,7 +315,7 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'a_pillar_inner': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
             'overhead': 'overhead', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'mat_edges': 'mat_edge', 'center_ribs': 'pedal', 'center_rib_base': 'pillar', 'pedals': 'pedal', 'pedal_grips': 'yoke', 'pedal_arms': 'tiedown',
             'piping': 'piping', 'belts': 'belt', 'belt_hw': 'bezel',
-            'overhead_strip': 'bezel', 'overhead_keys': 'switch', 'overhead_arms': 'overhead', 'mirror_glass': 'mirror_glass', 'tweeters': 'grille', 'usb': 'screen',
+            'overhead_strip': 'bezel', 'overhead_keys': 'switch', 'overhead_arms': 'overhead', 'mirror_glass': 'mirror_glass', 'tweeters': 'grille', 'window_edge': 'bezel', 'usb': 'screen',
             # on the doors (door_<k>_int_<name>)
             'armrest': 'armrest', 'door_lower': 'door_dark', 'switch_pod': 'bezel', 'switch': 'door_button', 'open': 'door_button',
             'cap': 'dash_top', 'grilles': 'grille'}
@@ -409,7 +410,7 @@ disc = stl('brake_disc', M['disc'], smooth_angle=50)
 caliper = stl('caliper', M['caliper'])
 templates = (tyre, rim, lugs, cover, disc, caliper)
 all_door_parts = [o for v in door_parts.values() for o in v]
-for o in [x for x in (body, glass, roof_glass, windshield_glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper, wiper_blade, slat) if x] + [*front_bits, *rear_parts, *cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
+for o in [x for x in (body, glass, quarter_glass, roof_glass, windshield_glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper, wiper_blade, slat) if x] + [*front_bits, *rear_parts, *cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
     o.data.transform(TO_BLENDER)         # UVs and materials were set in the model frame; now move to Blender's
 
 def empty(name, loc=(0, 0, 0), parent=None):
@@ -421,7 +422,7 @@ def empty(name, loc=(0, 0, 0), parent=None):
 
 root = empty('cybertruck')
 body_node = empty('body', parent=root)
-for o in [x for x in (body, glass, roof_glass, windshield_glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper) if x] + [*front_bits, *rear_parts, *detail_parts, *button_parts, *bed_parts]:
+for o in [x for x in (body, glass, quarter_glass, roof_glass, windshield_glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper) if x] + [*front_bits, *rear_parts, *detail_parts, *button_parts, *bed_parts]:
     o.parent = body_node
 wiper_pivot = Vector(to_blender(GEO['wiper']['pivot']))
 wiper_node = empty('wiper_arm', loc=wiper_pivot, parent=root)
