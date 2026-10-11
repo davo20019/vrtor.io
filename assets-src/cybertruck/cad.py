@@ -1404,6 +1404,8 @@ def door_trim(p, d, sx, driver):
 # c164 and c165 put the glass's own front edge at 1,730 and 1,763. The rail 72 deep below the roof edge, the corner
 # about 85 round (c003, 1.45 mm/px). Its depth into the cabin (50) no photo shows: the side views see it edge-on
 # (c003's 12 degree view gives the same 72 to 75 width as c165's square one) and the cabin photos don't reach it.
+DASH_MEET = (1019.0, 1265.0)  # the dash top's crest under the windshield (s, h): manual seat side view at 4.58 mm/px; dgRcedIkNOM-32
+APOST = dict(depth=130.0, thick=90.0, strip_down=80.0, strip_in=100.0)       # the A-pillar trim's post: along the truck, and in from the glass (guesses)
 WINDOW_EDGE = dict(s_front=1727.0, width=75.0, rail=72.0, corner=85.0, depth=50.0, inset=14.0)
 
 def window_edge(p, sx):
@@ -1453,12 +1455,20 @@ def interior(p):
     d0, d1 = 900.0, c['dash_s']
     # At the corner the real pad lies below the glass. Keep the measured rear lip, and follow
     # the documented windshield slope at the front rather than retaining the old raised cowl ledge.
-    front = min(c['dash_h'] + 8, on_plane(pl['roof'], x=0, z=ZF - d0)[1] - 24)
-    top = plane3(V(0, c['dash_h'], d1), V(1, c['dash_h'], d1), V(0, front, d0))
+    # The top rises from the lip to its crest under the glass, DASH_MEET (the manual's seat side view at 4.58 mm/px:
+    # 1,265 high at 1,019 back, 20 under the glass; dgRcedIkNOM-32 through its solved camera: the dash top runs up
+    # to row 60, where the glass is about 1,000 back). Ahead of it, kept 8 under the glass. It was nearly level (1,224 to 1,218), meeting the
+    # glass at 900, so from the seats the dash looked half as deep as in the photo.
+    ms, mh = DASH_MEET
+    mh = min(mh, on_plane(pl['roof'], x=0, z=ZF - ms)[1] - 8)
+    top = plane3(V(0, c['dash_h'], d1), V(1, c['dash_h'], d1), V(0, mh, ms))
     if top[1][1] < 0:
         top = (top[0], -top[1])
+    under = (np.array(pl['roof'][0], float) - np.array([0, 8.0, 0]), np.array(pl['roof'][1], float))
+    if under[1][1] < 0:
+        under = (under[0], -under[1])
     slab = Box(2400, 600, d1 - d0, align=(Align.CENTER, Align.MIN, Align.MAX)).moved(Location((0, 700, ZF - d0)))
-    shelf = halfspace_cut(slab, *top) - halfspace_cut(slab, top[0] - top[1] * 40, top[1])
+    shelf = halfspace_cut(halfspace_cut(slab, *top), *under) - halfspace_cut(slab, top[0] - top[1] * 40, top[1])
     out['dash_top'] = fixed(shelf & inner)
     # Under the lip (video frames dgRcedIkNOM-14, -16; manual dash render): a recessed grey face holding the
     # vent slot, the ambient line, then the white block (chamfered top, front face, chamfered bottom; 130 high,
@@ -1651,19 +1661,16 @@ def interior(p):
     a8 = math.radians(8)
     apex_front = c['h_front'][0] + (c['head_front'] - 102.0) * math.sin(a8)
     # It fills up to the glass (10 mm inside the skin), so nothing shows between them.
-    beams = [band & sband(h0, h1) & roof_only, ceiling_band(p, 10 - c['wall'], 24) & sband(apex_front, p['apex_s'] + 40) & roof_only]
+    # Behind the header the suede headliner runs on, under the windshield's upper part, back to this beam
+    # (dgRcedIkNOM-31: dark suede behind the lowered visor, no glass overhead; c134: from above, the clear glass
+    # shows nothing behind the mirror housing). Before, bare glass there showed the seats from outside.
+    beams = [band & sband(h0, apex_front + 5) & roof_only, ceiling_band(p, 10 - c['wall'], 24) & sband(apex_front, p['apex_s'] + 40) & roof_only]
     rails = []
     for ka, kb, s0, s1, reach in (('roof', 'window_l', 1000, p['apex_s'], 45), ('deck', 'window_l', p['apex_s'], c['cab_rear_s'] - 10, 45),
                                   ('roof', 'window_r', 1000, p['apex_s'], 45), ('deck', 'window_r', p['apex_s'], c['cab_rear_s'] - 10, 45)):
         rails.append(band & sband(s0, s1) & edge_wedge(p, ka, kb, reach))
     head = Compound(beams + rails)
     out['headliner'] = fixed(head & Box(2400, 2400, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, c['dash_h'] + 40, 0))))
-    # The tweeter grilles on the A-pillars, a little above the dash (dgRcedIkNOM-14): a patch of the pillar trim's
-    # surface 2.5 mm proud. Its size and height: guesses from that frame.
-    tw = []
-    for kb in ('window_l', 'window_r'):
-        tw.append(ceiling_band(p, 21.5, 24) & edge_wedge(p, 'roof', kb, 45) & sband(1460, 1540))
-    out['tweeters'] = fixed(Compound(tw))
     # B-pillar trim between the doors (fixed), the cab's back wall above the rear seat.
     b0, b1 = p['seam_2'] - PILLAR_HALF + 2, p['seam_2'] + PILLAR_HALF - 2
     bpil = SH([(b0, c['floor']), (b1, c['floor']), (b1, 2000), (b0, 2000)], -1300, 1300) & (hull(p, inset=c['wall'] - 3) - hull(p, inset=c['wall'] + 40))
@@ -1673,7 +1680,7 @@ def interior(p):
     # showing between them. The post's rear face is the window opening's edge, through int-athens-1's solved camera
     # (5.9 px RMS, measure/console/athens1-pillar.md): 1,410 back at the dash, 1,470 at 1,370 high, the rounded
     # corner at 1,496 and 1,399.
-    apil = []
+    apil, grilles = [], []
     trim_pl = planes(PILLAR_REFERENCE)
     for key in ('window_l', 'window_r'):
         sx = 1 if key == 'window_l' else -1
@@ -1717,10 +1724,21 @@ def interior(p):
         # ray meets the windshield 20 outboard of the crease, so the bar's edge is below the glass), with a dark
         # lip between it and the clear windshield, which is the windshield's black band; and through its lower
         # outline at 6:16, from the passenger's seat, which sets how far its underside rises inboard.
-        strip = plane_cut(Box(1200, 900, 2000).moved(Location((sx * 700, 1500, ZF - 1300))), wpt(1200, 1200, 10), wpt(1600, 1200, 10), wpt(1400, 1500, 10), inside)
-        strip = plane_cut(strip, r0, r0 + np.cross(rn, [1, 0, 0]) * 100, r0 + np.array([100.0, 0, 0]), inside)
-        for k in ('strip athens1', 'strip upper athens1', 'strip upper athens2', 'strip passenger seat'):
-            strip = halfspace_cut(strip, *hull_pl[k])                                                          # its two outlines
+        # Now one even bar along the crease from the dash up to the apex, as dgRcedIkNOM-31 shows it (its face an even
+        # width all the way, meeting the dash at the windshield's lower corner); the sight planes above made it a
+        # wedge hanging over the glass triangle with a gap behind it. Its depth from the crease is a guess (APOST).
+        # Built on the truck's own glass planes (the sight planes above were on PILLAR_REFERENCE's, from before the
+        # pane was widened), 10 under the side glass and 12 under the windshield.
+        act = planes(p)
+        an = np.array(act[key][1], float); an = an if np.dot(an, [sx, 0, 0]) > 0 else -an
+        arn = np.array(act['roof'][1], float); arn = arn if arn[1] > 0 else -arn
+        ar0 = np.array(act['roof'][0], float) - arn * 12
+        def apt(s, h, off=0.0):
+            return on_plane(act[key], y=h, z=ZF - s) - an * off
+        strip = plane_cut(Box(1200, 900, 2600).moved(Location((sx * 700, 1500, ZF - 1500))), apt(1200, 1200, 10), apt(1600, 1200, 10), apt(1400, 1500, 10), inside)
+        strip = plane_cut(strip, ar0, ar0 + np.cross(arn, [1, 0, 0]) * 100, ar0 + np.array([100.0, 0, 0]), inside)
+        strip = halfspace_cut(strip, ar0 - arn * APOST['strip_down'], -arn)                      # its depth under the windshield
+        strip = halfspace_cut(strip, apt(1400, 1300, 10) - an * APOST['strip_in'], -an)          # and in from the side glass
         # It runs on up the windshield's edge to the roof's apex, covering the glass's black band (its inner edge
         # 75 in from the glass's edge, as c134 shows it from outside): int-athens-2 shows suede right up to clear
         # glass all the way up, post and strip one surface above the glass triangle. Behind the window opening it
@@ -1731,22 +1749,46 @@ def interior(p):
         w0, w1 = [on_plane(old_r, x=sx * (abs(edge_point(old_r, old_w, ZF - q)[0]) - PILLAR_REFERENCE['win_margin']),
                            z=ZF - q) for q in (PILLAR_REFERENCE['cowl_s'] + 30, p['apex_s'] - 40)]
         c0, c1 = w0 - np.array([sx * 100.0, 0, 0]), w1 - np.array([sx * 100.0, 0, 0])
-        strip = plane_cut(strip, c0, c1, c0 + rn * 100, np.array([sx * 1000.0, 1300.0, ZF - 1100]))            # out to the clear glass
         strip = strip & Box(2400, 3000, p['apex_s'] - 800, align=(Align.CENTER, Align.CENTER, Align.MIN)).moved(Location((0, 0, ZF - p['apex_s'])))
-        fwd = plane_cut(Box(2400, 3000, 8000), A, B, A + inward * 100, np.array([sx * 700.0, 1300.0, ZF - 1200]))
+        # The post's rear face is the window opening's edge (the door frame's upright, WINDOW_EDGE), with no glass
+        # between them: dgRcedIkNOM-31, int-athens-1 and the 6:16 frame all show the door glass starting right behind
+        # it, and c003, c164 and c165 put that edge at 1,727 back from the door seams. The strip keeps its full section
+        # down to there; behind it only the rail along the crease.
+        s_r = WINDOW_EDGE['s_front'] + 5.0
+        A, B = apt(s_r, 1219, 10), apt(s_r, 1401, 10)
+        fwd = plane_cut(Box(2400, 4000, 8000), A, B, A - an * 100, np.array([sx * 700.0, 1300.0, ZF - 1200]))
         strip = (strip & fwd) + ((strip - fwd) & edge_wedge(p, 'roof', key, 45))
         strip = strip & Box(2400, 1500, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, 1254.0, 0)))   # ends on the dash, where its lower edge meets it
         strip = strip & Box(2400, 3000, 1600, align=(Align.CENTER, Align.CENTER, Align.MAX)).moved(Location((0, 0, ZF - 800)))
+        # The post: from inside the dash up into the strip, its rear face on the window opening's edge, its inner face
+        # parallel to the glass. Depth along the truck and thickness from the glass are guesses (APOST), proportioned on
+        # dgRcedIkNOM-31, where its inner face is about half as wide as the glass triangle ahead of it at the dash.
+        # Replaces the post drawn to the int-athens sight planes, 230 further forward, which left a strip of side glass
+        # between the post and the door glass that no photo shows (those cameras don't reproduce their photos).
+        s_f = s_r - APOST['depth']
+        quad = [apt(s_f, 1150, 10), apt(s_r, 1150, 10), apt(s_r, 1800, 10), apt(s_f, 1800, 10)]
+        col = prism(quad, an, out=0.0, depth=APOST['thick'])
+        col = plane_cut(col, ar0, ar0 + np.cross(arn, [1, 0, 0]) * 100, ar0 + np.array([100.0, 0, 0]), inside)          # under the windshield
+        col = (col & above) + ((col - above) & inner)
+        # The speaker grille low on the post's inner face, 2.5 proud (dgRcedIkNOM-31, int-athens-1); size and height guessed.
+        g = [apt(s_f + 30, 1270, 10 + APOST['thick']), apt(s_r - 30, 1270, 10 + APOST['thick']),
+             apt(s_r - 30, 1330, 10 + APOST['thick']), apt(s_f + 30, 1330, 10 + APOST['thick'])]
+        grilles.append(prism(g, -an, out=2.5, depth=1.0))
+        # The tweeter grille on the strip's underside just ahead of the post's top (dgRcedIkNOM-31): 2.5 proud,
+        # between 40 and 100 in from the side glass, 80 along the strip; placement and size guessed from that frame.
+        gz = Box(2400, 3000, 8000)
+        gz = halfspace_cut(gz, ar0 - arn * (APOST['strip_down'] + 2.5), -arn)
+        gz = halfspace_cut(gz, ar0 - arn * (APOST['strip_down'] - 1.0), arn)
+        gz = halfspace_cut(gz, apt(1400, 1300, 100), -an)
+        gz = halfspace_cut(gz, apt(1400, 1300, 40), an)
+        grilles.append(gz & sband(s_f - 110, s_f - 30))
         col = col + strip
-        # The upright merges into the diagonal support; it must not leave a separate spike in the
-        # windshield opening. Both still photographs bound the complete assembly's front outline.
-        for k in ('strip upper athens1', 'strip upper athens2'):
-            col = halfspace_cut(col, *hull_pl[k])
         actual_ws, actual_n = panels(p)['windshield'][:2]
         col = col - prism(actual_ws, actual_n, out=400.0, depth=10.0)
         col = col & hull(p, inset=10.0)  # the trim must stay inside the corrected physical body
         apil.append(col)
     out['a_pillar_inner'] = Compound(apil)
+    out['tweeters'] = fixed(Compound(grilles))         # the speaker grilles on the post and the strip (both drawn above)
     out['window_edge'] = Compound([window_edge(p, 1), window_edge(p, -1)])
     out['rear_wall'] = (SH([(c['cab_rear_s'] - 26, c['floor']), (c['cab_rear_s'] + 5, c['floor']), (c['cab_rear_s'] + 5, 2000), (c['cab_rear_s'] - 26, 2000)], -1300, 1300) & inner)
     # Sun visors, stowed flat under the header (dgRcedIkNOM-31; the manual's dash render shows none over the
