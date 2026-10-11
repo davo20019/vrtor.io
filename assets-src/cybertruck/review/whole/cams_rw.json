@@ -1,0 +1,3 @@
+{"glbFrame":"y-up","samples":24,"cameras":{
+ "c003":{"measure":"../../measure/windshield/c003-sidetip.camera.json","photo":"../../refs/web/c003-side-R.jpg"},
+ "c059":{"measure":"../../measure/windshield/c059-cowl.camera.json","photo":"../../refs/web/c059-side-L.jpg"}}}

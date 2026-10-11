@@ -180,17 +180,19 @@ def planes(p):
         'roof': plane3(V(0, p['cowl_h'], p['cowl_s']), V(1, p['cowl_h'], p['cowl_s']), V(0, H, p['apex_s'])),
         'deck': plane3(V(0, H, p['apex_s']), V(1, H, p['apex_s']), V(0, p['tail_h'], LT)),
     }
+    window = plane3(V(BW, p['belt_h_front'], p['a_pillar_s']), V(BW, p['belt_h_rear'], p['c_pillar_s']),
+                    V(p['roof_half'], H, p['apex_s']))
     side = {
         'side': (V(BW, 0, 0), np.array([1.0, 0, 0])),
         'tuck': plane3(V(BW, p['crease_h'], 0), V(BW, p['crease_h'], 1), V(BW - p['tuck'], CLEAR, 0)),
-        'window': plane3(V(BW, p['belt_h_front'], p['a_pillar_s']), V(BW, p['belt_h_rear'], p['c_pillar_s']),
-                         V(p['roof_half'], H, p['apex_s'])),
-        # The sail: through the C-pillar base (where it meets the window facet) and its crease with the side
-        # at the tail (side_tail_h, both fitted to the side photos), and out to the deck's corner at the tail
-        # (tail_half, from the manual's top view: its crease with the deck runs 823 to 925 mm off the
-        # centreline from s 3,700 to 5,500, which this plane reproduces within 6 mm). Ahead of where it meets
-        # the deck and window, the window facet bounds the deck.
-        'sail': plane3(V(BW, p['belt_h_rear'], p['c_pillar_s']), V(BW, p['side_tail_h'], LT),
+        'window': window,
+        # The sail: its crease with the window facet stands upright at the C-pillar, from the base up to the deck
+        # edge, as the rear side window's rear edge does on the truck (c022, c010: the window is a tall
+        # quadrilateral, not a wedge); out to the deck's corner at the tail (tail_half, from the manual's top
+        # view). Its crease with the side at the tail comes out at 1,273 (the side fit's 1,259 was for a crease
+        # running from the C-pillar base up to the apex, which no photo shows). Ahead of the C-pillar the window
+        # facet bounds the deck.
+        'sail': plane3(V(BW, p['belt_h_rear'], p['c_pillar_s']), edge_point(pl['deck'], window, ZF - p['c_pillar_s']),
                        V(p['tail_half'], p['tail_h'], LT)),
         'corner': plane3(V(nfh, nh, 0), V(BW, nh, p['corner_s']), V(nfh, p['bumper_f_h'], p['face_rake'])),
         'shoulder': plane3(V(nfh, nh, 0), V(nfh, p.get('shoulder_cowl_h', p['cowl_h']), p.get('shoulder_cowl_s', p['cowl_s'])), V(BW, nh - p['shoulder_drop'], 0)),
@@ -1041,11 +1043,11 @@ def through_holes(p):
         if kind == 'glass':
             hole = prism(inset_polygon(pts, n, 3.0), n, out=-(depth - 1.0), depth=320)   # starts above the pocket floor, so it removes it
             if name.startswith('side_glass_'):
-                # The side glass's outline reaches the deck edge, but the hull clips the glass at the window/sail
-                # crease. Stop the hole there too (3 mm in, like its other edges), or it takes the sail's skin
-                # behind the rear window with it and the cabin shows through.
-                win, sail = pl['window_' + name[-1]], pl['sail_' + name[-1]]
-                a, b = edge_point(win, sail, ZF - p['apex_s']), edge_point(win, sail, ZF - p['c_pillar_s'])
+                # The hull clips the glass at the window/sail crease. Stop the hole there too (3 mm in, like its
+                # other edges), or it takes the sail's skin behind the rear window with it and the cabin shows through.
+                win = pl['window_' + name[-1]]
+                a = on_plane(win, y=p['belt_h_rear'], z=ZF - p['c_pillar_s'])      # the crease stands at the C-pillar
+                b = edge_point(pl['deck'], win, ZF - p['c_pillar_s'])
                 c = np.cross(b - a, win[1])
                 c /= np.linalg.norm(c)
                 if np.dot(sum(pts) / len(pts) - a, c) > 0:

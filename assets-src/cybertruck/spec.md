@@ -339,7 +339,7 @@ track 1,772.0, width across flares 2,031.6, mirror span 2,413.3, tyre 878.5 x 28
 | shoulder_drop | 80 | 30-160 | drop of the hood's shoulder facet at the corners | c150 | front |
 | roof_half | 650 | 560-760 | half-width of the roof at the apex | c150 | front |
 | tail_half | 930.5 | fixed | half-width of the deck at the tail top | manual top view (the sail's crease with the deck, s 3,700 to 5,500) | not fitted |
-| side_tail_h | 1,259.1 | 1,200-1,320 | height of the sail's crease with the side at the tail | carried over from the side-photo fit | side |
+| (side_tail_h) | 1,273 (derived) | | height of the sail's crease with the side at the tail; was 1,259.1 from the side-photo fit, now set by the upright C-pillar crease ("Rear side window, 2026-10-11") | c022, c003 | not fitted |
 | (tail_bevel) | dropped | | the sail now runs through the window crease (roof corner at the apex to the C-pillar base) and the tail corner, which fixes the rear top corner | c069 | rear |
 | arch_top_h | 980 | 900-1,060 | top of the arch flare | c022 981 | side (wheel landmark) |
 | arch_top_half | 310 | 250-380 | half-length of the flat arch top | c022 | side |
@@ -628,6 +628,17 @@ lower crease at the tail (both as fitted) and the deck's tail corner at 930.5 (d
 drawing's crease, 823 to 925 mm off the centreline from s 3,700 to 5,500, within 6 mm, and leaves the side
 views as they were. From the C-pillar back to about s 4,040 the window facet now bounds the deck: there the
 model sits up to 36 mm inside the drawing.
+
+Rear side window, 2026-10-11: the sail's crease with the window facet ran from the C-pillar base up to the roof
+corner at the apex, so the hull clipped the rear side glass to a wedge whose top fell steeply to a point on the
+belt. On the truck the window is a tall quadrilateral: its rear edge stands upright at the C-pillar from the belt
+to the rail under the roof edge, about 250 tall (c022, c003, c010; the window frame in c003, windows down). The
+sail is now the plane through the C-pillar base, the deck edge straight above it on the window facet, and the
+deck's tail corner (930.5, drawing). Through c003's solved camera the new opening's rear edge and top lie on the
+photo's. Costs: its crease with the side at the tail comes out at 1,273 instead of the fitted 1,259 (14 higher),
+and the deck edge sits 29 mm inside the drawing at s 4,200 and 15 at 4,800 (was within 6). No single plane
+through the upright crease and the tail corner meets both; the photos of the window win, as the window is what
+shows from every side.
 
 Tailgate, compartment, outlets, tie-downs (manual: Cargo Bed and Cargo Bed Outlets pages and their renders;
 c069 straight rear, tonneau shut; c056 open bed, tailgate down):
