@@ -4,6 +4,25 @@ const assets = import.meta.glob('./audio/*.mp3', { eager: true, query: '?url', i
 
 export function createAudio(onChange) {
   let reference = null, playback = null, recorder = null, stream = null;
+  let meterContext = null, analyser = null, samples = null;
+  function stopMeter() {
+    analyser = samples = null;
+    meterContext?.close().catch(() => {}); meterContext = null;
+  }
+  function startMeter(input) {
+    try {
+      meterContext = new AudioContext();
+      analyser = meterContext.createAnalyser(); analyser.fftSize = 512;
+      samples = new Float32Array(analyser.fftSize);
+      meterContext.createMediaStreamSource(input).connect(analyser);
+      meterContext.resume().catch(() => {});
+    } catch { stopMeter(); } // Recording still works if audio metering is unavailable.
+  }
+  function level() {
+    if (!analyser || !state.recording) return 0;
+    analyser.getFloatTimeDomainData(samples);
+    return Math.min(1, Math.sqrt(samples.reduce((sum, v) => sum + v * v, 0) / samples.length) * 5);
+  }
   let blobUrl = null, timer = null, generation = 0, disposed = false;
   const state = { playing: false, recording: false, requesting: false, hasRecording: false, message: '' };
   const update = () => { if (!disposed) onChange(state); };
@@ -18,7 +37,7 @@ export function createAudio(onChange) {
     state.hasRecording = false;
   };
   function cancel() {
-    generation++;
+    generation++; stopMeter();
     clearTimeout(timer);
     if (recorder?.state === 'recording') recorder.stop();
     stream?.getTracks().forEach((track) => track.stop());
@@ -66,7 +85,7 @@ export function createAudio(onChange) {
     try {
       const input = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
       if (token !== generation || disposed) { input.getTracks().forEach((t) => t.stop()); return; }
-      stream = input;
+      stream = input; startMeter(input);
       const mimeType = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find((type) => MediaRecorder.isTypeSupported(type));
       const current = new MediaRecorder(input, mimeType ? { mimeType } : undefined);
       recorder = current;
@@ -76,7 +95,7 @@ export function createAudio(onChange) {
         clearTimeout(timer);
         input.getTracks().forEach((track) => track.stop());
         if (token !== generation || disposed) return;
-        recorder = stream = null;
+        stopMeter(); recorder = stream = null;
         state.recording = false;
         if (chunks.length) {
           blobUrl = URL.createObjectURL(new Blob(chunks, { type: current.mimeType }));
@@ -96,7 +115,7 @@ export function createAudio(onChange) {
     } catch (error) {
       if (token !== generation) return;
       stream?.getTracks().forEach((track) => track.stop());
-      stream = recorder = null;
+      stopMeter(); stream = recorder = null;
       state.requesting = state.recording = false;
       state.message = error.name === 'NotAllowedError'
         ? 'Microphone access was denied. Allow it in browser settings; in a headset, try recording once before entering VR.'
@@ -119,5 +138,5 @@ export function createAudio(onChange) {
       playback = null; state.playing = false; state.message = 'Playback failed. Try recording again.'; update();
     }
   }
-  return { state, play, record, playRecording, cancel, dispose() { cancel(); disposed = true; } };
+  return { state, play, record, playRecording, cancel, level, dispose() { cancel(); disposed = true; } };
 }

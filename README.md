@@ -126,8 +126,13 @@ const updateBar = mountPresenceControls(presence, document.querySelector('.prese
 A browser and WebXR pronunciation lab connected to Learn English Sounds. Four guided
 American English contrasts (ship/sheep, cat/cut, thin/sin, vest/best) follow the same
 sequence: compare examples, answer six shuffled listening questions, inspect a schematic
-mouth position, then record and compare words and sentences. Choose with the HTML buttons,
-click the 3D pedestals, or point and pull the trigger in VR. A/X opens the headset menu;
+mouth position, then record and compare words and sentences. Listening, mouth exploration,
+and speaking occupy separate stations. Lesson steps move between them with a comfort fade.
+In VR, squeeze to grab a word and release it in the gold answer ring, or point and tap a
+word, then the ring. HTML answer buttons are also available. The enlarged mouth cutaway
+rotates, animates between sounds, and lets you highlight tongue, teeth and lips. Live 3D
+volume bars respond to the microphone while recording; they do not assess pronunciation.
+Station controls keep the lesson playable with the large panel closed. A/X opens the menu;
 teleport and snap turns use the shared XR shell. Visitors and spatial voice are optional;
 starting a recording mutes your visitor microphone and does not turn it back on automatically.
 
@@ -153,7 +158,8 @@ automatic pronunciation scores; there is no shared login or cross-site progress 
 
 The catalog, `/sounds`, `/sound-lab`, `/english`, sitemap, and headset room menu all
 include Sound Lab. Desktop/mobile browser flows, bundled audio, recording lifecycle,
-local routing and caching have been checked. Physical headset comfort, menu placement,
+local routing and caching have been checked. Grip/drop acceptance, input fallback, and controller/session cleanup have automated checks.
+Physical headset comfort, reach, controller behavior, menu placement,
 and microphone permission behavior still require a headset check.
 
 ## How Accent (accent.learnenglishsounds.com/vr) plugs in

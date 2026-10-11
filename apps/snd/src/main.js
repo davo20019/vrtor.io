@@ -7,6 +7,7 @@ import { buildWorld, V } from './world.js';
 import { GUIDES, GUIDE_BY_ID, LESSONS, guideUrl, makeRound, initialSelection } from './lessons.js';
 import { readProgress, saveProgress, completeRound, addRecording, reviewLesson } from './progress.js';
 import { createAudio } from './audio.js';
+import { STATIONS, stationFor } from './spatial.js';
 import './style.css';
 
 const $ = (selector) => document.querySelector(selector);
@@ -39,7 +40,11 @@ function setQuery(values = {}) {
   history.replaceState(null, '', `${location.pathname}${params.size ? `?${params}` : ''}`);
 }
 function navigate(next) {
-  audio.cancel(); view = next; cardOpen = true; render();
+  const before = stationFor(view);
+  audio.cancel(); world?.stopComparison(); view = next;
+  cardOpen = !['preview', 'listen', 'feedback', 'mouth', 'speak'].includes(next);
+  render();
+  if (stationFor(next) !== before || next === 'preview') focusStation();
 }
 function home() { setQuery(); navigate('home'); }
 function begin(id) {
@@ -62,9 +67,8 @@ async function listen(slow = false) {
   if (played && view === 'listen' && current === round[question]) { heard = true; render(false); }
 }
 function choose(side) {
-  if (!cardOpen) cardOpen = true;
   if (view === 'preview') { mouthSide = side; audio.play(lesson.words[side]); render(false); return; }
-  if (view === 'mouth') { mouthSide = side; render(false); return; }
+  if (view === 'mouth') { world.stopComparison(); mouthSide = side; sceneKey = ''; render(false); return; }
   if (view !== 'listen' || response !== null) return;
   if (!heard) { audio.state.message = 'Press Listen before choosing.'; render(false); return; }
   const q = round[question];
@@ -110,7 +114,7 @@ function content() {
   if (view === 'people') return presenceCard(presence, button, () => navigate(previousView));
   if (view === 'home') return {
     kicker: 'English sounds · A hands-on lab', title: 'Hear the difference. Find your voice.',
-    body: 'Start with two sounds that are easy to confuse. Listen, choose, see the mouth position, then record yourself. Five minutes. One small discovery.',
+    body: 'Learn by doing in three spaces: place the word you hear in an answer ring, inspect a moving mouth cutaway, then see your voice while you record and compare. Start with a contrast.',
     fact: 'American English lessons · No sign-in needed',
     choices: LESSONS.map((l, i) => button(`${String(i + 1).padStart(2, '0')}  ${l.title}`, () => begin(l.id))),
     actions: [button('Start with ship / sheep', () => begin('ship-sheep'), true), button('All 44 guides', showLibrary)],
@@ -126,8 +130,8 @@ function content() {
     const q = round[question], words = lesson.pairs[q.pairIndex];
     return {
       kicker: `Step 2 / Listening · ${question + 1} of ${round.length}`, title: 'What did you hear?',
-      body: 'Press Listen, then choose the word you heard. You can replay the example as often as you need.',
-      fact: 'Choose with a button or point at the matching pedestal.',
+      body: 'Press Listen, then place the matching word in the gold answer ring. You can replay the example as often as you need, or use the word buttons here.',
+      fact: 'VR: squeeze to grab a word, then release it in the gold ring. Or point and tap a word, then the ring.',
       choices: words.map((word, i) => button(word, () => choose(i))),
       actions: [button('Listen', () => listen(), true), button('Listen slower', () => listen(true))],
     };
@@ -145,14 +149,16 @@ function content() {
   if (view === 'mouth') return {
     kicker: 'Step 3 / See the sound', title: `/${lesson.symbols[mouthSide]}/ as in ${lesson.words[mouthSide]}`,
     body: lesson.tip,
-    fact: 'The side view shows tongue, teeth and lips. Mint dots illustrate airflow. This is a simplified demonstration.',
-    choices: lesson.words.map((word, i) => button(`Show /${lesson.symbols[i]}/ · ${word}`, () => { mouthSide = i; render(false); })),
-    actions: [button('Hear this sound', () => audio.play(lesson.words[mouthSide])), button('Practice speaking', () => { speakIndex = 0; navigate('speak'); }, true)],
+    fact: 'Inspect the enlarged 3D cutaway: point at tongue, teeth or lips. Compare positions and rotate to see depth. Mint dots illustrate airflow.',
+    choices: lesson.words.map((word, i) => button(`Show /${lesson.symbols[i]}/ · ${word}`, () => choose(i))),
+    actions: [button(world.comparing ? 'Stop comparison' : 'Compare movement', () => { if (!world.compareMouth(lesson.mouth, lesson.symbols)) world.setMouth(lesson.mouth[mouthSide], lesson.symbols[mouthSide]); render(false); }),
+      button('Rotate left', () => world.rotateMouth(-1)), button('Rotate right', () => world.rotateMouth(1)),
+      button('Hear this sound', () => { world.stopComparison(); world.setMouth(lesson.mouth[mouthSide], lesson.symbols[mouthSide]); audio.play(lesson.words[mouthSide]); }), button('Practice speaking', () => { speakIndex = 0; navigate('speak'); }, true)],
   };
   if (view === 'speak') return {
     kicker: `Step 4 / Speak & compare · ${speakIndex + 1} of 4`, title: speakingText(),
     body: 'Listen, say it aloud, then record yourself. Play your recording and the example one after the other. What would you change on your next attempt?',
-    fact: 'Only you hear this practice. Recordings stay in this tab. Speaking practice is self-review.',
+    fact: 'The 3D bars show your live volume while recording. They do not grade pronunciation. Recordings stay in this tab; compare by listening.',
     actions: [...recordingActions(speakingText(), 'American English', lesson.id), button(speakIndex === 3 ? 'Finish lesson' : 'Next practice', () => {
       if (speakIndex < 3) { speakIndex++; navigate('speak'); } else navigate('complete');
     })],
@@ -203,7 +209,7 @@ let sceneKey = '';
 function updateWorld() {
   const q = round[question];
   const pair = ['listen', 'feedback'].includes(view) && q ? lesson.pairs[q.pairIndex] : lesson.words;
-  const key = `${view}:${lesson.id}:${pair.join('-')}:${mouthSide}:${selectedGuide.id}`;
+  const key = `${view}:${lesson.id}:${pair.join('-')}:${mouthSide}:${speakIndex}:${selectedGuide.id}`;
   if (key === sceneKey) return;
   sceneKey = key;
   const useObjects = pair[0] === lesson.words[0];
@@ -211,19 +217,47 @@ function updateWorld() {
   const show = ['home', 'preview', 'mouth', 'speak', 'complete'].includes(view) || (view === 'guide' && mappedMouth[selectedGuide.id]);
   world.showMouth(!!show);
   if (view === 'guide' && mappedMouth[selectedGuide.id]) world.setMouth(mappedMouth[selectedGuide.id], selectedGuide.ipa);
-  else world.setMouth(lesson.mouth[mouthSide], lesson.symbols[mouthSide]);
+  else world.setMouth(lesson.mouth[view === 'speak' ? speakIndex % 2 : mouthSide], lesson.symbols[view === 'speak' ? speakIndex % 2 : mouthSide]);
+}
+
+let moving = false, moveQueued = false;
+async function focusStation() {
+  if (!inXr()) {
+    const s = STATIONS[stationFor(view)];
+    camera.setTarget(V(...s.target)); camera.radius = s.radius; camera.alpha = -Math.PI / 2; camera.beta = 1.38;
+    return;
+  }
+  moveQueued = true;
+  if (moving) return;
+  moving = true;
+  try {
+    while (moveQueued && inXr()) {
+      moveQueued = false;
+      const s = STATIONS[stationFor(view)];
+      await rig.moveTo(V(...s.position), V(...s.lookAt));
+      if (inXr() && cardOpen) render();
+    }
+  } catch (error) { console.warn('[snd] Station move failed', error); }
+  finally { moving = false; }
 }
 
 function render(place = true) {
   if (!panel) return;
   updateWorld();
   const data = content();
+  world.setActivity({
+    view, station: stationFor(view), heard, recording: audio.state.recording, busy: audio.state.recording || audio.state.requesting,
+    title: data.title, teaching: lesson.tip, status: audio.state.message || (view === 'feedback' ? `Answer: ${round[question].word} · ${correct} correct` : ''),
+    hint: view === 'listen' ? (heard ? 'Squeeze to grab · release in gold ring · or tap word then ring' : 'Press Listen, then find the matching word') : view === 'preview' ? 'Tap an object to hear it · then start the listening game' : '',
+    actions: [...(['mouth', 'feedback'].includes(view) ? (data.choices ?? []) : []), ...(data.actions ?? [])],
+  });
   if (inXr()) {
     ui.card.hidden = true;
     if (!cardOpen) { panel.hide(); return; }
     const busy = audio.state.recording || audio.state.requesting;
     const tools = busy ? [] : [button('Lessons', home), button('Library', showLibrary), button('Progress', () => navigate('progress')), button('People', people), button('Rooms', () => { previousView = view; navigate('rooms'); })];
-    panel.setContent({ ...data, fact: audio.state.message || data.fact, tools, onClose: () => {
+    const guarded = (items) => items?.map((a) => ({ ...a, onClick: () => { if (!busy || a.label === 'Stop recording') a.onClick(); } }));
+    panel.setContent({ ...data, actions: guarded(data.actions), choices: guarded(data.choices), fact: audio.state.message || data.fact, tools, onClose: () => {
       if (busy) return;
       cardOpen = false; render(false);
     } });
@@ -254,7 +288,7 @@ function render(place = true) {
 async function start() {
   world = buildWorld(engine, choose);
   camera = new ArcRotateCamera('lab camera', -Math.PI / 2, 1.38, 8.4, V(0, 1.6, 1.1), world.scene);
-  camera.lowerRadiusLimit = 4; camera.upperRadiusLimit = 11;
+  camera.lowerRadiusLimit = 2.8; camera.upperRadiusLimit = 11;
   camera.lowerBetaLimit = 0.55; camera.upperBetaLimit = 1.65;
   camera.lowerAlphaLimit = -Math.PI * 0.8; camera.upperAlphaLimit = -Math.PI * 0.2;
   camera.panningSensibility = 0; camera.wheelDeltaPercentage = 0.01;
@@ -264,6 +298,7 @@ async function start() {
     camera.viewport = innerWidth > 800 ? new Viewport(0.25, 0, 0.75, 1) : innerWidth > 520 ? new Viewport(0.3, 0, 0.7, 1) : new Viewport(0, 0, 1, 1);
   };
   addEventListener('resize', layout); layout();
+  world.voiceLevel(() => audio.level());
   world.animateMouth(!matchMedia('(prefers-reduced-motion: reduce)').matches);
   panel = createCard(world.scene, { name: 'sound-lab-menu', width: 0.86, height: 1.0 });
   let refreshPresence = () => {};
@@ -285,17 +320,18 @@ async function start() {
   } catch (error) { console.warn('[snd] VR unavailable', error); }
   if (rig) {
     ui.vr.hidden = false;
+    world.attachXr(rig);
     for (const p of panel.panels) rig.mirrorPanel(p, { interactive: true });
     rig.onChange((entered) => {
       document.body.classList.toggle('in-xr', entered);
-      if (!entered) { audio.cancel(); render(); }
+      if (!entered) { audio.cancel(); render(); focusStation(); }
     });
     let enteredFrames = 0;
     rig.xr.baseExperience.sessionManager.onXRFrameObservable.add(() => {
       if (!inXr()) { enteredFrames = 0; return; }
-      if (++enteredFrames === 6) { cardOpen = true; render(); }
+      if (++enteredFrames === 6) { cardOpen = !['preview', 'listen', 'feedback', 'mouth', 'speak'].includes(view); render(); focusStation(); }
     });
-    createMenuControls(world.scene, rig, panel, { open: () => { cardOpen = true; render(); }, close: () => {
+    createMenuControls(world.scene, rig, panel, { follow: false, open: () => { cardOpen = true; render(); }, close: () => {
       if (audio.state.recording || audio.state.requesting) return;
       cardOpen = false; render(false);
     } });
@@ -311,7 +347,7 @@ async function start() {
   engine.runRenderLoop(() => world.scene.render());
   // Read-only inspection makes rendering and state smoke checks possible without a headset.
   window.__snd = { scene: world.scene, panel, get state() {
-    return { view, lesson: lesson.id, question, correct, heard, response, speakIndex, mouthSide, progress, audio: { ...audio.state } };
+    return { view, lesson: lesson.id, question, correct, heard, response, speakIndex, mouthSide, station: stationFor(view), selectedObject: world.interaction.held?.side ?? null, comparing: world.comparing, progress, audio: { ...audio.state } };
   } };
 }
 
