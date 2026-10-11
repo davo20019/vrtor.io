@@ -6,6 +6,7 @@
 
 /** The rooms served on vrtor.io (apps/home/src/subjects.js lists every subject). */
 export const ROOMS = [
+  { code: 'snd', name: 'Sound Lab' },
   { code: 'taj', name: 'Taj Mahal' },
   { code: 'mpc', name: 'Machu Picchu' },
   { code: 'apo', name: 'Apollo 11' },
@@ -36,14 +37,14 @@ async function leave(rig, href) {
  */
 export function roomsCard(here, rig, button, onBack) {
   const choices = ROOMS.filter((r) => r.code !== here).map((r) => button(r.name, () => leave(rig, `/${r.code}/?vr=1`)));
-  choices.push(button('VRtor home', () => leave(rig, '/')));
   return {
     kicker: 'Change room',
     title: 'Where to next?',
     body: 'VR pauses briefly while the next room loads.',
     fact: '',
     choices,
-    actions: [button('Back', onBack, true)],
+    // Keep the room grid to three rows as the catalog grows; home fits beside Back.
+    actions: [button('VRtor home', () => leave(rig, '/')), button('Back', onBack, true)],
   };
 }
 

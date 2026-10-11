@@ -16,6 +16,7 @@ apps/mpc/        Machu Picchu (with visitors), Worker "vrtor-mpc"
 apps/apo/        Apollo 11: inside Columbia in lunar orbit, Worker "vrtor-apo"
 apps/fly/        Wright Flyer: the 1903 Flyer at Kill Devil Hills, Worker "vrtor-fly"
 apps/orca/       Orca: a killer whale skeleton, inside out, Worker "vrtor-orca"
+apps/snd/        Sound Lab: English sound contrasts and the LES sound library, Worker "vrtor-snd"
 apps/geo/        Earth (unlisted experiment): open imagery, terrain and buildings from orbit to
                  street level (three.js + 3d-tiles-renderer, not Babylon), Worker "vrtor-geo"
 packages/xr-shell/  shared WebXR pieces for every subject (Quest-tuned session setup,
@@ -119,6 +120,41 @@ const updateBar = mountPresenceControls(presence, document.querySelector('.prese
 2. In `apps/home`: add `{ code, service }` to `src/subjects.js` and the service binding to `wrangler.jsonc`.
 3. Add it to `scripts/dev.js` and the root `deploy` script, and update its card in `apps/home/public/index.html`.
 4. Optional: visitors (see above). The presence route accepts any subject with a `service`.
+
+## Sound Lab (`vrtor.io/snd/`)
+
+A browser and WebXR pronunciation lab connected to Learn English Sounds. Four guided
+American English contrasts (ship/sheep, cat/cut, thin/sin, vest/best) follow the same
+sequence: compare examples, answer six shuffled listening questions, inspect a schematic
+mouth position, then record and compare words and sentences. Choose with the HTML buttons,
+click the 3D pedestals, or point and pull the trigger in VR. A/X opens the headset menu;
+teleport and snap turns use the shared XR shell. Visitors and spatial voice are optional;
+starting a recording mutes your visitor microphone and does not turn it back on automatically.
+
+The library contains the 44 LES guides, including regional entries and the /ju/ sound
+pattern. British centering-diphthong guides are labeled and use British examples; core
+lessons use American English. Mouth animations cover the eight guided sounds only and
+are simplified demonstrations, not anatomical measurements. Every guide offers its
+mouth instructions, example audio, private recording playback, and a link to its full
+LES page. Deep links from LES can open `/snd/?sound=short-i` or
+`/snd/?lesson=ship-sheep`. The LES site itself is not modified here.
+
+Examples are bundled MP3s made with synthesized macOS voices (Samantha for American,
+Daniel for British). Recordings remain in memory in the browser tab, stop after eight
+seconds, and are discarded on exercise changes, backgrounding, or leaving. Only listening
+results and recording counts persist in localStorage. Speaking is self-review, without
+automatic pronunciation scores; there is no shared login or cross-site progress sync.
+
+- Build: `npm run build -w @vrtor/snd`; checks: `npm run test:snd`.
+- Development: `npm run dev` includes Sound Lab at `/snd/`.
+- Deployment: deploy `vrtor-snd` before the home Worker; the root deploy script does this.
+- Refresh LES data: `node scripts/import-sound-guides.mjs /path/to/learnenglishsounds`.
+- Rebuild audio on macOS with `say` and `ffmpeg`: `node scripts/build-sound-audio.mjs`.
+
+The catalog, `/sounds`, `/sound-lab`, `/english`, sitemap, and headset room menu all
+include Sound Lab. Desktop/mobile browser flows, bundled audio, recording lifecycle,
+local routing and caching have been checked. Physical headset comfort, menu placement,
+and microphone permission behavior still require a headset check.
 
 ## How Accent (accent.learnenglishsounds.com/vr) plugs in
 

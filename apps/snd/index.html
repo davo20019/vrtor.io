@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sound Lab · Learn English sounds in VR · VRtor</title>
+    <meta name="description" content="Learn English sounds in a hands-on VR sound lab. Listen to minimal pairs, explore mouth positions, record yourself, and continue with Learn English Sounds." />
+    <link rel="canonical" href="https://vrtor.io/snd/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#0d202c" />
+    <meta property="og:title" content="Sound Lab · VRtor" />
+    <meta property="og:description" content="Hear the difference. See the sound. Find your voice. English pronunciation practice in your headset's browser." />
+    <meta property="og:url" content="https://vrtor.io/snd/" />
+    <meta property="og:image" content="https://vrtor.io/assets/cards/sound-lab.svg" />
+  </head>
+  <body>
+    <canvas id="scene" aria-label="Interactive 3D sound lab with two choice pedestals and a mouth-position demonstration"></canvas>
+    <header class="top">
+      <a class="brand" href="/">VRtor<span>Sound Lab</span></a>
+      <a class="partner" href="https://www.learnenglishsounds.com/en?ref=vrtor" target="_blank" rel="noopener">With Learn English Sounds <span aria-hidden="true">↗</span></a>
+    </header>
+    <main>
+      <div class="loading" role="status"><p>Opening the Sound Lab…</p><button type="button" data-retry hidden>Try again</button></div>
+      <section class="card" aria-label="Sound lesson" hidden>
+        <p class="card-kicker"></p>
+        <h1 class="card-title"></h1>
+        <p class="card-body"></p>
+        <p class="card-fact" aria-live="polite"></p>
+        <div class="card-choices"></div>
+        <div class="card-actions"></div>
+        <p class="audio-status" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <nav class="bar" aria-label="Sound Lab controls">
+      <button type="button" data-home disabled>Lessons</button>
+      <button type="button" data-library disabled>Sound library <span>44</span></button>
+      <button type="button" data-progress disabled>My progress</button>
+      <div class="presence-controls"></div>
+      <button class="vr-cta" type="button" data-enter-vr hidden><strong>Enter VR</strong><small>Step inside the Sound Lab</small></button>
+    </nav>
+    <p class="hint">Choose with the buttons or tap a pedestal · Drag to look around</p>
+    <details class="credits"><summary>About the lab</summary><p>The library links to all 44 guides on <a href="https://www.learnenglishsounds.com/en" target="_blank" rel="noopener">Learn English Sounds</a>; its catalog includes regional sounds and a /ju/ sound pattern. The four guided contrasts use American English. Examples use synthesized voices, with a British voice for the three British centering-diphthong guides.</p><p>The mouth demonstration is a simplified side view for the eight guided sounds, not a measurement of your mouth. Recorded audio stays in this browser tab and is deleted when you change exercise or leave. Practice counts and listening results are saved in this browser; speaking is self-review, without automatic pronunciation scoring.</p><p>Headset: point and pull the trigger to choose. A or X opens the menu. Use the right stick to teleport and turn. Allow the microphone before entering VR if your headset cannot show the permission prompt inside VR.</p></details>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

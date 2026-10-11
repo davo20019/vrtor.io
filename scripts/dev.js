@@ -14,6 +14,7 @@ const homeArgs = process.argv.slice(2);
 if (!homeArgs.includes('--port')) homeArgs.push('--port', '8790');
 
 const children = [
+  run('npm', ['run', 'watch', '-w', '@vrtor/snd']),
   run('npm', ['run', 'watch', '-w', '@vrtor/spc']),
   run('npm', ['run', 'watch', '-w', '@vrtor/taj']),
   run('npm', ['run', 'watch', '-w', '@vrtor/mpc']),
@@ -23,6 +24,7 @@ const children = [
   run('npm', ['run', 'watch', '-w', '@vrtor/geo']),
   run('npm', ['run', 'watch', '-w', '@vrtor/jump']),
   run('npm', ['run', 'watch', '-w', '@vrtor/cyb']),
+  run('npx', ['wrangler', 'dev', '-c', 'apps/snd/wrangler.jsonc', '--port', '8800', '--inspector-port', '9250']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/cyb/wrangler.jsonc', '--port', '8799', '--inspector-port', '9249']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/jump/wrangler.jsonc', '--port', '8798', '--inspector-port', '9248']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/geo/wrangler.jsonc', '--port', '8797', '--inspector-port', '9247']),

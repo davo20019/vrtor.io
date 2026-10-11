@@ -1,0 +1,750 @@
+[
+  {
+    "id": "schwa",
+    "ipa": "ə",
+    "name": "Schwa",
+    "category": "Vowel",
+    "example": "about",
+    "mouth": "Very neutral and relaxed. The lips are not rounded or spread. The jaw is only slightly open. The tongue rests in the middle-center of the mouth, not tense, not high/low/front/back. It requires minimal effort.",
+    "description": "The schwa is the most common vowel sound in English. It is a very short, relaxed, neutral vowel sound that *only* appears in unstressed syllables. Think of it as a lazy \"uh\" or \"ih\" sound.",
+    "words": [
+      "about",
+      "sofa",
+      "taken",
+      "pencil",
+      "supply"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "short-a",
+    "ipa": "æ",
+    "name": "Short A",
+    "category": "Vowel",
+    "example": "cat",
+    "mouth": "The mouth is open, lips spread slightly. The tongue is flat and low in the mouth.",
+    "description": "The short \"a\" sound as in \"cat\" or \"hat\".",
+    "words": [
+      "cat",
+      "hat",
+      "bat",
+      "map",
+      "sat"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "long-a",
+    "ipa": "eɪ",
+    "name": "Long A",
+    "category": "Diphthong",
+    "example": "say",
+    "mouth": "Start with the jaw mid-open and the tongue mid-high and towards the front of the mouth. Then, glide the tongue slightly higher and forward while the jaw closes slightly. The lips start relatively neutral or slightly spread and become more neutral or slightly retracted as the sound finishes.",
+    "description": "The vowel sound heard in words like \"say\", \"make\", \"rain\", and \"eight\". It's a diphthong, meaning it's a combination of two vowel sounds: it starts with a sound similar to the 'e' in \"bet\" (/ɛ/ or a slightly higher /e/) and glides towards the 'ee' sound in \"see\" (/i/ or /ɪ/).",
+    "words": [
+      "say",
+      "make",
+      "rain",
+      "play",
+      "eight"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "short-e",
+    "ipa": "ɛ",
+    "name": "Short E",
+    "category": "Vowel",
+    "example": "bed",
+    "mouth": "The jaw is mid-open, lips are slightly spread but relaxed. The tongue is mid-high and towards the front of the mouth, but not as high as for the long \"e\" sound.",
+    "description": "The short \"e\" sound as in \"bed\", \"red\", \"get\", and \"let\". This is a mid-front vowel sound that is shorter and more relaxed than the long \"e\" sound.",
+    "words": [
+      "bed",
+      "red",
+      "get",
+      "let",
+      "pen"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "short-i",
+    "ipa": "ɪ",
+    "name": "Short I",
+    "category": "Vowel",
+    "example": "sit",
+    "mouth": "The jaw is relatively closed, lips are slightly spread but relaxed. The tongue is high and towards the front of the mouth, but more relaxed than for the long \"i\" sound.",
+    "description": "The short \"i\" sound as in \"sit\", \"hit\", \"big\", and \"fish\". This is a high-front lax vowel sound that is shorter and more relaxed than the long \"i\" sound.",
+    "words": [
+      "sit",
+      "hit",
+      "big",
+      "fish",
+      "ship"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "long-e",
+    "ipa": "iː",
+    "name": "Long E",
+    "category": "Vowel",
+    "example": "see",
+    "mouth": "The jaw is relatively closed, lips are spread wide in a smile position. The tongue is high and towards the front of the mouth, creating a tense, bright sound.",
+    "description": "The long \"e\" sound as in \"see\", \"meet\", \"feel\", and \"tree\". This is a high-front tense vowel sound that is longer and more tense than the short \"e\" sound.",
+    "words": [
+      "see",
+      "meet",
+      "feel",
+      "tree",
+      "green"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "short-o",
+    "ipa": "ɑ",
+    "name": "Short O / Broad A",
+    "category": "Vowel",
+    "example": "hot",
+    "mouth": "The jaw is open, lips are relaxed and not rounded. The tongue is low and back in the mouth, creating a deep, open sound.",
+    "description": "The short \"o\" sound as in \"hot\", \"lot\", \"stop\", and \"job\". This is a low-back unrounded vowel sound that is common in American English.",
+    "words": [
+      "hot",
+      "lot",
+      "stop",
+      "job",
+      "dog"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "long-o",
+    "ipa": "oʊ",
+    "name": "Long O",
+    "category": "Diphthong",
+    "example": "go",
+    "mouth": "Start with the jaw mid-open and the tongue mid-high and back in the mouth. Then, glide the tongue higher and more back while the jaw closes slightly. The lips start rounded and become more rounded as the sound finishes.",
+    "description": "The diphthong sound heard in words like \"go\", \"home\", \"boat\", and \"know\". It's a combination of two vowel sounds: it starts with a sound similar to the \"o\" in \"go\" (/o/) and glides towards the \"oo\" sound in \"too\" (/ʊ/).",
+    "words": [
+      "go",
+      "home",
+      "boat",
+      "know",
+      "road"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "er",
+    "ipa": "ɜr",
+    "name": "ER (Bird, Nurse)",
+    "category": "Vowel",
+    "example": "bird",
+    "mouth": "The lips are relaxed and slightly rounded. The tongue is in the middle of the mouth, neither high nor low, front nor back, with the tip slightly curled back. The jaw is in a neutral position, slightly open.",
+    "description": "The R-controlled vowel sound heard in words like \"bird\", \"nurse\", \"learn\", and \"turn\". This is a mid-central vowel followed by an R sound. In American English, this sound is typically rhotic (the R is pronounced).",
+    "words": [
+      "bird",
+      "nurse",
+      "learn",
+      "turn",
+      "first"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "short-oo",
+    "ipa": "ʊ",
+    "name": "Short OO / Book Vowel",
+    "category": "Vowel",
+    "example": "book",
+    "mouth": "Lips are loosely rounded (less than for Long OO /u/). Tongue is high and towards the back, but lower and more relaxed than for /u/. Jaw is relatively closed, but slightly more open than for /u/.",
+    "description": "The high-mid back rounded lax vowel sound heard in words like \"book\", \"put\", \"could\", and \"foot\". Often called the BOOK vowel.",
+    "words": [
+      "book",
+      "put",
+      "could",
+      "foot",
+      "good"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "long-oo",
+    "ipa": "u",
+    "name": "Long OO / Blue Vowel",
+    "category": "Vowel",
+    "example": "blue",
+    "mouth": "Lips are tightly rounded and pushed forward slightly. Tongue is high and pulled far back in the mouth. Jaw is relatively closed. Muscles around the lips are tense.",
+    "description": "The high back rounded tense vowel sound heard in words like \"blue\", \"food\", \"two\", and \"rule\". Often called the BLUE vowel.",
+    "words": [
+      "blue",
+      "food",
+      "two",
+      "rule",
+      "you"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "short-u",
+    "ipa": "ʌ",
+    "name": "Short U / Strut Vowel",
+    "category": "Vowel",
+    "example": "cup",
+    "mouth": "Jaw is mid-open, slightly lower than for schwa /ə/. Tongue is low-mid and in the center or slightly back of the mouth, relaxed. Lips are neutral, not rounded or spread. The sound is produced with an open throat and relaxed articulation.",
+    "description": "The mid-low back-central unrounded vowel sound heard in words like \"cup\", \"luck\", \"son\", and \"does\". Often called the STRUT vowel in linguistics, this sound is common in English and appears in many frequently used words.",
+    "words": [
+      "cup",
+      "luck",
+      "son",
+      "does",
+      "fun"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "long-u",
+    "ipa": "ju",
+    "name": "Long U / Cute Vowel",
+    "category": "Vowel/Diphthong",
+    "example": "cute",
+    "mouth": "Start with the tongue high and front, similar to the start of 'yes'. Lips may be slightly spread. Then, quickly glide the tongue high and back while rounding the lips tightly for the /u/ sound.",
+    "description": "The sound heard in words like \"cute\", \"music\", \"few\", and \"use\". It typically starts with a /j/ glide (like 'y' in 'yes') and moves into the Long OO /u/ sound. Sometimes, after certain consonants (like R, L, J, CH, SH), the /j/ glide is dropped, and it sounds like Long OO /u/ (e.g., rule, blue, chew).",
+    "words": [
+      "use (verb)",
+      "cute",
+      "music",
+      "few",
+      "human"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "aw-sound",
+    "ipa": "ɔ",
+    "name": "AW Sound / Caught Vowel",
+    "category": "Vowel",
+    "example": "caught",
+    "mouth": "Jaw is mid-low, more open than for Long O /oʊ/. Tongue is low-mid and pulled back. Lips are rounded, but can be less tense than for /oʊ/.",
+    "description": "The mid-low back rounded vowel sound heard in words like \"caught\", \"law\", \"talk\", and \"all\". Often called the CAUGHT vowel. Note: Many American English speakers merge this sound with the Short O /ɑ/ (the Cot-Caught Merger).",
+    "words": [
+      "caught",
+      "law",
+      "talk",
+      "all",
+      "saw"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "diphthong-ow",
+    "ipa": "aʊ",
+    "name": "Diphthong OW / Mouth Vowel",
+    "category": "Diphthong",
+    "example": "now",
+    "mouth": "Start with the jaw wide open, tongue low (either front /æ/ or central /ɑ/). Then, glide the tongue high and back while rounding the lips for the /ʊ/ sound. The jaw closes significantly during the glide.",
+    "description": "The diphthong vowel sound heard in words like \"now\", \"house\", \"out\", and \"down\". Often called the MOUTH vowel. It starts with a low vowel, similar to /æ/ or /ɑ/, and glides towards a high back rounded vowel /ʊ/.",
+    "words": [
+      "now",
+      "house",
+      "out",
+      "down",
+      "about"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "diphthong-oy",
+    "ipa": "ɔɪ",
+    "name": "Diphthong OY / Choice Vowel",
+    "category": "Diphthong",
+    "example": "boy",
+    "mouth": "Start with the jaw mid-open, tongue low-mid and back, lips rounded (/ɔ/). Then, glide the tongue high and forward while unrounding the lips and closing the jaw slightly for the /ɪ/ sound.",
+    "description": "The diphthong vowel sound heard in words like \"boy\", \"noise\", \"coin\", and \"toy\". Often called the CHOICE vowel. It starts with a mid-back rounded vowel /ɔ/ (like in 'caught') and glides towards a high front unrounded vowel /ɪ/ (like in 'sit').",
+    "words": [
+      "boy",
+      "noise",
+      "coin",
+      "toy",
+      "voice"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "long-i",
+    "ipa": "aɪ",
+    "name": "Diphthong AY / Price Vowel / Long I",
+    "category": "Diphthong",
+    "example": "price",
+    "mouth": "Start with the jaw open and the tongue low and back in the mouth. Then, glide the tongue higher and forward while the jaw closes. The lips start neutral and become slightly spread as the sound finishes.",
+    "description": "The diphthong sound heard in words like \"price\", \"high\", \"my\", and \"time\". It's a combination of two vowel sounds: it starts with a sound similar to the \"a\" in \"father\" (/ɑ/ or /a/) and glides towards the \"ee\" sound in \"see\" (/i/ or /ɪ/).",
+    "words": [
+      "price",
+      "high",
+      "my",
+      "time",
+      "like"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "near",
+    "ipa": "ɪə",
+    "name": "NEAR Diphthong / Centering Diphthong",
+    "category": "Diphthong",
+    "example": "dear",
+    "mouth": "Start with the tongue high and forward for the /ɪ/ sound, jaw relatively closed. Then, glide the tongue towards the center and lower it slightly while relaxing the jaw for the /ə/ sound. Lips remain relatively neutral throughout.",
+    "description": "The centering diphthong vowel sound heard in words like \"dear\", \"fear\", \"clear\", and \"here\". Often called the NEAR vowel. It starts with a high front unrounded vowel /ɪ/ (like in 'sit') and glides towards the central vowel /ə/ (schwa).",
+    "words": [
+      "dear",
+      "fear",
+      "clear",
+      "here",
+      "near"
+    ],
+    "accent": "British English"
+  },
+  {
+    "id": "square",
+    "ipa": "eə",
+    "name": "SQUARE Diphthong / Centering Diphthong",
+    "category": "Diphthong",
+    "example": "care",
+    "mouth": "Start with the tongue mid-high and forward for the /e/ sound, jaw mid-open. Then, glide the tongue towards the center and lower it slightly while the jaw opens more for the /ə/ sound. Lips remain relatively neutral throughout.",
+    "description": "The centering diphthong vowel sound heard in words like \"care\", \"fair\", \"there\", and \"hair\". Often called the SQUARE vowel. It starts with a mid-front unrounded vowel /e/ (like in 'bed' but slightly higher) and glides towards the central vowel /ə/ (schwa).",
+    "words": [
+      "care",
+      "fair",
+      "there",
+      "hair",
+      "share"
+    ],
+    "accent": "British English"
+  },
+  {
+    "id": "cure",
+    "ipa": "ʊə",
+    "name": "CURE Diphthong / Centering Diphthong",
+    "category": "Diphthong",
+    "example": "cure",
+    "mouth": "Start with the tongue high and back, lips rounded for the /ʊ/ sound, jaw relatively closed. Then, glide the tongue towards the center and lower it slightly while unrounding the lips and relaxing the jaw for the /ə/ sound.",
+    "description": "The centering diphthong vowel sound heard in words like \"cure\", \"sure\", \"poor\", and \"tour\". Often called the CURE vowel. It starts with a high back rounded vowel /ʊ/ (like in 'put') and glides towards the central vowel /ə/ (schwa). Note: This diphthong is becoming rare in many English dialects.",
+    "words": [
+      "cure",
+      "sure",
+      "poor",
+      "tour",
+      "pure"
+    ],
+    "accent": "British English"
+  },
+  {
+    "id": "b",
+    "ipa": "b",
+    "name": "B",
+    "category": "Consonant",
+    "example": "boy",
+    "mouth": "Press your lips together firmly, build up air pressure behind them, then release the lips while vibrating your vocal cords. The release is gentler than for P.",
+    "description": "The B sound is a voiced bilabial stop consonant. It is made the same way as P, but with the vocal cords vibrating. Press both lips together to stop the airflow, then release them while vibrating your vocal cords.",
+    "words": [
+      "boy",
+      "big",
+      "baby",
+      "book",
+      "blue"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "d",
+    "ipa": "d",
+    "name": "D",
+    "category": "Consonant",
+    "example": "dog",
+    "mouth": "Press the tip of your tongue against the ridge behind your upper teeth (the alveolar ridge). Build up air pressure, then release the tongue while vibrating your vocal cords.",
+    "description": "The D sound is a voiced alveolar stop consonant. It is made by briefly stopping the airflow by pressing the tip of the tongue against the ridge behind the upper teeth, then releasing it while vibrating the vocal cords.",
+    "words": [
+      "dog",
+      "day",
+      "door",
+      "dark",
+      "down"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "f",
+    "ipa": "f",
+    "name": "F",
+    "category": "Consonant",
+    "example": "fun",
+    "mouth": "Place your upper teeth lightly on your lower lip. Push air out between them, creating a friction sound. Your vocal cords should not vibrate.",
+    "description": "The F sound is a voiceless labiodental fricative consonant. It is made by pressing your upper teeth against your lower lip and forcing air out between them.",
+    "words": [
+      "fun",
+      "food",
+      "fish",
+      "face",
+      "life"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "g",
+    "ipa": "g",
+    "name": "G",
+    "category": "Consonant",
+    "example": "go",
+    "mouth": "Press the back of your tongue against your soft palate (velum), just like for the K sound. Build up air pressure, then release it while vibrating your vocal cords.",
+    "description": "The G sound is a voiced velar stop consonant. It is made similarly to the K sound, but with vocal cord vibration.",
+    "words": [
+      "go",
+      "get",
+      "give",
+      "big",
+      "leg"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "h",
+    "ipa": "h",
+    "name": "H",
+    "category": "Consonant",
+    "example": "hat",
+    "mouth": "Keep your mouth slightly open in a neutral position, as if about to speak a vowel. The sound comes from the throat, not the mouth. Push air out from your lungs through your open throat without vibrating your vocal cords. The shape of your mouth will be influenced by the vowel that follows the /h/.",
+    "description": "The H sound is a voiceless glottal fricative. It's essentially a whispered vowel sound, made by pushing air through the open glottis (the space between the vocal cords) without vibration.",
+    "words": [
+      "hat",
+      "hello",
+      "house",
+      "behind",
+      "perhaps"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "j",
+    "ipa": "dʒ",
+    "name": "J Sound",
+    "category": "Consonant",
+    "example": "job",
+    "mouth": "Start by placing the tip of your tongue on the ridge behind your upper teeth (like for D). Quickly pull the tongue back slightly and release air through the narrowing while vibrating your vocal cords, creating the ZH part of the sound. It's a quick d+zh combination.",
+    "description": "The J sound is a voiced post-alveolar affricate. It starts like a D sound (/d/) with the tongue tip at the alveolar ridge, but then quickly releases into a ZH sound (/ʒ/) as the tongue pulls back slightly. It's the voiced counterpart to the CH sound /tʃ/.",
+    "words": [
+      "job",
+      "jump",
+      "judge",
+      "age",
+      "large"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "k",
+    "ipa": "k",
+    "name": "K",
+    "category": "Consonant",
+    "example": "key",
+    "mouth": "Press the back of your tongue against your soft palate (the soft part at the back of the roof of your mouth). Build up air pressure, then release it with a small puff of air. Your vocal cords should not vibrate.",
+    "description": "The K sound is a voiceless velar stop consonant. It is made by pressing the back of your tongue against the soft palate (velum) and releasing it with a puff of air.",
+    "words": [
+      "key",
+      "cat",
+      "keep",
+      "make",
+      "like"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "l",
+    "ipa": "l",
+    "name": "L Sound",
+    "category": "Consonant",
+    "example": "light",
+    "mouth": "Place the tip of your tongue on the alveolar ridge (the bumpy spot behind your upper front teeth). Keep the tongue tip there while voicing, allowing air to flow around the sides of the tongue. The back of the tongue position varies for light L (usually lower) vs. dark L (usually higher, often found at ends of words or after vowels in American English).",
+    "description": "The L sound is a voiced alveolar lateral approximant. Airflow is blocked centrally by the tongue tip touching the alveolar ridge, but escapes around the sides of the tongue.",
+    "words": [
+      "light",
+      "like",
+      "love",
+      "look",
+      "hello"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "m",
+    "ipa": "m",
+    "name": "M Sound",
+    "category": "Consonant",
+    "example": "man",
+    "mouth": "Close your lips together gently. Lower the soft palate (velum) to allow air to flow out through the nose. Vibrate your vocal cords.",
+    "description": "The M sound is a voiced bilabial nasal consonant. Airflow is blocked by closing the lips but escapes through the nose while the vocal cords vibrate.",
+    "words": [
+      "man",
+      "him",
+      "make",
+      "home",
+      "time"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "n",
+    "ipa": "n",
+    "name": "N Sound",
+    "category": "Consonant",
+    "example": "no",
+    "mouth": "Place the tip of your tongue against the ridge behind your upper front teeth (alveolar ridge), creating a seal. Lower the soft palate (velum) to allow air to flow out through the nose. Vibrate your vocal cords.",
+    "description": "The N sound is a voiced alveolar nasal consonant. Airflow is blocked by the tongue tip touching the alveolar ridge (behind the top teeth) but escapes through the nose while the vocal cords vibrate.",
+    "words": [
+      "no",
+      "name",
+      "sun",
+      "now",
+      "fun"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "ng",
+    "ipa": "ŋ",
+    "name": "NG Sound",
+    "category": "Consonant",
+    "example": "sing",
+    "mouth": "Raise the back of your tongue to press against the soft palate (velum), creating a seal like for /k/ or /g/. Lower the velum to allow air to flow out through the nose. Vibrate your vocal cords. The lips and tongue tip are not involved.",
+    "description": "The NG sound is a voiced velar nasal consonant. It is made by blocking airflow in the mouth with the back of the tongue against the soft palate (velum) and allowing air to pass through the nose while vibrating the vocal cords. It appears in words like \"sing\", \"king\", and \"long\".",
+    "words": [
+      "sing",
+      "ring",
+      "king",
+      "long",
+      "strong"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "p",
+    "ipa": "p",
+    "name": "P",
+    "category": "Consonant",
+    "example": "pen",
+    "mouth": "Press your lips together firmly, build up air pressure behind them, then release the lips with a small puff of air. Your vocal cords should not vibrate.",
+    "description": "The P sound is a voiceless bilabial stop consonant. It is made by briefly stopping the airflow by pressing both lips together, then releasing them with a small puff of air.",
+    "words": [
+      "pen",
+      "park",
+      "play",
+      "push",
+      "paper"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "r",
+    "ipa": "r",
+    "name": "R Sound",
+    "category": "Consonant",
+    "example": "red",
+    "mouth": "Two common articulations: 1) Bunched: The back/middle of the tongue bunches up high towards the roof of the mouth (palate), sides of the tongue make contact with the upper side teeth, and the tongue tip points down or straight. 2) Retroflex: The tongue tip curls slightly upward and backward toward the hard palate, while the sides of the tongue maintain contact with the upper side teeth. Lips are often neutral but can be slightly rounded or protruded depending on the context. Vocal cords vibrate.",
+    "description": "The General American R is a voiced post-alveolar or retroflex approximant, often called a liquid. Unlike many languages, the tongue tip does NOT tap or trill. The sound is produced by either bunching the back/middle of the tongue towards the palate or curling the tongue tip back slightly (retroflex), with air flowing over the center of the tongue.",
+    "words": [
+      "red",
+      "run",
+      "right",
+      "car",
+      "very"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "s",
+    "ipa": "s",
+    "name": "S",
+    "category": "Consonant",
+    "example": "see",
+    "mouth": "Bring the tip or blade of your tongue close to the alveolar ridge (the bumpy part behind your upper front teeth), but don't touch it. Create a narrow groove in the center of your tongue. Force air through this channel. Your vocal cords should not vibrate.",
+    "description": "The S sound is a voiceless alveolar fricative. It is made by forcing air through a narrow channel formed by the tip of the tongue and the alveolar ridge.",
+    "words": [
+      "see",
+      "say",
+      "sun",
+      "this",
+      "house"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "t",
+    "ipa": "t",
+    "name": "T Sound",
+    "category": "Consonant",
+    "example": "time",
+    "mouth": "The tip of the tongue touches the alveolar ridge (the ridge behind the upper front teeth). Air is briefly blocked, then released with a burst of air. Vocal cords do not vibrate.",
+    "description": "The voiceless alveolar stop sound heard at the beginning of \"time\" or end of \"cat\". In American English, this sound has several variants depending on word position and surrounding sounds.",
+    "words": [
+      "time",
+      "cat",
+      "take",
+      "water",
+      "city"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "v",
+    "ipa": "v",
+    "name": "V",
+    "category": "Consonant",
+    "example": "very",
+    "mouth": "Place your upper teeth lightly on your lower lip. Push air out between them while vibrating your vocal cords, creating a buzzing friction sound.",
+    "description": "The V sound is a voiced labiodental fricative consonant. It is made the same way as F, but with the vocal cords vibrating. Press your upper teeth against your lower lip and force air out between them while vibrating your vocal cords.",
+    "words": [
+      "very",
+      "voice",
+      "love",
+      "live",
+      "move"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "w",
+    "ipa": "w",
+    "name": "W",
+    "category": "Consonant",
+    "example": "way",
+    "mouth": "Start with lips tightly rounded and pushed forward slightly. The back of the tongue is high, close to the soft palate (similar to /u/). Then, quickly relax the lips and tongue as you voice the sound, gliding into the next sound in the word.",
+    "description": "The W sound is a voiced labio-velar approximant. It's like a quick glide starting with rounded lips (similar to the OO vowel /u/) and moving quickly away from that position.",
+    "words": [
+      "way",
+      "we",
+      "water",
+      "will",
+      "work"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "y",
+    "ipa": "j",
+    "name": "Y",
+    "category": "Consonant",
+    "example": "yes",
+    "mouth": "Start with your tongue high and near the front of your mouth, almost touching the hard palate (similar to the /iː/ sound). The sides of your tongue should touch the upper side teeth. Keep your lips relaxed or slightly spread. Quickly move your tongue away from the palate as you voice the sound, gliding into the next vowel. Your vocal cords vibrate.",
+    "description": "The Y sound, represented by /j/ in IPA, is a voiced palatal approximant. It's like a very quick /iː/ (ee) sound that glides into the following vowel.",
+    "words": [
+      "yes",
+      "yellow",
+      "you",
+      "beyond",
+      "million"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "z",
+    "ipa": "z",
+    "name": "Z",
+    "category": "Consonant",
+    "example": "zoo",
+    "mouth": "The mouth position is identical to the S sound: Bring the tip or blade of your tongue close to the alveolar ridge (the bumpy part behind your upper front teeth), but don't touch it. Create a narrow groove in the center of your tongue. Force air through this channel. The key difference is that your vocal cords must vibrate, creating a buzzing sound.",
+    "description": "The Z sound is a voiced alveolar fricative. It is made in the same mouth position as the S sound, but with the vocal cords vibrating.",
+    "words": [
+      "zoo",
+      "zip",
+      "buzz",
+      "easy",
+      "rose"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "th-voiced",
+    "ipa": "ð",
+    "name": "Voiced TH",
+    "category": "Consonant",
+    "example": "this",
+    "mouth": "Place the tip of your tongue between your top and bottom front teeth. Push air out while vibrating your vocal cords. Your tongue should be visible between your teeth.",
+    "description": "The voiced TH sound is made by placing your tongue between your teeth and vibrating your vocal cords while pushing air out. Common in function words and between vowels in English.",
+    "words": [
+      "this",
+      "that",
+      "these",
+      "those",
+      "they"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "th-voiceless",
+    "ipa": "θ",
+    "name": "Voiceless TH",
+    "category": "Consonant",
+    "example": "think",
+    "mouth": "The tip of the tongue is placed between the upper and lower front teeth or just behind the upper front teeth. Air is pushed through the narrow space between the tongue and teeth, creating friction. Vocal cords do not vibrate.",
+    "description": "The voiceless dental fricative sound heard in words like \"think\", \"thin\", and \"bath\". Air passes between the tongue and teeth creating friction.",
+    "words": [
+      "think",
+      "thin",
+      "bath",
+      "three",
+      "mouth"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "sh",
+    "ipa": "ʃ",
+    "name": "SH",
+    "category": "Consonant",
+    "example": "she",
+    "mouth": "Round your lips slightly. Raise the blade (the part just behind the tip) of your tongue towards the roof of your mouth, just behind the alveolar ridge (the bump behind your upper teeth). Don't let your tongue tip touch the ridge. Keep the sides of your tongue touching the upper side teeth. Push air out through the channel created, without vibrating your vocal cords.",
+    "description": "The SH sound is a voiceless postalveolar fricative. It is made by bringing the blade of the tongue close to the area just behind the alveolar ridge and forcing air through, creating a hushing sound.",
+    "words": [
+      "she",
+      "ship",
+      "fish",
+      "nation",
+      "sure"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "zh",
+    "ipa": "ʒ",
+    "name": "ZH",
+    "category": "Consonant",
+    "example": "vision",
+    "mouth": "Round your lips slightly. Raise the blade (the part just behind the tip) of your tongue towards the roof of your mouth, just behind the alveolar ridge (the bump behind your upper teeth). Don't let your tongue tip touch the ridge. Keep the sides of your tongue touching the upper side teeth. Push air out through the channel created, while vibrating your vocal cords.",
+    "description": "The ZH sound is a voiced postalveolar fricative, the voiced counterpart to the SH sound (/ʃ/). It is made in the same mouth position as SH, but with vocal cord vibration.",
+    "words": [
+      "vision",
+      "measure",
+      "pleasure",
+      "usual",
+      "garage"
+    ],
+    "accent": "American English"
+  },
+  {
+    "id": "ch",
+    "ipa": "tʃ",
+    "name": "CH Sound",
+    "category": "Consonant",
+    "example": "chair",
+    "mouth": "Start by placing the tip of your tongue on the ridge behind your upper teeth (like for T). Quickly pull the tongue back slightly and release air through the narrowing, creating the SH part of the sound. It's a quick t+sh combination. Vocal cords do not vibrate.",
+    "description": "The CH sound is a voiceless post-alveolar affricate. It starts like a T sound (/t/) with the tongue tip at the alveolar ridge, but then quickly releases into an SH sound (/ʃ/) as the tongue pulls back slightly.",
+    "words": [
+      "chair",
+      "choose",
+      "church",
+      "teach",
+      "watch"
+    ],
+    "accent": "American English"
+  }
+]

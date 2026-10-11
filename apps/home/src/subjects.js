@@ -19,6 +19,7 @@ const EARTH = { name: 'Earth', code: 'geo', service: 'GEO' };
 const JUMP = { name: 'Parachute', code: 'jump', service: 'JUMP' };
 // A full-size Cybertruck to walk around and sit in, built with the building-3d-replicas skill (apps/cyb).
 const CYB = { name: 'Cybertruck', code: 'cyb', service: 'CYB' };
+const SOUND_LAB = { name: 'Sound Lab', code: 'snd', service: 'SND' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
 const NATURE = { name: 'Nature' };
@@ -31,6 +32,11 @@ export const SUBJECTS = {
   accent: COMMUNICATION,
   acento: COMMUNICATION,
   speak: COMMUNICATION,
+
+  snd: SOUND_LAB,
+  sounds: SOUND_LAB,
+  'sound-lab': SOUND_LAB,
+  english: SOUND_LAB,
 
   mpc: MACHU,
   'machu-picchu': MACHU,
