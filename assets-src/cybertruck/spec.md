@@ -88,6 +88,9 @@ than the real tyre. Open: to be read off the straight front photo (c150) in the 
 - **Panel gaps and stainless grain direction**: seen in the close-ups, but their exact widths are
   guesses (about 4 mm gaps).
 - **Tyre squash** under the truck's weight: not published.
+- **Front door trim at the dash** (dgRcedIkNOM 6:16, 7:13): the door's white panel, cap and ambient line run
+  forward past the seam to the dash's rear face, 4 mm behind it (the gap is a guess); the white's lower edge
+  falls from the dash's bottom corner (1,028) to the armrest's front, read on those frames, not measured.
 - **Roof apex x position and the sail facet angles**: no published number; measured from the side
   drawing and photos in the fit.
 

@@ -1,0 +1,4 @@
+{"glbFrame":"y-up","samples":24,"exposure":1.5,"cameras":{
+ "close":{"eye":[-350,1250,700],"look":[-860,1120,1200],"fovDeg":60,"size":[1280,720]},
+ "wide":{"eye":[50,1377,912],"look":[-900,1100,1250],"fovDeg":75,"size":[1280,720],"photo":"../../refs/video/frames/dgRcedIkNOM-376s.jpg"}
+}}

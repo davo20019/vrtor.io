@@ -1335,6 +1335,9 @@ def yoke_decal():
     p0, px, py = (yoke_place(Vertex(*q)).center() for q in ((0, 12.5, 0), (1, 12.5, 0), (0, 13.5, 0)))
     return {'centre': list(p0), 'u': list(px - p0), 'v': list(py - p0), 'size': [260, 65]}
 
+# The rear edge of the dash's white block and lower dash in (s, h), top to bottom, where the front door's trim meets them.
+DASH_END = [(1467.0, 1159.0), (1488.0, 1118.0), (1492.0, 1062.0), (1462.0, 1028.0)]
+
 def door_trim(p, d, sx, driver):
     """Trim on one door's inside (d 'f' or 'r', sx +1 left / -1 right), from the video frames
     (dgRcedIkNOM-12, -17, -45) and the manual (Windows: four switches on the driver's door): a black cap under
@@ -1374,6 +1377,16 @@ def door_trim(p, d, sx, driver):
     out['switch'] = keys
     out['open'] = [Box(24, 8, 30).moved(Location((hip + 15, ya + 3, Z(arm_s0 + 160))))]   # the door-open button, ahead of the pull pocket
     white = SH([(s0, ya - 2), (s1, ya - 2), (s1, bt1), (s0, bt0)], hip - 40, xw)
+    if d == 'f':
+        # With the door shut its trim runs forward past the seam to the dash, 4 mm behind its rear face (dgRcedIkNOM
+        # 6:16 and 7:13): the white block's point butts onto the door's white panel, whose top meets the block's top
+        # corner, and whose lower edge leaves the block's bottom corner (1,028) and falls back to the armrest's front;
+        # under it the dark panel. The dash's lip and face end there, the door's cap and ambient line carrying on.
+        # The profile is the white block's and the lower dash's rear edge (interior(), 'dash_white', 'dash_lower').
+        wf = [(sw + 4, hw) for sw, hw in DASH_END]
+        white = SH([(wf[0][0], belt_h(p, wf[0][0]) - 52)] + wf[1:] + [(arm_s0 + 70, ya - 2), (s1, ya - 2), (s1, bt1)], hip - 40, xw)
+        out['door_lower'].append(XH([(xw, 866), (hip, 866), (hip, 1100), (xw, 1100)], 1400, arm_s0 + 72)
+                                 & SH([(1434, 866), (arm_s0, 866), (arm_s0 + 70, ya - 1), wf[-1], (1434, 880)], 0, 2000))
     # Crease: front door from high at the front to low at the back; rear door the other way (a chevron).
     hc_hi, hc_lo = (lambda s: belt_h(p, s) - 70), ya + 25
     c0 = np.array([sh, hc_hi(s0) if d == 'f' else hc_lo, Z(s0)])
@@ -1384,8 +1397,10 @@ def door_trim(p, d, sx, driver):
     white = plane_cut(white, c0, c1, np.array([sh + 32, ya, Z(lo_s)]), out_pt)                       # lower facet
     white = plane_cut(white, c0, c1, np.array([sh + 60, belt_h(p, hi_s) - 34, Z(hi_s)]), out_pt)       # upper facet
     out['trim_white'] = [white]
-    out['cap'] = [SH([(s0, bt0 + 3), (s1, bt1 + 3), (s1, belt_h(p, s1) + 6), (s0, belt_h(p, s0) + 6)], sh + 10, xw)]
-    out['ambient'] = [SH([(s0 + 4, bt0 - 0.5), (s1 - 4, bt1 - 0.5), (s1 - 4, bt1 + 3.5), (s0 + 4, bt0 + 3.5)], sh + 12, sh + 40)]
+    c0s = DASH_END[0][0] + 5 if d == 'f' else s0                    # the front door's cap starts at the dash (above)
+    ct0 = belt_h(p, c0s) - 52
+    out['cap'] = [SH([(c0s, ct0 + 3), (s1, bt1 + 3), (s1, belt_h(p, s1) + 6), (c0s, belt_h(p, c0s) + 6)], sh + 10, xw)]
+    out['ambient'] = [SH([(c0s, ct0 - 0.5), (s1 - 4, bt1 - 0.5), (s1 - 4, bt1 + 3.5), (c0s, ct0 + 3.5)], sh + 12, sh + 40)]
     if d == 'f':
         g = [(s0 + 50, 470), (s0 + 330, 470), (s0 + 300, 640), (s0 + 50, 640)]
     else:
