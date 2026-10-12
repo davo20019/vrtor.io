@@ -505,7 +505,7 @@ def part_key(o):
         return 'open'
     return n.split('_int_', 1)[1] if '_int_' in n else n[4:] if n.startswith('int_') else n
 
-ROUND_SEGMENTS = {'yoke': 5, 'a_pillar_inner': 4}             # the rim: a padded grip, round in section, not a bevelled plate
+ROUND_SEGMENTS = {'yoke': 3, 'a_pillar_inner': 3}             # the rim: a padded grip, round in section, not a bevelled plate
 
 def round_edges(o, width, segments=3):
     for m in list(o.modifiers):          # smooth-by-angle would mark the rounded edges sharp again; hardened normals shade instead
@@ -533,7 +533,7 @@ def flat_faces(o):
 # The black cladding (bumpers, flares, rockers) is moulded plastic with softened edges (c147, c085: the bumper's
 # top edge and corners read as rounded, not knife-sharp); the grille's bars a little too.
 flat_faces(clad)
-round_edges(clad, 9.0)
+round_edges(clad, 9.0, segments=2)
 round_edges(intake_grille, 1.5, segments=2)
 
 def gltf_output():
@@ -632,9 +632,8 @@ inside_parts = cabin_parts + [o for o in all_door_parts if '_int_' in o.name or 
 for o in inside_parts:
     w = ROUND.get(part_key(o))
     if w:
-        if part_key(o) == 'a_pillar_inner':
-            flat_faces(o)
-        round_edges(o, w, ROUND_SEGMENTS.get(part_key(o), 3))
+        flat_faces(o)                    # one polygon per flat face first: the bevel then rounds only real creases, with far fewer triangles
+        round_edges(o, w, ROUND_SEGMENTS.get(part_key(o), 2))
 bake_cabin([o for o in inside_parts if part_key(o) not in NO_BAKE],
            [o for o in bpy.context.scene.objects if o.type == 'MESH' and ('glass' in o.name or part_key(o) in ('ambient', 'screen', 'rear_screen'))])
 

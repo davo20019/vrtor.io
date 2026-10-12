@@ -1296,7 +1296,7 @@ def yoke_parts():
     pods, trims, wheels = [], [], []
     tip, low = (-123.0, 6.7), (-59.0, -15.2)
     pod_pts = [(-60, 42), (-69.5, 41.3), (-104.9, 33.7), (-123.0, 6.7), (-111.6, -5.0), (-59.0, -15.2)]
-    knurl = [(7.4 if i % 2 == 0 else 6.9) * np.array([math.cos(i * math.pi / 24), math.sin(i * math.pi / 24)]) for i in range(48)]
+    knurl = [(7.4 if i % 2 == 0 else 6.9) * np.array([math.cos(i * math.pi / 16), math.sin(i * math.pi / 16)]) for i in range(32)]
     for sx in (1, -1):
         pts = [(sx * x, y) for x, y in pod_pts]
         pod = poly(pts if sx > 0 else pts[::-1], 3, T - 4, T + 7)
@@ -1448,7 +1448,8 @@ def door_trim(p, d, sx, driver):
 # about 85 round (c003, 1.45 mm/px). Its depth into the cabin (50) no photo shows: the side views see it edge-on
 # (c003's 12 degree view gives the same 72 to 75 width as c165's square one) and the cabin photos don't reach it.
 DASH_TOP = [(1435.0, 1207.0), (1398.0, 1231.0), (1045.0, 1246.0), (975.0, 1263.0)]   # the dash top's profile (s, h), lip to crest (see interior())
-APOST = dict(strip_down=35.0, strip_in=50.0)       # the A-pillar strip's section: depth under the windshield, and in from the side glass
+GRILLE_POST = dict(x=(765.0, 830.0), h=(1233.0, 1295.0))   # the post's speaker grille (int-athens-1, cast onto the post)
+APOST = dict(span=67.0, depth=30.0)       # the A-pillar strip's wedge section: across the windshield from the crease, and its bottom corner's depth
 WINDOW_EDGE = dict(s_front=1727.0, width=75.0, rail=72.0, corner=85.0, depth=50.0, inset=14.0)
 
 def window_edge(p, sx):
@@ -1791,8 +1792,24 @@ def interior(p):
             return on_plane(act[key], y=h, z=ZF - s) - an * off
         strip = plane_cut(Box(1200, 900, 2600).moved(Location((sx * 700, 1500, ZF - 1500))), apt(1200, 1200, 10), apt(1600, 1200, 10), apt(1400, 1500, 10), inside)
         strip = plane_cut(strip, ar0, ar0 + np.cross(arn, [1, 0, 0]) * 100, ar0 + np.array([100.0, 0, 0]), inside)
-        strip = halfspace_cut(strip, ar0 - arn * APOST['strip_down'], -arn)                      # its depth under the windshield
-        strip = halfspace_cut(strip, apt(1400, 1300, 10) - an * APOST['strip_in'], -an)          # and in from the side glass
+        # Its section is a wedge (2026-10-11): from the crease it runs APOST['span'] in under the windshield (its edge on the
+        # glass 71 to 82 in from the side glass through dgRcedIkNOM-32's solved camera, which puts the clear glass's edge
+        # within 3 mm of the model's), meets the side glass at the crease itself (2 to 10 below the windshield there), and
+        # its bottom corner lies half way across (int-athens-1: the dark underside and the lit inner face meet at 0.47 to
+        # 0.50 of the way between the two edges, a ratio its camera's near-field offset doesn't change), APOST['depth']
+        # under the windshield.
+        def wedge_pts(sq):
+            base = edge_point(act['roof'], act[key], ZF - sq) - arn * 12
+            step = np.cross(arn, np.cross(an, arn)); step = -step / np.linalg.norm(step)       # along the windshield, inboard
+            d0 = np.dot(np.array(act[key][0], float) - base, an)
+            per = np.dot(-step, an)                     # distance from the side glass gained per mm inboard
+            K = base + step * ((10 - d0) / per)
+            W = base + step * ((10 + APOST['span'] - d0) / per)
+            return K, W, (K + W) / 2 - arn * APOST['depth']
+        (K1, W1, P1), (K2, W2, P2) = wedge_pts(1000.0), wedge_pts(2000.0)
+        glass_pt = (K1 + W1) / 2 + arn * 2
+        strip = plane_cut(strip, K1, K2, P1, glass_pt)                                            # its underside
+        strip = plane_cut(strip, W1, W2, P1, glass_pt)                                            # its face toward the cabin
         # It runs on up the windshield's edge to the roof's apex, covering the glass's black band (its inner edge
         # 75 in from the glass's edge, as c134 shows it from outside): int-athens-2 shows suede right up to clear
         # glass all the way up, post and strip one surface above the glass triangle. Behind the window opening it
@@ -1811,21 +1828,20 @@ def interior(p):
         strip = strip & Box(2400, 1500, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, 1254.0, 0)))   # ends on the dash, where its lower edge meets it
         strip = strip & Box(2400, 3000, 1600, align=(Align.CENTER, Align.CENTER, Align.MAX)).moved(Location((0, 0, ZF - 800)))
         # The speaker grille on the post's face toward the seats (its rear face, the door opening's edge), just above the
-        # dash end, over the inboard part of that face (int-athens-1 through its solved camera, which puts the post right
-        # over the white block's pointed end, as the photo shows; dgRcedIkNOM-31): a skin 2.5 proud, h 1,240 to 1,305,
-        # from 45 in from the side glass inward.
+        # dash end: its corners in int-athens-1 cast through its solved camera onto the post, which lands on the photo's
+        # (measure/console/athens1-grille.md): 1,233 to 1,295 high, 765 to 830 out from the centreline, about 65 x 62. A skin
+        # 2.5 proud of the post there.
         back = np.array([0.0, 0.0, -1.0])
         skin = col.moved(Location(tuple(back * 2.5))) - col
-        skin = halfspace_cut(skin, wpt(1420, 1270, 10 + 45), wn)
-        grilles.append(skin & sband(1380, 1470) & Box(2400, 65, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, 1240.0, 0))))
-        # The tweeter grille on the strip's underside just ahead of the post's top (dgRcedIkNOM-31): 2.5 proud,
-        # between 40 and 100 in from the side glass, 80 along the strip.
-        gz = Box(2400, 3000, 8000)
-        gz = halfspace_cut(gz, ar0 - arn * (APOST['strip_down'] + 2.5), -arn)
-        gz = halfspace_cut(gz, ar0 - arn * (APOST['strip_down'] - 1.0), arn)
-        gz = halfspace_cut(gz, apt(1400, 1300, 100), -an)
-        gz = halfspace_cut(gz, apt(1400, 1300, 40), an)
-        grilles.append(gz & sband(1300, 1380))
+        gx0, gx1 = GRILLE_POST['x']
+        grilles.append(skin & sband(1380, 1480) & Box(gx1 - gx0, GRILLE_POST['h'][1] - GRILLE_POST['h'][0], 8000, align=(Align.MIN, Align.MIN, Align.CENTER)).moved(Location((gx0 if sx > 0 else -gx1, GRILLE_POST['h'][0], 0))))
+        # The tweeter grille on the bar's underside just ahead of the post's top (dgRcedIkNOM-31, the only picture that shows
+        # it; no solved camera): the same square part as the post's grille in that frame, so 65 along the bar, across its
+        # underside from 10 to 55 in from the side glass; its rear edge one grille ahead of the post, as there.
+        gz = strip.moved(Location(tuple(-arn * 2.5))) - strip
+        gz = halfspace_cut(gz, apt(1400, 1300, 10 + 10), an)
+        gz = halfspace_cut(gz, apt(1400, 1300, 10 + 55), -an)
+        grilles.append(gz & sband(1310, 1375))
         col = col + strip
         actual_ws, actual_n = panels(p)['windshield'][:2]
         col = col - prism(actual_ws, actual_n, out=400.0, depth=10.0)
@@ -2407,7 +2423,7 @@ if __name__ == '__main__':
     save(band_gate, 'gate_band')
     for name, part in rear_lights(p).items():           # gate_*: on the tailgate's band, they drop with it
         save(part, name)
-    save(Compound([c - tub_cav for c in cladding(p)]), 'cladding')
+    save(Compound([c - tub_cav for c in cladding(p)]), 'cladding', tolerance=1.0, angular=0.5)
     cp = cladding_parts(p)
     save(cp['bumper_f_intake'], 'intake_back')
     save(cp['bumper_f_grille'], 'intake_grille')
@@ -2441,14 +2457,14 @@ if __name__ == '__main__':
         else:
             fine = name in ('seats_front', 'seats_rear')       # their padded crowns are shallow curves: 4.6 degrees a facet
             small = name.startswith(('yoke', 'pedal')) and name != 'yoke_column'     # held close: its curves and small round parts need fine facets
-            save(part, f'int_{name}', tolerance=0.3 if small else 1.0 if fine else 2.5, angular=0.2 if small else 0.08 if fine else 0.7)     # flat facets; coarse tessellation keeps the few round parts cheap
+            save(part, f'int_{name}', tolerance=0.8 if small else 1.0 if fine else 2.5, angular=0.35 if small else 0.18 if fine else 0.7)     # flat facets; coarse tessellation keeps the few round parts cheap
     for name, part in details(p).items():
         save(part, f'det_{name}')
 
     # Wheels: one set of meshes, built for the left side around its own centre.
-    save(tyre(), 'tyre', tolerance=1.2, angular=0.12)
+    save(tyre(), 'tyre', tolerance=1.2, angular=0.22)
     rim_body, lugs = rim()
-    save(rim_body, 'rim', tolerance=1.0, angular=0.25)
+    save(rim_body, 'rim', tolerance=1.5, angular=0.35)
     save(lugs, 'lugs', tolerance=1.0, angular=0.6)
     save(cover(), 'cover', tolerance=1.0, angular=0.5)
     disc, cal = brake()

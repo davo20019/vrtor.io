@@ -1,7 +1,7 @@
 """Render a GLB from named cameras, for comparing a model with photos or manual pictures side by side.
   blender -b --factory-startup --python scripts/3d/render_cams.py -- <glb> <cams.json> <outdir>
 
-cams.json: {"glbFrame": "y-up" | "front+y", "exposure": 0, "samples": 32, "lights": [{"at": [x, y, z], "watts": 100, "size": 500}],
+cams.json: {"glbFrame": "y-up" | "front+y", "exposure": 0, "samples": 32, "sunEnergy": 3.0, "lights": [{"at": [x, y, z], "watts": 100, "size": 500}],
             "cameras": {name: camera}}, where a camera is either
   {"eye": [x, y, z], "look": [x, y, z], "fovDeg": 80, "size": [W, H]}     model frame, mm, up +y
   {"measure": "path/to/<job>.camera.json"}                                 solved by scripts/3d/measure.py
@@ -51,7 +51,7 @@ bg = world.node_tree.nodes['Background']
 bg.inputs['Color'].default_value = (0.75, 0.8, 0.9, 1)
 bg.inputs['Strength'].default_value = 1.2
 sun = bpy.data.objects.new('sun', bpy.data.lights.new('sun', 'SUN'))
-sun.data.energy = 3.0
+sun.data.energy = cfg.get('sunEnergy', 3.0)        # 0 for diffuse showroom light, to compare materials with indoor photos
 sun.rotation_euler = (math.radians(-50), math.radians(25), 0)   # from above and to one side (model frame, y up)
 sun.rotation_mode = 'XYZ'
 sun.matrix_world = Matrix.Rotation(math.radians(-60), 4, 'X') @ Matrix.Rotation(math.radians(30), 4, 'Y')
