@@ -88,6 +88,9 @@ than the real tyre. Open: to be read off the straight front photo (c150) in the 
 - **Panel gaps and stainless grain direction**: seen in the close-ups, but their exact widths are
   guesses (about 4 mm gaps).
 - **Tyre squash** under the truck's weight: not published.
+- **Door hinge pins and the glass drop** (2026-10-12): the hinges' kind and mounting are known (Tesla Service
+  Manual), their pins' position and tilt are not; nor is how far the frameless glass drops as a door opens. The
+  model's values make the doors work, and are marked as not measured: see "Doors: each its own assembly".
 - **Front door trim at the dash** (dgRcedIkNOM 6:16, 7:13): the door's white panel, cap and ambient line run
   forward past the seam to the dash's rear face, 4 mm behind it (the gap is a guess); the white's lower edge
   falls from the dash's bottom corner (1,028) to the armrest's front, read on those frames, not measured.
@@ -182,12 +185,27 @@ trim). Rules:
   cladding, the window frame, the quarter glass, the cabin. The door stands DOOR_GAP (2 mm) inside it: 4 mm between
   two doors, 2 mm over the rocker. The skin and window are the body's own surfaces within the door's outline, as a
   real door's outer panel is one panel of the body's shape.
-- **A hinge that works.** On the skin's line at the front seam (2 mm outside it), vertical (the real axis's tilt:
-  not measured), so every point of the door moves back or out as it opens.
+- **The hinge: known in kind, not yet in place.** The truck's own (Tesla Service Manual, refs/tesla/servicemanual):
+  two pin hinges per door, each a body bracket on two studs on the hinge pillar and a door leaf on one stud, the pin
+  between them inside the door's front gap, behind the fender. Tesla sets a door by gap and flush, and publishes no
+  axis. The model's axis stands on the skin's line at the front seam (2 mm outside it), vertical: that makes the
+  swing clear, but it is NOT the real pin's position or tilt. Measuring them failed so far: c166 (both doors open,
+  from the front) solves to 41 px RMS at best (measure/hinge/c166_hinge.py; systematic 40 to 60 px at the cowl and
+  face corners), about 30 mm, while a 5 degree tilt moves the door's rear corner only about 55 mm. Needed: the
+  hinge pins measured on a truck, or two open-door photos whose cameras solve to a few px.
 - **A swing envelope.** Every part a door carries lies within the cylinder about its hinge that stops 3 mm short of
   the body's next face behind it; its trailing inner corners round off along that arc.
+- **Panel gaps.** DOOR_GAP (2 mm each side) keeps the seams' former 4 mm slots; Tesla's gap and flush figures are
+  in its internal "Inspection Standards" only (Panel Alignment Specifications). Not measured.
 - **Declared mounts.** parts/mounts.json says what each part is fixed to; assemble.py hangs a door's parts on its
   node from that, not from file names.
+- **The frameless glass.** With the window up, it drops a little as the door opens and rises once the door is shut
+  (owners: cybertruckownersclub.com, "Any theory why the driver window raises slightly when opened?", 2023-12-26);
+  with the window fully down, it now rises slightly as the door opens, to stop rattle (basenor.com, citing
+  @TeslaNewswire, 2026-09-18; not modelled). How far it drops: no source gives it (the service manual's glass
+  adjustment has none). GLASS_DROP (12 mm) is the least that clears the roof's edge in the model, NOT a measured
+  figure. Needed: a video of a door opening with its window up, close enough to see the glass's top edge against
+  the roof seal, or a measurement on a truck.
 - **Checked every build.** check_doors.py swings each door through its opening (its glass dropped first by
   glassDropMm, as the app does) and fails the build if any part passes through a fixed one at any angle.
   Shut, it lists parts resting on each other (only the door's ambient strip against the dash's).
