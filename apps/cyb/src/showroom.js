@@ -18,8 +18,9 @@ const HALL_TONE = '#e1e0dc';
 /** The soft light over the truck: across (x) and along (z), the truck being 2.4 m wide and 5.7 m long. */
 const CANOPY = { w: 6.4, d: 9.6 };
 const HALL = { x0: -10, x1: 16, z0: -11, z1: 11, h: 6 };
-/** The parts space, beside the truck on its right (+x): room for a truck's worth of parts laid out. */
-const PARTS = { x: 10.6, z: 0, w: 4.6, d: 8.4, h: 0.1 };
+/** The parts space, beside the truck on its right (+x): room for a truck's worth of parts laid out (disassembly.js:
+ *  68 parts take about 31 m² with room round each). Its near edge 3.5 m from the turntable's, a full walkway. */
+const PARTS = { x: 10.3, z: 0, w: 6.0, d: 9.6, h: 0.1 };
 /** The doorway to the self-driving ride, in the wall ahead of the truck, so the driver's seat faces it. */
 const DOOR = { w: 5.2, h: 3.2 };
 
@@ -255,7 +256,8 @@ export function createShowroom(scene) {
   led.parent = root;
   led.isPickable = false;
 
-  // ---- the parts space: an empty low plinth, its edge marked, and a stand saying what's coming. Light
+  // ---- the parts space: a low plinth the truck's parts are laid out on (disassembly.js), its edge marked, and a
+  // stand saying how. Light
   // grey like the turntable: the truck's right side looks straight at it, and a dark one shows as a dark
   // band along the doors.
   const partsMat = flat(scene, 'showroom-parts', '#a9a8a4', { specular: 0.05 });
@@ -265,8 +267,8 @@ export function createShowroom(scene) {
   parts.parent = root;
   floors.push(parts);
   envMeshes.push(parts);
-  // A dashed outline on its top: a space kept, not yet filled.
-  const outlineTex = canvasTexture(scene, 'showroom-parts-top', 512, 1024, (ctx, w, hh) => {
+  // A dashed outline on its top, drawn in the plinth's own proportions.
+  const outlineTex = canvasTexture(scene, 'showroom-parts-top', 512, Math.round((512 * PARTS.d) / PARTS.w / 4) * 4, (ctx, w, hh) => {
     ctx.fillStyle = '#a9a8a4';
     ctx.fillRect(0, 0, w, hh);
     ctx.strokeStyle = '#e0a12c';
@@ -289,9 +291,9 @@ export function createShowroom(scene) {
   post.parent = root;
   post.isPickable = false;
   const partsSign = signTexture(scene, 'showroom-parts-sign', 1024, 512, [
-    { text: 'COMING SOON', size: 56, y: 120, weight: 600, spacing: 10, color: '#f2b544' },
+    { text: 'IN THE SERVICE MANUAL’S ORDER', size: 44, y: 120, weight: 600, spacing: 6, color: '#f2b544' },
     { text: 'See every part', size: 120, y: 260, weight: 500 },
-    { text: 'The truck taken apart, piece by piece', size: 48, y: 390, weight: 400, color: '#b9bec4' },
+    { text: 'Menu, then Take it apart: tap a part', size: 46, y: 390, weight: 400, color: '#b9bec4' },
   ]);
   const panel = MeshBuilder.CreatePlane('showroom-parts-sign', { width: 1.0, height: 0.5 }, scene);
   panel.material = glow(scene, 'showroom-parts-sign', '#ffffff', partsSign);

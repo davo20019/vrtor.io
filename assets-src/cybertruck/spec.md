@@ -188,6 +188,19 @@ What that asks of every part: a complete closed solid on every side (its hidden 
 own node, its mount declared (parts/mounts.json), where it really sits, and what lies under it modelled from the
 manual's photos of it removed, never from nothing. Built one assembly at a time, the front door first.
 
+In the app (2026-10-12, v1): Menu, then Take it apart. disassembly.py lists 68 parts the model already has
+separately, by the manual's names (wheel covers, wheels, calipers, rotors; each door's mirror glass, skull cap,
+mirror, beltline, trim panel, glass and the door; the wiper arm, windshield, roof and quarter glass; the light bar,
+plate, fascias, grille, flares, rockers, tailgate, tonneau, bed lid, outlet door; the mats, seats, airbag, yoke,
+screens, rearview mirror, console), with the order from the manual's procedures. The seats, quarter glass and
+cladding are saved one piece each (cad.py, '__' names). The parts plinth grew to 6.0 x 9.6 m: the 68 laid out by
+footprint take about 31 m² with room round each, more than the 4.6 x 8.4 m one held.
+
+Triangles: the GLB draws 60,810 (61,222 before this, with the front plate in it twice). review.py counted 60,365
+and, before, 59,825: Blender's importer drops degenerate triangles the GPU still draws, so the review undercounts.
+Both counts are over the 60,000 budget; a truck that comes apart part by part will need far more, so the budget
+waits on a frame rate measured on the Quest, not on a guess.
+
 ### Doors: each its own assembly, in an opening (2026-10-12)
 
 Each door is built as the truck has it, not cut out of the body: cad.py's `Door` holds its seams, hinge, swing

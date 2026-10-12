@@ -196,7 +196,7 @@ export function createYokeControls(scene, byName, info, { onHighBeam = () => {} 
         if (state.signal || state.hazard) setLit(true);
         else paint();
       } else if (key === 'wiper') {
-        if (wiper && state.wipe < 0) state.wipe = 0;
+        if (wiper && state.wipe < 0 && !w.metadata?.off) state.wipe = 0;     // not with the arm taken off (disassembly.js)
       } else if (key === 'high_beam') {
         state.highBeam = !state.highBeam;
         onHighBeam(state.highBeam);

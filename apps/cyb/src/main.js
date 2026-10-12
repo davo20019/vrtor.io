@@ -57,6 +57,7 @@ import { createYokeControls } from './yoke.js';
 import { createScreen } from './screen.js';
 import { createLoaderStrip, drawLoader } from './loader.js';
 import { createShowroom } from './showroom.js';
+import { createDisassembly } from './disassembly.js';
 import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
@@ -208,6 +209,11 @@ scene.environmentIntensity = 0.9;
 // ---------------------------------------------------------------- the truck
 
 let truck = null;
+/** See every part (disassembly.js): the truck taken apart onto the parts plinth, in the Service Manual's order. */
+let parts = null;
+let takingApart = false;
+let partsNote = null;
+let partMeshes = [];
 /** Where the truck is: in the showroom it stands on the turntable; on the road the ride moves it. */
 const pose = new TransformNode('truck-pose', scene);
 pose.rotationQuaternion = Quaternion.Identity();
@@ -223,7 +229,7 @@ const doorTargets = new Map();
 async function loadTruck() {
   const info = await (await fetch(`${BASE}models/cybertruck.json`)).json();
   // The stable model path is cached for an hour; select the rebuilt corner immediately.
-  const container = await LoadAssetContainerAsync(`${BASE}models/cybertruck.glb?v=27205011239f`, scene, {
+  const container = await LoadAssetContainerAsync(`${BASE}models/cybertruck.glb?v=d258d3320885`, scene, {
     onProgress: (e) => e.lengthComputable && (ui.pct.textContent = `${Math.round((e.loaded / e.total) * 100)}%`),
   });
   container.addAllToScene();
@@ -265,6 +271,90 @@ async function loadTruck() {
 }
 
 
+// ---------------------------------------------------------------- see every part
+
+/** The parts list (disassembly.js) on the showroom's parts plinth; nothing moves until Take it apart. */
+function setUpParts() {
+  parts = createDisassembly(scene, {
+    info: truck.info,
+    byName: truck.byName,
+    root: truck.root,
+    area: showroom.partsArea,
+    moved: shadowMoved,
+    prepare: shutForRemoval,
+    onChange: () => {
+      if (takingApart && cardOpen) render();
+    },
+  });
+  partMeshes = truck.root.getChildMeshes().filter((m) => parts.partOf(m));
+  for (const m of partMeshes) m.metadata = { ...(m.metadata ?? {}), pickable: m.isPickable };
+}
+
+/** A part comes off shut: a door, the tailgate, the lid and the outlet cover closed, the bed's cover rolled shut. */
+function shutForRemoval(def) {
+  const door = /^door_(fl|fr|rl|rr)$/.exec(def.id)?.[1];
+  if (door && doors[door]) {
+    const d = doors[door];
+    d.t = d.target = 0;
+    d.node.rotationQuaternion = d.rest.clone();
+  }
+  const hinge = Object.keys(HINGED_PART).find((k) => HINGED_PART[k] === def.id);
+  if (hinge && hinged[hinge]) {
+    const h = hinged[hinge];
+    h.t = h.target = 0;
+    h.node.rotationQuaternion = h.rest.clone();
+    if (hinge === 'tailgate') for (const st of struts) st.mesh.setEnabled(false);
+  }
+  if (def.id === 'tonneau' && tonneau.slats.length) {
+    tonneau.u = 0;
+    tonneau.dir = 0;
+    placeSlats();
+  }
+  shadowMoved();
+}
+
+function setTakingApart(on) {
+  takingApart = on;
+  partsNote = null;
+  for (const m of partMeshes) m.isPickable = on || m.metadata.pickable;
+  if (on && !inXr()) {
+    // Back far enough to see the truck and the plinth beside it.
+    const c = showroom.partsArea.centre;
+    flyTo(new Vector3(c.x * 0.45, 4.6, c.z + 10.4), new Vector3(c.x * 0.6, 0.2, c.z), false);    // under the 6 m ceiling
+  }
+  cardOpen = true;
+  render();
+}
+
+function partsContent() {
+  const n = parts.offCount, total = parts.count;
+  const note = partsNote;
+  const names = (defs) => defs.map((d) => d.name).join(', ');
+  let title = 'Tap a part to take it off', body = 'Each part comes off in the order Tesla’s Service Manual takes them off, and goes back the other way. Tap one on the truck to take it off; tap it on the plinth to put it back.';
+  if (note?.verb === 'off') {
+    title = note.part.name;
+    body = `Off, as the Service Manual's ${note.part.procedure ?? 'procedure'} takes it off${note.part.mirrored ? ' (on the other side)' : ''}. Tap it on the plinth to put it back.`;
+  } else if (note?.verb === 'on') {
+    title = note.part.name;
+    body = 'Back on the truck.';
+  } else if (note?.verb === 'blocked-off') {
+    title = note.part.name;
+    body = `First take off: ${names(note.by)}.`;
+  } else if (note?.verb === 'blocked-on') {
+    title = note.part.name;
+    body = `First put back: ${names(note.by)}.`;
+  }
+  const actions = [];
+  if (!parts.running) {
+    if (n < total) actions.push({ label: 'Take everything off', onClick: () => ((partsNote = null), parts.takeAll(), render()) });
+    if (n > 0) actions.push({ label: 'Put everything back', onClick: () => ((partsNote = null), parts.putAllBack(), render()) });
+  } else {
+    actions.push({ label: 'Stop', onClick: () => (parts.stop(), render()) });
+  }
+  actions.push({ label: 'Done', primary: true, onClick: () => setTakingApart(false) });
+  return { kicker: 'See every part', title, body, fact: `${n} of ${total} parts off`, actions };
+}
+
 // ---------------------------------------------------------------- doors
 
 const GLOW = Color3.FromHexString('#ffb020');
@@ -300,7 +390,7 @@ function setUpDoors(container, info) {
 
 function toggleDoor(key) {
   const d = doors[key];
-  if (!d) return;
+  if (!d || parts?.isOff(`door_${key}`)) return;
   // It won't open a door while it's moving: it stops in its lane first, then opens it.
   if (ride.world === 'bigsur' && !ride.drive.stopped) {
     stopHere(() => {
@@ -315,7 +405,7 @@ function toggleDoor(key) {
 
 function setDoorsAll(open) {
   if (open && ride.world === 'bigsur' && !ride.drive.stopped) return stopHere(() => setDoorsAll(true));
-  for (const d of Object.values(doors)) d.target = open ? 1 : 0;
+  for (const [k, d] of Object.entries(doors)) if (!parts?.isOff(`door_${k}`)) d.target = open ? 1 : 0;
   render();
 }
 
@@ -409,6 +499,7 @@ function setWindowsAll(down) {
 
 /** Down its slant by the switch's travel, or by the drop for an open door, whichever is lower. */
 function placePane(w) {
+  if (w.pane.metadata?.off) return;                  // taken off (disassembly.js): it lies on the parts plinth
   w.pane.position.copyFrom(w.rest).addInPlace(w.down.scale(Math.max(w.u * w.travel, w.drop * w.dropMm)));
   shadowMoved();
 }
@@ -438,7 +529,7 @@ scene.onBeforeRenderObservable.add(() => {
       w.pane.setEnabled(w.u < 1);
       shadowMoved();
     }
-    if (w.u <= 0 && !w.drop) {
+    if ((w.u <= 0 && !w.drop) || w.pane.metadata?.off) {
       w.mat.clipPlane = null;
       continue;
     }
@@ -530,7 +621,7 @@ const tonneauLocked = () => ride.world === 'bigsur' && !ride.drive?.stopped;
 
 /** 'open', 'close' (the switch's keys) or 'toggle' (the touchscreen). */
 function tonneauPress(which) {
-  if (!tonneau.slats.length || tonneauLocked()) return;
+  if (!tonneau.slats.length || tonneauLocked() || parts?.isOff('tonneau')) return;
   if (tonneau.dir) {
     tonneau.dir = 0;                                   // a second press stops it where it is
   } else if (which === 'open') {
@@ -616,9 +707,12 @@ function setUpHinged(container, info) {
 const bedOpen = () => (hinged.tailgate?.t ?? 0) > 0.9 || tonneau.u > 0.3;
 
 /** A press on a hinged part, or the tailgate's key. */
+/** The part each hinged node is in the parts list (disassembly.py). */
+const HINGED_PART = { tailgate: 'tailgate', bedlid: 'bed_lid', outlet_cover: 'outlet_door' };
+
 function hingePress(key) {
   const h = hinged[key];
-  if (!h) return;
+  if (!h || parts?.isOff(HINGED_PART[key])) return;
   if (key === 'tailgate') {
     if (h.target > 0.5) h.target = 0;                 // lifted shut by hand; it has no handle to open it
   } else if (bedOpen() || h.target > 0.5) {
@@ -629,7 +723,7 @@ function hingePress(key) {
 
 function setTailgate(open) {
   const h = hinged.tailgate;
-  if (!h || (open && tonneauLocked())) return;
+  if (!h || (open && tonneauLocked()) || parts?.isOff('tailgate')) return;
   h.target = open ? 1 : 0;
   render();
 }
@@ -783,6 +877,10 @@ scene.onPointerObservable.add((info) => {
   const sitTo = seatTargets.get(pick?.pickedMesh) ?? null;
   const yokeKey = yokeControls?.targets.get(pick?.pickedMesh) ?? null;
   if (info.type === PointerEventTypes.POINTERMOVE) {
+    if (takingApart) {
+      if (!inXr()) canvas.style.cursor = parts?.partOf(pick?.pickedMesh) ? 'pointer' : '';
+      return;
+    }
     hover(key);
     hoverSpot(sitTo ? pick.pickedMesh : null);
     yokeControls?.hover(yokeKey);
@@ -808,6 +906,15 @@ scene.onPointerObservable.add((info) => {
   }
   const press = (xrPointer && info.type === PointerEventTypes.POINTERDOWN) || (!xrPointer && info.type === PointerEventTypes.POINTERTAP);
   if (!press) return;
+  if (takingApart && ride.world === 'showroom') {
+    const r = parts.tap(pick?.pickedMesh);
+    if (r && r.verb !== 'moving') {
+      partsNote = r;
+      cardOpen = true;
+      render();
+    }
+    return;
+  }
   if (yokeKey) yokeControls.press(yokeKey);
   else if (key?.startsWith('tonneau:')) tonneauPress(key.slice(8));
   else if (key === 'tailgate:open') setTailgate(true);
@@ -1057,6 +1164,8 @@ async function sitIn(name) {
   // In a seat the ride is one tap away: its download starts now, so it's often ready by then.
   if (name !== 'outside') fetchRide();
   if (name === 'outside' && ride.world === 'bigsur') return stepOutOnRoad();
+  if (name !== 'outside' && parts?.offCount) parts.restoreNow();    // a seat to sit in, a yoke to hold
+  if (takingApart && name !== 'outside') setTakingApart(false);
   seat = name;
   updateTeleport();
   const { eye, look } = eyeOf(name);
@@ -1083,6 +1192,7 @@ function content() {
     return page;
   }
   if (ride.world !== 'showroom') return rideContent();
+  if (takingApart && parts) return partsContent();
   const menuFact = 'Left stick: walk. Right stick: forward to teleport, left or right to turn. A or X opens and closes this menu. B or Y joins other visitors, then turns your mic on and off.';
   const coversOn = covers[0]?.isEnabled() ?? true;
   const actions = [
@@ -1092,6 +1202,7 @@ function content() {
     { label: (hinged.tailgate?.target ?? 0) > 0.5 ? 'Close the tailgate' : 'Open the tailgate', onClick: () => setTailgate((hinged.tailgate?.target ?? 0) < 0.5) },
     { label: tonneau.dir ? 'Stop the cover' : tonneau.u > 0 ? 'Close the bed' : 'Open the bed', onClick: () => tonneauPress(tonneau.dir ? 'stop' : tonneau.u > 0 ? 'close' : 'open') },
     { label: coversOn ? 'Wheel covers off' : 'Wheel covers on', onClick: toggleCovers },
+    ...(parts?.count ? [{ label: parts.offCount ? 'See every part' : 'Take it apart', onClick: () => setTakingApart(true) }] : []),
     ...(seat !== 'driver' ? [{ label: "Driver's seat", onClick: () => sitIn('driver') }] : []),
     ...(seat !== 'rear' ? [{ label: 'Back seat', onClick: () => sitIn('rear') }] : []),
     { label: 'Start self-driving', primary: true, onClick: startRide },
@@ -1405,6 +1516,8 @@ async function arrive(name, change) {
 
 async function startRide() {
   if (ride.world !== 'showroom') return;
+  if (parts?.offCount) parts.restoreNow();          // it drives off whole
+  if (takingApart) setTakingApart(false);
   // From outside, it seats you at the wheel first.
   if (seat === 'outside') await sitIn('driver');
   ride.world = 'loading';
@@ -1680,6 +1793,7 @@ async function start() {
   roofGlass = truck.root.getChildMeshes().find((m) => m.name === 'roof_glass')?.material ?? null;
   setUpSeatSpots();
   for (const m of truck.root.getChildMeshes()) m.isPickable = doorTargets.has(m) || screen.meshes.includes(m);
+  setUpParts();
   if (yokeControls) {
     yokeControls.active = false;
     scene.onBeforeRenderObservable.add(() => {
@@ -1790,4 +1904,4 @@ start().catch((err) => {
 });
 
 // For automated checks in a browser.
-window.__cyb = { get yoke() { return yokeControls; }, controls: screenControls, mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, tonneauPress, tonneau, hinged, setTailgate, hingePress, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };
+window.__cyb = { get parts() { return parts; }, setTakingApart, get yoke() { return yokeControls; }, controls: screenControls, mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, tonneauPress, tonneau, hinged, setTailgate, hingePress, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };

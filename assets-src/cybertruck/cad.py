@@ -1693,18 +1693,18 @@ def interior(p):
     # Two USB-C ports under the rear screen's surround (manual-interior-E5BB028D, item 3): dark slots 9 x 3.5.
     out['usb'] = Compound([SH([(se - 4, 741), (se + 1.5, 741), (se + 1.5, 744.5), (se - 4, 744.5)], xu - 4.5, xu + 4.5) for xu in (-22, 22)])
     # ---- seats
-    seats = {'seat': [], 'seat_base': [], 'switch': [], 'piping': []}
-    for sx in (1, -1):
-        for k, v in front_seat(sx * c['seat_x'], sx).items():
-            seats[k] += v
+    # Each seat its own part (Service Manual: Seat Assembly - 1st Row - LH, RH; Seat Assembly - 2nd Row): a name's
+    # part after '__' says which, so the truck can be taken apart seat by seat.
+    for sx, side in ((1, 'l'), (-1, 'r')):
+        seat = front_seat(sx * c['seat_x'], sx)
+        out[f'seats_front__{side}'] = Compound(seat['seat'])
+        out[f'seat_base__{side}'] = Compound(seat['seat_base'])
+        out[f'seat_knobs__{side}'] = Compound(seat['switch'])
+        out[f'piping__{side}'] = Compound(seat['piping'])
     rear, _ = rear_bench(p)
-    seats['seat_base'] += rear['seat_base']
-    out['seats_front'] = Compound(seats['seat'])
     out['seats_rear'] = Compound(rear['seat'])
-    out['seat_base'] = Compound(seats['seat_base'])
-    out['seat_knobs'] = Compound(seats['switch'])
+    out['seat_base__rear'] = Compound(rear['seat_base'])
     out['rear_armrest'] = Compound(rear['armrest_r'])
-    out['piping'] = Compound(seats['piping'])
     # ---- seat belts. Front: the D-ring on its height adjuster on the B-pillar (manual-seatbelts-0EF5959F), the
     # belt hanging down the pillar's trim to the retractor at its foot (-25FB8DBC), the buckle on a stalk inboard
     # of the cushion (-F460CA2E). Rear outboard: from the cab's back wall at the shoulder down beside the cushion;
@@ -2489,7 +2489,9 @@ if __name__ == '__main__':
     ahead = Box(2400, 3000, 4000, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(Location((0, 0, ZF - WINDOW_EDGE['s_front'] - WINDOW_EDGE['width'])))
     # Its foot ends 1 mm over the door's steel top (belt + 13): it reached 43 mm down into the door, which then
     # slid through it as it opened; and round the mirror's base, which sat 4 mm into it.
-    save(clear_of_doors(p, glass & ahead, 'opening', lift=1.0) - both_sides(mirror_part(p)), 'quarter_glass')
+    quarter = clear_of_doors(p, glass & ahead, 'opening', lift=1.0) - both_sides(mirror_part(p))
+    for side, sx in (('l', 1), ('r', -1)):                # each side's its own part (Quarter Glass - Front - LH, RH)
+        save(quarter & Box(3000, 4000, 8000, align=(Align.MIN if sx > 0 else Align.MAX, Align.CENTER, Align.CENTER)), f'quarter_glass__{side}')
     save(glass - ahead, 'glass')
     ton_rest, ton_gate = cut(Compound(groups['tonneau']), gate)
     save(ton_rest, 'tonneau')
@@ -2503,7 +2505,9 @@ if __name__ == '__main__':
         save(part, name)
     # The wheel arch's flare ends at the door's opening (c166: the open door's front edge is bare steel); it ran
     # 46 mm onto the front door, fixed to the body, so the door was shut through it and couldn't open past it.
-    save(Compound([clear_of_doors(p, c - tub_cav, 'opening') for c in cladding(p)]), 'cladding', tolerance=1.0, angular=0.5)
+    for name, c in cladding_parts(p).items():            # each flare and rocker its own part (Fender Flare, Rocker Panel)
+        if not name.startswith(('bumper_f_', 'rear_', 'front_plate')):     # the plate is its own (it was here twice)
+            save(clear_of_doors(p, c - tub_cav, 'opening'), f'cladding__{name}', tolerance=1.0, angular=0.5)
     cp = cladding_parts(p)
     save(cp['bumper_f_intake'], 'intake_back')
     save(cp['bumper_f_grille'], 'intake_grille')
@@ -2520,7 +2524,7 @@ if __name__ == '__main__':
     for name, part in interior(p).items():
         if part is None or part.volume < 1:
             continue
-        fine = name in ('seats_front', 'seats_rear')       # their padded crowns are shallow curves: 4.6 degrees a facet
+        fine = name.split('__')[0] in ('seats_front', 'seats_rear')       # their padded crowns are shallow curves: 4.6 degrees a facet
         small = name.startswith(('yoke', 'pedal')) and name != 'yoke_column'     # held close: its curves and small round parts need fine facets
         save(part, f'int_{name}', tolerance=0.8 if small else 1.0 if fine else 2.5, angular=0.35 if small else 0.18 if fine else 0.7)     # flat facets; coarse tessellation keeps the few round parts cheap
     for name, part in details(p).items():

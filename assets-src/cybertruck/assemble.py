@@ -228,7 +228,7 @@ def classify(o):
 classify(body)
 
 glass = stl('glass', M['glass'])
-quarter_glass = stl('quarter_glass', M['glass_front'])        # the triangles ahead of the window edge, on the body
+quarter_glass = [stl(f'quarter_glass__{s}', M['glass_front']) for s in 'lr']   # the triangles ahead of the window edge, on the body
 roof_glass = stl('roof_glass', M['glass_roof'])
 windshield_glass = stl('windshield_glass', M['windshield'])
 tonneau = stl('tonneau', M['tonneau']); box_uv(tonneau, tile_mm=800)
@@ -238,7 +238,7 @@ rear_parts = [stl('rear_band', M['band']), stl('light_rear_l', M['light_r']), st
               stl('light_cap_l', M['light_cap']), stl('light_cap_r', M['light_cap']), stl('light_low', M['light_low']),
               stl('light_reverse', M['light_rev']), stl('rear_hitch', M['intake'])]
 M['plate'].node_tree.nodes['Principled BSDF'].inputs['Emission Strength'].default_value = 0.0
-clad = stl('cladding', M['clad'])
+clad = [stl(f.stem, M['clad']) for f in sorted(PARTS.glob('cladding__*.stl'))]   # each flare and rocker
 intake = stl('intake_back', M['intake'])
 intake_grille = stl('intake_grille', M['grille'])
 front_bits = [stl('tow_covers', M['tow_cap']), stl('front_camera', M['clad'], smooth_angle=40), stl('front_camera_lens', M['lens_black'])]
@@ -319,7 +319,9 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             # on the doors (door_<k>_int_<name>)
             'armrest': 'armrest', 'door_lower': 'door_dark', 'switch_pod': 'bezel', 'switch': 'door_button', 'open': 'door_button',
             'cap': 'dash_top', 'grilles': 'grille'}
-cabin_parts = [stl(f'int_{n}', M[m], smooth_angle=25) for n, m in INTERIOR.items() if (PARTS / f'int_{n}.stl').exists()]
+# A part split into individual ones ('seats_front__l', 'seats_front__r') takes its material by the name before '__'.
+cabin_parts = [stl(f.stem, M[INTERIOR[f.stem[4:].split('__')[0]]], smooth_angle=25)
+               for f in sorted(PARTS.glob('int_*.stl')) if f.stem[4:].split('__')[0] in INTERIOR]
 for o in cabin_parts:                    # the screens: the picture spans each screen's face
     sc_ = GEO['screens'].get(o.name[4:])
     if not sc_:
@@ -409,7 +411,7 @@ disc = stl('brake_disc', M['disc'], smooth_angle=50)
 caliper = stl('caliper', M['caliper'])
 templates = (tyre, rim, lugs, cover, disc, caliper)
 all_door_parts = [o for v in door_parts.values() for o in v]
-for o in [x for x in (body, glass, quarter_glass, roof_glass, windshield_glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper, wiper_blade, slat) if x] + [*front_bits, *rear_parts, *cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
+for o in [x for x in (body, glass, roof_glass, windshield_glass, tonneau, lf, intake, intake_grille, mirrors, wiper, wiper_blade, slat) if x] + [*quarter_glass, *clad, *front_bits, *rear_parts, *cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
     o.data.transform(TO_BLENDER)         # UVs and materials were set in the model frame; now move to Blender's
 
 def empty(name, loc=(0, 0, 0), parent=None):
@@ -421,7 +423,7 @@ def empty(name, loc=(0, 0, 0), parent=None):
 
 root = empty('cybertruck')
 body_node = empty('body', parent=root)
-for o in [x for x in (body, glass, quarter_glass, roof_glass, windshield_glass, tonneau, lf, clad, intake, intake_grille, mirrors, wiper) if x] + [*front_bits, *rear_parts, *detail_parts, *button_parts, *bed_parts]:
+for o in [x for x in (body, glass, roof_glass, windshield_glass, tonneau, lf, intake, intake_grille, mirrors, wiper) if x] + [*quarter_glass, *clad, *front_bits, *rear_parts, *detail_parts, *button_parts, *bed_parts]:
     o.parent = body_node
 wiper_pivot = Vector(to_blender(GEO['wiper']['pivot']))
 wiper_node = empty('wiper_arm', loc=wiper_pivot, parent=root)
@@ -499,7 +501,8 @@ NO_BAKE = ('screen', 'rear_screen', 'ambient', 'open', 'switch', 'mirror_glass',
            'yoke_btn_signal_right', 'yoke_btn_signal_left', 'yoke_btn_high_beam', 'yoke_btn_wiper')     # the yoke's keys: baked alone they came out darker than the pod round them
 
 def part_key(o):
-    n = o.name
+    """The part's kind, for its material, rounding and baking: a split part's name before '__' (seats_front__l)."""
+    n = o.name.split('__')[0]
     if n.startswith('open_'):
         return 'open'
     return n.split('_int_', 1)[1] if '_int_' in n else n[4:] if n.startswith('int_') else n
@@ -561,8 +564,9 @@ def flat_faces(o):
 
 # The black cladding (bumpers, flares, rockers) is moulded plastic with softened edges (c147, c085: the bumper's
 # top edge and corners read as rounded, not knife-sharp); the grille's bars a little too.
-flat_faces(clad)
-round_edges(clad, 9.0, segments=2)
+for o in clad:
+    flat_faces(o)
+    round_edges(o, 9.0, segments=2)
 round_edges(intake_grille, 1.5, segments=2)
 
 def gltf_output():
@@ -711,6 +715,20 @@ info = {
     'wiper': {'node': 'wiper_arm', 'pivot': [v * 0.001 for v in GEO['wiper']['pivot']], 'axis': GEO['wiper']['axis'], 'sweepDeg': GEO['wiper']['sweepDeg'],
               'note': 'wiper_arm turns about axis (the windshield glass normal, glTF frame) through its pivot; parked it lies up the driver\'s A-pillar; one wipe turns it sweepDeg toward the passenger side, to horizontal along the cowl, and back (Owner\'s Manual, Windshield Wiper and Washers)'},
     'cabin': 'node "cabin": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); glass alpha from the factory light transmission: windshield 76%, front side 72%, rear side 23%, roof 3% (GLASS_VLT in assemble.py); the B-pillar glass is opaque',
+}
+# The parts as a technician takes them off (disassembly.py, the Service Manual's): every node the list names must
+# be in the model, or the build stops.
+import sys
+sys.path.insert(0, str(HERE))
+import disassembly
+_graph = json.loads((HERE / 'refs' / 'tesla' / 'servicemanual' / 'removal-graph.json').read_text())
+_parts = disassembly.resolved(_graph)
+_missing = [(q['id'], n) for q in _parts for n in q['nodes'] if n not in bpy.data.objects]
+if _missing:
+    raise SystemExit(f'assemble: disassembly names nodes the model lacks: {_missing}')
+info['disassembly'] = {
+    'parts': _parts,
+    'note': 'each part: its nodes (meshes or transform nodes) come off together, along dir (glTF frame), once every part in after is off; on: the part it is fixed to (absent: the body), which carries it when that comes off; manual: its name in the Service Manual, procedure and page: the documented procedure it follows (mirrored: its left-hand or front twin)',
 }
 (OUT / 'cybertruck.json').write_text(json.dumps(info, indent=2))
 print('assemble: wrote', OUT / 'cybertruck.glb')

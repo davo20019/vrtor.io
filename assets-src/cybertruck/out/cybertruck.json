@@ -3951,5 +3951,1416 @@
     "sweepDeg": 84.15205034463318,
     "note": "wiper_arm turns about axis (the windshield glass normal, glTF frame) through its pivot; parked it lies up the driver's A-pillar; one wipe turns it sweepDeg toward the passenger side, to horizontal along the cowl, and back (Owner's Manual, Windshield Wiper and Washers)"
   },
-  "cabin": "node \"cabin\": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); glass alpha from the factory light transmission: windshield 76%, front side 72%, rear side 23%, roof 3% (GLASS_VLT in assemble.py); the B-pillar glass is opaque"
+  "cabin": "node \"cabin\": seats, dash, yoke, screens, trim (placed from the manual cabin sizes and video frames, not a replica); glass alpha from the factory light transmission: windshield 76%, front side 72%, rear side 23%, roof 3% (GLASS_VLT in assemble.py); the B-pillar glass is opaque",
+  "disassembly": {
+    "parts": [
+      {
+        "id": "wheel_cover_fl",
+        "name": "Wheel Cover - Front - LH",
+        "manual": "Wheel Cover - Front - LH",
+        "nodes": [
+          "cover_fl"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "wheel_fl",
+        "why": null,
+        "procedure": "Wheel Cover - Front - LH",
+        "page": "GUID-221E31AF-E98F-4D0A-A21D-87457A7A3D77.html",
+        "mirrored": false
+      },
+      {
+        "id": "wheel_fl",
+        "name": "Wheel and tyre - Front - LH",
+        "manual": "Wheel Assembly",
+        "nodes": [
+          "wheel_fl"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_cover_fl"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Wheel Assembly",
+        "page": "GUID-C595BB14-FE12-43D5-82F9-DE09822B4387.html",
+        "mirrored": false
+      },
+      {
+        "id": "caliper_fl",
+        "name": "Brake Caliper - Front - LH",
+        "manual": "Brake Caliper - Front - LH",
+        "nodes": [
+          "caliper_fl"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_fl"
+        ],
+        "on": null,
+        "why": "the caliper sits behind the rim in the model; the front procedure removes only the wheel cap",
+        "procedure": "Brake Caliper - Front - LH",
+        "page": "GUID-8CD379E5-9703-4951-9B67-60C3171129AF.html",
+        "mirrored": false
+      },
+      {
+        "id": "rotor_fl",
+        "name": "Brake Rotor - Front - LH",
+        "manual": "Brake Rotor - Front - LH",
+        "nodes": [
+          "brake_disc_fl"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_fl",
+          "caliper_fl"
+        ],
+        "on": null,
+        "why": "the caliper straddles the rotor",
+        "procedure": "Brake Rotor - Front - LH",
+        "page": "GUID-DED49278-3593-44BA-B956-9A43C69BB564.html",
+        "mirrored": false
+      },
+      {
+        "id": "wheel_cover_fr",
+        "name": "Wheel Cover - Front - RH",
+        "manual": "Wheel Cover - Front - RH",
+        "nodes": [
+          "cover_fr"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "wheel_fr",
+        "why": null,
+        "procedure": "Wheel Cover - Front - LH",
+        "page": "GUID-221E31AF-E98F-4D0A-A21D-87457A7A3D77.html",
+        "mirrored": true
+      },
+      {
+        "id": "wheel_fr",
+        "name": "Wheel and tyre - Front - RH",
+        "manual": "Wheel Assembly",
+        "nodes": [
+          "wheel_fr"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_cover_fr"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Wheel Assembly",
+        "page": "GUID-C595BB14-FE12-43D5-82F9-DE09822B4387.html",
+        "mirrored": false
+      },
+      {
+        "id": "caliper_fr",
+        "name": "Brake Caliper - Front - RH",
+        "manual": "Brake Caliper - Front - RH",
+        "nodes": [
+          "caliper_fr"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_fr"
+        ],
+        "on": null,
+        "why": "the caliper sits behind the rim in the model; the front procedure removes only the wheel cap",
+        "procedure": "Brake Caliper - Front - LH",
+        "page": "GUID-8CD379E5-9703-4951-9B67-60C3171129AF.html",
+        "mirrored": true
+      },
+      {
+        "id": "rotor_fr",
+        "name": "Brake Rotor - Front - RH",
+        "manual": "Brake Rotor - Front - RH",
+        "nodes": [
+          "brake_disc_fr"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_fr",
+          "caliper_fr"
+        ],
+        "on": null,
+        "why": "the caliper straddles the rotor",
+        "procedure": "Brake Rotor - Front - LH",
+        "page": "GUID-DED49278-3593-44BA-B956-9A43C69BB564.html",
+        "mirrored": true
+      },
+      {
+        "id": "wheel_cover_rl",
+        "name": "Wheel Cover - Rear - LH",
+        "manual": "Wheel Cover - Rear - LH",
+        "nodes": [
+          "cover_rl"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "wheel_rl",
+        "why": null,
+        "procedure": "Wheel Cover - Front - LH",
+        "page": "GUID-221E31AF-E98F-4D0A-A21D-87457A7A3D77.html",
+        "mirrored": true
+      },
+      {
+        "id": "wheel_rl",
+        "name": "Wheel and tyre - Rear - LH",
+        "manual": "Wheel Assembly",
+        "nodes": [
+          "wheel_rl"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_cover_rl"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Wheel Assembly",
+        "page": "GUID-C595BB14-FE12-43D5-82F9-DE09822B4387.html",
+        "mirrored": false
+      },
+      {
+        "id": "caliper_rl",
+        "name": "Brake Caliper - Rear - LH",
+        "manual": "Brake Caliper - Rear - LH",
+        "nodes": [
+          "caliper_rl"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_rl"
+        ],
+        "on": null,
+        "why": "the caliper sits behind the rim in the model; the front procedure removes only the wheel cap",
+        "procedure": "Brake Caliper - Rear - LH",
+        "page": "GUID-47742FF1-96DB-4EA3-A481-5AFFF3EAFA0B.html",
+        "mirrored": false
+      },
+      {
+        "id": "rotor_rl",
+        "name": "Brake Rotor - Rear - LH",
+        "manual": "Brake Rotor - Rear - LH",
+        "nodes": [
+          "brake_disc_rl"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_rl",
+          "caliper_rl"
+        ],
+        "on": null,
+        "why": "the caliper straddles the rotor",
+        "procedure": "Brake Rotor - Rear - LH",
+        "page": "GUID-8DA0BAEA-7807-4F7F-ACF9-FB3D3FF40A7B.html",
+        "mirrored": false
+      },
+      {
+        "id": "wheel_cover_rr",
+        "name": "Wheel Cover - Rear - RH",
+        "manual": "Wheel Cover - Rear - RH",
+        "nodes": [
+          "cover_rr"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "wheel_rr",
+        "why": null,
+        "procedure": "Wheel Cover - Front - LH",
+        "page": "GUID-221E31AF-E98F-4D0A-A21D-87457A7A3D77.html",
+        "mirrored": true
+      },
+      {
+        "id": "wheel_rr",
+        "name": "Wheel and tyre - Rear - RH",
+        "manual": "Wheel Assembly",
+        "nodes": [
+          "wheel_rr"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_cover_rr"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Wheel Assembly",
+        "page": "GUID-C595BB14-FE12-43D5-82F9-DE09822B4387.html",
+        "mirrored": false
+      },
+      {
+        "id": "caliper_rr",
+        "name": "Brake Caliper - Rear - RH",
+        "manual": "Brake Caliper - Rear - RH",
+        "nodes": [
+          "caliper_rr"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_rr"
+        ],
+        "on": null,
+        "why": "the caliper sits behind the rim in the model; the front procedure removes only the wheel cap",
+        "procedure": "Brake Caliper - Rear - LH",
+        "page": "GUID-47742FF1-96DB-4EA3-A481-5AFFF3EAFA0B.html",
+        "mirrored": true
+      },
+      {
+        "id": "rotor_rr",
+        "name": "Brake Rotor - Rear - RH",
+        "manual": "Brake Rotor - Rear - RH",
+        "nodes": [
+          "brake_disc_rr"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "wheel_rr",
+          "caliper_rr"
+        ],
+        "on": null,
+        "why": "the caliper straddles the rotor",
+        "procedure": "Brake Rotor - Rear - LH",
+        "page": "GUID-8DA0BAEA-7807-4F7F-ACF9-FB3D3FF40A7B.html",
+        "mirrored": true
+      },
+      {
+        "id": "mirror_glass_fl",
+        "name": "Exterior Mirror Glass - Flat - Electrochromic Dimming - LH",
+        "manual": "Exterior Mirror Glass - Flat - Electrochromic Dimming - LH",
+        "nodes": [
+          "door_fl_mirrorglass"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [],
+        "on": "mirror_fl",
+        "why": null,
+        "procedure": "Exterior Mirror Glass - Flat - Electrochromic Dimming - LH",
+        "page": "GUID-F868AFA5-83DA-4585-AF37-34C5F71D405C.html",
+        "mirrored": false
+      },
+      {
+        "id": "mirror_cap_fl",
+        "name": "Skull Cap - Exterior Mirror - LH",
+        "manual": "Skull Cap - Exterior Mirror - LH",
+        "nodes": [
+          "door_fl_mirrorcap"
+        ],
+        "dir": [
+          0,
+          0,
+          1
+        ],
+        "after": [
+          "mirror_glass_fl"
+        ],
+        "on": "mirror_fl",
+        "why": null,
+        "procedure": "Skull Cap - Exterior Mirror - LH",
+        "page": "GUID-CA20A92E-6874-4C0F-9EBA-D67C2CDE7BFC.html",
+        "mirrored": false
+      },
+      {
+        "id": "mirror_fl",
+        "name": "Exterior Mirror Assembly - Electromechanical - LH",
+        "manual": "Exterior Mirror Assembly - Electromechanical - LH",
+        "nodes": [
+          "door_fl_mirror"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "door_fl",
+        "why": null,
+        "procedure": "Exterior Mirror Assembly - Electromechanical - LH",
+        "page": "GUID-E5FC5791-2CCB-49E2-A210-2300460B0063.html",
+        "mirrored": false
+      },
+      {
+        "id": "beltline_fl",
+        "name": "Beltline Assembly - Door Panel - Front - LH",
+        "manual": "Beltline Assembly - Door Panel - Front - LH",
+        "nodes": [
+          "door_fl_int_cap",
+          "door_fl_int_ambient"
+        ],
+        "dir": [
+          -1,
+          0.4,
+          0
+        ],
+        "after": [],
+        "on": "door_fl",
+        "why": null,
+        "procedure": "Beltline Assembly - Door Panel - Front - LH",
+        "page": "GUID-EDC75B2A-9737-4D8B-96BA-4BC3416F6DF6.html",
+        "mirrored": false
+      },
+      {
+        "id": "door_trim_fl",
+        "name": "Panel - Door Trim - Front - LH",
+        "manual": "Panel - Door Trim - Front - LH",
+        "nodes": [
+          "door_fl_int_trim_white",
+          "door_fl_int_armrest",
+          "door_fl_int_door_lower",
+          "door_fl_int_switch_pod",
+          "door_fl_int_switch",
+          "door_fl_int_grilles",
+          "open_fl"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "beltline_fl"
+        ],
+        "on": "door_fl",
+        "why": null,
+        "procedure": "Panel - Door Trim - Front - LH",
+        "page": "GUID-5FF58081-E522-4ED4-AAAE-227408A5133D.html",
+        "mirrored": false
+      },
+      {
+        "id": "door_glass_fl",
+        "name": "Moving Glass - Door - Front - LH",
+        "manual": "Moving Glass - Door - Front - LH",
+        "nodes": [
+          "door_fl_glass"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "door_trim_fl",
+          "beltline_fl"
+        ],
+        "on": "door_fl",
+        "why": null,
+        "procedure": "Moving Glass - Door - Front - LH",
+        "page": "GUID-6EF37E1F-202A-4DE1-B0C7-ADBE08187ECA.html",
+        "mirrored": false
+      },
+      {
+        "id": "door_fl",
+        "name": "Door - Front - LH",
+        "manual": "Door - Front - LH",
+        "nodes": [
+          "door_fl"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Door - Front - LH",
+        "page": "GUID-600F196C-8500-4ED6-8625-B938F5E7E291.html",
+        "mirrored": false
+      },
+      {
+        "id": "mirror_glass_fr",
+        "name": "Exterior Mirror Glass - Flat - Electrochromic Dimming - RH",
+        "manual": "Exterior Mirror Glass - Flat - Electrochromic Dimming - RH",
+        "nodes": [
+          "door_fr_mirrorglass"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [],
+        "on": "mirror_fr",
+        "why": null,
+        "procedure": "Exterior Mirror Glass - Flat - Electrochromic Dimming - LH",
+        "page": "GUID-F868AFA5-83DA-4585-AF37-34C5F71D405C.html",
+        "mirrored": true
+      },
+      {
+        "id": "mirror_cap_fr",
+        "name": "Skull Cap - Exterior Mirror - RH",
+        "manual": "Skull Cap - Exterior Mirror - RH",
+        "nodes": [
+          "door_fr_mirrorcap"
+        ],
+        "dir": [
+          0,
+          0,
+          1
+        ],
+        "after": [
+          "mirror_glass_fr"
+        ],
+        "on": "mirror_fr",
+        "why": null,
+        "procedure": "Skull Cap - Exterior Mirror - LH",
+        "page": "GUID-CA20A92E-6874-4C0F-9EBA-D67C2CDE7BFC.html",
+        "mirrored": true
+      },
+      {
+        "id": "mirror_fr",
+        "name": "Exterior Mirror Assembly - Electromechanical - RH",
+        "manual": "Exterior Mirror Assembly - Electromechanical - RH",
+        "nodes": [
+          "door_fr_mirror"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "door_fr",
+        "why": null,
+        "procedure": "Exterior Mirror Assembly - Electromechanical - LH",
+        "page": "GUID-E5FC5791-2CCB-49E2-A210-2300460B0063.html",
+        "mirrored": true
+      },
+      {
+        "id": "beltline_fr",
+        "name": "Beltline Assembly - Door Panel - Front - RH",
+        "manual": "Beltline Assembly - Door Panel - Front - RH",
+        "nodes": [
+          "door_fr_int_cap",
+          "door_fr_int_ambient"
+        ],
+        "dir": [
+          1,
+          0.4,
+          0
+        ],
+        "after": [],
+        "on": "door_fr",
+        "why": null,
+        "procedure": "Beltline Assembly - Door Panel - Front - LH",
+        "page": "GUID-EDC75B2A-9737-4D8B-96BA-4BC3416F6DF6.html",
+        "mirrored": true
+      },
+      {
+        "id": "door_trim_fr",
+        "name": "Panel - Door Trim - Front - RH",
+        "manual": "Panel - Door Trim - Front - RH",
+        "nodes": [
+          "door_fr_int_trim_white",
+          "door_fr_int_armrest",
+          "door_fr_int_door_lower",
+          "door_fr_int_switch_pod",
+          "door_fr_int_switch",
+          "door_fr_int_grilles",
+          "open_fr"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "beltline_fr"
+        ],
+        "on": "door_fr",
+        "why": null,
+        "procedure": "Panel - Door Trim - Front - LH",
+        "page": "GUID-5FF58081-E522-4ED4-AAAE-227408A5133D.html",
+        "mirrored": true
+      },
+      {
+        "id": "door_glass_fr",
+        "name": "Moving Glass - Door - Front - RH",
+        "manual": "Moving Glass - Door - Front - RH",
+        "nodes": [
+          "door_fr_glass"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "door_trim_fr",
+          "beltline_fr"
+        ],
+        "on": "door_fr",
+        "why": null,
+        "procedure": "Moving Glass - Door - Front - LH",
+        "page": "GUID-6EF37E1F-202A-4DE1-B0C7-ADBE08187ECA.html",
+        "mirrored": true
+      },
+      {
+        "id": "door_fr",
+        "name": "Door - Front - RH",
+        "manual": "Door - Front - RH",
+        "nodes": [
+          "door_fr"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Door - Front - LH",
+        "page": "GUID-600F196C-8500-4ED6-8625-B938F5E7E291.html",
+        "mirrored": true
+      },
+      {
+        "id": "beltline_rl",
+        "name": "Beltline Assembly - Door Panel - Rear - LH",
+        "manual": "Beltline Assembly - Door Panel - Rear - LH",
+        "nodes": [
+          "door_rl_int_cap",
+          "door_rl_int_ambient"
+        ],
+        "dir": [
+          -1,
+          0.4,
+          0
+        ],
+        "after": [],
+        "on": "door_rl",
+        "why": null,
+        "procedure": "Beltline Assembly - Door Panel - Rear - LH",
+        "page": "GUID-3EBE1131-6613-45FF-96BA-0E07C7F304C4.html",
+        "mirrored": false
+      },
+      {
+        "id": "door_trim_rl",
+        "name": "Panel - Door Trim - Rear - LH",
+        "manual": "Panel - Door Trim - Rear - LH",
+        "nodes": [
+          "door_rl_int_trim_white",
+          "door_rl_int_armrest",
+          "door_rl_int_door_lower",
+          "door_rl_int_switch_pod",
+          "door_rl_int_switch",
+          "door_rl_int_grilles",
+          "open_rl"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "beltline_rl"
+        ],
+        "on": "door_rl",
+        "why": null,
+        "procedure": "Panel - Door Trim - Rear - LH",
+        "page": "GUID-2E34FCB0-C7C2-4A20-8DB2-1E358B3F2B3D.html",
+        "mirrored": false
+      },
+      {
+        "id": "door_glass_rl",
+        "name": "Moving Glass - Door - Rear - LH",
+        "manual": "Moving Glass - Door - Rear - LH",
+        "nodes": [
+          "door_rl_glass"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "door_trim_rl",
+          "beltline_rl"
+        ],
+        "on": "door_rl",
+        "why": null,
+        "procedure": "Moving Glass - Door - Rear - LH",
+        "page": "GUID-65D2FEE8-59A7-42A4-BD4B-6E3EABA7027A.html",
+        "mirrored": false
+      },
+      {
+        "id": "door_rl",
+        "name": "Door - Rear - LH",
+        "manual": "Door - Rear - LH",
+        "nodes": [
+          "door_rl"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Door - Rear - LH",
+        "page": "GUID-1D85119E-6C91-4BA0-A8BD-627ADD876A3A.html",
+        "mirrored": false
+      },
+      {
+        "id": "beltline_rr",
+        "name": "Beltline Assembly - Door Panel - Rear - RH",
+        "manual": "Beltline Assembly - Door Panel - Rear - RH",
+        "nodes": [
+          "door_rr_int_cap",
+          "door_rr_int_ambient"
+        ],
+        "dir": [
+          1,
+          0.4,
+          0
+        ],
+        "after": [],
+        "on": "door_rr",
+        "why": null,
+        "procedure": "Beltline Assembly - Door Panel - Rear - LH",
+        "page": "GUID-3EBE1131-6613-45FF-96BA-0E07C7F304C4.html",
+        "mirrored": true
+      },
+      {
+        "id": "door_trim_rr",
+        "name": "Panel - Door Trim - Rear - RH",
+        "manual": "Panel - Door Trim - Rear - RH",
+        "nodes": [
+          "door_rr_int_trim_white",
+          "door_rr_int_armrest",
+          "door_rr_int_door_lower",
+          "door_rr_int_switch_pod",
+          "door_rr_int_switch",
+          "door_rr_int_grilles",
+          "open_rr"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "beltline_rr"
+        ],
+        "on": "door_rr",
+        "why": null,
+        "procedure": "Panel - Door Trim - Rear - LH",
+        "page": "GUID-2E34FCB0-C7C2-4A20-8DB2-1E358B3F2B3D.html",
+        "mirrored": true
+      },
+      {
+        "id": "door_glass_rr",
+        "name": "Moving Glass - Door - Rear - RH",
+        "manual": "Moving Glass - Door - Rear - RH",
+        "nodes": [
+          "door_rr_glass"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "door_trim_rr",
+          "beltline_rr"
+        ],
+        "on": "door_rr",
+        "why": null,
+        "procedure": "Moving Glass - Door - Rear - LH",
+        "page": "GUID-65D2FEE8-59A7-42A4-BD4B-6E3EABA7027A.html",
+        "mirrored": true
+      },
+      {
+        "id": "door_rr",
+        "name": "Door - Rear - RH",
+        "manual": "Door - Rear - RH",
+        "nodes": [
+          "door_rr"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Door - Rear - LH",
+        "page": "GUID-1D85119E-6C91-4BA0-A8BD-627ADD876A3A.html",
+        "mirrored": true
+      },
+      {
+        "id": "wiper_arm",
+        "name": "Wiper Arm and Blade Assembly - Windshield",
+        "manual": "Wiper Arm and Blade Assembly - Windshield",
+        "nodes": [
+          "wiper_arm"
+        ],
+        "dir": [
+          0,
+          1,
+          0.3
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Wiper Arm and Blade Assembly - Windshield",
+        "page": "GUID-BD6E78E3-9B88-4F20-940F-068717D81EA2.html",
+        "mirrored": false
+      },
+      {
+        "id": "windshield",
+        "name": "Windshield Assembly",
+        "manual": "Windshield Assembly",
+        "nodes": [
+          "windshield_glass"
+        ],
+        "dir": [
+          0,
+          0.8,
+          0.6
+        ],
+        "after": [
+          "wiper_arm"
+        ],
+        "on": null,
+        "why": "the wiper lies on the glass",
+        "procedure": "Windshield Assembly",
+        "page": "GUID-28743D4C-E164-4741-8C95-D09F014DC857.html",
+        "mirrored": false
+      },
+      {
+        "id": "roof_glass",
+        "name": "Fixed Glass Roof Assembly",
+        "manual": "Fixed Glass Roof Assembly",
+        "nodes": [
+          "roof_glass"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Fixed Glass Roof Assembly",
+        "page": "GUID-2BD8D95C-E890-4240-9564-4BE5FDF143C1.html",
+        "mirrored": false
+      },
+      {
+        "id": "quarter_glass_l",
+        "name": "Quarter Glass - Front - LH",
+        "manual": "Quarter Glass - Front - LH",
+        "nodes": [
+          "quarter_glass__l"
+        ],
+        "dir": [
+          1,
+          0.3,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Quarter Glass - Front - LH",
+        "page": "GUID-B0C681D9-FCDF-46D1-A7A4-65DC50E9AA00.html",
+        "mirrored": false
+      },
+      {
+        "id": "quarter_glass_r",
+        "name": "Quarter Glass - Front - RH",
+        "manual": "Quarter Glass - Front - RH",
+        "nodes": [
+          "quarter_glass__r"
+        ],
+        "dir": [
+          -1,
+          0.3,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Quarter Glass - Front - LH",
+        "page": "GUID-B0C681D9-FCDF-46D1-A7A4-65DC50E9AA00.html",
+        "mirrored": true
+      },
+      {
+        "id": "lightbar_front",
+        "name": "Lightbar - Front",
+        "manual": "Lightbar - Front",
+        "nodes": [
+          "light_front"
+        ],
+        "dir": [
+          0,
+          0,
+          1
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Lightbar - Front",
+        "page": "GUID-4A605514-9F14-4377-A650-E152662396B1.html",
+        "mirrored": false
+      },
+      {
+        "id": "license_plate_front",
+        "name": "License Plate Assembly - Front",
+        "manual": "License Plate Assembly - Front",
+        "nodes": [
+          "front_plate"
+        ],
+        "dir": [
+          0,
+          0,
+          1
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "License Plate Assembly - Front",
+        "page": "GUID-C5A805F2-0362-4B5D-8035-46F51ED77362.html",
+        "mirrored": false
+      },
+      {
+        "id": "front_fascia",
+        "name": "Front Fascia",
+        "manual": "Front Fascia",
+        "nodes": [
+          "cladding__bumper_f",
+          "tow_covers",
+          "front_camera",
+          "front_camera_lens"
+        ],
+        "dir": [
+          0,
+          -0.2,
+          1
+        ],
+        "after": [
+          "license_plate_front"
+        ],
+        "on": null,
+        "why": "the plate is fixed on the fascia",
+        "procedure": "Front Fascia",
+        "page": "GUID-35EB74FA-C560-4CD3-BCDD-315009209FA6.html",
+        "mirrored": false
+      },
+      {
+        "id": "front_lower_grille",
+        "name": "Front Lower Grille",
+        "manual": "Front Lower Grille",
+        "nodes": [
+          "intake_grille",
+          "intake_back"
+        ],
+        "dir": [
+          0,
+          0,
+          1
+        ],
+        "after": [
+          "front_fascia"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Front Lower Grille",
+        "page": "GUID-CE729B6F-331C-4B57-BC35-5C2EA95AE1FB.html",
+        "mirrored": false
+      },
+      {
+        "id": "flare_front_l",
+        "name": "Fender flare - Front - LH",
+        "manual": null,
+        "nodes": [
+          "cladding__flare_f_l"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": "the manual lists the front flare only with the fender (Fender Assembly - Front) and its carriers"
+      },
+      {
+        "id": "flare_rear_l",
+        "name": "Fender flare - Rear - LH",
+        "manual": "Fender Flare - Fore - Rear - LH",
+        "nodes": [
+          "cladding__flare_r_l"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": "the manual has it in two pieces (Fore, Aft); the model in one",
+        "procedure": "Fender Flare - Fore - Rear - LH",
+        "page": "GUID-54FF82DC-2792-4069-BDA9-E507C82AAC4B.html",
+        "mirrored": false
+      },
+      {
+        "id": "rocker_l",
+        "name": "Rocker Panel Assembly - LH",
+        "manual": "Rocker Panel Assembly - LH",
+        "nodes": [
+          "cladding__rocker_l"
+        ],
+        "dir": [
+          1,
+          -0.3,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Rocker Panel Assembly - LH",
+        "page": "GUID-1A4ECBC0-507B-40E3-8F12-F6FE45B50981.html",
+        "mirrored": false
+      },
+      {
+        "id": "flare_front_r",
+        "name": "Fender flare - Front - RH",
+        "manual": null,
+        "nodes": [
+          "cladding__flare_f_r"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": "the manual lists the front flare only with the fender (Fender Assembly - Front) and its carriers"
+      },
+      {
+        "id": "flare_rear_r",
+        "name": "Fender flare - Rear - RH",
+        "manual": "Fender Flare - Fore - Rear - RH",
+        "nodes": [
+          "cladding__flare_r_r"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": "the manual has it in two pieces (Fore, Aft); the model in one",
+        "procedure": "Fender Flare - Fore - Rear - LH",
+        "page": "GUID-54FF82DC-2792-4069-BDA9-E507C82AAC4B.html",
+        "mirrored": true
+      },
+      {
+        "id": "rocker_r",
+        "name": "Rocker Panel Assembly - RH",
+        "manual": "Rocker Panel Assembly - RH",
+        "nodes": [
+          "cladding__rocker_r"
+        ],
+        "dir": [
+          -1,
+          -0.3,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Rocker Panel Assembly - LH",
+        "page": "GUID-1A4ECBC0-507B-40E3-8F12-F6FE45B50981.html",
+        "mirrored": true
+      },
+      {
+        "id": "rear_fascia",
+        "name": "Rear Fascia",
+        "manual": "Rear Fascia",
+        "nodes": [
+          "cladding__bumper_r"
+        ],
+        "dir": [
+          0,
+          -0.2,
+          -1
+        ],
+        "after": [
+          "flare_rear_l",
+          "flare_rear_r"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Rear Fascia",
+        "page": "GUID-2E55B481-9D9C-4489-AF53-55AE5402336E.html",
+        "mirrored": false
+      },
+      {
+        "id": "tailgate",
+        "name": "Tailgate Assembly",
+        "manual": "Tailgate Assembly",
+        "nodes": [
+          "tailgate"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Tailgate Assembly",
+        "page": "GUID-195F4C22-0105-47FE-9D0F-3643ED0C2D58.html",
+        "mirrored": false
+      },
+      {
+        "id": "tonneau",
+        "name": "Slat System - Tonneau",
+        "manual": "Slat System - Tonneau",
+        "nodes": [
+          "tonneau_cover"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Slat System - Tonneau",
+        "page": "GUID-D62653D5-6BC1-4228-8CE6-3B3A214F14C2.html",
+        "mirrored": false
+      },
+      {
+        "id": "bed_lid",
+        "name": "Lid - Bed Cargo Tub",
+        "manual": "Lid - Bed Cargo Tub",
+        "nodes": [
+          "bedlid"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Lid - Bed Cargo Tub",
+        "page": "GUID-0275A598-FFD2-4E9D-8CEC-58FFC52654D4.html",
+        "mirrored": false
+      },
+      {
+        "id": "outlet_door",
+        "name": "Door - Outlet - Bed",
+        "manual": "Door - Outlet - Bed",
+        "nodes": [
+          "outlet_cover"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Door - Outlet - Bed",
+        "page": "GUID-FB32462D-242B-4419-8D0A-6AB2989483FB.html",
+        "mirrored": false
+      },
+      {
+        "id": "floor_mats",
+        "name": "Floor Mat Kit",
+        "manual": "Floor Mat Kit",
+        "nodes": [
+          "int_mats",
+          "int_mat_edges"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Floor Mat Kit",
+        "page": "GUID-B11A3A46-F7F8-461D-9A5A-09A4412279E1.html",
+        "mirrored": false
+      },
+      {
+        "id": "seat_rear",
+        "name": "Seat Assembly - 2nd Row",
+        "manual": "Seat Assembly - 2nd Row",
+        "nodes": [
+          "int_seats_rear",
+          "int_seat_base__rear",
+          "int_rear_armrest"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Seat Assembly - 2nd Row",
+        "page": "GUID-38DF85AE-F0DA-4B85-820B-157A6B00986A.html",
+        "mirrored": false
+      },
+      {
+        "id": "seat_front_l",
+        "name": "Seat Assembly - 1st Row - LH",
+        "manual": "Seat Assembly - 1st Row - LH",
+        "nodes": [
+          "int_seats_front__l",
+          "int_seat_base__l",
+          "int_seat_knobs__l",
+          "int_piping__l"
+        ],
+        "dir": [
+          0.3,
+          1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Seat Assembly - 1st Row - LH",
+        "page": "GUID-3D275EB4-0894-41D7-A709-125A36EE8491.html",
+        "mirrored": false
+      },
+      {
+        "id": "seat_front_r",
+        "name": "Seat Assembly - 1st Row - RH",
+        "manual": "Seat Assembly - 1st Row - RH",
+        "nodes": [
+          "int_seats_front__r",
+          "int_seat_base__r",
+          "int_seat_knobs__r",
+          "int_piping__r"
+        ],
+        "dir": [
+          -0.3,
+          1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Seat Assembly - 1st Row - LH",
+        "page": "GUID-3D275EB4-0894-41D7-A709-125A36EE8491.html",
+        "mirrored": true
+      },
+      {
+        "id": "airbag_driver",
+        "name": "Airbag - Driver",
+        "manual": "Airbag - Driver",
+        "nodes": [
+          "int_yoke_pad"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [],
+        "on": "steering_wheel",
+        "why": null,
+        "procedure": "Airbag - Driver",
+        "page": "GUID-3DA963E4-87CA-423A-8155-02EF2B103505.html",
+        "mirrored": false
+      },
+      {
+        "id": "steering_wheel",
+        "name": "Steering yoke",
+        "manual": "Steering Wheel Pur Heated",
+        "nodes": [
+          "int_yoke",
+          "int_yoke_face",
+          "int_yoke_chin",
+          "int_yoke_pods",
+          "int_yoke_trim",
+          "int_yoke_keys",
+          "int_yoke_btn_high_beam",
+          "int_yoke_btn_signal_left",
+          "int_yoke_btn_signal_right",
+          "int_yoke_btn_wiper"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [
+          "airbag_driver"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Steering Wheel Pur Heated",
+        "page": "GUID-4EE81306-9C4C-49A3-A993-727DA9E7D2B9.html",
+        "mirrored": false
+      },
+      {
+        "id": "touchscreen",
+        "name": "Touchscreen - Center Display Assembly",
+        "manual": "Touchscreen - Center Display Assembly",
+        "nodes": [
+          "int_screen",
+          "int_screen_bezel"
+        ],
+        "dir": [
+          0,
+          0.3,
+          -1
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Touchscreen - Center Display Assembly",
+        "page": "GUID-F6BAB956-9B3A-477C-89CD-1C4AF5E8220E.html",
+        "mirrored": false
+      },
+      {
+        "id": "rear_display",
+        "name": "Touchscreen - Rear Display",
+        "manual": "Touchscreen - Rear Display",
+        "nodes": [
+          "int_rear_screen"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [],
+        "on": "center_console",
+        "why": null,
+        "procedure": "Touchscreen - Rear Display",
+        "page": "GUID-246FEAA1-B833-4044-818F-F2D26B2042AB.html",
+        "mirrored": false
+      },
+      {
+        "id": "rearview_mirror",
+        "name": "Rearview Mirror",
+        "manual": "Rearview Mirror",
+        "nodes": [
+          "int_rear_mirror",
+          "int_mirror_glass"
+        ],
+        "dir": [
+          0,
+          -1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Rearview Mirror",
+        "page": "GUID-150B77ED-F87E-4A44-9971-9DF6EFC17EF6.html",
+        "mirrored": false
+      },
+      {
+        "id": "center_console",
+        "name": "Center Console Assembly",
+        "manual": "Center Console Assembly",
+        "nodes": [
+          "int_console",
+          "int_console_lid",
+          "int_console_rim",
+          "int_chargers",
+          "int_charger_trim",
+          "int_usb"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Center Console Assembly",
+        "page": "GUID-583518A9-ED30-48E1-AFCB-6112343020FB.html",
+        "mirrored": false
+      }
+    ],
+    "note": "each part: its nodes (meshes or transform nodes) come off together, along dir (glTF frame), once every part in after is off; on: the part it is fixed to (absent: the body), which carries it when that comes off; manual: its name in the Service Manual, procedure and page: the documented procedure it follows (mirrored: its left-hand or front twin)"
+  }
 }
