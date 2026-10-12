@@ -125,26 +125,13 @@
         0.9,
         1.1928000000000003
       ],
-      "openDeg": -65,
+      "openDeg": -65.0,
+      "glassDropMm": 12.0,
       "buttons": [
         "btn_fl",
         "open_fl"
       ],
-      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
-    },
-    "fr": {
-      "node": "door_fr",
-      "hinge": [
-        -0.96392,
-        0.9,
-        1.1928000000000003
-      ],
-      "openDeg": 65,
-      "buttons": [
-        "btn_fr",
-        "open_fr"
-      ],
-      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
+      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); before it swings, its frameless glass (door_*_glass) drops glassDropMm down its slant, and rises once the door is shut; btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
     },
     "rl": {
       "node": "door_rl",
@@ -153,12 +140,28 @@
         0.9,
         0.024800000000000183
       ],
-      "openDeg": -65,
+      "openDeg": -65.0,
+      "glassDropMm": 12.0,
       "buttons": [
         "btn_rl",
         "open_rl"
       ],
-      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
+      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); before it swings, its frameless glass (door_*_glass) drops glassDropMm down its slant, and rises once the door is shut; btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
+    },
+    "fr": {
+      "node": "door_fr",
+      "hinge": [
+        -0.96392,
+        0.9,
+        1.1928000000000003
+      ],
+      "openDeg": 65.0,
+      "glassDropMm": 12.0,
+      "buttons": [
+        "btn_fr",
+        "open_fr"
+      ],
+      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); before it swings, its frameless glass (door_*_glass) drops glassDropMm down its slant, and rises once the door is shut; btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
     },
     "rr": {
       "node": "door_rr",
@@ -167,12 +170,13 @@
         0.9,
         0.024800000000000183
       ],
-      "openDeg": 65,
+      "openDeg": 65.0,
+      "glassDropMm": 12.0,
       "buttons": [
         "btn_rr",
         "open_rr"
       ],
-      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
+      "note": "door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); before it swings, its frameless glass (door_*_glass) drops glassDropMm down its slant, and rises once the door is shut; btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle"
     }
   },
   "hinged": {

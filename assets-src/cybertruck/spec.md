@@ -172,6 +172,28 @@ Cuts and fittings on the shell:
 - Not modelled: cameras, the charge port door and the body-side antennae (too small for the budget,
   and not visible beyond a few metres).
 
+### Doors: each its own assembly, in an opening (2026-10-12)
+
+Each door is built as the truck has it, not cut out of the body: cad.py's `Door` holds its seams, hinge, swing
+and opening, and `door_assembly` returns everything it carries (skin, frameless glass, mirror on a front door,
+trim). Rules:
+
+- **An opening with a gap.** Everything fixed stops at the door's opening (`clear_of_doors`): the body's steel, the
+  cladding, the window frame, the quarter glass, the cabin. The door stands DOOR_GAP (2 mm) inside it: 4 mm between
+  two doors, 2 mm over the rocker. The skin and window are the body's own surfaces within the door's outline, as a
+  real door's outer panel is one panel of the body's shape.
+- **A hinge that works.** On the skin's line at the front seam (2 mm outside it), vertical (the real axis's tilt:
+  not measured), so every point of the door moves back or out as it opens.
+- **A swing envelope.** Every part a door carries lies within the cylinder about its hinge that stops 3 mm short of
+  the body's next face behind it; its trailing inner corners round off along that arc.
+- **Declared mounts.** parts/mounts.json says what each part is fixed to; assemble.py hangs a door's parts on its
+  node from that, not from file names.
+- **Checked every build.** check_doors.py swings each door through its opening (its glass dropped first by
+  glassDropMm, as the app does) and fails the build if any part passes through a fixed one at any angle.
+  Shut, it lists parts resting on each other (only the door's ambient strip against the dash's).
+
+The tailgate, bed lid, outlet cover and tonneau are still cut from the body: next to move to this structure.
+
 ### Wheels: separate parts, each its own node
 
 Node tree (glTF), all pivots on the axle:
@@ -689,8 +711,8 @@ open (c166, dgRcedIkNOM-12) the door's top is bare, so upright, rail and triangl
 | Side glass seen from the driver's seat | 1,235 high at 865 back, 1,310 at 1,084, 1,357 at 1,228 | athens1-stripx (was 947 / 1,136 / 1,260 with the guessed focal) |
 | Front door glass | starts at the upright (1,802); the triangle ahead is body glass with the front side windows' tint | c166, dgRcedIkNOM-12 |
 | Mirror, rechecked | base underside 0 to 5 above the door top (model 10), base 68 to 70 tall (63), top 194 above the underside (190); tip within 10 to 18 of the photo's from the seam | c003 (measure/doorframe/c003-mirror.md) |
-| Mirror on its door (2026-10-11) | each mirror rides whole on its front door: base, head, cap and glass | c166 (both front doors open, each mirror swung out with its door). The door regions had cut the head in two, about 4.9 L of each staying on the body, hanging in the air with the door open and swept through by the door's cap and mirror glass (review/dashend/door_sweep.py: door meshes against every fixed mesh, 0 to 65 deg) |
-| Doors swing clear (2026-10-12) | each door swings 0 to 65 deg through nothing fixed (review/dashend/door_sweep.py, all four doors, every angle "clear"; shut, only faces resting on one another). The hinge axis stands 2 outside the skin at the front seam (was 20 inside: the door's outer 20 mm swung forward through the fender and the B-pillar's trim and glass). The doors' steel, glass and trim lie within the circle about the hinge that stops 3 short of the body's next face (door_swing): the trailing inner corners are rounded off along it, a 3 mm gap at the rear seam. The quarter glass and the window upright end 1 mm over the door's steel top (they reached 43 and 35 mm down into it); the doors' inner lower panels and grilles end 2 over the door's bottom edge (they sat 55 mm inside the sill); the front wheel arch's flare ends at the door seam (c166: the open door's front edge is bare steel; it ran 46 mm onto the door); the rear outboard belts 25 further in (they ran through the shut rear doors' trim). The app drops each door's frameless glass 12 mm before the door swings and raises it once shut: with it up, the rear doors' glass ran 10 mm into the roof's edge. | the swing test; c166; the drop's real size: not measured |
+| Mirror on its door (2026-10-11) | each mirror rides whole on its front door: base, head, cap and glass | c166 (both front doors open, each mirror swung out with its door). The door regions had cut the head in two, about 4.9 L of each staying on the body, hanging in the air with the door open and swept through by the door's cap and mirror glass (check_doors.py: door meshes against every fixed mesh, 0 to 65 deg) |
+| Doors swing clear (2026-10-12) | each door swings 0 to 65 deg through nothing fixed (check_doors.py, run by build.sh: all four doors, every angle clear; shut, only faces resting on one another). The hinge axis stands 2 outside the skin at the front seam (was 20 inside: the door's outer 20 mm swung forward through the fender and the B-pillar's trim and glass). The doors' steel, glass and trim lie within the circle about the hinge that stops 3 short of the body's next face (door_swing): the trailing inner corners are rounded off along it, a 3 mm gap at the rear seam. The quarter glass and the window upright end 1 mm over the door's steel top (they reached 43 and 35 mm down into it); the doors' inner lower panels and grilles end 2 over the door's bottom edge (they sat 55 mm inside the sill); the front wheel arch's flare ends at the door seam (c166: the open door's front edge is bare steel; it ran 46 mm onto the door); the rear outboard belts 25 further in (they ran through the shut rear doors' trim). The app drops each door's frameless glass 12 mm before the door swings and raises it once shut: with it up, the rear doors' glass ran 10 mm into the roof's edge. | the swing test; c166; the drop's real size: not measured |
 
 Superseded (2026-10-04): the post moved 250 back to meet the upright. That rested on int-athens-1's camera being
 250 too far forward; with its real focal length it moves only 50, so the post went back where the photos put it.

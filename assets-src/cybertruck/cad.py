@@ -145,6 +145,8 @@ BUMPER_F = dict(
 def V(w, h, s):
     return np.array([w, h, ZF - s], float)
 
+MOUNTS = {}     # part file -> what it's fixed to, when not the body: written to parts/mounts.json for assemble.py
+
 def save(part, name, tolerance=0.5, angular=0.3):
     export_stl(part, str(OUT / f'{name}.stl'), tolerance=tolerance, angular_tolerance=angular)
 
@@ -1355,7 +1357,7 @@ def corner_cut(pts, rounds=2):
     return [(round(s, 1), round(h, 1)) for s, h in pts]
 DASH_END = corner_cut([(1467.0, 1159.0), (1488.0, 1118.0), (1492.0, 1062.0), (1462.0, 1028.0)])
 
-DOOR_FOOT = 482.0      # the doors' inner panels end here, 2 over the door's bottom edge (480, door_regions)
+DOOR_FOOT = 482.0      # the doors' inner panels end here, 2 over the door's bottom edge (480, Door)
 
 def door_trim(p, d, sx, driver):
     """Trim on one door's inside (d 'f' or 'r', sx +1 left / -1 right), from the video frames
@@ -1375,7 +1377,7 @@ def door_trim(p, d, sx, driver):
     # The sill under the glass is ~52 deep, the white panel starting under it (dgRcedIkNOM 6:16: 40 px against the
     # white panel's 175; int-athens-3 about the same), dark grey like the pillar trim
     bt0, bt1 = belt_h(p, s0) - 52, belt_h(p, s1) - 52
-    # Down to 2 above the door's bottom edge (480, door_regions): to the floor it sat 55 mm inside the sill and
+    # Down to 2 above the door's bottom edge (480, Door): to the floor it sat 55 mm inside the sill and
     # the rocker, and swept through them as the door opened. The sill shows under it, as on the open truck.
     lower = XH([(xw, DOOR_FOOT), (hip + 33, DOOR_FOOT), (hip + 33, 640), (hip, 720), (hip, 872), (xw, 872)], s0, s1)
     out['door_lower'] = [lower]
@@ -1462,9 +1464,9 @@ def door_trim(p, d, sx, driver):
     else:
         g = [(s0 + 40, DOOR_FOOT + 10), (s0 + 230, DOOR_FOOT + 10), (s0 + 210, 600), (s0 + 40, 600)]
     out['grilles'] = [SH(g, hip + 30, hip + 36)]
-    # How it moves: the trim lies within its door's swing (door_swing), and ahead of the front seam it stops 6 short
+    # How it moves: the trim lies within its door's swing (Door.swing), and ahead of the front seam it stops 6 short
     # of the body's shell, which narrows there (at 0.5 the cap still touched it), so it never drags through it.
-    swing = door_swing(p, d + 'l')
+    swing = doors(p)[d + 'l'].swing
     shell_ahead = Box(500, 6000, 2000, align=(Align.MIN, Align.CENTER, Align.MIN)).moved(Location((body_w(p) - c['wall'] - 6.0, 0, Z(door_spans(p)[d][0]))))
     out = {k: [(q & swing) - shell_ahead for q in v] for k, v in out.items()}
     out = {k: [q for q in v if q is not None and q.volume > 1] for k, v in out.items()}
@@ -1517,7 +1519,7 @@ def window_edge(p, sx):
         pass
     # Its foot stops flat 1 mm over the door's steel top (belt + 13), so the door swings clear: pushed in along
     # the window's leaning normal, its inner edge reached 35 mm down into the door.
-    return edge - Compound([reg.moved(Location((0, 1, 0))) for reg, _ in door_regions(p, glass=False).values()])
+    return clear_of_doors(p, edge, 'opening', lift=1.0)
 
 def interior(p):
     """Fixed interior parts by name -> solid, and door-mounted ones as 'door_<k>_<name>'. assemble.py gives
@@ -1526,11 +1528,9 @@ def interior(p):
     out = {}
     inner = hull(p, inset=c['wall'] + 2)
     well = both_sides(side_prism(arch_polygon(p, AXLES['f'], grow=40), WELL_X - 60, 1300))
-    regions = door_regions(p)
     pl = planes(p)
     def fixed(part):
-        rest, _ = split_doors(part, regions)               # whatever reaches into a door's opening stays out of it
-        return rest
+        return clear_of_doors(p, part)                     # whatever reaches into a door's space stays out of it
     # ---- dash. The shelf: a dark slab rising from its lip (1,207 high, 1,435 back) to its crest under the windshield.
     d0, d1 = 900.0, c['dash_s']
     # The top's profile (s, h), DASH_TOP: from the lip a short rounded nose up to 1,228, the long main top rising
@@ -1734,11 +1734,7 @@ def interior(p):
         hw.append(rod(V(xb, hR - 40, sR + 70), V(xb, hR + 30, sR + 50), (1, 0, 0), 30, 20))
     out['belts'] = Compound(belts)
     out['belt_hw'] = Compound(hw)
-    # ---- doors: each door's trim rides on it
-    for d in ('f', 'r'):
-        for sx, side_k in ((1, 'l'), (-1, 'r')):
-            for name, parts in door_trim(p, d, sx, driver=(d == 'f' and sx > 0)).items():
-                out[f'door_{d}{side_k}_{name}'] = Compound(parts)
+    # (each door's trim is its own: door_assembly)
     # ---- pillars, headliner, roof beams (dgRcedIkNOM-31: suede trim, the header beam with the sun visors;
     # the windshield's top edge measured through the dash render's camera at 1,739 back, the dome light under
     # the header at 1,826; the header's rear edge is a guess).
@@ -2108,61 +2104,91 @@ PILLAR_HALF = 35.0          # the fixed B-pillar strip between the doors, where 
 def door_spans(p):
     return {'f': (p['seam_1'], p['seam_2'] - PILLAR_HALF), 'r': (p['seam_2'] + PILLAR_HALF, p['seam_3'])}
 
-def door_regions(p, glass=True):
-    """{door: (region solid, hinge point)} for fl, rl, fr, rr. A door is everything between its seams that is
-    below the beltline: its skin, trim, armrest and handle; with glass, also what's below the roof and deck
-    (minus the glass pockets' depth) outboard of the side window's plane: its window, which is frameless
-    (it drops a little as the door opens), so the steel above the belt (the pocket's lip under the roof
-    edge) stays on the body and nothing hangs over the door with its window down. Never the roof."""
-    pl = planes(p)
-    BW = body_w(p)
-    c = CAB
-    x_in = BW - c['wall'] - c['trim_t'] - 100
-    out = {}
-    for d, (s0, s1) in door_spans(p).items():
-        poly = [(ZF - s0, 480.0), (ZF - s1, 480.0), (ZF - s1, 2100.0), (ZF - s0, 2100.0)]
-        prism_l = side_prism(poly, x_in, 1300)
-        # the front door's window reaches forward past its seam to the glass's tip, over the fender
-        # the front door's glass starts at the window edge: the glass triangle ahead of it stays on the body (c166)
-        ga = WINDOW_EDGE['s_front'] + WINDOW_EDGE['width'] if d == 'f' else s0
-        prism_a = side_prism([(ZF - ga, 480.0), (ZF - s1, 480.0), (ZF - s1, 2100.0), (ZF - ga, 2100.0)], x_in, 1300)
-        a = halfspace_cut(prism_a, pl['roof'][0] - pl['roof'][1] * 12, pl['roof'][1])
-        a = halfspace_cut(a, pl['deck'][0] - pl['deck'][1] * 12, pl['deck'][1])
-        wp, wn = pl['window_l']
-        a = halfspace_cut(a, wp - wn * 120, -wn)
+DOOR_GAP = 2.0          # a door stands this far inside its opening: 4 mm between two doors (the seams' slots were 4), 2 at the rocker
+DOOR_OPEN_DEG = 65.0
+GLASS_DROP = 12.0       # the frameless glass drops this far before its door swings (apps/cyb): with it up, the rear doors'
+                        # glass ran 10 mm into the roof's edge. The real drop: not measured
+
+class Door:
+    """One door as the truck has it: a part of its own, hung on a hinge, standing in an opening in the body with a gap
+    all round, carrying its skin, frameless glass, mirror (front doors) and trim.
+
+    opening          what everything fixed leaves free for it below the belt (the body's steel, the cladding, the
+                     window frame and the quarter glass stop at it): between its seams, from its bottom edge (480)
+                     up to its steel's top, belt + 13, the side glass's bottom edge
+    window_opening   the same above the belt for its glass: ahead of it, the front door's starts at the window
+                     frame (the glass triangle there stays on the body, c166); under the roof and deck's edge
+    space            both: no fixed part of the cabin may reach into it
+    swing            a vertical cylinder about the hinge reaching 3 mm short of the body's next face behind the door
+                     (the B-pillar, or the cab's rear): the door's parts lie within it, so it swings clear. Its trailing
+                     inner corners round off along that arc, as on the truck (dgRcedIkNOM-12); square, they swung 2 to
+                     19 mm into the body between 3 and 15 deg
+    envelope         what the door's own steel and trim lie within: its opening less the gap, and its swing
+    hinge            on the skin's line (2 mm outside it) at the front seam, so every point of the door moves back
+                     or out as it opens; at 20 mm inside, its outer edge swung forward through the body ahead"""
+
+    def __init__(self, p, key):
+        self.key, self.d, self.sx = key, key[0], 1 if key[1] == 'l' else -1
+        self.s0, self.s1 = door_spans(p)[self.d]
+        pl = planes(p)
+        BW, c = body_w(p), CAB
+        x_in = BW - c['wall'] - c['trim_t'] - 100
         belt = plane3(V(BW, p['belt_h_front'], p['a_pillar_s']), V(BW, p['belt_h_rear'], p['c_pillar_s']), V(0, p['belt_h_front'], p['a_pillar_s']))
         if belt[1][1] < 0:
             belt = (belt[0], -belt[1])
-        # The steel's own top is the side glass's bottom edge (belt + 12), so no sliver of it stays on the body.
-        b = halfspace_cut(prism_l, belt[0] + belt[1] * (2 if glass else 13), belt[1])
-        region = a + b if glass else b
-        # The hinge axis stands just outside the skin at the door's front seam, so every point of the door moves
-        # back or out as it opens. At 20 mm inside the skin the door's outer 20 mm swung forward through the body
-        # ahead of the seam (the fender, the B-pillar's black trim and glass); door_sweep.py checks the swing.
-        hinge = np.array([BW + 2, 900.0, ZF - s0])
-        out[f'{d}l'] = (region, hinge)
-        out[f'{d}r'] = (region.mirror(Plane.YZ), hinge * [-1, 1, 1])
+        def below(s0, s1, h0, top):
+            prism = side_prism([(ZF - s0, h0), (ZF - s1, h0), (ZF - s1, 2100.0), (ZF - s0, 2100.0)], x_in, 1300)
+            return halfspace_cut(prism, belt[0] + belt[1] * top, belt[1])
+        g = DOOR_GAP
+        opening = below(self.s0 - g, self.s1 + g, 480.0, 13)
+        inside = below(self.s0 + g, self.s1 - g, 480.0 + g, 13)
+        ga = WINDOW_EDGE['s_front'] + WINDOW_EDGE['width'] if self.d == 'f' else self.s0
+        a = side_prism([(ZF - ga, 480.0), (ZF - self.s1, 480.0), (ZF - self.s1, 2100.0), (ZF - ga, 2100.0)], x_in, 1300)
+        a = halfspace_cut(a, pl['roof'][0] - pl['roof'][1] * 12, pl['roof'][1])
+        a = halfspace_cut(a, pl['deck'][0] - pl['deck'][1] * 12, pl['deck'][1])
+        wp, wn = pl['window_l']
+        a = halfspace_cut(a, wp - wn * 120, -wn)
+        window = a + below(self.s0, self.s1, 480.0, 2)
+        swing = Cylinder(self.s1 - self.s0 - 3.0, 6000).rotate(Axis.X, 90).moved(Location((BW + 2.0, 0, Z(self.s0))))
+        self.hinge = np.array([self.sx * (BW + 2.0), 900.0, ZF - self.s0])
+        side = (lambda q: q) if self.sx > 0 else (lambda q: q.mirror(Plane.YZ))
+        self.opening, self.window_opening = side(opening), side(window)
+        self.space = side(opening + window)
+        self.swing = side(swing)
+        self.envelope = side(inside & swing)
+
+_DOORS = {}
+
+def doors(p):
+    """{'fl', 'rl', 'fr', 'rr': Door}"""
+    k = json.dumps(p, sort_keys=True, default=str)
+    if k not in _DOORS:
+        _DOORS[k] = {key: Door(p, key) for key in ('fl', 'rl', 'fr', 'rr')}
+    return _DOORS[k]
+
+def clear_of_doors(p, part, attr='space', lift=0.0):
+    """A fixed part with every door's opening (attr: 'space', 'opening' or 'window_opening') taken out of it, so no
+    door passes through it. lift: the openings raised that many mm first, so the part stops that far over the doors."""
+    return part - Compound([getattr(dr, attr).moved(Location((0, lift, 0))) for dr in doors(p).values()])
+
+def door_assembly(p, dr, steel, glass):
+    """{part name: (solid, save options)} for everything door dr carries: its skin and its window, the body's own
+    surfaces within its outline; its mirror (a front door's, whole: c166, both doors open, each mirror swung out with
+    its door); its trim. Each within the door's envelope or swing."""
+    out = {'steel': (steel & dr.envelope, dict(tolerance=0.5, angular=0.5)),
+           'glass': (glass & dr.window_opening & dr.swing, {})}
+    if dr.d == 'f':
+        m, mg = mirror_part(p), mirror_glass_part(p)
+        if (m.center().X > 0) != (dr.sx > 0):
+            m, mg = m.mirror(Plane.YZ), mg.mirror(Plane.YZ)
+        # Two-tone, as on the truck (c003, dgRcedIkNOM-04): a satin grey cap over the black base and arm, split at
+        # the base's top.
+        cap_zone = Box(6000, 1000, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, mirror_frame(p)['yb'], 0)))
+        out.update({'mirror': (m - cap_zone, {}), 'mirrorcap': (m & cap_zone, {}), 'mirrorglass': (mg, {})})
+    for name, parts in door_trim(p, dr.d, dr.sx, driver=(dr.key == 'fl')).items():
+        fine = name == 'trim_white' and dr.d == 'f'
+        out[f'int_{name}'] = (Compound(parts), dict(tolerance=1.0, angular=0.25) if fine else dict(tolerance=2.5, angular=0.7))
     return out
-
-def door_swing(p, k):
-    """The solid a door ('fl', 'rl', 'fr', 'rr') must lie within to swing clear: a vertical cylinder about its hinge
-    (door_regions) reaching to 3 mm short of the body's next face behind it (the B-pillar for a front door, the
-    cab's rear for a rear one). Its trailing edge's inner corners are rounded off along that arc, the shut gap there
-    3 mm at the skin, as on the truck; square, they swung 2 mm into the body near 3 deg and the front door's
-    trim up to 19 mm into the B-pillar near 10 deg (review/dashend/door_sweep.py)."""
-    s0, s1 = door_spans(p)[k[0]]
-    sx = 1 if k[1] == 'l' else -1
-    return Cylinder(s1 - s0 - 3.0, 6000).rotate(Axis.X, 90).moved(Location((sx * (body_w(p) + 2.0), 0, Z(s0))))
-
-def split_doors(part, regions):
-    """(rest, {door: piece}) of a solid or compound cut by the door regions; empty pieces are dropped."""
-    pieces, rest = {}, part
-    for k, (reg, _) in regions.items():
-        piece = part & reg
-        if piece is not None and piece.volume > 1:
-            pieces[k] = piece
-            rest = rest - reg
-    return rest, pieces
 
 # ---------------------------------------------------------------- the cargo bed and the powered tonneau
 
@@ -2382,11 +2408,10 @@ if __name__ == '__main__':
     body = shell(p)
     inner = hull(p, inset=1.0)                       # panels are clipped to 1 mm under the steel
 
-    # Door seams: thin slots through the flank, from the rocker up to the glass's bottom edge at that seam
-    # (the beltline rises toward the back, so a single height ran the front seam up onto the cowl).
+    # Door seams below the doors: thin slots down the rocker under each seam. Round the doors themselves the gap
+    # is their openings' (Door, DOOR_GAP).
     for s in (p['seam_1'], p['seam_2'] - PILLAR_HALF, p['seam_2'] + PILLAR_HALF, p['seam_3']):
-        belt = p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (s - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
-        h = belt + 12 - CLEAR - 10
+        h = 480.0 - CLEAR - 10
         body -= Box(200, h, 4, align=(Align.MIN, Align.MIN, Align.CENTER)).moved(Location((BW - p['tuck'] - 6, CLEAR + 10, ZF - s)))
         body -= Box(200, h, 4, align=(Align.MAX, Align.MIN, Align.CENTER)).moved(Location((-BW + p['tuck'] + 6, CLEAR + 10, ZF - s)))
 
@@ -2448,22 +2473,23 @@ if __name__ == '__main__':
     for name, part in tonneau_switch(p).items():
         save(part, f'det_{name}')
 
-    regions = door_regions(p)
-    body, door_steel = split_doors(body, door_regions(p, glass=False))
-    glass, door_glass = split_doors(Compound(groups['glass']), regions)
-    for k, piece in door_steel.items():
-        save(piece & door_swing(p, k), f'door_{k}_steel', tolerance=0.5, angular=0.5)
-    for k, piece in door_glass.items():
-        save(piece & door_swing(p, k), f'door_{k}_glass')
+    # The doors: each its own assembly, in its opening (Door, door_assembly); what each part is fixed to goes in
+    # parts/mounts.json for assemble.py.
+    glass = Compound(groups['glass'])
+    for k, dr in doors(p).items():
+        for name, (part, opts) in door_assembly(p, dr, body, glass).items():
+            if part is not None and part.volume > 1:
+                save(part, f'door_{k}_{name}', **opts)
+                MOUNTS[f'door_{k}_{name}'] = f'door_{k}'
+    body = clear_of_doors(p, body, 'opening')
+    glass = clear_of_doors(p, glass, 'window_opening')
     save(body, 'body', tolerance=0.5, angular=0.5)
     # The glass triangles ahead of the window edge stay on the body but are the front side windows' glass
     # (assemble.py tints them as such); the rest of the body's glass is the black B-pillar glass.
     ahead = Box(2400, 3000, 4000, align=(Align.CENTER, Align.MIN, Align.MIN)).moved(Location((0, 0, ZF - WINDOW_EDGE['s_front'] - WINDOW_EDGE['width'])))
     # Its foot ends 1 mm over the door's steel top (belt + 13): it reached 43 mm down into the door, which then
-    # slid through it as it opened.
-    door_tops = Compound([reg.moved(Location((0, 1, 0))) for reg, _ in door_regions(p, glass=False).values()])
-    # and round the mirror's base, which sat 4 mm into it
-    save((glass & ahead) - door_tops - both_sides(mirror_part(p)), 'quarter_glass')
+    # slid through it as it opened; and round the mirror's base, which sat 4 mm into it.
+    save(clear_of_doors(p, glass & ahead, 'opening', lift=1.0) - both_sides(mirror_part(p)), 'quarter_glass')
     save(glass - ahead, 'glass')
     ton_rest, ton_gate = cut(Compound(groups['tonneau']), gate)
     save(ton_rest, 'tonneau')
@@ -2475,10 +2501,9 @@ if __name__ == '__main__':
     save(band_gate, 'gate_band')
     for name, part in rear_lights(p).items():           # gate_*: on the tailgate's band, they drop with it
         save(part, name)
-    # The wheel arch's flare ends at the door's seam (c166: the open door's front edge is bare steel); it ran
+    # The wheel arch's flare ends at the door's opening (c166: the open door's front edge is bare steel); it ran
     # 46 mm onto the front door, fixed to the body, so the door was shut through it and couldn't open past it.
-    clear_doors = Compound([reg.moved(Location((0, 0, 1))) for reg, _ in door_regions(p, glass=False).values()])
-    save(Compound([c - tub_cav - clear_doors for c in cladding(p)]), 'cladding', tolerance=1.0, angular=0.5)
+    save(Compound([clear_of_doors(p, c - tub_cav, 'opening') for c in cladding(p)]), 'cladding', tolerance=1.0, angular=0.5)
     cp = cladding_parts(p)
     save(cp['bumper_f_intake'], 'intake_back')
     save(cp['bumper_f_grille'], 'intake_grille')
@@ -2489,39 +2514,15 @@ if __name__ == '__main__':
     save(cp['rear_reverse'], 'light_reverse')
     save(cp['rear_plate'], 'rear_plate', tolerance=0.3, angular=0.3)
     save(cp['front_plate'], 'front_plate', tolerance=0.3, angular=0.3)
-    # Each mirror rides whole on its front door (c166: both doors open, each mirror swung out with its door). Cut
-    # by the door regions, the head's front half stayed on the body, hanging in the air with the door open and
-    # swept through by the door's cap and glass.
-    mirror_whole = mirror_part(p)
-    mirror_pieces = {'fl': mirror_whole, 'fr': mirror_whole.mirror(Plane.YZ)} if mirror_whole.center().X > 0 else \
-                    {'fl': mirror_whole.mirror(Plane.YZ), 'fr': mirror_whole}
-    mirrors_rest = None
-    # Two-tone, as on the truck (c003, dgRcedIkNOM-04): a satin grey cap over the black base and arm, split at
-    # the base's top.
-    cap_zone = Box(6000, 1000, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, mirror_frame(p)['yb'], 0)))
-    for k, piece in mirror_pieces.items():
-        save(piece - cap_zone, f'door_{k}_mirror')
-        save(piece & cap_zone, f'door_{k}_mirrorcap')
-    glass_whole = mirror_glass_part(p)
-    glass_pieces = {'fl': glass_whole, 'fr': glass_whole.mirror(Plane.YZ)} if glass_whole.center().X > 0 else \
-                   {'fl': glass_whole.mirror(Plane.YZ), 'fr': glass_whole}
-    for k, piece in glass_pieces.items():
-        save(piece, f'door_{k}_mirrorglass')
-    if mirrors_rest is not None and mirrors_rest.volume > 1:
-        save(mirrors_rest, 'mirrors')
     wiper_housing, wiper_arm = wiper(p)
     save(wiper_housing, 'wiper')
     save(wiper_arm, 'wiper_blade')
     for name, part in interior(p).items():
         if part is None or part.volume < 1:
             continue
-        if name.startswith('door_'):                     # door_<k>_<part>: rides on door k
-            front_white = name in ('door_fl_trim_white', 'door_fr_trim_white')
-            save(part, f'door_{name[5:7]}_int_{name[8:]}', tolerance=1.0 if front_white else 2.5, angular=0.25 if front_white else 0.7)
-        else:
-            fine = name in ('seats_front', 'seats_rear')       # their padded crowns are shallow curves: 4.6 degrees a facet
-            small = name.startswith(('yoke', 'pedal')) and name != 'yoke_column'     # held close: its curves and small round parts need fine facets
-            save(part, f'int_{name}', tolerance=0.8 if small else 1.0 if fine else 2.5, angular=0.35 if small else 0.18 if fine else 0.7)     # flat facets; coarse tessellation keeps the few round parts cheap
+        fine = name in ('seats_front', 'seats_rear')       # their padded crowns are shallow curves: 4.6 degrees a facet
+        small = name.startswith(('yoke', 'pedal')) and name != 'yoke_column'     # held close: its curves and small round parts need fine facets
+        save(part, f'int_{name}', tolerance=0.8 if small else 1.0 if fine else 2.5, angular=0.35 if small else 0.18 if fine else 0.7)     # flat facets; coarse tessellation keeps the few round parts cheap
     for name, part in details(p).items():
         save(part, f'det_{name}')
 
@@ -2546,7 +2547,7 @@ if __name__ == '__main__':
         'screens': screens(p),
         'wiper': dict(zip(('pivot', 'axis', 'sweepDeg'), (lambda q: (q[0].tolist(), q[1].tolist(), q[2]))(wiper_pivot(p)))),
         'decals': {n: yoke_decal() for n in ['yoke_pods'] + [f'yoke_btn_{k}' for k in YOKE_KEYS]},
-        'doors': {k: {'hinge': h.tolist(), 'openDeg': -65 if k.endswith('l') else 65} for k, (_, h) in regions.items()},
+        'doors': {k: {'hinge': dr.hinge.tolist(), 'openDeg': -DOOR_OPEN_DEG * dr.sx, 'glassDropMm': GLASS_DROP} for k, dr in doors(p).items()},
         'hinges': {
             'tailgate': {'hinge': gate_hinge(p).tolist(), 'axis': [1, 0, 0], 'openDeg': -90},
             'bedlid': {'hinge': [0.0, bed_floor(p) + 4.3, Z(BED['lid'][0])], 'axis': [1, 0, 0], 'openDeg': 80},
@@ -2557,4 +2558,5 @@ if __name__ == '__main__':
                     'closedArc': [float(np.linalg.norm(np.array(c) - np.array(path[0]))) for c in centres]},
     }
     (OUT / 'geometry.json').write_text(json.dumps(geo, indent=1))
+    (OUT / 'mounts.json').write_text(json.dumps(MOUNTS, indent=1, sort_keys=True))
     print('cad: wrote', sorted(q.name for q in OUT.glob('*.stl')))

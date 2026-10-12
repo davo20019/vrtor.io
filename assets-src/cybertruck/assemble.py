@@ -352,18 +352,17 @@ for k in GEO['doors']:
     o = stl(f'det_btn_{k}', M['door_button'], smooth_angle=20)
     o.name = o.data.name = f'btn_{k}'
     button_parts.append(o)
-# Doors: everything that swings with each door, by the part's material.
-DOOR_PARTS = {'steel': 'steel', 'glass': 'glass', 'mirror': 'mirror', 'mirrorcap': 'mirror_cap', 'mirrorglass': 'mirror_glass'}
+# Doors: everything each door carries, as cad.py declares it (parts/mounts.json: part -> what it's fixed to), by
+# the part's material.
+DOOR_PARTS = {'steel': 'steel', 'mirror': 'mirror', 'mirrorcap': 'mirror_cap', 'mirrorglass': 'mirror_glass'}
+MOUNTS = json.loads((PARTS / 'mounts.json').read_text())
 door_parts = {}
 for k in GEO['doors']:
     door_parts[k] = []
-    files = [(sfx, M[m]) for sfx, m in DOOR_PARTS.items()]
-    files = [(sfx, M['glass_front' if k[0] == 'f' else 'glass_rear'] if sfx == 'glass' else mat) for sfx, mat in files]    # front doors 72%, rear 23%
-    files += sorted((f.stem[len(f'door_{k}_'):], M[INTERIOR[f.stem[len(f'door_{k}_int_'):]]]) for f in PARTS.glob(f'door_{k}_int_*.stl'))
-    for suffix, mat in files:
-        f = PARTS / f'door_{k}_{suffix}.stl'
-        if not f.exists():
-            continue
+    for stem in sorted(n for n, m in MOUNTS.items() if m == f'door_{k}'):
+        suffix = stem[len(f'door_{k}_'):]
+        mat = (M['glass_front' if k[0] == 'f' else 'glass_rear'] if suffix == 'glass'          # front doors 72%, rear 23%
+               else M[INTERIOR[suffix[4:]]] if suffix.startswith('int_') else M[DOOR_PARTS[suffix]])
         o = stl(f'door_{k}_{suffix}', mat, smooth_angle=20 if suffix == 'steel' else 25)
         if suffix == 'steel':
             box_uv(o); classify(o)
@@ -688,9 +687,9 @@ info = {
                'note': 'tail: the thin strip across the band and the red lamps under the tailgate, lit with the lights (their emission in the GLB). Braking (c080; The Drive, The Autopian): the middle of the strip goes out and the end caps fill solid red with a shorter bar under it in the middle. The turn signals are the end caps, red on US trucks. Reverse: white lamps either side of the plate. gate_* parts ride on the tailgate node'},
     'material': 'brushed stainless is metallic: the scene needs environment lighting',
     'seatEyes': {k: [v * 0.001 for v in c] for k, c in GEO['seatEyes'].items()},
-    'doors': {k: {'node': f'door_{k}', 'hinge': [v * 0.001 for v in d['hinge']], 'openDeg': d['openDeg'],
+    'doors': {k: {'node': f'door_{k}', 'hinge': [v * 0.001 for v in d['hinge']], 'openDeg': d['openDeg'], 'glassDropMm': d['glassDropMm'],
                   'buttons': [f'btn_{k}', f'open_{k}'],
-                  'note': 'door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle'}
+                  'note': 'door_*.rotation about its own +y by openDeg opens it (front-hinged, swings outward); before it swings, its frameless glass (door_*_glass) drops glassDropMm down its slant, and rises once the door is shut; btn_* is the outside release button on the pillar behind the door, open_* the button on the inside handle'}
               for k, d in GEO['doors'].items()},
     'hinged': {k: {'node': k, 'hinge': [v * 0.001 for v in h['hinge']], 'axis': h['axis'], 'openDeg': h['openDeg']} for k, h in GEO['hinges'].items()},
     'struts': {side: {'body': a['body'], 'gate': [a['gate'][i] - GEO['hinges']['tailgate']['hinge'][i] for i in range(3)]} for side, a in GEO['struts'].items()},

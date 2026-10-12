@@ -223,7 +223,7 @@ const doorTargets = new Map();
 async function loadTruck() {
   const info = await (await fetch(`${BASE}models/cybertruck.json`)).json();
   // The stable model path is cached for an hour; select the rebuilt corner immediately.
-  const container = await LoadAssetContainerAsync(`${BASE}models/cybertruck.glb?v=bef41900a13c`, scene, {
+  const container = await LoadAssetContainerAsync(`${BASE}models/cybertruck.glb?v=27205011239f`, scene, {
     onProgress: (e) => e.lengthComputable && (ui.pct.textContent = `${Math.round((e.loaded / e.total) * 100)}%`),
   });
   container.addAllToScene();
@@ -278,7 +278,8 @@ function setUpDoors(container, info) {
     const node = byName(d.node);
     if (!node) continue;
     node.rotationQuaternion ??= Quaternion.Identity();
-    doors[key] = { node, rest: node.rotationQuaternion.clone(), open: (d.openDeg * Math.PI) / 180, t: 0, target: 0, buttons: [] };
+    doors[key] = { node, rest: node.rotationQuaternion.clone(), open: (d.openDeg * Math.PI) / 180, t: 0, target: 0, buttons: [],
+      glassDrop: d.glassDropMm ?? 0 };
     for (const name of d.buttons) {
       const button = byName(name);
       if (!button) continue;
@@ -348,7 +349,7 @@ function setUpWindows(byName) {
     pane.material = pane.material.clone(`${pane.name}-mat`);
     panes[key] = {
       pane, door, mat: pane.material, rest: pane.position.clone(),
-      down, travel: (y1 - y0) / -down.y, belt: y0 - 0.5, u: 0, dir: 0, last: -1, drop: 0,
+      down, travel: (y1 - y0) / -down.y, belt: y0 - 0.5, u: 0, dir: 0, last: -1, drop: 0, dropMm: doors[key].glassDrop,
     };
   }
   // Raise and lower: the one switch on each passenger's door, and the driver's four.
@@ -408,7 +409,7 @@ function setWindowsAll(down) {
 
 /** Down its slant by the switch's travel, or by the drop for an open door, whichever is lower. */
 function placePane(w) {
-  w.pane.position.copyFrom(w.rest).addInPlace(w.down.scale(Math.max(w.u * w.travel, w.drop * GLASS_DROP_MM)));
+  w.pane.position.copyFrom(w.rest).addInPlace(w.down.scale(Math.max(w.u * w.travel, w.drop * w.dropMm)));
   shadowMoved();
 }
 
@@ -730,9 +731,8 @@ scene.onBeforeRenderObservable.add(() => {
 const anyDoorOpen = () => Object.values(doors).some((d) => d.target > 0.5);
 
 /** The frameless glass drops a little before its door unlatches, clearing the seal under the roof's edge, and
- *  rises once the door is shut. Swung with the glass up, the rear doors' glass ran 10 mm into the roof's edge
- *  (assets-src/cybertruck/review/dashend/door_sweep.py); 12 mm clears it. The real drop: not measured. */
-const GLASS_DROP_MM = 12;
+ *  rises once the door is shut: how far is the model's (cybertruck.json doors.*.glassDropMm, which the build's
+ *  swing check uses too). */
 const GLASS_DROP_SECONDS = 0.2;
 
 scene.onBeforeRenderObservable.add(() => {
