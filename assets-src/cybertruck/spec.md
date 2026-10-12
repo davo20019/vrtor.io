@@ -689,6 +689,7 @@ open (c166, dgRcedIkNOM-12) the door's top is bare, so upright, rail and triangl
 | Side glass seen from the driver's seat | 1,235 high at 865 back, 1,310 at 1,084, 1,357 at 1,228 | athens1-stripx (was 947 / 1,136 / 1,260 with the guessed focal) |
 | Front door glass | starts at the upright (1,802); the triangle ahead is body glass with the front side windows' tint | c166, dgRcedIkNOM-12 |
 | Mirror, rechecked | base underside 0 to 5 above the door top (model 10), base 68 to 70 tall (63), top 194 above the underside (190); tip within 10 to 18 of the photo's from the seam | c003 (measure/doorframe/c003-mirror.md) |
+| Mirror on its door (2026-10-11) | each mirror rides whole on its front door: base, head, cap and glass | c166 (both front doors open, each mirror swung out with its door). The door regions had cut the head in two, about 4.9 L of each staying on the body, hanging in the air with the door open and swept through by the door's cap and mirror glass (review/dashend/door_sweep.py: door meshes against every fixed mesh, 0 to 65 deg) |
 
 Superseded (2026-10-04): the post moved 250 back to meet the upright. That rested on int-athens-1's camera being
 250 too far forward; with its real focal length it moves only 50, so the post went back where the photos put it.

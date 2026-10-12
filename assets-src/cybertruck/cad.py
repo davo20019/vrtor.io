@@ -2456,14 +2456,22 @@ if __name__ == '__main__':
     save(cp['rear_reverse'], 'light_reverse')
     save(cp['rear_plate'], 'rear_plate', tolerance=0.3, angular=0.3)
     save(cp['front_plate'], 'front_plate', tolerance=0.3, angular=0.3)
-    mirrors_rest, mirror_pieces = split_doors(both_sides(mirror_part(p)), regions)     # the mirrors ride on the front doors
+    # Each mirror rides whole on its front door (c166: both doors open, each mirror swung out with its door). Cut
+    # by the door regions, the head's front half stayed on the body, hanging in the air with the door open and
+    # swept through by the door's cap and glass.
+    mirror_whole = mirror_part(p)
+    mirror_pieces = {'fl': mirror_whole, 'fr': mirror_whole.mirror(Plane.YZ)} if mirror_whole.center().X > 0 else \
+                    {'fl': mirror_whole.mirror(Plane.YZ), 'fr': mirror_whole}
+    mirrors_rest = None
     # Two-tone, as on the truck (c003, dgRcedIkNOM-04): a satin grey cap over the black base and arm, split at
     # the base's top.
     cap_zone = Box(6000, 1000, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, mirror_frame(p)['yb'], 0)))
     for k, piece in mirror_pieces.items():
         save(piece - cap_zone, f'door_{k}_mirror')
         save(piece & cap_zone, f'door_{k}_mirrorcap')
-    _, glass_pieces = split_doors(both_sides(mirror_glass_part(p)), regions)
+    glass_whole = mirror_glass_part(p)
+    glass_pieces = {'fl': glass_whole, 'fr': glass_whole.mirror(Plane.YZ)} if glass_whole.center().X > 0 else \
+                   {'fl': glass_whole.mirror(Plane.YZ), 'fr': glass_whole}
     for k, piece in glass_pieces.items():
         save(piece, f'door_{k}_mirrorglass')
     if mirrors_rest is not None and mirrors_rest.volume > 1:
