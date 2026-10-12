@@ -1,0 +1,125 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "sunEnergy": 0,
+ "exposure": 1.4,
+ "cameras": {
+  "0-assembled": {
+   "eye": [
+    0,
+    1250,
+    -250
+   ],
+   "look": [
+    0,
+    1000,
+    1200
+   ],
+   "fovDeg": 75,
+   "size": [
+    1000,
+    750
+   ],
+   "hide": [
+    "int_seat_",
+    "int_console",
+    "int_charger",
+    "int_chargers",
+    "int_usb"
+   ]
+  },
+  "1-mid-quarters-off": {
+   "eye": [
+    0,
+    1250,
+    -250
+   ],
+   "look": [
+    0,
+    1000,
+    1200
+   ],
+   "fovDeg": 75,
+   "size": [
+    1000,
+    750
+   ],
+   "hide": [
+    "int_seat_",
+    "int_console",
+    "int_charger",
+    "int_chargers",
+    "int_usb",
+    "int_dash_white",
+    "int_ambient",
+    "int_quarter_"
+   ]
+  },
+  "2-lower-glovebox-off": {
+   "eye": [
+    0,
+    1250,
+    -250
+   ],
+   "look": [
+    0,
+    1000,
+    1200
+   ],
+   "fovDeg": 75,
+   "size": [
+    1000,
+    750
+   ],
+   "hide": [
+    "int_seat_",
+    "int_console",
+    "int_charger",
+    "int_chargers",
+    "int_usb",
+    "int_dash_white",
+    "int_ambient",
+    "int_quarter_",
+    "int_dash_lower",
+    "int_glovebox",
+    "int_footwell_cover",
+    "int_gap_hider"
+   ]
+  },
+  "3-airbags-top-pad-off": {
+   "eye": [
+    0,
+    1250,
+    -250
+   ],
+   "look": [
+    0,
+    1000,
+    1200
+   ],
+   "fovDeg": 75,
+   "size": [
+    1000,
+    750
+   ],
+   "hide": [
+    "int_seat_",
+    "int_console",
+    "int_charger",
+    "int_chargers",
+    "int_usb",
+    "int_dash_white",
+    "int_ambient",
+    "int_quarter_",
+    "int_dash_lower",
+    "int_glovebox",
+    "int_footwell_cover",
+    "int_gap_hider",
+    "int_airbag_",
+    "int_dash_top",
+    "int_dash_face",
+    "int_dash_vent"
+   ]
+  }
+ }
+}

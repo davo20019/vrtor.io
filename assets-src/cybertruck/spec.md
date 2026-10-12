@@ -222,7 +222,16 @@ track it stands on (cad.py front_seat). The cover is the back's outside 14 mm (2
 the procedures' photos, not measured), the frame its rear 35. The bench: each outboard back with its outboard and
 inboard bolsters and its back rest insert, the centre back with the centre headrest, three cushions, the armrest
 (rear_bench); the manual names the left and right backs and cushions, the model's centre ones are its own. Renders:
-review/seats/sheet.png. 156 parts in all.
+review/seats/sheet.png.
+
+The dash (2026-10-12), as the manual takes it apart (1405, 2001, 3205): the service panel on the screen's shroud, then
+the touchscreen, the display shroud; the mid panel (the white block, its ambient strip), the lower panel, the glovebox
+drawer cut from it along its measured groove (200 deep), the quarter panels at the dash's ends (beyond 700 out), the
+gap hider round the steering column, the footwell cover, the knee airbags in pockets behind the lower panel, the
+passenger airbag under the top pad, then the top pad (the suede shelf, its face and vent slot). Sizes and places read
+on the procedures' photos against the model's dash, not surveyed. The dash's structure behind the panels (aerobracket,
+cowl, ducts, HVAC) is the "down to structure" depth, not built: the panels are solid. Renders: review/dash/sheet.png.
+169 parts in all.
 
 Triangles: the GLB draws 62,398 with the doors' insides (1,724 of them); before them 60,810 (61,222 before this, with the front plate in it twice). review.py counted 60,365
 and, before, 59,825: Blender's importer drops degenerate triangles the GPU still draws, so the review undercounts.

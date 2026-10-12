@@ -322,6 +322,9 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'seat_buttons': 'switch', 'seat_riser': 'armrest',
             'rear_back': 'seat', 'rear_cushion': 'seat', 'rear_insert': 'seat', 'rear_bolster_out': 'seat', 'rear_bolster_in': 'seat',
             'rear_headrest': 'seat',
+            # the dash as the manual takes it apart (cad.py interior)
+            'quarter_white': 'trim_white', 'quarter_lower': 'armrest', 'glovebox': 'armrest', 'airbag_knee': 'bezel',
+            'airbag_passenger': 'bezel', 'footwell_cover': 'armrest', 'gap_hider': 'armrest', 'service_panel': 'bezel',
             'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'a_pillar_inner': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
             'overhead': 'overhead', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'mat_edges': 'mat_edge', 'center_ribs': 'pedal', 'center_rib_base': 'pillar', 'pedals': 'pedal', 'pedal_grips': 'yoke', 'pedal_arms': 'tiedown',
             'piping': 'piping', 'belts': 'belt', 'belt_hw': 'bezel',
@@ -508,7 +511,7 @@ bpy.context.view_layer.update()
 # from an even sky (direct and bounced) is baked into one texture, exported as the glTF occlusion map on a
 # second UV set: the app multiplies its lights by it, so corners, footwells and the underside of the roof
 # go dark and the faces open to the windows stay bright, as in the real cabin.
-ROUND = {'seat_cushion_foam': 24, 'rear_back': 24, 'rear_cushion': 24, 'rear_headrest': 14, 'rear_bolster_out': 10, 'rear_bolster_in': 10, 'seat_back_foam': 10, 'rear_armrest': 14, 'dash_white': 12, 'console': 10, 'console_rim': 3, 'console_lid': 16, 'seat_base': 8,
+ROUND = {'quarter_white': 12, 'quarter_lower': 6, 'glovebox': 4, 'seat_cushion_foam': 24, 'rear_back': 24, 'rear_cushion': 24, 'rear_headrest': 14, 'rear_bolster_out': 10, 'rear_bolster_in': 10, 'seat_back_foam': 10, 'rear_armrest': 14, 'dash_white': 12, 'console': 10, 'console_rim': 3, 'console_lid': 16, 'seat_base': 8,
          'dash_top': 6, 'dash_lower': 6, 'dash_face': 4, 'yoke': 9, 'yoke_column': 5, 'visors': 8, 'screen_bezel': 3, 'overhead': 6,
          'armrest': 14, 'door_lower': 6, 'trim_white': 14, 'cap': 6,
          # The removed trim in Tesla's windshield service photos has rolled edges. The sight-plane
@@ -545,7 +548,7 @@ def round_edges(o, width, segments=3):
                 edge[weights] = 1.0
         bm.to_mesh(o.data); bm.free()
         mod.limit_method = 'WEIGHT'
-    if part_key(o) == 'dash_white' or o.name.startswith(('door_fl_int_trim_white', 'door_fr_int_trim_white')):
+    if part_key(o) in ('dash_white', 'quarter_white') or o.name.startswith(('door_fl_int_trim_white', 'door_fr_int_trim_white')):
         # Keep the 2 mm shut-door joint crisp. A full-width bevel on these seam edges
         # retracts the dash's point and the door's return into two mismatched scallops.
         # The long padded dash edges and the rest of the door retain their usual rounding.
@@ -557,12 +560,12 @@ def round_edges(o, width, segments=3):
             if not edge.is_manifold or edge.calc_face_angle() < math.radians(25):
                 continue
             pts = [to_mm @ v.co for v in edge.verts]
-            seam = (all(abs(v.x) > 740 and v.y > -1240.8 for v in pts) if part_key(o) == 'dash_white'
+            seam = (all(abs(v.x) > 740 and v.y > -1240.8 for v in pts) if part_key(o) in ('dash_white', 'quarter_white')
                     else all(v.y < -1128.8 for v in pts))  # model z > ZF - 1567 mm
             # The block's own end is a rounded nose standing off the door panel (dgRcedIkNOM-32, 6:16, int-athens-3:
             # soft corners at its top, tip and bottom, the door's panel meeting it behind them); 12 mm (cad.py,
             # NOSE_STEP), read on those frames, not measured. The door's side of the joint stays crisp.
-            edge[weights] = (min(12.0 / width, 1.0) if part_key(o) == 'dash_white' else min(0.7 / width, 1.0)) if seam else 1.0
+            edge[weights] = (min(12.0 / width, 1.0) if part_key(o) in ('dash_white', 'quarter_white') else min(0.7 / width, 1.0)) if seam else 1.0
         bm.to_mesh(o.data); bm.free()
         mod.limit_method = 'WEIGHT'
     mod.harden_normals = True

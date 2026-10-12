@@ -1629,13 +1629,35 @@ def interior(p):
     gi = [(-237.5, 1021), (-609, 1021), (-601.5, 971), (-215.5, 971)]
     glove = XH(gl, 1300, 1530) - XH(gi, 1290, 1540)
     out['dash_lower'] = lower - glove                    # the glovebox's outline, a 3 mm groove
+    # The dash as the manual takes it apart (1405, 2001; Service Manual photos, not surveyed): the quarter panels at
+    # its ends (beyond 700 out), the glovebox drawer in its groove (200 deep), the knee airbags in pockets behind the
+    # lower panel and the passenger's under the top pad, the footwell cover under the driver's side.
+    ends = lambda sd: Box(1000, 3000, 8000, align=(Align.MIN if sd > 0 else Align.MAX, Align.CENTER, Align.CENTER)).moved(Location((sd * 700, 0, 0)))
+    for side, sd in (('l', 1), ('r', -1)):
+        out[f'quarter_white__{side}'] = out['dash_white'] & ends(sd)
+        out[f'quarter_lower__{side}'] = out['dash_lower'] & ends(sd)
+    out['dash_white'] = out['dash_white'] & Box(1400, 3000, 8000)
+    out['dash_lower'] = out['dash_lower'] & Box(1400, 3000, 8000)
+    drawer = XH(gi, 1330, 1530)
+    out['glovebox'] = lower & drawer
+    out['dash_lower'] = out['dash_lower'] - drawer
+    for side, x0, x1 in (('l', 260, 600), ('r', -600, -260)):
+        bag = SH([(1330, 820), (1400, 820), (1400, 940), (1330, 940)], x0, x1)
+        out[f'airbag_knee__{side}'] = bag
+        out['dash_lower'] = out['dash_lower'] - SH([(1329, 819), (1401, 819), (1401, 941), (1329, 941)], x0 - 1, x1 + 1)
+    out['airbag_passenger'] = SH([(1150, 1110), (1290, 1110), (1290, 1180), (1150, 1180)], -600, -250)
+    out['footwell_cover'] = SH([(1180, 688), (1385, 688), (1385, 698), (1180, 698)], 150, 650)
     # 18.5 in screen, landscape, centred on the truck, leaning back 7 degrees (seat side view; the dash render's
     # camera fits better with it than with 15); its face carries screen.png.
     a = c['screen_tilt']
     scr_c = np.array([0.0, c['screen_y'], ZF - c['screen_s']])
     out['screen_bezel'] = Box(412, 242, 16).rotate(Axis.X, a).moved(Location(tuple(scr_c)))
     out['screen'] = Box(398, 226, 2).rotate(Axis.X, a).moved(Location(tuple(scr_c + screen_offset(a))))
-    out['screen_stand'] = Box(150, 80, 70).moved(Location(tuple(scr_c + [0, -35, 38])))     # the neck into the white block
+    stand = Box(150, 80, 70).moved(Location(tuple(scr_c + [0, -35, 38])))     # the neck into the white block
+    # Its rear (the driver's side) is the service panel (Service Panel - Center Shroud), the rest the display shroud.
+    sp = stand & Box(400, 400, 12, align=(Align.CENTER, Align.CENTER, Align.MIN)).moved(Location((0, scr_c[1] - 35, scr_c[2] + 3)))
+    out['service_panel'] = sp
+    out['screen_stand'] = stand - sp
     # ---- yoke on its column, driver on the left (+x), tilted 22 degrees (seat side view).
     yc = (c['seat_x'], c['yoke'][1], ZF - c['yoke'][0])
     place = yoke_place
@@ -1647,6 +1669,9 @@ def interior(p):
     out['yoke'] = place(rim)
     out['yoke_pad'] = place(pad)
     out['yoke_column'] = col + shroud
+    # The gap hider round the column where it meets the dash (Gap Hider - Instrument Panel): a frame on the shroud.
+    hider = Box(190, 160, 8).rotate(Axis.X, c['yoke_tilt']).moved(Location(tuple(np.array(yc) + col_dir * 175)))
+    out['gap_hider'] = hider - Box(112, 92, 30).rotate(Axis.X, c['yoke_tilt']).moved(Location(tuple(np.array(yc) + col_dir * 175)))
     out['yoke_chin'] = place(chin)
     out['yoke_face'] = place(face)
     out['yoke_pods'] = place(pods)

@@ -6088,6 +6088,26 @@
         "mirrored": false
       },
       {
+        "id": "quarter_panel_l",
+        "name": "Quarter Panel Assembly - LH - Instrument Panel",
+        "manual": "Quarter Panel Assembly - LH - Instrument Panel",
+        "nodes": [
+          "int_quarter_white__l",
+          "int_quarter_lower__l"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Quarter Panel Assembly - LH - Instrument Panel",
+        "page": "GUID-5646B2F5-E38E-4489-9A8D-83BA3AA9CC4B.html",
+        "mirrored": false
+      },
+      {
         "id": "quarter_glass_l",
         "name": "Quarter Glass - Front - LH",
         "manual": "Quarter Glass - Front - LH",
@@ -6105,6 +6125,26 @@
         "procedure": "Quarter Glass - Front - LH",
         "page": "GUID-B0C681D9-FCDF-46D1-A7A4-65DC50E9AA00.html",
         "mirrored": false
+      },
+      {
+        "id": "quarter_panel_r",
+        "name": "Quarter Panel Assembly - RH - Instrument Panel",
+        "manual": "Quarter Panel Assembly - RH - Instrument Panel",
+        "nodes": [
+          "int_quarter_white__r",
+          "int_quarter_lower__r"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Quarter Panel Assembly - LH - Instrument Panel",
+        "page": "GUID-5646B2F5-E38E-4489-9A8D-83BA3AA9CC4B.html",
+        "mirrored": true
       },
       {
         "id": "quarter_glass_r",
@@ -7136,11 +7176,243 @@
           0.3,
           -1
         ],
-        "after": [],
+        "after": [
+          "service_panel"
+        ],
         "on": null,
         "why": null,
         "procedure": "Touchscreen - Center Display Assembly",
         "page": "GUID-F6BAB956-9B3A-477C-89CD-1C4AF5E8220E.html",
+        "mirrored": false
+      },
+      {
+        "id": "service_panel",
+        "name": "Service Panel - Center Shroud - Instrument Panel",
+        "manual": "Service Panel - Center Shroud - Instrument Panel",
+        "nodes": [
+          "int_service_panel"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Service Panel - Center Shroud - Instrument Panel",
+        "page": "GUID-E86A9772-BDD3-491C-A1E3-41D16715C4C3.html",
+        "mirrored": false
+      },
+      {
+        "id": "display_shroud",
+        "name": "Display Shroud - Instrument Panel",
+        "manual": "Display Shroud - Instrument Panel",
+        "nodes": [
+          "int_screen_stand"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [
+          "touchscreen"
+        ],
+        "on": null,
+        "why": "the screen is mounted on it",
+        "procedure": "Display Shroud - Instrument Panel",
+        "page": "GUID-F08480B2-7FC2-452B-BE2B-328D579A0ACB.html",
+        "mirrored": false
+      },
+      {
+        "id": "mid_panel",
+        "name": "Mid Panel Assembly - Instrument Panel",
+        "manual": "Mid Panel Assembly - Instrument Panel",
+        "nodes": [
+          "int_dash_white",
+          "int_ambient"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Mid Panel Assembly - Instrument Panel",
+        "page": "GUID-2166115B-640F-4B95-A171-B9C03C4112CA.html",
+        "mirrored": false
+      },
+      {
+        "id": "gap_hider",
+        "name": "Gap Hider - Instrument Panel",
+        "manual": "Gap Hider - Instrument Panel",
+        "nodes": [
+          "int_gap_hider"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [
+          "mid_panel",
+          "lower_panel"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Gap Hider - Instrument Panel",
+        "page": "GUID-D6045590-CD59-439A-8B6F-D1F35DA43F47.html",
+        "mirrored": false
+      },
+      {
+        "id": "lower_panel",
+        "name": "Lower Assembly - Instrument Panel",
+        "manual": "Lower Assembly - Instrument Panel",
+        "nodes": [
+          "int_dash_lower"
+        ],
+        "dir": [
+          0,
+          -0.3,
+          -1
+        ],
+        "after": [
+          "mid_panel"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Lower Assembly - Instrument Panel",
+        "page": "GUID-08EBBA12-ADA7-4049-B7F4-0B0E62432AB1.html",
+        "mirrored": false
+      },
+      {
+        "id": "glovebox",
+        "name": "Glovebox Assembly",
+        "manual": "Glovebox Assembly",
+        "nodes": [
+          "int_glovebox"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [
+          "lower_panel"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Glovebox Assembly",
+        "page": "GUID-D8CCB803-F5A5-4B72-8BE8-16E498EA98CA.html",
+        "mirrored": false
+      },
+      {
+        "id": "footwell_cover",
+        "name": "Cover - Footwell",
+        "manual": "Cover - Footwell",
+        "nodes": [
+          "int_footwell_cover"
+        ],
+        "dir": [
+          0,
+          -1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Cover - Footwell",
+        "page": "GUID-FCAC8D7A-A021-49F9-B57D-34AB856C957E.html",
+        "mirrored": false
+      },
+      {
+        "id": "airbag_knee_l",
+        "name": "Airbag - Knee - Driver",
+        "manual": "Airbag - Knee - Driver",
+        "nodes": [
+          "int_airbag_knee__l"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [
+          "lower_panel"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Airbag - Knee - Driver",
+        "page": "GUID-4AC2DFE8-A337-4370-90EF-3CC9B873DB9C.html",
+        "mirrored": false
+      },
+      {
+        "id": "airbag_knee_r",
+        "name": "Airbag - Knee - Front Passenger",
+        "manual": "Airbag - Knee - Front Passenger",
+        "nodes": [
+          "int_airbag_knee__r"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [
+          "lower_panel"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Airbag - Knee - Front Passenger",
+        "page": "GUID-08A023E5-46D1-4C9F-8CBF-B10F040098E8.html",
+        "mirrored": false
+      },
+      {
+        "id": "airbag_passenger",
+        "name": "Airbag - Front Passenger",
+        "manual": "Airbag - Front Passenger",
+        "nodes": [
+          "int_airbag_passenger"
+        ],
+        "dir": [
+          0,
+          -1,
+          0
+        ],
+        "after": [
+          "lower_panel",
+          "glovebox"
+        ],
+        "on": null,
+        "why": "under the top pad, it is reached from below once the lower panel and glovebox are out",
+        "procedure": "Airbag - Front Passenger",
+        "page": "GUID-81A18FB1-96C0-4EEA-916E-0799DB37EE25.html",
+        "mirrored": false
+      },
+      {
+        "id": "top_pad",
+        "name": "Top Pad Assembly - Instrument Panel",
+        "manual": "Top Pad Assembly - Instrument Panel",
+        "nodes": [
+          "int_dash_top",
+          "int_dash_face",
+          "int_dash_vent"
+        ],
+        "dir": [
+          0,
+          1,
+          -0.5
+        ],
+        "after": [
+          "airbag_passenger"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Top Pad Assembly - Instrument Panel",
+        "page": "GUID-5DEA8399-CD2A-44E7-A64C-50F99006E229.html",
         "mirrored": false
       },
       {

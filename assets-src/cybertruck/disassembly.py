@@ -113,6 +113,8 @@ def parts():
         part('roof_glass', 'Fixed Glass Roof Assembly', ['roof_glass'], (0, 1, 0)),
     ]
     for s, (side, sx) in SIDE.items():
+        out.append(part(f'quarter_panel_{s}', f'Quarter Panel Assembly - {side} - Instrument Panel',
+                        [f'int_quarter_white__{s}', f'int_quarter_lower__{s}'], (0, 0, -1)))
         out.append(part(f'quarter_glass_{s}', f'Quarter Glass - Front - {side}', [f'quarter_glass__{s}'], (sx, 0.3, 0)))
     # ---- exterior (1001, 1220, 1740, 1120, 1215)
     out += [
@@ -188,7 +190,23 @@ def parts():
     out += [
         part('airbag_driver', 'Airbag - Driver', ['int_yoke_pad'], (0, 0, -1), on='steering_wheel'),
         part('steering_wheel', 'Steering Wheel Pur Heated', yoke, (0, 0, -1), after=['airbag_driver'], name='Steering yoke'),
-        part('touchscreen', 'Touchscreen - Center Display Assembly', ['int_screen', 'int_screen_bezel'], (0, 0.3, -1)),
+        part('touchscreen', 'Touchscreen - Center Display Assembly', ['int_screen', 'int_screen_bezel'], (0, 0.3, -1),
+             after=['service_panel']),
+        # ---- the dash (1405, 2001, 3205; cad.py interior)
+        part('service_panel', 'Service Panel - Center Shroud - Instrument Panel', ['int_service_panel'], (0, 0, -1)),
+        part('display_shroud', 'Display Shroud - Instrument Panel', ['int_screen_stand'], (0, 0, -1), after=['touchscreen'],
+             why='the screen is mounted on it'),
+        part('mid_panel', 'Mid Panel Assembly - Instrument Panel', ['int_dash_white', 'int_ambient'], (0, 0, -1)),
+        part('gap_hider', 'Gap Hider - Instrument Panel', ['int_gap_hider'], (0, 0, -1), after=['mid_panel', 'lower_panel']),
+        part('lower_panel', 'Lower Assembly - Instrument Panel', ['int_dash_lower'], (0, -0.3, -1), after=['mid_panel']),
+        part('glovebox', 'Glovebox Assembly', ['int_glovebox'], (0, 0, -1), after=['lower_panel']),
+        part('footwell_cover', 'Cover - Footwell', ['int_footwell_cover'], (0, -1, 0)),
+        part('airbag_knee_l', 'Airbag - Knee - Driver', ['int_airbag_knee__l'], (0, 0, -1), after=['lower_panel']),
+        part('airbag_knee_r', 'Airbag - Knee - Front Passenger', ['int_airbag_knee__r'], (0, 0, -1), after=['lower_panel']),
+        part('airbag_passenger', 'Airbag - Front Passenger', ['int_airbag_passenger'], (0, -1, 0), after=['lower_panel', 'glovebox'],
+             why='under the top pad, it is reached from below once the lower panel and glovebox are out'),
+        part('top_pad', 'Top Pad Assembly - Instrument Panel', ['int_dash_top', 'int_dash_face', 'int_dash_vent'], (0, 1, -0.5),
+             after=['airbag_passenger']),
         part('rear_display', 'Touchscreen - Rear Display', ['int_rear_screen'], (0, 0, -1), on='center_console'),
         part('rearview_mirror', 'Rearview Mirror', ['int_rear_mirror', 'int_mirror_glass'], (0, -1, 0)),
         part('center_console', 'Center Console Assembly',
