@@ -226,10 +226,13 @@ const doors = {};
 /** Pick targets (bigger than the 3 cm buttons, so a controller ray finds them) -> door key. */
 const doorTargets = new Map();
 
+/** The model's version: both its files are cached for an hour at a stable path, so the app asks for this one. */
+const MODEL_V = 'd258d3320885';
+
 async function loadTruck() {
-  const info = await (await fetch(`${BASE}models/cybertruck.json`)).json();
+  const info = await (await fetch(`${BASE}models/cybertruck.json?v=${MODEL_V}`)).json();   // the json goes with its model: same version
   // The stable model path is cached for an hour; select the rebuilt corner immediately.
-  const container = await LoadAssetContainerAsync(`${BASE}models/cybertruck.glb?v=d258d3320885`, scene, {
+  const container = await LoadAssetContainerAsync(`${BASE}models/cybertruck.glb?v=${MODEL_V}`, scene, {
     onProgress: (e) => e.lengthComputable && (ui.pct.textContent = `${Math.round((e.loaded / e.total) * 100)}%`),
   });
   container.addAllToScene();
