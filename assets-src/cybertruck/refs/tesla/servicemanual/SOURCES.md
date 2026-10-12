@@ -12,6 +12,7 @@ Copyright Tesla. Reference only; never shipped in the app. Text of each procedur
 | glass-front-adjust.txt | Moving Glass - Front Door - LH (Adjust), 2026-09-24 | GUID-A1AA6C9E-5718-474C-AED0-0C0E417CDD78 |
 | glass-rear-adjust.txt | Moving Glass - Rear Door - LH (Adjust) | GUID-3A7C031B-08F4-4682-B52A-2361DEECA22B |
 | glass-front-remove.txt | Moving Glass - Door - Front - LH (Remove and Install) | GUID-6EF37E1F-202A-4DE1-B0C7-ADBE08187ECA |
+| procedures/*.json, removal-graph.json, PARTS.md | the 449 removal procedures in scope (crawled 2026-10-12): steps, links, photos; each part with the parts its procedure removes first | Service Manual table of contents |
 | panel-alignment.txt | Panel Alignment Specifications: the gap and flush figures are only in Tesla's internal "Inspection Standards" | GUID-4869C70E-5CBF-48B6-A7C6-03E006DA85E7 |
 
 What they establish: each door hangs on two pin hinges (upper, lower), each a body bracket on two studs

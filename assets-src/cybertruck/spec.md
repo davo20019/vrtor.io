@@ -175,6 +175,19 @@ Cuts and fittings on the shell:
 - Not modelled: cameras, the charge port door and the body-side antennae (too small for the budget,
   and not visible beyond a few metres).
 
+### Disassembly: the truck comes apart as a technician takes it apart (2026-10-12)
+
+The truck is to be taken apart in a space of its own in vrtor, so it is built from individual parts assembled
+into the bigger ones, at the depth of Tesla's Service Manual: every part a procedure removes, in the order the
+manual removes them (refs/tesla/servicemanual/PARTS.md and removal-graph.json: 421 parts in the sections in
+scope, each with the parts its procedure removes first; the HV battery, drive units, suspension and thermal
+internals are out of scope). In the app a part comes off when it is grabbed and pulled, once the parts the manual
+removes before it are off, and can be put back.
+
+What that asks of every part: a complete closed solid on every side (its hidden faces show once it is off), its
+own node, its mount declared (parts/mounts.json), where it really sits, and what lies under it modelled from the
+manual's photos of it removed, never from nothing. Built one assembly at a time, the front door first.
+
 ### Doors: each its own assembly, in an opening (2026-10-12)
 
 Each door is built as the truck has it, not cut out of the body: cad.py's `Door` holds its seams, hinge, swing
