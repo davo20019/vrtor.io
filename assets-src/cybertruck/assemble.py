@@ -305,7 +305,7 @@ front_bits.append(front_licence)
 cover_panel = stl('outlet_cover', M['bed'])
 cover_panel.name = cover_panel.data.name = 'outlet_cover_panel'      # the node is 'outlet_cover'
 hinged['outlet_cover'] = [cover_panel]
-INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': 'console', 'dash_vent': 'grille', 'ambient': 'ambient',
+INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': 'dash_top', 'dash_vent': 'grille', 'ambient': 'ambient',
             'dash_white': 'trim_white', 'dash_lower': 'armrest', 'screen_bezel': 'bezel', 'screen': 'screen_on', 'screen_stand': 'bezel',
             'yoke': 'yoke', 'yoke_pad': 'yoke', 'yoke_column': 'yoke', 'yoke_chin': 'silver', 'yoke_face': 'yoke_face',
             'yoke_pods': 'yoke_pod', 'yoke_trim': 'silver', 'yoke_keys': 'switch_key',
