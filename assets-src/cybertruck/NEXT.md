@@ -23,6 +23,10 @@ a measurement or a source, or it stays marked as unmeasured in spec.md.
   http://localhost:8790/cyb/): test2 (take everything off and back), taps (the order), grab (pull, free, let go),
   stuck (parts take-all can't reach), place (layout warnings), multi (three visitors), multi-prod (production, only
   in an empty room). Run from a folder with playwright-core 1.58 installed (`npm i playwright-core@1.58.2`).
+- The manual's photos: every procedure's images are listed in refs/tesla/servicemanual/procedures/*.json ("images");
+  fetch one from https://service.tesla.com/docs/Cybertruck/ServiceManual/en-us/<name> (2026-10-12: the interior
+  sections' ~2,150 were cached in ~/.cache/cyb-manual, not committed). The photos of a part taken off settle what is
+  one part and what isn't (the bench's centre back turned out to be the armrest).
 - Never start another `wrangler dev` in apps/*: the io.vrtor.headset LaunchAgent already serves every app on
   8790..8799 and 4179 (dev.vrtor.io); a second one breaks it (fix: `launchctl kickstart -k gui/$(id -u)/io.vrtor.headset`).
 - Deploy apps/cyb (and apps/home if presence changed) from a clean `git worktree` at the pushed commit, node_modules
