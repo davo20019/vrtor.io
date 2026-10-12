@@ -203,8 +203,17 @@ felt NVH pad on it, the trim 6.5 mm off the steel over that (cad.py front_door_i
 order: beltline, trim, felt, glass, closeout panel, regulator. The opening is read off the manual's drawing of the
 inner panel scaled to the door (1.61 x 1.42 mm/px), the panel's parts off its photo taken off, the woofer as a cone,
 module and motor as boxes of their sizes there: read from pictures, about +-25 mm, not surveyed. Review renders:
-review/doorinner/sheet_bright.png (assembled; trim off; felt off; closeout off). Still to come on the doors: the
-hinges and their stud plates, check strap, door presenter, latch, seals; the rear doors' insides.
+review/doorinner/sheet_bright.png (assembled; trim off; felt off; closeout off), sheet_rear.png (the rear door).
+
+The rear doors the same way (2026-10-12), from their own drawing (Panel - Door Trim - Rear, image 7; 1.93 x 1.77
+mm/px) and closeout photo (Closeout Panel - Rear Door, image 2; no woofer). Each door's hardware (cad.py
+door_hardware): the hinges (a bracket inlaid flush in the pillar's face, its leaf in the door's front face, so the door
+swings past them), their stud plates inside the door, the check strap, the door presenter and the latch in the cavity,
+the rear doors' strikers inlaid in the C-pillar, the primary seal round the body's opening, the secondary along the
+door's edges, the waist belt seals lining the glass's slot along the door's top (cut at the window's plane), and on the
+front doors the glass run seal. Heights from the hinge and striker holes in Tesla's body dimensions (figure 1, about 3.1
+mm/px from the sill: front hinges 1,067 and 545, rear 1,126 and 630, rear striker 954; the front latch taken at the
+rear's height); sizes read on the procedures' photos against the door, not measured. 128 parts in all.
 
 Triangles: the GLB draws 62,398 with the doors' insides (1,724 of them); before them 60,810 (61,222 before this, with the front plate in it twice). review.py counted 60,365
 and, before, 59,825: Blender's importer drops degenerate triangles the GPU still draws, so the review undercounts.

@@ -239,6 +239,9 @@ rear_parts = [stl('rear_band', M['band']), stl('light_rear_l', M['light_r']), st
               stl('light_reverse', M['light_rev']), stl('rear_hitch', M['intake'])]
 M['plate'].node_tree.nodes['Principled BSDF'].inputs['Emission Strength'].default_value = 0.0
 clad = [stl(f.stem, M['clad']) for f in sorted(PARTS.glob('cladding__*.stl'))]   # each flare and rocker
+# The doors' hardware on the body (cad.py: hw_<part>__<door>): hinge brackets and the strikers in metal, seals in rubber.
+HW = {'hinge_upper': 'tiedown', 'hinge_lower': 'tiedown', 'striker': 'tiedown', 'seal_primary': 'clad'}
+hw_parts = [stl(f.stem, M[HW[f.stem[3:].split('__')[0]]]) for f in sorted(PARTS.glob('hw_*.stl'))]
 intake = stl('intake_back', M['intake'])
 intake_grille = stl('intake_grille', M['grille'])
 front_bits = [stl('tow_covers', M['tow_cap']), stl('front_camera', M['clad'], smooth_angle=40), stl('front_camera_lens', M['lens_black'])]
@@ -321,7 +324,12 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'cap': 'dash_top', 'grilles': 'grille',
             # inside a front door (cad.py front_door_inner)
             'closeout': 'door_dark', 'closeout_speaker': 'grille', 'closeout_module': 'switch', 'regulator_motor': 'trim_white',
-            'regulator': 'tiedown', 'nvh_foam': 'carpet'}
+            'regulator': 'tiedown', 'nvh_foam': 'carpet',
+            # a door's hardware (cad.py door_hardware)
+            'hinge_leaves': 'tiedown', 'stud_plate_upper': 'tiedown', 'stud_plate_lower': 'tiedown', 'check_strap': 'tiedown',
+            'presenter': 'switch', 'latch': 'switch', 'seal_secondary': 'clad', 'seal_waist_inner': 'clad', 'seal_waist_outer': 'clad',
+            'seal_run': 'clad'}
+
 # A part split into individual ones ('seats_front__l', 'seats_front__r') takes its material by the name before '__'.
 cabin_parts = [stl(f.stem, M[INTERIOR[f.stem[4:].split('__')[0]]], smooth_angle=25)
                for f in sorted(PARTS.glob('int_*.stl')) if f.stem[4:].split('__')[0] in INTERIOR]
@@ -414,7 +422,7 @@ disc = stl('brake_disc', M['disc'], smooth_angle=50)
 caliper = stl('caliper', M['caliper'])
 templates = (tyre, rim, lugs, cover, disc, caliper)
 all_door_parts = [o for v in door_parts.values() for o in v]
-for o in [x for x in (body, glass, roof_glass, windshield_glass, tonneau, lf, intake, intake_grille, mirrors, wiper, wiper_blade, slat) if x] + [*quarter_glass, *clad, *front_bits, *rear_parts, *cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
+for o in [x for x in (body, glass, roof_glass, windshield_glass, tonneau, lf, intake, intake_grille, mirrors, wiper, wiper_blade, slat) if x] + [*quarter_glass, *clad, *hw_parts, *front_bits, *rear_parts, *cabin_parts, *detail_parts, *button_parts, *bed_parts, *all_door_parts, *templates, *[q for v in hinged.values() for q in v]]:
     o.data.transform(TO_BLENDER)         # UVs and materials were set in the model frame; now move to Blender's
 
 def empty(name, loc=(0, 0, 0), parent=None):
@@ -426,7 +434,7 @@ def empty(name, loc=(0, 0, 0), parent=None):
 
 root = empty('cybertruck')
 body_node = empty('body', parent=root)
-for o in [x for x in (body, glass, roof_glass, windshield_glass, tonneau, lf, intake, intake_grille, mirrors, wiper) if x] + [*quarter_glass, *clad, *front_bits, *rear_parts, *detail_parts, *button_parts, *bed_parts]:
+for o in [x for x in (body, glass, roof_glass, windshield_glass, tonneau, lf, intake, intake_grille, mirrors, wiper) if x] + [*quarter_glass, *clad, *hw_parts, *front_bits, *rear_parts, *detail_parts, *button_parts, *bed_parts]:
     o.parent = body_node
 wiper_pivot = Vector(to_blender(GEO['wiper']['pivot']))
 wiper_node = empty('wiper_arm', loc=wiper_pivot, parent=root)

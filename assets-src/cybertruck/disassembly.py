@@ -46,28 +46,65 @@ def parts():
                      after=[f'mirror_glass_{k}'], on=f'mirror_{k}'),
                 part(f'mirror_{k}', f'Exterior Mirror Assembly - Electromechanical - {side}', [f'{d}_mirror'], (sx, 0, 0), on=d),
             ]
+        e = end
+        lower = (f'Closure Assist Mechanisms and Hinges - Hinges - Front Door Hinge - Lower - {side}' if e == 'Front'
+                 else f'Closure Assist Mechanisms and Hinges - Hinges - Rear Door - Lower Hinge - {side}')
+        rear = e == 'Rear'
         out += [
-            part(f'beltline_{k}', f'Beltline Assembly - Door Panel - {end} - {side}', [f'{d}_int_cap', f'{d}_int_ambient'],
+            # Along the door's top: the waist belt seals each side of the glass's slot, under the beltline.
+            part(f'seal_waist_outer_{k}', f'Waist Belt Seal - Outer - {e} Door - {side}', [f'{d}_int_seal_waist_outer'], (0, 1, 0),
+                 after=[f'beltline_{k}', f'seal_waist_inner_{k}'] if rear else [], on=d),
+            part(f'seal_waist_inner_{k}', f'Waist Belt Seal - Inner - {e} Door - {side}', [f'{d}_int_seal_waist_inner'], (0, 1, 0),
+                 after=[f'beltline_{k}'], on=d),
+            part(f'beltline_{k}', f'Beltline Assembly - Door Panel - {e} - {side}', [f'{d}_int_cap', f'{d}_int_ambient'],
                  (-sx, 0.4, 0), on=d),
-            part(f'door_trim_{k}', f'Panel - Door Trim - {end} - {side}',
+            part(f'door_trim_{k}', f'Panel - Door Trim - {e} - {side}',
                  [f'{d}_int_trim_white', f'{d}_int_armrest', f'{d}_int_door_lower', f'{d}_int_switch_pod', f'{d}_int_switch',
                   f'{d}_int_grilles', f'open_{k}'], (-sx, 0, 0), after=[f'beltline_{k}'], on=d),
-            part(f'door_glass_{k}', f'Moving Glass - Door - {end} - {side}', [f'{d}_glass'], (0, 1, 0),
-                 after=[f'door_trim_{k}', f'beltline_{k}'], on=d),
-            part(d, f'Door - {end} - {side}', [d], (sx, 0, 0)),
+            # Under the trim (cad.py door_inside): the felt pad, the closeout panel with the door's module on it (and on
+            # a front door the woofer), the window regulator on its far side.
+            part(f'nvh_foam_{k}', f'NVH Foam - Door - {e} - {side}', [f'{d}_int_nvh_foam'], (-sx, 0, 0),
+                 after=[f'door_trim_{k}'], on=d),
+            part(f'door_glass_{k}', f'Moving Glass - Door - {e} - {side}', [f'{d}_glass'], (0, 1, 0),
+                 after=[f'door_trim_{k}', f'beltline_{k}'] + ([f'seal_waist_inner_{k}'] if rear else []), on=d),
+            part(f'closeout_{k}', f'Closeout Panel - {e} Door - {side}',
+                 [f'{d}_int_closeout', f'{d}_int_closeout_module'] + ([] if rear else [f'{d}_int_closeout_speaker']), (-sx, 0, 0),
+                 after=[f'door_trim_{k}', f'door_glass_{k}', f'nvh_foam_{k}'] + ([f'seal_waist_inner_{k}', f'seal_waist_outer_{k}'] if rear else []),
+                 on=d, why='the felt pad lies on it'),
+            part(f'regulator_{k}', f'Window Regulator - {e} Door - {side}', [f'{d}_int_regulator', f'{d}_int_regulator_motor'],
+                 (-sx, 0, 0), on=f'closeout_{k}'),
+            # In the cavity (cad.py door_hardware): the check strap, the door presenter, the latch at the rear edge, the
+            # stud plates the hinges bolt to, and on a front door the glass run seal up the glass's front edge.
+            part(f'check_strap_{k}', 'Check Strap, Rear' if rear else f'Check Strap - Front Door - {side}', [f'{d}_int_check_strap'],
+                 (-sx, 0, 0), after=[f'closeout_{k}'] + ([] if rear else [f'seal_glass_run_{k}']), on=d,
+                 why='in the model it lies in the cavity behind the closeout panel' if rear else None),
+            part(f'presenter_{k}', f'Door Presenter - {e} Door - {side}', [f'{d}_int_presenter'], (-sx, 0, 0),
+                 after=[f'closeout_{k}'] + ([f'door_glass_{k}'] if rear else []), on=d,
+                 why='in the model it lies in the cavity behind the closeout panel' if rear else None),
+            part(f'latch_{k}', f'Door Latch - {e} - {side}', [f'{d}_int_latch'], (-sx, 0, 0),
+                 after=[f'closeout_{k}'] + ([f'door_glass_{k}'] if rear else []), on=d,
+                 why='in the model it lies in the cavity behind the closeout panel' if rear else None),
+            part(f'stud_plate_upper_{k}', f'Stud Plate - Hinge - Upper - Door - {e} - {side}', [f'{d}_int_stud_plate_upper'], (-sx, 0, 0),
+                 after=[f'regulator_{k}'], on=d),
+            part(f'stud_plate_lower_{k}', f'Stud Plate - Hinge - Lower - Door - {e} - {side}', [f'{d}_int_stud_plate_lower'], (-sx, 0, 0),
+                 after=[f'regulator_{k}'], on=d),
+            part(f'seal_secondary_{k}', f'Secondary Seal - {e} Door - {side}', [f'{d}_int_seal_secondary'], (-sx, 0, 0), on=d),
+            part(d, f'Door - {e} - {side}', [d], (sx, 0, 0)),
+            # On the body: the hinges (the door hangs on them: it comes off first), the primary seal round the opening,
+            # and on the rear door's pillar its striker.
+            part(f'hinge_upper_{k}', f'Hinge - Upper - {e} Door - {side}', [f'hw_hinge_upper__{k}'], (sx, 0, 0), after=[d],
+                 why='the door hangs on it'),
+            part(f'hinge_lower_{k}', lower, [f'hw_hinge_lower__{k}'], (sx, 0, 0), after=[d], name=f'Hinge - Lower - {e} Door - {side}',
+                 why='the door hangs on it'),
+            part(f'seal_primary_{k}', f'Primary Seal - Door - {e} - {side}', [f'hw_seal_primary__{k}'], (sx, 0, 0), after=[d],
+                 why='the shut door covers it'),
         ]
-        if end == 'Front':
-            # Under the trim (cad.py front_door_inner): the felt pad, the closeout panel with the woofer and the
-            # door's module on it, and the window regulator on the panel's far side.
-            out += [
-                part(f'nvh_foam_{k}', f'NVH Foam - Door - Front - {side}', [f'{d}_int_nvh_foam'], (-sx, 0, 0),
-                     after=[f'door_trim_{k}'], on=d),
-                part(f'closeout_{k}', f'Closeout Panel - Front Door - {side}',
-                     [f'{d}_int_closeout', f'{d}_int_closeout_speaker', f'{d}_int_closeout_module'], (-sx, 0, 0),
-                     after=[f'door_trim_{k}', f'door_glass_{k}', f'nvh_foam_{k}'], on=d, why='the felt pad lies on it'),
-                part(f'regulator_{k}', f'Window Regulator - Front Door - {side}', [f'{d}_int_regulator', f'{d}_int_regulator_motor'],
-                     (-sx, 0, 0), on=f'closeout_{k}'),
-            ]
+        if rear:
+            out.append(part(f'striker_{k}', f'Door Striker - Rear - {side}', [f'hw_striker__{k}'], (0, 0, 1), after=[d],
+                            why='the shut door covers it'))
+        else:
+            out.append(part(f'seal_glass_run_{k}', f'Glass Run Seal - Front Door - A-Pillar - {side}', [f'{d}_int_seal_run'],
+                            (0, 1, 0), after=[f'closeout_{k}'], on=d))
     # ---- glass and the wiper (1020, 1750)
     out += [
         part('wiper_arm', 'Wiper Arm and Blade Assembly - Windshield', ['wiper_arm'], (0, 1, 0.3)),

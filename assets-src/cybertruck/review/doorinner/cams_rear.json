@@ -1,0 +1,138 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "sunEnergy": 0,
+ "exposure": 2.0,
+ "cameras": {
+  "r0-assembled": {
+   "eye": [
+    -150,
+    950,
+    -330
+   ],
+   "look": [
+    950,
+    840,
+    -330
+   ],
+   "fovDeg": 70,
+   "size": [
+    1200,
+    900
+   ],
+   "hide": [
+    "int_seats_rear",
+    "int_seat_base__rear",
+    "int_rear_armrest",
+    "int_belts",
+    "int_belt_hw",
+    "int_seats_front__",
+    "int_seat_base__l",
+    "int_piping__",
+    "int_seat_knobs__"
+   ]
+  },
+  "r1-trim-felt-glass-off": {
+   "eye": [
+    -150,
+    950,
+    -330
+   ],
+   "look": [
+    950,
+    840,
+    -330
+   ],
+   "fovDeg": 70,
+   "size": [
+    1200,
+    900
+   ],
+   "hide": [
+    "int_seats_rear",
+    "int_seat_base__rear",
+    "int_rear_armrest",
+    "int_belts",
+    "int_belt_hw",
+    "int_seats_front__",
+    "int_seat_base__l",
+    "int_piping__",
+    "int_seat_knobs__",
+    "door_rl_int_seal_waist_outer",
+    "door_rl_int_seal_waist_inner",
+    "door_rl_int_cap",
+    "door_rl_int_ambient",
+    "door_rl_int_trim_white",
+    "door_rl_int_armrest",
+    "door_rl_int_door_lower",
+    "door_rl_int_switch",
+    "door_rl_int_grilles",
+    "open_rl",
+    "door_rl_int_nvh_foam",
+    "door_rl_glass"
+   ]
+  },
+  "r2-closeout-off": {
+   "eye": [
+    -150,
+    950,
+    -330
+   ],
+   "look": [
+    950,
+    840,
+    -330
+   ],
+   "fovDeg": 70,
+   "size": [
+    1200,
+    900
+   ],
+   "hide": [
+    "int_seats_rear",
+    "int_seat_base__rear",
+    "int_rear_armrest",
+    "int_belts",
+    "int_belt_hw",
+    "int_seats_front__",
+    "int_seat_base__l",
+    "int_piping__",
+    "int_seat_knobs__",
+    "door_rl_int_seal_waist_outer",
+    "door_rl_int_seal_waist_inner",
+    "door_rl_int_cap",
+    "door_rl_int_ambient",
+    "door_rl_int_trim_white",
+    "door_rl_int_armrest",
+    "door_rl_int_door_lower",
+    "door_rl_int_switch",
+    "door_rl_int_grilles",
+    "open_rl",
+    "door_rl_int_nvh_foam",
+    "door_rl_glass",
+    "door_rl_int_closeout",
+    "door_rl_int_closeout_module"
+   ]
+  },
+  "f-door-off": {
+   "eye": [
+    2200,
+    1000,
+    300
+   ],
+   "look": [
+    930,
+    850,
+    1250
+   ],
+   "fovDeg": 55,
+   "size": [
+    1200,
+    900
+   ],
+   "hide": [
+    "door_fl"
+   ]
+  }
+ }
+}

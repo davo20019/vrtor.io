@@ -1369,8 +1369,8 @@ def door_trim(p, d, sx, driver):
     c = CAB
     s0, s1 = door_spans(p)[d]
     s0, s1 = s0 + 12, s1 - 12
-    # 3 mm into the shell's inner face; on a front door 6.5 off it, over the felt pad and closeout panel (front_door_inner)
-    xw = body_w(p) - c['wall'] + (-6.5 if d == 'f' else 3)
+    # 6.5 mm off the shell's inner face, over the felt pad and closeout panel (door_inside)
+    xw = body_w(p) - c['wall'] - 6.5
     hip = c['hip_half']
     sh = c['shoulder_front'] if d == 'f' else c['shoulder_rear']
     ya = c['door_arm_h']
@@ -2182,68 +2182,160 @@ def clear_of_doors(p, part, attr='space', lift=0.0):
 # foot 565 (s 2,599 to 1,505, h 1,230 to 482; 1.61 and 1.42 mm/px). The parts on the tub are placed on the photo of
 # the panel taken off (Closeout Panel, image 5) scaled to the tub. Read from the manual's pictures, not surveyed:
 # about +-25 mm (the drawing has some perspective). The rear doors keep their solid inner panel for now.
-DOOR_OPENING_PX = [(230, 205), (255, 188), (330, 185), (465, 185), (490, 178), (590, 180), (612, 205), (610, 250),
-                   (625, 300), (650, 350), (665, 395), (655, 418), (610, 430), (540, 458), (470, 470), (330, 476),
-                   (275, 470), (255, 450), (222, 400), (220, 330), (225, 260)]
+# Each door's inside, from the manual. The opening: traced on its drawing of the inner panel seen from the cabin
+# (front on the right), with that drawing's rear edge, front edge, beltline and foot in px; the closeout panel's
+# parts: placed on its photo (the tub's px box, then each part's), scaled to the tub. Front: Panel - Door Trim -
+# Front, image 10 and Closeout Panel - Front Door, image 5. Rear: Panel - Door Trim - Rear, image 7 and Closeout
+# Panel - Rear Door, image 2 (no woofer there; the rear door's speaker sits low in its trim).
+DOOR_INSIDE = {
+    'f': dict(opening=[(230, 205), (255, 188), (330, 185), (465, 185), (490, 178), (590, 180), (612, 205), (610, 250),
+                       (625, 300), (650, 350), (665, 395), (655, 418), (610, 430), (540, 458), (470, 470), (330, 476),
+                       (275, 470), (255, 450), (222, 400), (220, 330), (225, 260)],
+              drawing=(80, 760, 40, 565), tub=(15, 760, 85, 545), woofer=(630, 385, 110),
+              module=(120, 240, 250, 375), motor=(330, 150, 470, 255), rails=(150, 520)),
+    'r': dict(opening=[(175, 185), (205, 170), (300, 168), (420, 182), (442, 195), (442, 265), (448, 300), (458, 330),
+                       (455, 360), (440, 385), (410, 410), (370, 422), (330, 428), (270, 424), (225, 408), (195, 385),
+                       (175, 360), (168, 320), (168, 250), (170, 210)],
+              drawing=(55, 555, 30, 500), tub=(155, 1185, 95, 820), woofer=None,
+              module=(340, 400, 515, 570), motor=(550, 215, 830, 390), rails=(330, 930)),
+}
 DOOR_SKIN = 2.5            # mm, the door's outer skin and its inner panel (a guess at sheet steel's thickness)
 DOOR_INNER_PANEL = 2.0
 
-def front_door_inner(p):
-    """The left front door's insides in the truck's frame: {'cut': what comes out of the steel, part: solid}."""
-    s0, s1 = door_spans(p)['f']
-    xi = body_w(p) - CAB['wall']                       # the steel's inner face, 901.9 (the door is a 60 mm slab)
+def door_belt(p, q):
+    return p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (q - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
+
+def door_inside(p, d):
+    """A left door's insides in the truck's frame (d 'f' or 'r'): {'cut': what comes out of its steel, part: solid}.
+    The door is a skin and an inner panel 60 mm apart, the cavity the glass drops into between them; the inner
+    panel's opening is closed by the closeout panel (a black tub carrying the control module and window motor, and
+    on the front door the woofer, on the cabin side, the regulator's two rails on the cavity side); a felt pad on it,
+    the trim over that. Read from the manual's pictures scaled to the door: about +-25 mm, not surveyed."""
+    cfg = DOOR_INSIDE[d]
+    s0, s1 = door_spans(p)[d]
+    xi = body_w(p) - CAB['wall']                       # the steel's inner face (the door is a 60 mm slab)
     xo = body_w(p)
-    to_sh = lambda x, y: (s1 - 2 - (x - 80) * (s1 - s0 - 4) / 680, 1230 - (y - 40) * 748 / 525)
-    opening = [to_sh(x, y) for x, y in DOOR_OPENING_PX]
+    rx, fx, ty, by = cfg['drawing']
+    top = door_belt(p, (s0 + s1) / 2) + 13
+    to_sh = lambda x, y: (s1 - 2 - (x - rx) * (s1 - s0 - 4) / (fx - rx), top - (y - ty) * (top - 482) / (by - ty))
+    opening = [to_sh(x, y) for x, y in cfg['opening']]
     def shf(pts, grow, x0, x1):
         f = Face(Wire.make_polygon([(x0, h, Z(q)) for q, h in pts], close=True))
         if grow:
             f = offset(f, amount=grow, kind=Kind.INTERSECTION)
         return extrude(f, amount=x1 - x0, dir=(1, 0, 0))
-    belt = lambda q: p['belt_h_front'] + (p['belt_h_rear'] - p['belt_h_front']) * (q - p['a_pillar_s']) / (p['c_pillar_s'] - p['a_pillar_s'])
-    # The cavity: inside the door's edges by 40 (its frame), from the inner panel to the skin.
-    cav = [(s0 + 40, 520.0), (s1 - 40, 520.0), (s1 - 40, belt(s1) - 25), (s0 + 40, belt(s0) - 25)]
-    cut = SH(cav, xi + DOOR_INNER_PANEL, xo - DOOR_SKIN) + shf(opening, 0, xi - 1, xi + DOOR_INNER_PANEL + 0.5)
-    out = {'cut': cut}
-    # The closeout panel: a rim on the inner face round the opening, and a tub down into it, 28 deep.
+    cav = [(s0 + 40, 520.0), (s1 - 40, 520.0), (s1 - 40, door_belt(p, s1) - 25), (s0 + 40, door_belt(p, s0) - 25)]
+    out = {'cut': SH(cav, xi + DOOR_INNER_PANEL, xo - DOOR_SKIN) + shf(opening, 0, xi - 1, xi + DOOR_INNER_PANEL + 0.5)}
     rim = shf(opening, 45, xi - 3, xi) - shf(opening, -2, xi - 4, xi + 1)
     tub = shf(opening, -2, xi - 3, xi + 28) - shf(opening, -12, xi - 4, xi + 25)
     out['closeout'] = rim + tub
-    # Its parts, placed on the photo of the panel (800 x 600: the tub from x 15 to 760, y 85 to 545).
     lo_s = min(q for q, _ in opening) - 45; hi_s = max(q for q, _ in opening) + 45
     lo_h = min(h for _, h in opening) - 45; hi_h = max(h for _, h in opening) + 45
-    at = lambda x, y: (hi_s - (x - 15) * (hi_s - lo_s) / 745, hi_h - (y - 85) * (hi_h - lo_h) / 460)
-    def box(x0, y0, x1, y1, d):
+    tx0, tx1, ty0, ty1 = cfg['tub']
+    at = lambda x, y: (hi_s - (x - tx0) * (hi_s - lo_s) / (tx1 - tx0), hi_h - (y - ty0) * (hi_h - lo_h) / (ty1 - ty0))
+    def box(x0, y0, x1, y1, depth):
         (sa, ha), (sb, hb) = at(x0, y0), at(x1, y1)
-        return SH([(sa, hb), (sb, hb), (sb, ha), (sa, ha)], xi + 25 - d, xi + 25)
-    sc, hc = at(630, 385)
-    r = 110 * (hi_s - lo_s) / 745
-    rim_s = Cylinder(r, 6).rotate(Axis.Y, 90).moved(Location((xi + 20, hc, Z(sc))))
-    cone = Cone(r - 8, r * 0.35, 22).rotate(Axis.Y, 90).moved(Location((xi + 11, hc, Z(sc))))
-    out['closeout_speaker'] = rim_s + cone                   # the woofer, facing the cabin
-    out['closeout_module'] = box(120, 240, 250, 375, 24)     # the door's control module
-    out['regulator_motor'] = box(330, 150, 470, 255, 26)     # the window motor, on the cabin side
-    # The regulator: two rails on the cavity side, top to bottom of the tub, and the cable between them.
+        return SH([(sa, hb), (sb, hb), (sb, ha), (sa, ha)], xi + 25 - depth, xi + 25)
+    if cfg['woofer']:
+        wx, wy, wr = cfg['woofer']
+        sc, hc = at(wx, wy)
+        r = wr * (hi_s - lo_s) / (tx1 - tx0)
+        out['closeout_speaker'] = (Cylinder(r, 6).rotate(Axis.Y, 90).moved(Location((xi + 20, hc, Z(sc))))
+                                   + Cone(r - 8, r * 0.35, 22).rotate(Axis.Y, 90).moved(Location((xi + 11, hc, Z(sc)))))
+    out['closeout_module'] = box(*cfg['module'], 24)
+    out['regulator_motor'] = box(*cfg['motor'], 26)
     rails = []
-    for x in (150, 520):
-        (sa, ha), (sb, hb) = at(x - 12, 95), at(x + 12, 530)
+    for x in cfg['rails']:
+        (sa, ha), (sb, hb) = at(x - 12 * (tx1 - tx0) / 745, ty0 + 10), at(x + 12 * (tx1 - tx0) / 745, ty1 - 15)
         rails.append(SH([(sa, hb), (sb, hb), (sb, ha), (sa, ha)], xi + 28, xi + 40))
     out['regulator'] = Compound(rails)
-    # The felt pad on the panel, the woofer's face left clear.
-    pad = shf(opening, 30, xi - 6, xi - 3) - Cylinder(r + 6, 20).rotate(Axis.Y, 90).moved(Location((xi - 4.5, hc, Z(sc))))
+    pad = shf(opening, 30, xi - 6, xi - 3)
+    if cfg['woofer']:
+        pad = pad - Cylinder(r + 6, 20).rotate(Axis.Y, 90).moved(Location((xi - 4.5, hc, Z(sc))))
     out['nvh_foam'] = pad
     return out
+
+# ---- a door's hardware (Service Manual, 1133, 1170, 1010; refs/tesla/servicemanual), for a left door (d 'f'/'r').
+# Heights: the hinges' and the rear striker's mounting holes in Tesla's body dimensions (refs/tesla/body-dimensions,
+# figure 1, the side view, about 3.1 mm/px from its marked distances, read from the sill): front door hinges 1,067
+# and 545 high, rear door 1,126 and 630, the rear striker 954; the front door's latch is taken at the rear's height
+# (no figure marks it). Shapes and sizes: read on the procedures' photos against the door (a hinge's body bracket
+# about 60 x 80 on two studs and its leaf on one; the check strap's arm; the presenter's actuator; the latch on the
+# door's rear face), not measured. Each hinge's pin stands on the door's axis (Door.hinge), which is itself not the
+# real one (see spec.md, Doors).
+DOOR_HW = {'f': dict(hinges=(1067.0, 545.0), latch=954.0), 'r': dict(hinges=(1126.0, 630.0), latch=954.0)}
+
+def door_hardware(p, d):
+    """({part: solid} fixed to the door, {part: solid} fixed to the body) for a left door, in the truck's frame. Each
+    has a 'cut': the recesses the hinges and striker sit in (flush, so the door swings past them), and on the door
+    the glass's slot along its top, between the waist belt seals."""
+    s0, s1 = door_spans(p)[d]
+    xi = body_w(p) - CAB['wall']
+    xo = body_w(p)
+    hw = DOOR_HW[d]
+    belt0, belt1 = door_belt(p, s0), door_belt(p, s1)
+    g = DOOR_GAP
+    on_door, on_body = {}, {}
+    door_cut, body_cut = [], []
+    brackets, leaves, plates = [], [], []
+    for h in hw['hinges']:
+        bracket = SH([(s0 - g - 12, h - 40), (s0 - g, h - 40), (s0 - g, h + 40), (s0 - g - 12, h + 40)], xo - 50, xo - 10)
+        leaf = SH([(s0 + g, h - 28), (s0 + g + 10, h - 28), (s0 + g + 10, h + 28), (s0 + g, h + 28)], xo - 46, xo - 14)
+        brackets.append(bracket)
+        leaves.append(leaf)
+        body_cut.append(bracket)
+        door_cut.append(leaf)
+        plates.append(SH([(s0 + 41, h - 35), (s0 + 45, h - 35), (s0 + 45, h + 35), (s0 + 41, h + 35)], xi + 6, xi + 40))
+    on_body['hinge_upper'], on_body['hinge_lower'] = brackets
+    on_door['hinge_leaves'] = Compound(leaves)
+    on_door['stud_plate_upper'], on_door['stud_plate_lower'] = plates
+    hm = (hw['hinges'][0] + hw['hinges'][1]) / 2
+    on_door['check_strap'] = SH([(s0 + 45, hm - 12), (s0 + 300, hm - 12), (s0 + 300, hm + 12), (s0 + 45, hm + 12)], xi + 12, xi + 22)
+    on_door['presenter'] = SH([(s0 + 45, belt0 - 140), (s0 + 160, belt0 - 140), (s0 + 160, belt0 - 85), (s0 + 45, belt0 - 85)], xi + 10, xi + 48)
+    lh = hw['latch']
+    on_door['latch'] = SH([(s1 - 130, lh - 60), (s1 - 42, lh - 60), (s1 - 42, lh + 60), (s1 - 130, lh + 60)], xi + 10, xi + 52)
+    if d == 'r':
+        striker = SH([(s1 + g, lh - 15), (s1 + g + 12, lh - 15), (s1 + g + 12, lh + 15), (s1 + g, lh + 15)], xi + 18, xi + 42)
+        on_body['striker'] = striker
+        body_cut.append(striker)
+    # The primary seal round the body's door opening (front, foot, rear), on its inner flange, 1 mm clear of the door's
+    # trim where that reaches past the front seam (at 6.5 mm off the steel); the secondary along
+    # the door's own front, foot and rear edges, cabin side.
+    on_body['seal_primary'] = (SH([(s0 - g - 14, 470.0), (s0 - g, 470.0), (s0 - g, belt0 + 10), (s0 - g - 14, belt0 + 10)], xi - 5, xi + 4)
+                               + SH([(s1 + g, 470.0), (s1 + g + 14, 470.0), (s1 + g + 14, belt1 + 10), (s1 + g, belt1 + 10)], xi - 5, xi + 4)
+                               + SH([(s0 - g - 14, 456.0), (s1 + g + 14, 456.0), (s1 + g + 14, 470.0), (s0 - g - 14, 470.0)], xi - 5, xi + 4))
+    on_door['seal_secondary'] = (SH([(s0 + 3, 492.0), (s0 + 14, 492.0), (s0 + 14, belt0 - 10), (s0 + 3, belt0 - 10)], xi - 6, xi)
+                                 + SH([(s1 - 14, 492.0), (s1 - 3, 492.0), (s1 - 3, belt1 - 10), (s1 - 14, belt1 - 10)], xi - 6, xi)
+                                 + SH([(s0 + 3, 484.0), (s1 - 3, 484.0), (s1 - 3, 495.0), (s0 + 3, 495.0)], xi - 6, xi))
+    # The glass's slot along the door's top, where it drops into the cavity: centred on the window's plane at the
+    # belt, 16 wide between the waist belt seals (inner and outer, 6 each), down to the cavity's top.
+    wp, wn = planes(p)['window_l']
+    xg = lambda q: on_plane((np.array(wp, float), np.array(wn, float)), y=door_belt(p, q), z=Z(q))[0]
+    xg0, xg1 = xg(s0), xg(s1)
+    xm = (xg0 + xg1) / 2
+    top0, top1 = belt0 + 14, belt1 + 14
+    slot = SH([(s0 + 25, belt0 - 30), (s1 - 25, belt1 - 30), (s1 - 25, top1), (s0 + 25, top0)], xm - 14, xm + 14)
+    door_cut.append(slot)
+    on_door['seal_waist_inner'] = SH([(s0 + 25, belt0 - 20), (s1 - 25, belt1 - 20), (s1 - 25, top1 - 1), (s0 + 25, top0 - 1)], xm - 14, xm - 8)
+    on_door['seal_waist_outer'] = SH([(s0 + 25, belt0 - 20), (s1 - 25, belt1 - 20), (s1 - 25, top1 - 1), (s0 + 25, top0 - 1)], xm + 8, xm + 14)
+    if d == 'f':
+        on_door['seal_run'] = SH([(s0 + 44, 900.0), (s0 + 60, 900.0), (s0 + 60, belt0 - 30), (s0 + 44, belt0 - 30)], xm - 14, xm + 14) \
+                                    - SH([(s0 + 48, 890.0), (s0 + 64, 890.0), (s0 + 64, belt0 - 20), (s0 + 48, belt0 - 20)], xm - 4, xm + 4)
+    on_door['cut'] = Compound(door_cut)
+    on_body['cut'] = Compound(body_cut)
+    return on_door, on_body
 
 def door_assembly(p, dr, steel, glass):
     """{part name: (solid, save options)} for everything door dr carries: its skin and its window, the body's own
     surfaces within its outline; its mirror (a front door's, whole: c166, both doors open, each mirror swung out with
     its door); its trim. Each within the door's envelope or swing."""
-    inner = None
-    if dr.d == 'f':
-        inner = front_door_inner(p)
-        if dr.sx < 0:
-            inner = {k: v.mirror(Plane.YZ) for k, v in inner.items()}
-        steel = steel - inner.pop('cut')
+    inner = door_inside(p, dr.d)
+    hw = door_hardware(p, dr.d)[0]
+    inner['cut'] = inner['cut'] + hw.pop('cut')
+    inner.update(hw)
+    if dr.sx < 0:
+        inner = {k: v.mirror(Plane.YZ) for k, v in inner.items()}
+    steel = steel - inner.pop('cut')
     out = {'steel': (steel & dr.envelope, dict(tolerance=0.5, angular=0.5)),
            'glass': (glass & dr.window_opening & dr.swing, {})}
     if dr.d == 'f':
@@ -2552,7 +2644,14 @@ if __name__ == '__main__':
             if part is not None and part.volume > 1:
                 save(part, f'door_{k}_{name}', **opts)
                 MOUNTS[f'door_{k}_{name}'] = f'door_{k}'
-    body = clear_of_doors(p, body, 'opening')
+    body_cuts = []
+    for d in ('f', 'r'):                                  # the doors' hardware on the body: hinge brackets, striker, seals
+        on_body = door_hardware(p, d)[1]
+        body_cuts.append(both_sides(on_body.pop('cut')))
+        for name, part in on_body.items():
+            for side, sx in (('l', 1), ('r', -1)):
+                save(part if sx > 0 else part.mirror(Plane.YZ), f'hw_{name}__{d}{side}', tolerance=1.0, angular=0.4)
+    body = clear_of_doors(p, body, 'opening') - Compound(body_cuts)
     glass = clear_of_doors(p, glass, 'window_opening')
     save(body, 'body', tolerance=0.5, angular=0.5)
     # The glass triangles ahead of the window edge stay on the body but are the front side windows' glass
