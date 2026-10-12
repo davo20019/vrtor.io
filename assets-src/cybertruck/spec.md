@@ -215,6 +215,15 @@ front doors the glass run seal. Heights from the hinge and striker holes in Tesl
 mm/px from the sill: front hinges 1,067 and 545, rear 1,126 and 630, rear striker 954; the front latch taken at the
 rear's height); sizes read on the procedures' photos against the door, not measured. 128 parts in all.
 
+The seats (2026-10-12), as the manual takes them apart once out of the truck (1301, 1305, 1307, 1308). A front seat:
+its side shields (the adjustment buttons on the outboard one), the seatback (its frame) carrying the back's trim (the
+cover, with the map pocket and piping) and foam, the cushion's foam (with its cover) on its frame, and the riser and
+track it stands on (cad.py front_seat). The cover is the back's outside 14 mm (22 across, and 30 at the front: read on
+the procedures' photos, not measured), the frame its rear 35. The bench: each outboard back with its outboard and
+inboard bolsters and its back rest insert, the centre back with the centre headrest, three cushions, the armrest
+(rear_bench); the manual names the left and right backs and cushions, the model's centre ones are its own. Renders:
+review/seats/sheet.png. 156 parts in all.
+
 Triangles: the GLB draws 62,398 with the doors' insides (1,724 of them); before them 60,810 (61,222 before this, with the front plate in it twice). review.py counted 60,365
 and, before, 59,825: Blender's importer drops degenerate triangles the GPU still draws, so the review undercounts.
 Both counts are over the 60,000 budget; a truck that comes apart part by part will need far more, so the budget

@@ -1131,6 +1131,13 @@ def front_seat(xc, outboard):
     front = [(-245, 680), (245, 680), (262, 1000), (268, 1150), (185, 1420), (160, 1560), (120, 1637),
              (-120, 1637), (-160, 1560), (-185, 1420), (-268, 1150), (-262, 1000)]
     back = SH(side, xc - 300, xc + 300) & XH([(xc + x, h) for x, h in front], 2260, 2650)
+    # Under its cover (Service Manual: Trim - Seat Back, 1307) the back is foam on a frame: the core is the back's
+    # outline 10 mm in (the cover's thickness: read on the procedure's photos, not measured), the frame its rear 35.
+    side_face = Face(Wire.make_polygon([(xc - 300, h, Z(q)) for q, h in side], close=True))
+    front_face = Face(Wire.make_polygon([(xc + x, h, Z(2650)) for x, h in front], close=True))
+    side_in = offset(side_face, amount=-10, kind=Kind.INTERSECTION).faces()[0]
+    front_in = offset(front_face, amount=-10, kind=Kind.INTERSECTION).faces()[0]
+    core = extrude(side_in, amount=600, dir=(1, 0, 0)) & extrude(front_in, amount=390, dir=(0, 0, 1))
     # The centre insert sits 45 mm behind the bolsters' front faces, between them, up to the shoulders.
     insert = SH([(2345, 760), (2470, 1225), (2470, 1250), (2100, 1250), (2100, 700), (2345, 700)], xc - 150, xc + 150)
     back = back - insert
@@ -1198,7 +1205,22 @@ def front_seat(xc, outboard):
         piping += rods(cpts, (0, 1, 0), 6, 6)
     tp = (rear_s(1180) + out_n[0] * 12, 1180 + out_n[1] * 12)
     piping.append(rod(V(xc - 215, tp[1], tp[0]), V(xc + 215, tp[1], tp[0]), (0, 1, 0), 6, 6))
-    return {'seat': [back, cushion, pocket], 'seat_base': [base, stand], 'switch': knobs, 'piping': piping}
+    # As the manual takes it apart: the back's trim (its cover, with the map pocket and piping), foam and frame; the
+    # cushion's foam (with its cover) on its frame; the side shields either side of the base (the buttons on the
+    # outboard one); the riser and track the seat stands on.
+    # The core inside every face of the back, not only its outline (the insert's recess, the bolsters' turned faces
+    # and the seams cut into it): the back eroded by 14 mm along each axis (22 across, where the insert meets the bolsters' turned faces), so no foam shows through its cover.
+    for dv in ((22, 0, 0), (-22, 0, 0), (0, 14, 0), (0, -14, 0), (0, 0, 14), (0, 0, -14)):
+        core = core & back.moved(Location(dv))
+    core = core & back.moved(Location((0, 0, -30)))     # and 30 behind its front face, deep in the insert's steps too
+    frame = core - core.moved(Location((0, 0, 35)))
+    cushion_frame = cushion & Box(1000, 2000, 4000, align=(Align.CENTER, Align.MAX, Align.CENTER)).moved(Location((xc, 672, 0)))
+    o = 1 if outboard > 0 else -1
+    shield = lambda sd: base & Box(400, 2000, 4000, align=(Align.MIN if sd > 0 else Align.MAX, Align.CENTER, Align.CENTER)).moved(Location((xc + sd * 150, 0, 0)))
+    return {'back_trim': [back - core, pocket], 'piping': piping, 'back_foam': [core - frame], 'back_frame': [frame],
+            'cushion_foam': [cushion - cushion_frame], 'cushion_frame': [cushion_frame],
+            'shield_out': [shield(o)], 'shield_in': [shield(-o)], 'buttons': knobs,
+            'riser': [base - shield(o) - shield(-o), stand]}
 
 def rear_bench(p):
     """Three places: two outboard and a narrower centre one whose lower back is the fold-down armrest
@@ -1215,7 +1237,7 @@ def rear_bench(p):
     t = 110.0
     side = [tuple(A), tuple(A + d * L), tuple(A + d * L + nrm * t), tuple(A + nrm * t + [0, -40]), tuple(A + [0, -40])]
     places = [(-445, 500), (0, 380), (445, 500)]          # centre and width of each place
-    out = {'seat': [], 'seat_base': [], 'armrest_r': []}
+    out = {'seat': [], 'seat_base': [], 'armrest_r': [], 'by_place': {}}
     for xc, w in places:
         hw, hh = w / 2 - 3, (130 if xc else 100)
         # Back up to the shoulders, then a separate headrest 25 mm above it with chamfered top corners
@@ -1227,11 +1249,19 @@ def rear_bench(p):
             [tuple(A + d * ((hR + 625 - A[1]) / d[1]) + [-200, 0]), tuple(A + d * L + [-200, 0]), tuple(A + d * L + nrm * 45), tuple(A + d * ((hR + 625 - A[1]) / d[1]) + nrm * 45)],
             xc - hw - 5, xc + hw + 5)                    # the headrest is thinner than the back: 65 mm
         hw_in = hw - 70
+        place = {}
         if xc:                                             # outboard places: bolsters either side of a recessed insert
             q0, q1 = A + d * 20, A + d * ((hR + 540 - A[1]) / d[1])
             ins = SH([tuple(q0 + nrm * 30), tuple(q1 + nrm * 30), tuple(q1 + [-200, 0]), tuple(q0 + [-200, 0])], xc - hw_in, xc + hw_in)
             back -= ins
-            back += pillow(tuple(q0 + nrm * 30), tuple(q1 + nrm * 30), tuple(-nrm), xc, hw_in, 14.0, ins)
+            insert = pillow(tuple(q0 + nrm * 30), tuple(q1 + nrm * 30), tuple(-nrm), xc, hw_in, 14.0, ins)
+            # The bolsters (Service Manual 1305): the back's strips either side of the insert, below the shoulders.
+            below = Box(2000, 2000, 4000, align=(Align.CENTER, Align.MAX, Align.CENTER)).moved(Location((0, hR + 540, 0)))
+            strip = lambda sd: back & below & Box(200, 2000, 4000, align=(Align.MIN if sd > 0 else Align.MAX, Align.CENTER, Align.CENTER)).moved(Location((xc + sd * hw_in, 0, 0)))
+            out_sd = 1 if xc > 0 else -1
+            place['bolster_out'], place['bolster_in'] = strip(out_sd), strip(-out_sd)
+            back = back - place['bolster_out'] - place['bolster_in']
+            place['insert'] = insert
         if xc == 0:                                        # the stowed armrest fills a slot in the centre back
             slot_lo, slot_hi = A[1] + 5, A[1] + 420
             pa, pb = A + d * ((slot_lo - A[1]) / d[1]), A + d * ((slot_hi - A[1]) / d[1])
@@ -1244,10 +1274,15 @@ def rear_bench(p):
             for xh in (-62, 62):
                 arm = arm - XS(ngon(xh, sR - 290, 44, 6, math.pi / 6), cush_top + 40, cush_top + 120)
             out['armrest_r'].append(arm)
+        if xc == 0:                                        # the centre headrest is its own (Headrest - Center - 2nd Row Seat)
+            place['headrest'] = back & Box(2000, 2000, 4000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, hR + 612, 0)))
+            back = back - place['headrest']
         out['seat'].append(back)
         cush = SH([(sR - 430, hR - 130), (sR - 430, hR - 28), (sR - 400, hR - 18), (sR + 90, hR - 45), (sR + 100, hR - 130)],
                   xc - hw, xc + hw)
         out['seat'].append(cush)
+        place['back'], place['cushion'] = back, cush
+        out['by_place']['l' if xc > 0 else 'r' if xc < 0 else 'c'] = place
     out['seat_base'].append(SH([(sR - 410, c['floor'] - 2), (sR - 410, hR - 128), (sR + 300, hR - 128), (sR + 300, c['floor'] - 2)], -700, 700))
     return out, hR
 
@@ -1696,14 +1731,14 @@ def interior(p):
     # ---- seats
     # Each seat its own part (Service Manual: Seat Assembly - 1st Row - LH, RH; Seat Assembly - 2nd Row): a name's
     # part after '__' says which, so the truck can be taken apart seat by seat.
+    # The front seats piece by piece as the manual takes them apart (front_seat), and the bench (rear_bench).
     for sx, side in ((1, 'l'), (-1, 'r')):
-        seat = front_seat(sx * c['seat_x'], sx)
-        out[f'seats_front__{side}'] = Compound(seat['seat'])
-        out[f'seat_base__{side}'] = Compound(seat['seat_base'])
-        out[f'seat_knobs__{side}'] = Compound(seat['switch'])
-        out[f'piping__{side}'] = Compound(seat['piping'])
+        for k, v in front_seat(sx * c['seat_x'], sx).items():
+            out[f'seat_{k}__{side}'] = Compound(v)
     rear, _ = rear_bench(p)
-    out['seats_rear'] = Compound(rear['seat'])
+    for pl_, place in rear['by_place'].items():
+        for k, v in place.items():
+            out[f'rear_{k}__{pl_}'] = v
     out['seat_base__rear'] = Compound(rear['seat_base'])
     out['rear_armrest'] = Compound(rear['armrest_r'])
     # ---- seat belts. Front: the D-ring on its height adjuster on the B-pillar (manual-seatbelts-0EF5959F), the
@@ -2694,7 +2729,7 @@ if __name__ == '__main__':
     for name, part in interior(p).items():
         if part is None or part.volume < 1:
             continue
-        fine = name.split('__')[0] in ('seats_front', 'seats_rear')       # their padded crowns are shallow curves: 4.6 degrees a facet
+        fine = name.split('__')[0] in ('seat_back_trim', 'seat_cushion_foam', 'rear_back', 'rear_cushion', 'rear_insert', 'rear_bolster_out', 'rear_bolster_in', 'rear_headrest')       # their padded crowns are shallow curves: 4.6 degrees a facet
         small = name.startswith(('yoke', 'pedal')) and name != 'yoke_column'     # held close: its curves and small round parts need fine facets
         save(part, f'int_{name}', tolerance=0.8 if small else 1.0 if fine else 2.5, angular=0.35 if small else 0.18 if fine else 0.7)     # flat facets; coarse tessellation keeps the few round parts cheap
     for name, part in details(p).items():

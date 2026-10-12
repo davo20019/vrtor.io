@@ -6436,35 +6436,11 @@
         "mirrored": false
       },
       {
-        "id": "seat_rear",
-        "name": "Seat Assembly - 2nd Row",
-        "manual": "Seat Assembly - 2nd Row",
-        "nodes": [
-          "int_seats_rear",
-          "int_seat_base__rear",
-          "int_rear_armrest"
-        ],
-        "dir": [
-          0,
-          1,
-          0
-        ],
-        "after": [],
-        "on": null,
-        "why": null,
-        "procedure": "Seat Assembly - 2nd Row",
-        "page": "GUID-38DF85AE-F0DA-4B85-820B-157A6B00986A.html",
-        "mirrored": false
-      },
-      {
         "id": "seat_front_l",
         "name": "Seat Assembly - 1st Row - LH",
         "manual": "Seat Assembly - 1st Row - LH",
         "nodes": [
-          "int_seats_front__l",
-          "int_seat_base__l",
-          "int_seat_knobs__l",
-          "int_piping__l"
+          "int_seat_riser__l"
         ],
         "dir": [
           0.3,
@@ -6479,14 +6455,166 @@
         "mirrored": false
       },
       {
+        "id": "shield_out_l",
+        "name": "Side Shield - Outboard - 1st Row Seat - LH",
+        "manual": "Side Shield - Outboard - 1st Row Seat - LH",
+        "nodes": [
+          "int_seat_shield_out__l",
+          "int_seat_buttons__l"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "seat_front_l",
+        "why": null,
+        "procedure": "Side Shield - Outboard - 1st Row Seat - LH",
+        "page": "GUID-86E65731-A917-4185-A690-7804FA16F6C0.html",
+        "mirrored": false
+      },
+      {
+        "id": "shield_in_l",
+        "name": "Side Shield - Inboard - 1st Row Seat - LH",
+        "manual": "Side Shield - Inboard - 1st Row Seat - LH",
+        "nodes": [
+          "int_seat_shield_in__l"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "seat_front_l"
+        ],
+        "on": "seat_front_l",
+        "why": null,
+        "procedure": "Side Shield - Inboard - 1st Row Seat - LH",
+        "page": "GUID-A9C54057-EE7D-4ACD-B490-0643234B3E5B.html",
+        "mirrored": false
+      },
+      {
+        "id": "seatback_l",
+        "name": "Seatback Assembly - 1st Row Seat - LH",
+        "manual": "Seatback Assembly - 1st Row Seat - LH",
+        "nodes": [
+          "int_seat_back_frame__l"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "seat_front_l",
+          "shield_out_l",
+          "shield_in_l"
+        ],
+        "on": "seat_front_l",
+        "why": null,
+        "procedure": "Seatback Assembly - 1st Row Seat - LH",
+        "page": "GUID-A655D575-1284-4EC0-AE8D-663A0C08B72B.html",
+        "mirrored": false
+      },
+      {
+        "id": "back_trim_l",
+        "name": "Trim - Seat Back - 1st Row - LH",
+        "manual": "Trim - Seat Back - 1st Row - LH",
+        "nodes": [
+          "int_seat_back_trim__l",
+          "int_seat_piping__l"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "seat_front_l",
+          "shield_out_l",
+          "shield_in_l"
+        ],
+        "on": "seatback_l",
+        "why": null,
+        "procedure": "Trim - Seat Back - 1st Row - LH",
+        "page": "GUID-561A17C7-F0FC-4E1E-8377-2F788091F1E1.html",
+        "mirrored": false
+      },
+      {
+        "id": "back_foam_l",
+        "name": "Foam - Seat Back - 1st Row Seat - LH (with Ventilation)",
+        "manual": "Foam - Seat Back - 1st Row Seat - LH (with Ventilation)",
+        "nodes": [
+          "int_seat_back_foam__l"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "back_trim_l"
+        ],
+        "on": "seatback_l",
+        "why": null,
+        "procedure": "Foam - Seat Back - 1st Row Seat - LH (with Ventilation)",
+        "page": "GUID-96AC6BA6-D6D5-416C-A86A-8DD4386DBB5B.html",
+        "mirrored": false
+      },
+      {
+        "id": "cushion_frame_l",
+        "name": "Frame - Seat Cushion - 1st Row Seat - LH",
+        "manual": "Frame - Seat Cushion - 1st Row Seat - LH",
+        "nodes": [
+          "int_seat_cushion_frame__l"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "seat_front_l",
+          "shield_out_l",
+          "cushion_foam_l"
+        ],
+        "on": "seat_front_l",
+        "why": "the cushion foam lies on it",
+        "procedure": "Frame - Seat Cushion - 1st Row Seat - LH",
+        "page": "GUID-09E495D5-DD80-471F-BBD2-0FAC44A6ABB8.html",
+        "mirrored": false
+      },
+      {
+        "id": "cushion_foam_l",
+        "name": "Foam - Seat Cushion - 1st Row Seat - LH (with Ventilation)",
+        "manual": "Foam - Seat Cushion - 1st Row Seat - LH (with Ventilation)",
+        "nodes": [
+          "int_seat_cushion_foam__l"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "seat_front_l",
+          "shield_out_l",
+          "shield_in_l"
+        ],
+        "on": "cushion_frame_l",
+        "why": null,
+        "procedure": "Foam - Seat Cushion - 1st Row Seat - LH (with Ventilation)",
+        "page": "GUID-35751D17-DEC8-4C64-9871-534031F8E46E.html",
+        "mirrored": false
+      },
+      {
         "id": "seat_front_r",
         "name": "Seat Assembly - 1st Row - RH",
         "manual": "Seat Assembly - 1st Row - RH",
         "nodes": [
-          "int_seats_front__r",
-          "int_seat_base__r",
-          "int_seat_knobs__r",
-          "int_piping__r"
+          "int_seat_riser__r"
         ],
         "dir": [
           -0.3,
@@ -6499,6 +6627,452 @@
         "procedure": "Seat Assembly - 1st Row - LH",
         "page": "GUID-3D275EB4-0894-41D7-A709-125A36EE8491.html",
         "mirrored": true
+      },
+      {
+        "id": "shield_out_r",
+        "name": "Side Shield - Outboard - 1st Row Seat - RH",
+        "manual": "Side Shield - Outboard - 1st Row Seat - RH",
+        "nodes": [
+          "int_seat_shield_out__r",
+          "int_seat_buttons__r"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "seat_front_r",
+        "why": null,
+        "procedure": "Side Shield - Outboard - 1st Row Seat - LH",
+        "page": "GUID-86E65731-A917-4185-A690-7804FA16F6C0.html",
+        "mirrored": true
+      },
+      {
+        "id": "shield_in_r",
+        "name": "Side Shield - Inboard - 1st Row Seat - RH",
+        "manual": "Side Shield - Inboard - 1st Row Seat - RH",
+        "nodes": [
+          "int_seat_shield_in__r"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "seat_front_r"
+        ],
+        "on": "seat_front_r",
+        "why": null,
+        "procedure": "Side Shield - Inboard - 1st Row Seat - LH",
+        "page": "GUID-A9C54057-EE7D-4ACD-B490-0643234B3E5B.html",
+        "mirrored": true
+      },
+      {
+        "id": "seatback_r",
+        "name": "Seatback Assembly - 1st Row Seat - RH",
+        "manual": "Seatback Assembly - 1st Row Seat - RH",
+        "nodes": [
+          "int_seat_back_frame__r"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "seat_front_r",
+          "shield_out_r",
+          "shield_in_r"
+        ],
+        "on": "seat_front_r",
+        "why": null,
+        "procedure": "Seatback Assembly - 1st Row Seat - LH",
+        "page": "GUID-A655D575-1284-4EC0-AE8D-663A0C08B72B.html",
+        "mirrored": true
+      },
+      {
+        "id": "back_trim_r",
+        "name": "Trim - Seat Back - 1st Row - RH",
+        "manual": "Trim - Seat Back - 1st Row - RH",
+        "nodes": [
+          "int_seat_back_trim__r",
+          "int_seat_piping__r"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "seat_front_r",
+          "shield_out_r",
+          "shield_in_r"
+        ],
+        "on": "seatback_r",
+        "why": null,
+        "procedure": "Trim - Seat Back - 1st Row - LH",
+        "page": "GUID-561A17C7-F0FC-4E1E-8377-2F788091F1E1.html",
+        "mirrored": true
+      },
+      {
+        "id": "back_foam_r",
+        "name": "Foam - Seat Back - 1st Row Seat - RH (with Ventilation)",
+        "manual": "Foam - Seat Back - 1st Row Seat - RH (with Ventilation)",
+        "nodes": [
+          "int_seat_back_foam__r"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "back_trim_r"
+        ],
+        "on": "seatback_r",
+        "why": null,
+        "procedure": "Foam - Seat Back - 1st Row Seat - LH (with Ventilation)",
+        "page": "GUID-96AC6BA6-D6D5-416C-A86A-8DD4386DBB5B.html",
+        "mirrored": true
+      },
+      {
+        "id": "cushion_frame_r",
+        "name": "Frame - Seat Cushion - 1st Row Seat - RH",
+        "manual": "Frame - Seat Cushion - 1st Row Seat - RH",
+        "nodes": [
+          "int_seat_cushion_frame__r"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "seat_front_r",
+          "shield_out_r",
+          "cushion_foam_r"
+        ],
+        "on": "seat_front_r",
+        "why": "the cushion foam lies on it",
+        "procedure": "Frame - Seat Cushion - 1st Row Seat - LH",
+        "page": "GUID-09E495D5-DD80-471F-BBD2-0FAC44A6ABB8.html",
+        "mirrored": true
+      },
+      {
+        "id": "cushion_foam_r",
+        "name": "Foam - Seat Cushion - 1st Row Seat - RH (with Ventilation)",
+        "manual": "Foam - Seat Cushion - 1st Row Seat - RH (with Ventilation)",
+        "nodes": [
+          "int_seat_cushion_foam__r"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "seat_front_r",
+          "shield_out_r",
+          "shield_in_r"
+        ],
+        "on": "cushion_frame_r",
+        "why": null,
+        "procedure": "Foam - Seat Cushion - 1st Row Seat - LH (with Ventilation)",
+        "page": "GUID-35751D17-DEC8-4C64-9871-534031F8E46E.html",
+        "mirrored": true
+      },
+      {
+        "id": "seat_rear",
+        "name": "Seat Assembly - 2nd Row",
+        "manual": "Seat Assembly - 2nd Row",
+        "nodes": [
+          "int_seat_base__rear"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Seat Assembly - 2nd Row",
+        "page": "GUID-38DF85AE-F0DA-4B85-820B-157A6B00986A.html",
+        "mirrored": false
+      },
+      {
+        "id": "back_rear_c",
+        "name": "Seat back - Centre - 2nd Row",
+        "manual": null,
+        "nodes": [
+          "int_rear_back__c"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": "seat_rear",
+        "why": "the manual names the left and right backs; the model has the centre place on its own"
+      },
+      {
+        "id": "headrest_rear_c",
+        "name": "Headrest - Center - 2nd Row Seat",
+        "manual": "Headrest - Center - 2nd Row Seat",
+        "nodes": [
+          "int_rear_headrest__c"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": "back_rear_c",
+        "why": null,
+        "procedure": "Headrest - Center - 2nd Row Seat",
+        "page": "GUID-4551D074-AEDC-4886-8E88-B46C7B895682.html",
+        "mirrored": false
+      },
+      {
+        "id": "armrest_rear",
+        "name": "Armrest - 2nd Row Seat",
+        "manual": "Armrest - 2nd Row Seat",
+        "nodes": [
+          "int_rear_armrest"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": "seat_rear",
+        "why": null,
+        "procedure": "Armrest - 2nd Row Seat",
+        "page": "GUID-FA13BFAE-E6F1-4B65-A54C-2D5BA5DAB685.html",
+        "mirrored": false
+      },
+      {
+        "id": "cushion_rear_c",
+        "name": "Cushion - Centre - 2nd Row",
+        "manual": null,
+        "nodes": [
+          "int_rear_cushion__c"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "armrest_rear"
+        ],
+        "on": "seat_rear",
+        "why": "the armrest folds down onto it; the manual names the left and right cushions"
+      },
+      {
+        "id": "back_rear_l",
+        "name": "Seat Back Assembly - 2nd Row Seat - LH",
+        "manual": "Seat Back Assembly - 2nd Row Seat - LH",
+        "nodes": [
+          "int_rear_back__l"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "bolster_out_rear_l",
+          "bolster_in_rear_l"
+        ],
+        "on": "seat_rear",
+        "why": null,
+        "procedure": "Seat Back Assembly - 2nd Row Seat - LH",
+        "page": "GUID-90842497-CB33-49EE-B143-B9631C873560.html",
+        "mirrored": false
+      },
+      {
+        "id": "bolster_out_rear_l",
+        "name": "Bolster - Outboard - LH - 2nd Row Seat Back",
+        "manual": "Bolster - Outboard - LH - 2nd Row Seat Back",
+        "nodes": [
+          "int_rear_bolster_out__l"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "seat_rear",
+        "why": null,
+        "procedure": "Bolster - Outboard - LH - 2nd Row Seat Back",
+        "page": "GUID-0D655776-28A4-4659-BDEC-FA337B6CA4DD.html",
+        "mirrored": false
+      },
+      {
+        "id": "bolster_in_rear_l",
+        "name": "Bolster - Inboard - LH - 2nd Row Seat Back",
+        "manual": "Bolster - Inboard - LH - 2nd Row Seat Back",
+        "nodes": [
+          "int_rear_bolster_in__l"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "seat_rear",
+        "why": null,
+        "procedure": "Bolster - Inboard - LH - 2nd Row Seat Back",
+        "page": "GUID-DF0CBD77-3FE3-4558-8119-E005D9849AFB.html",
+        "mirrored": false
+      },
+      {
+        "id": "insert_rear_l",
+        "name": "Trim - Back Rest Insert - 2nd Row Seat - LH",
+        "manual": "Trim - Back Rest Insert - 2nd Row Seat",
+        "nodes": [
+          "int_rear_insert__l"
+        ],
+        "dir": [
+          0,
+          0.3,
+          1
+        ],
+        "after": [
+          "back_rear_l"
+        ],
+        "on": "back_rear_l",
+        "why": null,
+        "procedure": "Trim - Back Rest Insert - 2nd Row Seat",
+        "page": "GUID-AEEE9DA9-51CD-47CB-B7E8-C3B8E7E38D8F.html",
+        "mirrored": false
+      },
+      {
+        "id": "cushion_rear_l",
+        "name": "Cushion Assembly - 2nd Row Seat - LH",
+        "manual": "Cushion Assembly - 2nd Row Seat - LH",
+        "nodes": [
+          "int_rear_cushion__l"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": "seat_rear",
+        "why": null,
+        "procedure": "Cushion Assembly - 2nd Row Seat - LH",
+        "page": "GUID-93B4F00C-3F30-4138-8353-539CE04BA493.html",
+        "mirrored": false
+      },
+      {
+        "id": "back_rear_r",
+        "name": "Seat Back Assembly - 2nd Row Seat - RH",
+        "manual": "Seat Back Assembly - 2nd Row Seat - RH",
+        "nodes": [
+          "int_rear_back__r"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "bolster_out_rear_r",
+          "bolster_in_rear_r"
+        ],
+        "on": "seat_rear",
+        "why": null,
+        "procedure": "Seat Back Assembly - 2nd Row Seat - RH",
+        "page": "GUID-B4A36630-C143-41CC-A794-55EEE98FAEE8.html",
+        "mirrored": false
+      },
+      {
+        "id": "bolster_out_rear_r",
+        "name": "Bolster - Outboard - RH - 2nd Row Seat Back",
+        "manual": "Bolster - Outboard - RH - 2nd Row Seat Back",
+        "nodes": [
+          "int_rear_bolster_out__r"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "seat_rear",
+        "why": null,
+        "procedure": "Bolster - Outboard - LH - 2nd Row Seat Back",
+        "page": "GUID-0D655776-28A4-4659-BDEC-FA337B6CA4DD.html",
+        "mirrored": true
+      },
+      {
+        "id": "bolster_in_rear_r",
+        "name": "Bolster - Inboard - RH - 2nd Row Seat Back",
+        "manual": "Bolster - Inboard - RH - 2nd Row Seat Back",
+        "nodes": [
+          "int_rear_bolster_in__r"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "seat_rear",
+        "why": null,
+        "procedure": "Bolster - Inboard - LH - 2nd Row Seat Back",
+        "page": "GUID-DF0CBD77-3FE3-4558-8119-E005D9849AFB.html",
+        "mirrored": true
+      },
+      {
+        "id": "insert_rear_r",
+        "name": "Trim - Back Rest Insert - 2nd Row Seat - RH",
+        "manual": "Trim - Back Rest Insert - 2nd Row Seat",
+        "nodes": [
+          "int_rear_insert__r"
+        ],
+        "dir": [
+          0,
+          0.3,
+          1
+        ],
+        "after": [
+          "back_rear_r"
+        ],
+        "on": "back_rear_r",
+        "why": null,
+        "procedure": "Trim - Back Rest Insert - 2nd Row Seat",
+        "page": "GUID-AEEE9DA9-51CD-47CB-B7E8-C3B8E7E38D8F.html",
+        "mirrored": false
+      },
+      {
+        "id": "cushion_rear_r",
+        "name": "Cushion Assembly - 2nd Row Seat - RH",
+        "manual": "Cushion Assembly - 2nd Row Seat - RH",
+        "nodes": [
+          "int_rear_cushion__r"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": "seat_rear",
+        "why": null,
+        "procedure": "Cushion Assembly - 2nd Row Seat - RH",
+        "page": "GUID-8CB24F2D-0EBA-44A3-A027-6487A01D662D.html",
+        "mirrored": false
       },
       {
         "id": "airbag_driver",

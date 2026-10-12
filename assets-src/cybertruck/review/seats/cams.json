@@ -1,0 +1,104 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "sunEnergy": 0,
+ "exposure": 1.6,
+ "cameras": {
+  "0-assembled": {
+   "eye": [
+    1900,
+    1350,
+    600
+   ],
+   "look": [
+    390,
+    950,
+    260
+   ],
+   "fovDeg": 50,
+   "size": [
+    1000,
+    750
+   ],
+   "hide": [
+    "door_fl",
+    "door_rl"
+   ]
+  },
+  "1-back-trim-off": {
+   "eye": [
+    1900,
+    1350,
+    600
+   ],
+   "look": [
+    390,
+    950,
+    260
+   ],
+   "fovDeg": 50,
+   "size": [
+    1000,
+    750
+   ],
+   "hide": [
+    "door_fl",
+    "door_rl",
+    "int_seat_back_trim__l",
+    "int_seat_piping__l"
+   ]
+  },
+  "2-back-foam-off": {
+   "eye": [
+    1900,
+    1350,
+    600
+   ],
+   "look": [
+    390,
+    950,
+    260
+   ],
+   "fovDeg": 50,
+   "size": [
+    1000,
+    750
+   ],
+   "hide": [
+    "door_fl",
+    "door_rl",
+    "int_seat_back_trim__l",
+    "int_seat_piping__l",
+    "int_seat_back_foam__l"
+   ]
+  },
+  "3-cushion-foam-shields-off": {
+   "eye": [
+    1900,
+    1350,
+    600
+   ],
+   "look": [
+    390,
+    950,
+    260
+   ],
+   "fovDeg": 50,
+   "size": [
+    1000,
+    750
+   ],
+   "hide": [
+    "door_fl",
+    "door_rl",
+    "int_seat_back_trim__l",
+    "int_seat_piping__l",
+    "int_seat_back_foam__l",
+    "int_seat_cushion_foam__l",
+    "int_seat_shield_out__l",
+    "int_seat_buttons__l",
+    "int_seat_shield_in__l"
+   ]
+  }
+ }
+}

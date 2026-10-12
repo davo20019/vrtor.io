@@ -130,6 +130,7 @@ M = {
     'lamp_lower': material('lamp_lower_smoked', srgb(22, 22, 24), 0.12),
     'marker_red': material('marker_red', srgb(150, 15, 12), 0.2, emit=(1.0, 0.05, 0.03), emit_strength=0.4),
     'clad': material('cladding_black', srgb(32, 32, 34), 0.72),
+    'foam': material('seat_foam', srgb(214, 200, 150), 0.95),          # the seats' foam under their covers (yellowish PU)
     'tonneau': material('tonneau_black', srgb(26, 26, 28), 0.5, normal_map=PARTS / 'tonneau_normal.png', normal_strength=0.6),
     'slat': material('tonneau_slat', srgb(26, 26, 28), 0.5),
     'bed': material('bed_liner', srgb(34, 34, 36), 0.8),
@@ -314,7 +315,13 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'yoke_pods': 'yoke_pod', 'yoke_trim': 'silver', 'yoke_keys': 'switch_key',
             'yoke_btn_signal_right': 'yoke_pod', 'yoke_btn_signal_left': 'yoke_pod', 'yoke_btn_high_beam': 'yoke_pod', 'yoke_btn_wiper': 'yoke_pod',
             'console': 'console', 'console_rim': 'console_rim', 'console_lid': 'console_lid', 'charger_trim': 'dash_top', 'chargers': 'dash_top', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
-            'seats_front': 'seat', 'seats_rear': 'seat', 'seat_base': 'armrest', 'seat_knobs': 'switch', 'rear_armrest': 'seat',
+            'seat_base': 'armrest', 'rear_armrest': 'seat',
+            # the seats piece by piece (cad.py front_seat, rear_bench)
+            'seat_back_trim': 'seat', 'seat_piping': 'piping', 'seat_back_foam': 'foam', 'seat_back_frame': 'tiedown',
+            'seat_cushion_foam': 'seat', 'seat_cushion_frame': 'tiedown', 'seat_shield_out': 'armrest', 'seat_shield_in': 'armrest',
+            'seat_buttons': 'switch', 'seat_riser': 'armrest',
+            'rear_back': 'seat', 'rear_cushion': 'seat', 'rear_insert': 'seat', 'rear_bolster_out': 'seat', 'rear_bolster_in': 'seat',
+            'rear_headrest': 'seat',
             'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'a_pillar_inner': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
             'overhead': 'overhead', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'mat_edges': 'mat_edge', 'center_ribs': 'pedal', 'center_rib_base': 'pillar', 'pedals': 'pedal', 'pedal_grips': 'yoke', 'pedal_arms': 'tiedown',
             'piping': 'piping', 'belts': 'belt', 'belt_hw': 'bezel',
@@ -330,7 +337,7 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'presenter': 'switch', 'latch': 'switch', 'seal_secondary': 'clad', 'seal_waist_inner': 'clad', 'seal_waist_outer': 'clad',
             'seal_run': 'clad'}
 
-# A part split into individual ones ('seats_front__l', 'seats_front__r') takes its material by the name before '__'.
+# A part split into individual ones ('seat_riser__l', 'seat_riser__r') takes its material by the name before '__'.
 cabin_parts = [stl(f.stem, M[INTERIOR[f.stem[4:].split('__')[0]]], smooth_angle=25)
                for f in sorted(PARTS.glob('int_*.stl')) if f.stem[4:].split('__')[0] in INTERIOR]
 for o in cabin_parts:                    # the screens: the picture spans each screen's face
@@ -501,7 +508,7 @@ bpy.context.view_layer.update()
 # from an even sky (direct and bounced) is baked into one texture, exported as the glTF occlusion map on a
 # second UV set: the app multiplies its lights by it, so corners, footwells and the underside of the roof
 # go dark and the faces open to the windows stay bright, as in the real cabin.
-ROUND = {'seats_front': 24, 'seats_rear': 24, 'rear_armrest': 14, 'dash_white': 12, 'console': 10, 'console_rim': 3, 'console_lid': 16, 'seat_base': 8,
+ROUND = {'seat_cushion_foam': 24, 'rear_back': 24, 'rear_cushion': 24, 'rear_headrest': 14, 'rear_bolster_out': 10, 'rear_bolster_in': 10, 'seat_back_foam': 10, 'rear_armrest': 14, 'dash_white': 12, 'console': 10, 'console_rim': 3, 'console_lid': 16, 'seat_base': 8,
          'dash_top': 6, 'dash_lower': 6, 'dash_face': 4, 'yoke': 9, 'yoke_column': 5, 'visors': 8, 'screen_bezel': 3, 'overhead': 6,
          'armrest': 14, 'door_lower': 6, 'trim_white': 14, 'cap': 6,
          # The removed trim in Tesla's windshield service photos has rolled edges. The sight-plane
@@ -512,7 +519,7 @@ NO_BAKE = ('screen', 'rear_screen', 'ambient', 'open', 'switch', 'mirror_glass',
            'yoke_btn_signal_right', 'yoke_btn_signal_left', 'yoke_btn_high_beam', 'yoke_btn_wiper')     # the yoke's keys: baked alone they came out darker than the pod round them
 
 def part_key(o):
-    """The part's kind, for its material, rounding and baking: a split part's name before '__' (seats_front__l)."""
+    """The part's kind, for its material, rounding and baking: a split part's name before '__' (seat_riser__l)."""
     n = o.name.split('__')[0]
     if n.startswith('open_'):
         return 'open'

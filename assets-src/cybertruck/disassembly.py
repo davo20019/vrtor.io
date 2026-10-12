@@ -140,11 +140,49 @@ def parts():
     # ---- cabin (1304, 1305, 1530, 2001, 3205, 2107, 1505, 1519)
     out += [
         part('floor_mats', 'Floor Mat Kit', ['int_mats', 'int_mat_edges'], (0, 1, 0)),
-        part('seat_rear', 'Seat Assembly - 2nd Row', ['int_seats_rear', 'int_seat_base__rear', 'int_rear_armrest'], (0, 1, 0)),
+    ]
+    # ---- the seats (1301, 1304, 1305, 1307, 1308; cad.py front_seat, rear_bench). Out of the truck a seat is taken
+    # apart on the bench: the side shields, then the back (frame, foam, trim) and the cushion (frame, foam).
+    for s, (side, sx) in SIDE.items():
+        st = f'seat_front_{s}'
+        out += [
+            part(st, f'Seat Assembly - 1st Row - {side}', [f'int_seat_riser__{s}'], (0.3 * sx, 1, 0)),
+            part(f'shield_out_{s}', f'Side Shield - Outboard - 1st Row Seat - {side}', [f'int_seat_shield_out__{s}', f'int_seat_buttons__{s}'],
+                 (sx, 0, 0), on=st),
+            part(f'shield_in_{s}', f'Side Shield - Inboard - 1st Row Seat - {side}', [f'int_seat_shield_in__{s}'], (-sx, 0, 0),
+                 after=[st], on=st),
+            part(f'seatback_{s}', f'Seatback Assembly - 1st Row Seat - {side}', [f'int_seat_back_frame__{s}'], (0, 1, 0),
+                 after=[st, f'shield_out_{s}', f'shield_in_{s}'], on=st),
+            part(f'back_trim_{s}', f'Trim - Seat Back - 1st Row - {side}', [f'int_seat_back_trim__{s}', f'int_seat_piping__{s}'], (0, 1, 0),
+                 after=[st, f'shield_out_{s}', f'shield_in_{s}'], on=f'seatback_{s}'),
+            part(f'back_foam_{s}', f'Foam - Seat Back - 1st Row Seat - {side} (with Ventilation)', [f'int_seat_back_foam__{s}'], (0, 1, 0),
+                 after=[f'back_trim_{s}'], on=f'seatback_{s}'),
+            part(f'cushion_frame_{s}', f'Frame - Seat Cushion - 1st Row Seat - {side}', [f'int_seat_cushion_frame__{s}'], (0, 1, 0),
+                 after=[st, f'shield_out_{s}', f'cushion_foam_{s}'], on=st, why='the cushion foam lies on it'),
+            part(f'cushion_foam_{s}', f'Foam - Seat Cushion - 1st Row Seat - {side} (with Ventilation)', [f'int_seat_cushion_foam__{s}'],
+                 (0, 1, 0), after=[st, f'shield_out_{s}', f'shield_in_{s}'], on=f'cushion_frame_{s}'),
+        ]
+    out += [
+        part('seat_rear', 'Seat Assembly - 2nd Row', ['int_seat_base__rear'], (0, 1, 0)),
+        part('back_rear_c', None, ['int_rear_back__c'], (0, 1, 0), on='seat_rear', name='Seat back - Centre - 2nd Row',
+             why='the manual names the left and right backs; the model has the centre place on its own'),
+        part('headrest_rear_c', 'Headrest - Center - 2nd Row Seat', ['int_rear_headrest__c'], (0, 1, 0), on='back_rear_c'),
+        part('armrest_rear', 'Armrest - 2nd Row Seat', ['int_rear_armrest'], (0, 1, 0), on='seat_rear'),
+        part('cushion_rear_c', None, ['int_rear_cushion__c'], (0, 1, 0), on='seat_rear', after=['armrest_rear'],
+             name='Cushion - Centre - 2nd Row', why='the armrest folds down onto it; the manual names the left and right cushions'),
     ]
     for s, (side, sx) in SIDE.items():
-        out.append(part(f'seat_front_{s}', f'Seat Assembly - 1st Row - {side}',
-                        [f'int_seats_front__{s}', f'int_seat_base__{s}', f'int_seat_knobs__{s}', f'int_piping__{s}'], (0.3 * sx, 1, 0)))
+        out += [
+            part(f'back_rear_{s}', f'Seat Back Assembly - 2nd Row Seat - {side}', [f'int_rear_back__{s}'], (0, 1, 0),
+                 after=[f'bolster_out_rear_{s}', f'bolster_in_rear_{s}'], on='seat_rear'),
+            part(f'bolster_out_rear_{s}', f'Bolster - Outboard - {side} - 2nd Row Seat Back', [f'int_rear_bolster_out__{s}'], (sx, 0, 0),
+                 on='seat_rear'),
+            part(f'bolster_in_rear_{s}', f'Bolster - Inboard - {side} - 2nd Row Seat Back', [f'int_rear_bolster_in__{s}'], (-sx, 0, 0),
+                 on='seat_rear'),
+            part(f'insert_rear_{s}', 'Trim - Back Rest Insert - 2nd Row Seat', [f'int_rear_insert__{s}'], (0, 0.3, 1),
+                 after=[f'back_rear_{s}'], on=f'back_rear_{s}', name=f'Trim - Back Rest Insert - 2nd Row Seat - {side}'),
+            part(f'cushion_rear_{s}', f'Cushion Assembly - 2nd Row Seat - {side}', [f'int_rear_cushion__{s}'], (0, 1, 0), on='seat_rear'),
+        ]
     yoke = ['int_yoke', 'int_yoke_face', 'int_yoke_chin', 'int_yoke_pods', 'int_yoke_trim', 'int_yoke_keys',
             'int_yoke_btn_high_beam', 'int_yoke_btn_signal_left', 'int_yoke_btn_signal_right', 'int_yoke_btn_wiper']
     out += [
