@@ -19,8 +19,9 @@ const HALL_TONE = '#e1e0dc';
 const CANOPY = { w: 6.4, d: 9.6 };
 const HALL = { x0: -10, x1: 16, z0: -11, z1: 11, h: 6 };
 /** The parts space, beside the truck on its right (+x): room for a truck's worth of parts laid out (disassembly.js:
- *  68 parts take about 31 m² with room round each). Its near edge 3.5 m from the turntable's, a full walkway. */
-const PARTS = { x: 10.3, z: 0, w: 6.0, d: 9.6, h: 0.1 };
+ *  192 parts, the carpets and roof rails among them). Its near edge 3.5 m from the turntable's, a full walkway, and
+ *  1.5 m from the hall's side wall. */
+const PARTS = { x: 10.9, z: 0, w: 7.2, d: 12.4, h: 0.1 };
 /** The doorway to the self-driving ride, in the wall ahead of the truck, so the driver's seat faces it. */
 const DOOR = { w: 5.2, h: 3.2 };
 

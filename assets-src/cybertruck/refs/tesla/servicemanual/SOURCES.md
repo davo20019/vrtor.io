@@ -20,3 +20,4 @@ What they establish: each door hangs on two pin hinges (upper, lower), each a bo
 inside the door's front gap behind the fender; the door is set by gap and flush, not by a published axis. The
 glass is set by its bracket bolts and a pitch jackscrew; no drop distance is given.
 | img/door-fl/* | the photos the front door's insides are built from: the inner panel drawing (Panel - Door Trim, image 10), the closeout panel taken off (Closeout Panel, image 5) and on the door (image 1), the felt pad (NVH Foam, images 1, 2), the door with the glass out (Moving Glass, image 5). Every other photo of every procedure is listed in procedures/*.json (images) | Service Manual |
+| img/seat-assembly-2nd-row__13_* | the bench with its shoulder covers off, from the front (Seat Assembly - 2nd Row, image 13): the outboard heads, the centre armrest and headrest, the cushions; review/match/r2/bench_pair.png sets the model beside it | Service Manual |

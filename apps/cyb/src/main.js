@@ -227,7 +227,7 @@ const doors = {};
 const doorTargets = new Map();
 
 /** The model's version: both its files are cached for an hour at a stable path, so the app asks for this one. */
-const MODEL_V = '97d0be0385b5';
+const MODEL_V = '8ba259a57a10';
 
 async function loadTruck() {
   const info = await (await fetch(`${BASE}models/cybertruck.json?v=${MODEL_V}`)).json();   // the json goes with its model: same version

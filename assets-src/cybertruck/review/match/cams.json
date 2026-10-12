@@ -1,0 +1,129 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "cameras": {
+  "console34": {
+   "eye": [
+    -500,
+    1350,
+    200
+   ],
+   "look": [
+    0,
+    850,
+    700
+   ],
+   "fovDeg": 60,
+   "size": [
+    1200,
+    900
+   ],
+   "hide": [
+    "int_seat_back",
+    "int_seat_shield",
+    "int_seat_piping",
+    "int_seat_buttons",
+    "door_fr",
+    "door_rr"
+   ]
+  },
+  "dash_end": {
+   "eye": [
+    300,
+    1250,
+    700
+   ],
+   "look": [
+    -900,
+    1150,
+    1300
+   ],
+   "fovDeg": 70,
+   "size": [
+    1200,
+    900
+   ],
+   "hide": [
+    "door_fr",
+    "int_seat_"
+   ]
+  },
+  "roof": {
+   "eye": [
+    0,
+    1250,
+    0
+   ],
+   "look": [
+    0,
+    1700,
+    700
+   ],
+   "fovDeg": 90,
+   "size": [
+    1200,
+    900
+   ]
+  },
+  "bench": {
+   "eye": [
+    0,
+    1250,
+    700
+   ],
+   "look": [
+    0,
+    850,
+    -600
+   ],
+   "fovDeg": 70,
+   "size": [
+    1200,
+    900
+   ],
+   "hide": [
+    "int_seat_back",
+    "int_seat_cushion",
+    "int_seat_shield",
+    "int_seat_piping",
+    "int_seat_buttons",
+    "int_seat_riser",
+    "int_console",
+    "int_rear_screen",
+    "int_rear_vents",
+    "int_cupholder"
+   ],
+   "photo": "../../refs/tesla/servicemanual/img/seat-assembly-2nd-row__13_GUID-8E208A7B-5AB2-4DA1-BEAF-04F718DEBFA7-online-en-US.jpg"
+  }
+ },
+ "lights": [
+  {
+   "at": [
+    0,
+    1650,
+    900
+   ],
+   "watts": 150,
+   "size": 800
+  },
+  {
+   "at": [
+    0,
+    1650,
+    -500
+   ],
+   "watts": 120,
+   "size": 800
+  },
+  {
+   "at": [
+    0,
+    900,
+    1300
+   ],
+   "watts": 40,
+   "size": 400
+  }
+ ],
+ "exposure": 0.8
+}

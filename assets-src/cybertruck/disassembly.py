@@ -114,7 +114,7 @@ def parts():
     ]
     for s, (side, sx) in SIDE.items():
         out.append(part(f'quarter_panel_{s}', f'Quarter Panel Assembly - {side} - Instrument Panel',
-                        [f'int_quarter_white__{s}', f'int_quarter_lower__{s}'], (0, 0, -1)))
+                        [f'int_quarter_panel__{s}'], (0, 1, 0)))
         out.append(part(f'quarter_glass_{s}', f'Quarter Glass - Front - {side}', [f'quarter_glass__{s}'], (sx, 0.3, 0)))
     # ---- exterior (1001, 1220, 1740, 1120, 1215)
     out += [
@@ -126,8 +126,10 @@ def parts():
     ]
     for s, (side, sx) in SIDE.items():
         out += [
-            part(f'flare_front_{s}', None, [f'cladding__flare_f_{s}'], (sx, 0, 0), name=f'Fender flare - Front - {side}',
-                 why='the manual lists the front flare only with the fender (Fender Assembly - Front) and its carriers'),
+            part(f'flare_front_{s}', None, [f'cladding__flare_f_{s}'], (sx, 0, 0), name=f'Fender Flare Cover - Front - {side}',
+                 why='the manual names it in its carriers\' procedures ("release the clips (x11) and datums (x3) that attach '
+                     'the LH front fender flare cover", Carrier - Fender Flare - Fore - Front - LH, step 3; photo 48E64111 '
+                     'shows it off, in one piece) but has no procedure of its own'),
             part(f'flare_rear_{s}', f'Fender Flare - Fore - Rear - {side}', [f'cladding__flare_r_{s}'], (sx, 0, 0),
                  name=f'Fender flare - Rear - {side}', why='the manual has it in two pieces (Fore, Aft); the model in one'),
             part(f'rocker_{s}', f'Rocker Panel Assembly - {side}', [f'cladding__rocker_{s}'], (sx, -0.3, 0)),
@@ -142,6 +144,33 @@ def parts():
     # ---- cabin (1304, 1305, 1530, 2001, 3205, 2107, 1505, 1519)
     out += [
         part('floor_mats', 'Floor Mat Kit', ['int_mats', 'int_mat_edges'], (0, 1, 0)),
+        # the trims (1505, 1518, 1520, 1530; cad.py interior, end): roof header, overhead console, then each side's
+        # A-pillar, cantrail, visor and B-pillar; the floor's centre trim and the carpets last.
+        part('header_front', 'Trim - Header - Front', ['int_headliner__front'], (0, -1, 0)),
+        part('overhead_console', 'Overhead Console Assembly - Front',
+             ['int_overhead', 'int_overhead_arms', 'int_overhead_keys', 'int_overhead_strip'], (0, -1, 0), after=['header_front']),
+        part('center_floor', 'Trim - Center Floor - Lower', ['int_center_ribs', 'int_center_rib_base'], (0, 1, 0)),
+    ]
+    for s, (side, sx) in SIDE.items():
+        out += [
+            part(f'a_pillar_{s}', f'Trim - A-Pillar - Upper - {side}', [f'int_a_pillar_inner__{s}', f'int_tweeters__{s}'], (-sx, 0, -0.3),
+                 after=['header_front'], name=f'A-pillar trim - {side}',
+                 why='the model has the A-pillar\'s forward, mid and upper trims as one piece; the seams between them are not measured'),
+            part(f'cantrail_{s}', f'Trim - Cantrail - {side}', [f'int_headliner__cantrail_{s}'], (-sx, -1, 0),
+                 after=['header_front', f'a_pillar_{s}', f'quarter_panel_{s}']),
+            part(f'visor_{s}', f'Sun Visor - {side}', [f'int_visors__{s}'], (0, -1, 0),
+                 after=['header_front', f'a_pillar_{s}', f'quarter_panel_{s}']),
+            part(f'b_pillar_{s}', f'Trim - B-Pillar - Lower - {side}', [f'int_pillar_trim__{s}'], (-sx, 0, 0),
+                 after=[f'a_pillar_{s}', f'cantrail_{s}'], name=f'B-pillar trim - {side}',
+                 why='the model has the B-pillar\'s upper and lower trims as one; the seam between them is not measured'),
+        ]
+    out += [
+        part('carpet_driver', 'Carpet Assembly - Driver', ['int_carpet__driver'], (0, 1, 0),
+             after=['a_pillar_l', 'footwell_cover', 'center_floor', 'floor_mats']),
+        part('carpet_passenger', 'Carpet Assembly - Front Passenger', ['int_carpet__passenger'], (0, 1, 0),
+             after=['b_pillar_r', 'footwell_cover', 'center_floor', 'floor_mats']),
+        part('carpet_rear', 'Carpet Assembly - Rear', ['int_carpet__rear'], (0, 1, 0),
+             after=['a_pillar_l', 'a_pillar_r', 'b_pillar_l', 'b_pillar_r', 'floor_mats']),
     ]
     # ---- the seats (1301, 1304, 1305, 1307, 1308; cad.py front_seat, rear_bench). Out of the truck a seat is taken
     # apart on the bench: the side shields, then the back (frame, foam, trim) and the cushion (frame, foam).
@@ -166,12 +195,13 @@ def parts():
         ]
     out += [
         part('seat_rear', 'Seat Assembly - 2nd Row', ['int_seat_base__rear'], (0, 1, 0)),
-        part('back_rear_c', None, ['int_rear_back__c'], (0, 1, 0), on='seat_rear', name='Seat back - Centre - 2nd Row',
-             why='the manual names the left and right backs; the model has the centre place on its own'),
-        part('headrest_rear_c', 'Headrest - Center - 2nd Row Seat', ['int_rear_headrest__c'], (0, 1, 0), on='back_rear_c'),
-        part('armrest_rear', 'Armrest - 2nd Row Seat', ['int_rear_armrest'], (0, 1, 0), on='seat_rear'),
-        part('cushion_rear_c', None, ['int_rear_cushion__c'], (0, 1, 0), on='seat_rear', after=['armrest_rear'],
-             name='Cushion - Centre - 2nd Row', why='the armrest folds down onto it; the manual names the left and right cushions'),
+        # The centre place's back is the armrest (the centre headrest sits on its posts), standing in a tray the
+        # manual lifts out once both seat backs are off; the LH cushion assembly holds the left and centre places.
+        part('headrest_rear_c', 'Headrest - Center - 2nd Row Seat', ['int_rear_headrest__c'], (0, 1, 0), on='armrest_rear'),
+        part('armrest_closeout_rear', 'Closeout - Armrest - 2nd Row Seat', ['int_rear_armrest_closeout'], (0, 1, 0),
+             after=['back_rear_l', 'back_rear_r'], on='seat_rear'),
+        part('armrest_rear', 'Armrest - 2nd Row Seat', ['int_rear_armrest'], (0, 0.3, 1), after=['armrest_closeout_rear'],
+             on='seat_rear'),
     ]
     for s, (side, sx) in SIDE.items():
         out += [
@@ -196,7 +226,7 @@ def parts():
         part('service_panel', 'Service Panel - Center Shroud - Instrument Panel', ['int_service_panel'], (0, 0, -1)),
         part('display_shroud', 'Display Shroud - Instrument Panel', ['int_screen_stand'], (0, 0, -1), after=['touchscreen'],
              why='the screen is mounted on it'),
-        part('mid_panel', 'Mid Panel Assembly - Instrument Panel', ['int_dash_white', 'int_ambient'], (0, 0, -1)),
+        part('mid_panel', 'Mid Panel Assembly - Instrument Panel', ['int_dash_white'], (0, 0, -1)),
         part('gap_hider', 'Gap Hider - Instrument Panel', ['int_gap_hider'], (0, 0, -1), after=['mid_panel', 'lower_panel']),
         part('lower_panel', 'Lower Assembly - Instrument Panel', ['int_dash_lower'], (0, -0.3, -1), after=['mid_panel']),
         part('glovebox', 'Glovebox Assembly', ['int_glovebox'], (0, 0, -1), after=['lower_panel']),
@@ -205,12 +235,32 @@ def parts():
         part('airbag_knee_r', 'Airbag - Knee - Front Passenger', ['int_airbag_knee__r'], (0, 0, -1), after=['lower_panel']),
         part('airbag_passenger', 'Airbag - Front Passenger', ['int_airbag_passenger'], (0, -1, 0), after=['lower_panel', 'glovebox'],
              why='under the top pad, it is reached from below once the lower panel and glovebox are out'),
-        part('top_pad', 'Top Pad Assembly - Instrument Panel', ['int_dash_top', 'int_dash_face', 'int_dash_vent'], (0, 1, -0.5),
+        # The ambient strip stays lit on the dash with the mid panel off (Mid Panel Assembly, photos EB6822C8,
+        # 6C7DB9BE): it is the top pad's.
+        part('top_pad', 'Top Pad Assembly - Instrument Panel', ['int_dash_top', 'int_dash_face', 'int_dash_vent', 'int_ambient'], (0, 1, -0.5),
              after=['airbag_passenger']),
-        part('rear_display', 'Touchscreen - Rear Display', ['int_rear_screen'], (0, 0, -1), on='center_console'),
+        # The centre console as the manual takes it apart (1519): the caps and panels come off in the truck, the
+        # carrier comes out once its front panel is off, and on the bench the external panels and cupholder.
+        part('console_cap', 'Cap - Armrest - Center Console', ['int_console_cap'], (0, 1, 0), on='center_console'),
+        part('console_decor', 'Decor - Top - Center Console', ['int_console_rim'], (0, 1, 0), on='center_console'),
+        part('airwave_cap', 'Cap - Airwave - Center Console', ['int_rear_vents'], (0, 0, -1),
+             after=['console_cap', 'console_decor'], on='center_console'),
+        part('rear_display', 'Touchscreen - Rear Display', ['int_rear_screen'], (0, 0, -1),
+             after=['console_cap', 'console_decor', 'airwave_cap'], on='center_console'),
+        part('console_lid', 'Armrest Assembly - Center Console', ['int_console_lid'], (0, 1, 0), after=['rear_display'],
+             on='center_console'),
+        part('console_front', 'Panel - Front - Center Console', ['int_console_front'], (0, 0, 1), on='center_console'),
+        part('console_rear', 'Panel - Rear - Center Console', ['int_console_rear', 'int_usb'], (0, 0, -1), on='center_console'),
+        part('wireless_charger', 'Wireless Charger - Center Console', ['int_chargers'], (0, 1, 0), after=['console_front'],
+             on='center_console'),
+        part('console_panel_l', 'External Panel - LH - Center Console', ['int_console_panel__l'], (1, 0, 0),
+             after=['center_console'], on='center_console'),
+        part('console_panel_r', 'External Panel - RH - Center Console', ['int_console_panel__r'], (-1, 0, 0),
+             after=['center_console'], on='center_console'),
+        part('cupholder', 'Cupholder - Center Console', ['int_cupholder'], (0, 1, 0),
+             after=['center_console', 'console_panel_l', 'console_panel_r', 'console_decor', 'wireless_charger'], on='center_console'),
         part('rearview_mirror', 'Rearview Mirror', ['int_rear_mirror', 'int_mirror_glass'], (0, -1, 0)),
-        part('center_console', 'Center Console Assembly',
-             ['int_console', 'int_console_lid', 'int_console_rim', 'int_chargers', 'int_charger_trim', 'int_usb'], (0, 1, 0)),
+        part('center_console', 'Center Console Assembly', ['int_console', 'int_charger_trim'], (0, 1, 0), after=['console_front']),
     ]
     return out
 

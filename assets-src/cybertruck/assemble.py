@@ -314,8 +314,8 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'yoke': 'yoke', 'yoke_pad': 'yoke', 'yoke_column': 'yoke', 'yoke_chin': 'silver', 'yoke_face': 'yoke_face',
             'yoke_pods': 'yoke_pod', 'yoke_trim': 'silver', 'yoke_keys': 'switch_key',
             'yoke_btn_signal_right': 'yoke_pod', 'yoke_btn_signal_left': 'yoke_pod', 'yoke_btn_high_beam': 'yoke_pod', 'yoke_btn_wiper': 'yoke_pod',
-            'console': 'console', 'console_rim': 'console_rim', 'console_lid': 'console_lid', 'charger_trim': 'dash_top', 'chargers': 'dash_top', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
-            'seat_base': 'armrest', 'rear_armrest': 'seat',
+            'console': 'console', 'console_rim': 'console_rim', 'console_lid': 'console_lid', 'console_panel': 'console', 'console_front': 'console', 'console_rear': 'console', 'console_cap': 'console_lid', 'cupholder': 'console', 'charger_trim': 'dash_top', 'chargers': 'dash_top', 'rear_vents': 'silver', 'rear_screen': 'screen_on',
+            'seat_base': 'armrest', 'rear_armrest': 'seat', 'rear_armrest_closeout': 'armrest',
             # the seats piece by piece (cad.py front_seat, rear_bench)
             'seat_back_trim': 'seat', 'seat_piping': 'piping', 'seat_back_foam': 'foam', 'seat_back_frame': 'tiedown',
             'seat_cushion_foam': 'seat', 'seat_cushion_frame': 'tiedown', 'seat_shield_out': 'armrest', 'seat_shield_in': 'armrest',
@@ -323,7 +323,7 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'rear_back': 'seat', 'rear_cushion': 'seat', 'rear_insert': 'seat', 'rear_bolster_out': 'seat', 'rear_bolster_in': 'seat',
             'rear_headrest': 'seat',
             # the dash as the manual takes it apart (cad.py interior)
-            'quarter_white': 'trim_white', 'quarter_lower': 'armrest', 'glovebox': 'armrest', 'airbag_knee': 'bezel',
+            'quarter_white': 'trim_white', 'quarter_lower': 'armrest', 'quarter_panel': 'dash_shelf', 'glovebox': 'armrest', 'airbag_knee': 'bezel',
             'airbag_passenger': 'bezel', 'footwell_cover': 'armrest', 'gap_hider': 'armrest', 'service_panel': 'bezel',
             'headliner': 'dash_top', 'pillar_trim': 'dash_top', 'a_pillar_inner': 'dash_top', 'rear_wall': 'dash_top', 'visors': 'dash_top',
             'overhead': 'overhead', 'rear_mirror': 'yoke', 'carpet': 'carpet', 'mats': 'mat', 'mat_edges': 'mat_edge', 'center_ribs': 'pedal', 'center_rib_base': 'pillar', 'pedals': 'pedal', 'pedal_grips': 'yoke', 'pedal_arms': 'tiedown',
@@ -511,7 +511,7 @@ bpy.context.view_layer.update()
 # from an even sky (direct and bounced) is baked into one texture, exported as the glTF occlusion map on a
 # second UV set: the app multiplies its lights by it, so corners, footwells and the underside of the roof
 # go dark and the faces open to the windows stay bright, as in the real cabin.
-ROUND = {'quarter_white': 12, 'quarter_lower': 6, 'glovebox': 4, 'seat_cushion_foam': 24, 'rear_back': 24, 'rear_cushion': 24, 'rear_headrest': 14, 'rear_bolster_out': 10, 'rear_bolster_in': 10, 'seat_back_foam': 10, 'rear_armrest': 14, 'dash_white': 12, 'console': 10, 'console_rim': 3, 'console_lid': 16, 'seat_base': 8,
+ROUND = {'quarter_panel': 6, 'quarter_white': 12, 'quarter_lower': 6, 'glovebox': 4, 'seat_cushion_foam': 24, 'rear_back': 24, 'rear_cushion': 24, 'rear_headrest': 14, 'rear_bolster_out': 10, 'rear_bolster_in': 10, 'seat_back_foam': 10, 'rear_armrest': 14, 'dash_white': 12, 'console': 10, 'console_rim': 3, 'console_lid': 16, 'seat_base': 8,
          'dash_top': 6, 'dash_lower': 6, 'dash_face': 4, 'yoke': 9, 'yoke_column': 5, 'visors': 8, 'screen_bezel': 3, 'overhead': 6,
          'armrest': 14, 'door_lower': 6, 'trim_white': 14, 'cap': 6,
          # The removed trim in Tesla's windshield service photos has rolled edges. The sight-plane

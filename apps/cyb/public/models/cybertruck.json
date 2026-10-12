@@ -6092,13 +6092,12 @@
         "name": "Quarter Panel Assembly - LH - Instrument Panel",
         "manual": "Quarter Panel Assembly - LH - Instrument Panel",
         "nodes": [
-          "int_quarter_white__l",
-          "int_quarter_lower__l"
+          "int_quarter_panel__l"
         ],
         "dir": [
           0,
-          0,
-          -1
+          1,
+          0
         ],
         "after": [],
         "on": null,
@@ -6131,13 +6130,12 @@
         "name": "Quarter Panel Assembly - RH - Instrument Panel",
         "manual": "Quarter Panel Assembly - RH - Instrument Panel",
         "nodes": [
-          "int_quarter_white__r",
-          "int_quarter_lower__r"
+          "int_quarter_panel__r"
         ],
         "dir": [
           0,
-          0,
-          -1
+          1,
+          0
         ],
         "after": [],
         "on": null,
@@ -6251,7 +6249,7 @@
       },
       {
         "id": "flare_front_l",
-        "name": "Fender flare - Front - LH",
+        "name": "Fender Flare Cover - Front - LH",
         "manual": null,
         "nodes": [
           "cladding__flare_f_l"
@@ -6263,7 +6261,7 @@
         ],
         "after": [],
         "on": null,
-        "why": "the manual lists the front flare only with the fender (Fender Assembly - Front) and its carriers"
+        "why": "the manual names it in its carriers' procedures (\"release the clips (x11) and datums (x3) that attach the LH front fender flare cover\", Carrier - Fender Flare - Fore - Front - LH, step 3; photo 48E64111 shows it off, in one piece) but has no procedure of its own"
       },
       {
         "id": "flare_rear_l",
@@ -6305,7 +6303,7 @@
       },
       {
         "id": "flare_front_r",
-        "name": "Fender flare - Front - RH",
+        "name": "Fender Flare Cover - Front - RH",
         "manual": null,
         "nodes": [
           "cladding__flare_f_r"
@@ -6317,7 +6315,7 @@
         ],
         "after": [],
         "on": null,
-        "why": "the manual lists the front flare only with the fender (Fender Assembly - Front) and its carriers"
+        "why": "the manual names it in its carriers' procedures (\"release the clips (x11) and datums (x3) that attach the LH front fender flare cover\", Carrier - Fender Flare - Fore - Front - LH, step 3; photo 48E64111 shows it off, in one piece) but has no procedure of its own"
       },
       {
         "id": "flare_rear_r",
@@ -6473,6 +6471,322 @@
         "why": null,
         "procedure": "Floor Mat Kit",
         "page": "GUID-B11A3A46-F7F8-461D-9A5A-09A4412279E1.html",
+        "mirrored": false
+      },
+      {
+        "id": "header_front",
+        "name": "Trim - Header - Front",
+        "manual": "Trim - Header - Front",
+        "nodes": [
+          "int_headliner__front"
+        ],
+        "dir": [
+          0,
+          -1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Trim - Header - Front",
+        "page": "GUID-98CEF5F5-26A4-41CA-8E5F-3011E9644607.html",
+        "mirrored": false
+      },
+      {
+        "id": "overhead_console",
+        "name": "Overhead Console Assembly - Front",
+        "manual": "Overhead Console Assembly - Front",
+        "nodes": [
+          "int_overhead",
+          "int_overhead_arms",
+          "int_overhead_keys",
+          "int_overhead_strip"
+        ],
+        "dir": [
+          0,
+          -1,
+          0
+        ],
+        "after": [
+          "header_front"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Overhead Console Assembly - Front",
+        "page": "GUID-C4626364-D148-4DE9-BE94-90FF1075C258.html",
+        "mirrored": false
+      },
+      {
+        "id": "center_floor",
+        "name": "Trim - Center Floor - Lower",
+        "manual": "Trim - Center Floor - Lower",
+        "nodes": [
+          "int_center_ribs",
+          "int_center_rib_base"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": null,
+        "why": null,
+        "procedure": "Trim - Center Floor - Lower",
+        "page": "GUID-EC99D5AE-C818-429A-A474-5DAB89C5FC58.html",
+        "mirrored": false
+      },
+      {
+        "id": "a_pillar_l",
+        "name": "A-pillar trim - LH",
+        "manual": "Trim - A-Pillar - Upper - LH",
+        "nodes": [
+          "int_a_pillar_inner__l",
+          "int_tweeters__l"
+        ],
+        "dir": [
+          -1,
+          0,
+          -0.3
+        ],
+        "after": [
+          "header_front"
+        ],
+        "on": null,
+        "why": "the model has the A-pillar's forward, mid and upper trims as one piece; the seams between them are not measured",
+        "procedure": "Trim - A-Pillar - Upper - LH",
+        "page": "GUID-821537A0-51DC-4C19-B0C9-4F08DD45D8B9.html",
+        "mirrored": false
+      },
+      {
+        "id": "cantrail_l",
+        "name": "Trim - Cantrail - LH",
+        "manual": "Trim - Cantrail - LH",
+        "nodes": [
+          "int_headliner__cantrail_l"
+        ],
+        "dir": [
+          -1,
+          -1,
+          0
+        ],
+        "after": [
+          "header_front",
+          "a_pillar_l",
+          "quarter_panel_l"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Trim - Cantrail - LH",
+        "page": "GUID-D0FE9E8D-AABD-4DBB-9334-92FDA16FACD0.html",
+        "mirrored": false
+      },
+      {
+        "id": "visor_l",
+        "name": "Sun Visor - LH",
+        "manual": "Sun Visor - LH",
+        "nodes": [
+          "int_visors__l"
+        ],
+        "dir": [
+          0,
+          -1,
+          0
+        ],
+        "after": [
+          "header_front",
+          "a_pillar_l",
+          "quarter_panel_l"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Sun Visor - LH",
+        "page": "GUID-21A61B8C-1D14-4C4C-B19E-90F467FA6100.html",
+        "mirrored": false
+      },
+      {
+        "id": "b_pillar_l",
+        "name": "B-pillar trim - LH",
+        "manual": "Trim - B-Pillar - Lower - LH",
+        "nodes": [
+          "int_pillar_trim__l"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "a_pillar_l",
+          "cantrail_l"
+        ],
+        "on": null,
+        "why": "the model has the B-pillar's upper and lower trims as one; the seam between them is not measured",
+        "procedure": "Trim - B-Pillar - Lower - LH",
+        "page": "GUID-010D5F22-EB8D-43BA-9280-B21836120CCD.html",
+        "mirrored": false
+      },
+      {
+        "id": "a_pillar_r",
+        "name": "A-pillar trim - RH",
+        "manual": "Trim - A-Pillar - Upper - RH",
+        "nodes": [
+          "int_a_pillar_inner__r",
+          "int_tweeters__r"
+        ],
+        "dir": [
+          1,
+          0,
+          -0.3
+        ],
+        "after": [
+          "header_front"
+        ],
+        "on": null,
+        "why": "the model has the A-pillar's forward, mid and upper trims as one piece; the seams between them are not measured",
+        "procedure": "Trim - A-Pillar - Upper - LH",
+        "page": "GUID-821537A0-51DC-4C19-B0C9-4F08DD45D8B9.html",
+        "mirrored": true
+      },
+      {
+        "id": "cantrail_r",
+        "name": "Trim - Cantrail - RH",
+        "manual": "Trim - Cantrail - RH",
+        "nodes": [
+          "int_headliner__cantrail_r"
+        ],
+        "dir": [
+          1,
+          -1,
+          0
+        ],
+        "after": [
+          "header_front",
+          "a_pillar_r",
+          "quarter_panel_r"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Trim - Cantrail - LH",
+        "page": "GUID-D0FE9E8D-AABD-4DBB-9334-92FDA16FACD0.html",
+        "mirrored": true
+      },
+      {
+        "id": "visor_r",
+        "name": "Sun Visor - RH",
+        "manual": "Sun Visor - RH",
+        "nodes": [
+          "int_visors__r"
+        ],
+        "dir": [
+          0,
+          -1,
+          0
+        ],
+        "after": [
+          "header_front",
+          "a_pillar_r",
+          "quarter_panel_r"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Sun Visor - LH",
+        "page": "GUID-21A61B8C-1D14-4C4C-B19E-90F467FA6100.html",
+        "mirrored": true
+      },
+      {
+        "id": "b_pillar_r",
+        "name": "B-pillar trim - RH",
+        "manual": "Trim - B-Pillar - Lower - RH",
+        "nodes": [
+          "int_pillar_trim__r"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "a_pillar_r",
+          "cantrail_r"
+        ],
+        "on": null,
+        "why": "the model has the B-pillar's upper and lower trims as one; the seam between them is not measured",
+        "procedure": "Trim - B-Pillar - Lower - LH",
+        "page": "GUID-010D5F22-EB8D-43BA-9280-B21836120CCD.html",
+        "mirrored": true
+      },
+      {
+        "id": "carpet_driver",
+        "name": "Carpet Assembly - Driver",
+        "manual": "Carpet Assembly - Driver",
+        "nodes": [
+          "int_carpet__driver"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "a_pillar_l",
+          "footwell_cover",
+          "center_floor",
+          "floor_mats"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Carpet Assembly - Driver",
+        "page": "GUID-AD87ED6B-CFCC-49F3-A52C-6524A3AA0724.html",
+        "mirrored": false
+      },
+      {
+        "id": "carpet_passenger",
+        "name": "Carpet Assembly - Front Passenger",
+        "manual": "Carpet Assembly - Front Passenger",
+        "nodes": [
+          "int_carpet__passenger"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "b_pillar_r",
+          "footwell_cover",
+          "center_floor",
+          "floor_mats"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Carpet Assembly - Front Passenger",
+        "page": "GUID-632B4823-A0B8-4821-B8D0-8E471AC4D32D.html",
+        "mirrored": false
+      },
+      {
+        "id": "carpet_rear",
+        "name": "Carpet Assembly - Rear",
+        "manual": "Carpet Assembly - Rear",
+        "nodes": [
+          "int_carpet__rear"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "a_pillar_l",
+          "a_pillar_r",
+          "b_pillar_l",
+          "b_pillar_r",
+          "floor_mats"
+        ],
+        "on": null,
+        "why": null,
+        "procedure": "Carpet Assembly - Rear",
+        "page": "GUID-42926C23-CE15-4E05-B400-21ECC715C24D.html",
         "mirrored": false
       },
       {
@@ -6843,22 +7157,6 @@
         "mirrored": false
       },
       {
-        "id": "back_rear_c",
-        "name": "Seat back - Centre - 2nd Row",
-        "manual": null,
-        "nodes": [
-          "int_rear_back__c"
-        ],
-        "dir": [
-          0,
-          1,
-          0
-        ],
-        "after": [],
-        "on": "seat_rear",
-        "why": "the manual names the left and right backs; the model has the centre place on its own"
-      },
-      {
         "id": "headrest_rear_c",
         "name": "Headrest - Center - 2nd Row Seat",
         "manual": "Headrest - Center - 2nd Row Seat",
@@ -6871,10 +7169,32 @@
           0
         ],
         "after": [],
-        "on": "back_rear_c",
+        "on": "armrest_rear",
         "why": null,
         "procedure": "Headrest - Center - 2nd Row Seat",
         "page": "GUID-4551D074-AEDC-4886-8E88-B46C7B895682.html",
+        "mirrored": false
+      },
+      {
+        "id": "armrest_closeout_rear",
+        "name": "Closeout - Armrest - 2nd Row Seat",
+        "manual": "Closeout - Armrest - 2nd Row Seat",
+        "nodes": [
+          "int_rear_armrest_closeout"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "back_rear_l",
+          "back_rear_r"
+        ],
+        "on": "seat_rear",
+        "why": null,
+        "procedure": "Closeout - Armrest - 2nd Row Seat",
+        "page": "GUID-152394B1-A9DD-4D1C-938F-B536425911B1.html",
         "mirrored": false
       },
       {
@@ -6886,33 +7206,17 @@
         ],
         "dir": [
           0,
-          1,
-          0
+          0.3,
+          1
         ],
-        "after": [],
+        "after": [
+          "armrest_closeout_rear"
+        ],
         "on": "seat_rear",
         "why": null,
         "procedure": "Armrest - 2nd Row Seat",
         "page": "GUID-FA13BFAE-E6F1-4B65-A54C-2D5BA5DAB685.html",
         "mirrored": false
-      },
-      {
-        "id": "cushion_rear_c",
-        "name": "Cushion - Centre - 2nd Row",
-        "manual": null,
-        "nodes": [
-          "int_rear_cushion__c"
-        ],
-        "dir": [
-          0,
-          1,
-          0
-        ],
-        "after": [
-          "armrest_rear"
-        ],
-        "on": "seat_rear",
-        "why": "the armrest folds down onto it; the manual names the left and right cushions"
       },
       {
         "id": "back_rear_l",
@@ -7230,8 +7534,7 @@
         "name": "Mid Panel Assembly - Instrument Panel",
         "manual": "Mid Panel Assembly - Instrument Panel",
         "nodes": [
-          "int_dash_white",
-          "int_ambient"
+          "int_dash_white"
         ],
         "dir": [
           0,
@@ -7399,7 +7702,8 @@
         "nodes": [
           "int_dash_top",
           "int_dash_face",
-          "int_dash_vent"
+          "int_dash_vent",
+          "int_ambient"
         ],
         "dir": [
           0,
@@ -7416,6 +7720,66 @@
         "mirrored": false
       },
       {
+        "id": "console_cap",
+        "name": "Cap - Armrest - Center Console",
+        "manual": "Cap - Armrest - Center Console",
+        "nodes": [
+          "int_console_cap"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": "center_console",
+        "why": null,
+        "procedure": "Cap - Armrest - Center Console",
+        "page": "GUID-0B40D908-A2DC-41AE-B879-D755EC5C246C.html",
+        "mirrored": false
+      },
+      {
+        "id": "console_decor",
+        "name": "Decor - Top - Center Console",
+        "manual": "Decor - Top - Center Console",
+        "nodes": [
+          "int_console_rim"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [],
+        "on": "center_console",
+        "why": null,
+        "procedure": "Decor - Top - Center Console",
+        "page": "GUID-00FA7E63-3DFC-4008-B220-87C4CA60F463.html",
+        "mirrored": false
+      },
+      {
+        "id": "airwave_cap",
+        "name": "Cap - Airwave - Center Console",
+        "manual": "Cap - Airwave - Center Console",
+        "nodes": [
+          "int_rear_vents"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [
+          "console_cap",
+          "console_decor"
+        ],
+        "on": "center_console",
+        "why": null,
+        "procedure": "Cap - Airwave - Center Console",
+        "page": "GUID-4F7DB0CD-2FAF-4BC6-9416-0CE64A14FD63.html",
+        "mirrored": false
+      },
+      {
         "id": "rear_display",
         "name": "Touchscreen - Rear Display",
         "manual": "Touchscreen - Rear Display",
@@ -7427,11 +7791,163 @@
           0,
           -1
         ],
-        "after": [],
+        "after": [
+          "console_cap",
+          "console_decor",
+          "airwave_cap"
+        ],
         "on": "center_console",
         "why": null,
         "procedure": "Touchscreen - Rear Display",
         "page": "GUID-246FEAA1-B833-4044-818F-F2D26B2042AB.html",
+        "mirrored": false
+      },
+      {
+        "id": "console_lid",
+        "name": "Armrest Assembly - Center Console",
+        "manual": "Armrest Assembly - Center Console",
+        "nodes": [
+          "int_console_lid"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "rear_display"
+        ],
+        "on": "center_console",
+        "why": null,
+        "procedure": "Armrest Assembly - Center Console",
+        "page": "GUID-816B806D-902C-42E2-8BE6-74BECFBF563D.html",
+        "mirrored": false
+      },
+      {
+        "id": "console_front",
+        "name": "Panel - Front - Center Console",
+        "manual": "Panel - Front - Center Console",
+        "nodes": [
+          "int_console_front"
+        ],
+        "dir": [
+          0,
+          0,
+          1
+        ],
+        "after": [],
+        "on": "center_console",
+        "why": null,
+        "procedure": "Panel - Front - Center Console",
+        "page": "GUID-0B8D7D18-65C4-4A65-ADFA-D87BF5B2B3E4.html",
+        "mirrored": false
+      },
+      {
+        "id": "console_rear",
+        "name": "Panel - Rear - Center Console",
+        "manual": "Panel - Rear - Center Console",
+        "nodes": [
+          "int_console_rear",
+          "int_usb"
+        ],
+        "dir": [
+          0,
+          0,
+          -1
+        ],
+        "after": [],
+        "on": "center_console",
+        "why": null,
+        "procedure": "Panel - Rear - Center Console",
+        "page": "GUID-5B261394-F8F7-43B6-8DC6-C3AE1DE94CBE.html",
+        "mirrored": false
+      },
+      {
+        "id": "wireless_charger",
+        "name": "Wireless Charger - Center Console",
+        "manual": "Wireless Charger - Center Console",
+        "nodes": [
+          "int_chargers"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "console_front"
+        ],
+        "on": "center_console",
+        "why": null,
+        "procedure": "Wireless Charger - Center Console",
+        "page": "GUID-8B81665F-D4DC-4DED-B787-45A957056FF9.html",
+        "mirrored": false
+      },
+      {
+        "id": "console_panel_l",
+        "name": "External Panel - LH - Center Console",
+        "manual": "External Panel - LH - Center Console",
+        "nodes": [
+          "int_console_panel__l"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "center_console"
+        ],
+        "on": "center_console",
+        "why": null,
+        "procedure": "External Panel - LH - Center Console",
+        "page": "GUID-675B7BB1-815D-46F2-A53E-DC89AFAF3AD1.html",
+        "mirrored": false
+      },
+      {
+        "id": "console_panel_r",
+        "name": "External Panel - RH - Center Console",
+        "manual": "External Panel - RH - Center Console",
+        "nodes": [
+          "int_console_panel__r"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "center_console"
+        ],
+        "on": "center_console",
+        "why": null,
+        "procedure": "External Panel - LH - Center Console",
+        "page": "GUID-675B7BB1-815D-46F2-A53E-DC89AFAF3AD1.html",
+        "mirrored": true
+      },
+      {
+        "id": "cupholder",
+        "name": "Cupholder - Center Console",
+        "manual": "Cupholder - Center Console",
+        "nodes": [
+          "int_cupholder"
+        ],
+        "dir": [
+          0,
+          1,
+          0
+        ],
+        "after": [
+          "center_console",
+          "console_panel_l",
+          "console_panel_r",
+          "console_decor",
+          "wireless_charger"
+        ],
+        "on": "center_console",
+        "why": null,
+        "procedure": "Cupholder - Center Console",
+        "page": "GUID-C0E957A5-1FF1-4056-974B-15E8452EBADC.html",
         "mirrored": false
       },
       {
@@ -7460,18 +7976,16 @@
         "manual": "Center Console Assembly",
         "nodes": [
           "int_console",
-          "int_console_lid",
-          "int_console_rim",
-          "int_chargers",
-          "int_charger_trim",
-          "int_usb"
+          "int_charger_trim"
         ],
         "dir": [
           0,
           1,
           0
         ],
-        "after": [],
+        "after": [
+          "console_front"
+        ],
         "on": null,
         "why": null,
         "procedure": "Center Console Assembly",

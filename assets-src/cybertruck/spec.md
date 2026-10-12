@@ -219,19 +219,52 @@ The seats (2026-10-12), as the manual takes them apart once out of the truck (13
 its side shields (the adjustment buttons on the outboard one), the seatback (its frame) carrying the back's trim (the
 cover, with the map pocket and piping) and foam, the cushion's foam (with its cover) on its frame, and the riser and
 track it stands on (cad.py front_seat). The cover is the back's outside 14 mm (22 across, and 30 at the front: read on
-the procedures' photos, not measured), the frame its rear 35. The bench: each outboard back with its outboard and
-inboard bolsters and its back rest insert, the centre back with the centre headrest, three cushions, the armrest
-(rear_bench); the manual names the left and right backs and cushions, the model's centre ones are its own. Renders:
-review/seats/sheet.png.
+the procedures' photos, not measured), the frame its rear 35. Renders: review/seats/sheet.png.
+
+The bench as the manual's 2nd row procedures show it (rebuilt 2026-10-12, cad.py rear_bench): each outboard seat
+back is one piece up through its head (Seat Back Assembly - 2nd Row Seat - LH, photo 35E23696), faced from bottom to
+top of the head by the back rest insert trim (Trim - Back Rest Insert, photo 69D09E24) between its outboard and
+inboard bolsters below the shoulders. The centre place's back is the armrest standing up, the centre headrest on
+its posts ("separate the 2nd row center headrest from the armrest assembly", Headrest - Center), in a tray open to
+the front (Closeout - Armrest - 2nd Row Seat, photos 849FEE02, E01ED94A) that the manual lifts out once both seat
+backs are off; its two cupholders are on its rear face near the top, facing up when it is folded down
+(manual-interior-E5BB028D, Armrest photo 4947F2A0). Two cushions: the LH one holds the left and centre places in one
+piece (Cushion Assembly - 2nd Row Seat - LH, photo 8E19BADB), the RH one its own place (photo D04D57CC). So the
+centre back and cushion are no longer parts of the model's own naming. Read off the bench with its shoulder covers
+off (Seat Assembly - 2nd Row, photo 8E208A7B), at 2.0 mm/px from the centre back's width (380, itself a guess; the
+place pitch and widths are unchanged): outboard head 230 across the top, 320 at its foot, 290 tall, no gap to the
+back (was a separate headrest 25 above); centre top 95 below the outboard heads (hR + 735; was level with them),
+armrest hR + 55 to + 529, headrest above it as wide as the armrest (was 260 of 380), a 300 wide closeout below. About
++-25 mm, and the head and centre heights depend on the photo's foreshortening (the back leans away 21 degrees).
+Review: review/match/r1/bench_pair.png (the photo beside the model from the front seats).
 
 The dash (2026-10-12), as the manual takes it apart (1405, 2001, 3205): the service panel on the screen's shroud, then
-the touchscreen, the display shroud; the mid panel (the white block, its ambient strip), the lower panel, the glovebox
-drawer cut from it along its measured groove (200 deep), the quarter panels at the dash's ends (beyond 700 out), the
-gap hider round the steering column, the footwell cover, the knee airbags in pockets behind the lower panel, the
-passenger airbag under the top pad, then the top pad (the suede shelf, its face and vent slot). Sizes and places read
+the touchscreen, the display shroud; the mid panel (the white block whole to its pointed ends, photo DC5DBB4D), the
+lower panel, the glovebox drawer cut from it along its measured groove (200 deep), the quarter panels (the top's
+outboard 75 mm along the foot of the side glass, from the A-pillar back to the lip: Quarter Panel Assembly, photos
+33F4D328 and 532035C9, a felt strip about seven times as long as it is wide; they were the white block's and lower
+panel's ends beyond 700 out, which the manual's photos contradict), the gap hider round the steering column, the footwell cover, the knee airbags in pockets behind the lower panel, the
+passenger airbag under the top pad, then the top pad (the suede shelf, its face and vent slot, and the ambient strip,
+which stays lit on the dash with the mid panel off: Mid Panel Assembly, photos EB6822C8, 6C7DB9BE). Sizes and places read
 on the procedures' photos against the model's dash, not surveyed. The dash's structure behind the panels (aerobracket,
 cowl, ducts, HVAC) is the "down to structure" depth, not built: the panels are solid. Renders: review/dash/sheet.png.
-169 parts in all.
+
+The centre console (2026-10-12) as the manual takes it apart (1519): in the truck, the armrest cap behind the lid
+(Cap - Armrest, 7 clips; photo E7E20C9F), the top decor band (Decor - Top, 17 clips; photo 4C199D91: it runs along both
+top edges and round the cupholder pod, open to the bin under the lid), the airwave cap (the rear vents' surround), the
+rear display, the armrest (lid), the front and rear panels (10 clips each; the rear with the USB ports) and the
+wireless charger behind the front panel; then the carrier comes out (Center Console Assembly) and on the bench its
+external panels (17 clips each) and the cupholder insert (10 screws). Panels 10 mm thick on the carrier's faces:
+read, not measured.
+
+The cabin's trims (2026-10-12): the front header (the beam the mirror hangs from: Trim - Header - Front, photo
+727462DE), the overhead console, each side's A-pillar trim (the model's post and strip as one, with their grilles;
+the manual has forward, mid and upper trims whose seams are not measured), cantrail (photo 5B88A8A9), sun visor and
+B-pillar trim (upper and lower as one, likewise), the centre floor trim (the ribs: Trim - Center Floor - Lower,
+photos 4C749AE8, 5EAE6B82) and the carpets: driver's and passenger's ahead of the B-pillar, the rear one behind it
+(Carpet Assembly - Rear, photo 9D85EEAE). The rear header (over the rear window) and the rear wall's trims are not
+built. The front fender flares are the manual's "front fender flare cover" (Carrier - Fender Flare - Fore - Front,
+step 3; photo 48E64111 shows it off in one piece). 192 parts in all.
 
 Triangles: the GLB draws 62,398 with the doors' insides (1,724 of them); before them 60,810 (61,222 before this, with the front plate in it twice). review.py counted 60,365
 and, before, 59,825: Blender's importer drops degenerate triangles the GPU still draws, so the review undercounts.
@@ -532,9 +565,9 @@ Shapes taken from pictures, sizes partly guessed:
 - Front seat front outline (71D65904): widest at the shoulders (w +-268 at 1,150), straight sides tapering
   into the headrest (+-160 at 1,560, +-120 at the top), centre insert 45 mm behind the bolsters. Widths are
   scaled from the hip room split, not measured: **guess** (seat 536 wide).
-- Rear bench (FF29F441, EC916D67): outboard places 500 wide, centre 380, separate headrests 25 mm above the
-  backs, recessed inserts on the outboard backs, the centre armrest stowed in its slot (E5BB028D shows it
-  down with two cupholders). Place widths: **guess** from the picture's proportions.
+- Rear bench (FF29F441, EC916D67, Seat Assembly - 2nd Row photo 8E208A7B): outboard places 500 wide, centre 380; the
+  outboard heads part of their backs, the centre headrest on the armrest that is the centre back (see Disassembly).
+  Place widths: **guess** from the pictures' proportions; heights of the heads and armrest read on 8E208A7B.
 - Doors (frames dgRcedIkNOM-12, -17, -45; manual-windows-0C474E0B): black cap under the glass, ambient line,
   two-facet white panel with a diagonal crease (front door high at the front, rear door high at the back), armrest
   with pull pocket, switch pod (four switches on the driver's door, one elsewhere), dark lower panel, speaker

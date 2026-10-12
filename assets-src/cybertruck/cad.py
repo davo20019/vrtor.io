@@ -1223,8 +1223,15 @@ def front_seat(xc, outboard):
             'riser': [base - shield(o) - shield(-o), stand]}
 
 def rear_bench(p):
-    """Three places: two outboard and a narrower centre one whose lower back is the fold-down armrest
-    (manual-childseats-FF29F441 and -EC916D67 from the front, -D8CE20B2 from the side: backrest 21 degrees)."""
+    """Three places, as the Service Manual's 2nd row procedures show them (1305, 1308): two outboard seat backs,
+    each one piece up through its head (Seat Back Assembly - 2nd Row Seat - LH, photo 35E23696), faced by the back
+    rest insert trim from the bottom to the top of the head (Trim - Back Rest Insert, photo 69D09E24) between an
+    outboard and an inboard bolster below the shoulders; and the centre, whose back is the fold-down armrest with
+    the centre headrest on its posts ("separate the 2nd row center headrest from the armrest assembly", Headrest -
+    Center). Two cushions: the LH one spans the left and centre places (Cushion Assembly - 2nd Row Seat - LH, photo
+    8E19BADB), the RH one its own place (photo D04D57CC). Side profile: manual-childseats-D8CE20B2 (backrest 21
+    degrees). Heights of the head, armrest and headrest: read off the bench with its shoulder covers off (Seat
+    Assembly - 2nd Row, photo 8E208A7B) at 2.0 mm/px, the centre back's width (380) giving the scale (spec.md)."""
     c = CAB
     sR = c['h_rear'][0]
     hR = rear_h_point(p)
@@ -1235,53 +1242,58 @@ def rear_bench(p):
     top = hR + 830
     L = (top - A[1]) / d[1]
     t = 110.0
+    at = lambda h: A + d * ((h - A[1]) / d[1])          # the back's front face at height h
     side = [tuple(A), tuple(A + d * L), tuple(A + d * L + nrm * t), tuple(A + nrm * t + [0, -40]), tuple(A + [0, -40])]
     places = [(-445, 500), (0, 380), (445, 500)]          # centre and width of each place
-    out = {'seat': [], 'seat_base': [], 'armrest_r': [], 'by_place': {}}
+    out = {'seat_base': [], 'by_place': {}}
     for xc, w in places:
-        hw, hh = w / 2 - 3, (130 if xc else 100)
-        # Back up to the shoulders, then a separate headrest 25 mm above it with chamfered top corners
-        # (manual-childseats-FF29F441).
-        frontl = [(-hw, A[1] - 40), (hw, A[1] - 40), (hw, hR + 560), (hw - 40, hR + 600), (-hw + 40, hR + 600), (-hw, hR + 560)]
-        back = SH(side, xc - hw - 5, xc + hw + 5) & XH([(xc + x, h) for x, h in frontl], sR - 50, sR + 700)
-        rest = [(-hh, hR + 625), (hh, hR + 625), (hh, top - 40), (hh - 40, top), (-hh + 40, top), (-hh, top - 40)]
-        back += SH(side, xc - hw - 5, xc + hw + 5) & XH([(xc + x, h) for x, h in rest], sR - 50, sR + 700) - SH(
-            [tuple(A + d * ((hR + 625 - A[1]) / d[1]) + [-200, 0]), tuple(A + d * L + [-200, 0]), tuple(A + d * L + nrm * 45), tuple(A + d * ((hR + 625 - A[1]) / d[1]) + nrm * 45)],
-            xc - hw - 5, xc + hw + 5)                    # the headrest is thinner than the back: 65 mm
-        hw_in = hw - 70
+        hw = w / 2 - 3
+        slab = lambda: SH(side, xc - hw - 5, xc + hw + 5)
         place = {}
-        if xc:                                             # outboard places: bolsters either side of a recessed insert
-            q0, q1 = A + d * 20, A + d * ((hR + 540 - A[1]) / d[1])
-            ins = SH([tuple(q0 + nrm * 30), tuple(q1 + nrm * 30), tuple(q1 + [-200, 0]), tuple(q0 + [-200, 0])], xc - hw_in, xc + hw_in)
+        if xc:
+            # The back up to the shoulders, then its head: 230 across the top (20 mm corners), 320 where it meets the
+            # shoulders, 290 tall (photo 8E208A7B: 115 and 160 px, the head's foot 148 px below its top).
+            hw_in = hw - 70
+            core = [(-hw_in, A[1] - 40), (hw_in, A[1] - 40), (hw_in, hR + 540), (160, hR + 590), (115, top - 20),
+                    (95, top), (-95, top), (-115, top - 20), (-160, hR + 590), (-hw_in, hR + 540)]
+            frontl = [(-hw, A[1] - 40), (hw, A[1] - 40), (hw, hR + 540)] + core[3:-1] + [(-hw, hR + 540)]
+            back = slab() & XH([(xc + x, h) for x, h in frontl], sR - 50, sR + 700)
+            # The insert trim: the front 30 mm of the core and head, crowned 14 mm.
+            q0, q1 = at(A[1] - 20), at(top + 60)
+            ins = SH([tuple(q0 + nrm * 30), tuple(q1 + nrm * 30), tuple(q1 + [-200, 0]), tuple(q0 + [-200, 0])], xc - hw_in, xc + hw_in) \
+                & XH([(xc + x, h) for x, h in core], sR - 50, sR + 700)
             back -= ins
-            insert = pillow(tuple(q0 + nrm * 30), tuple(q1 + nrm * 30), tuple(-nrm), xc, hw_in, 14.0, ins)
+            place['insert'] = pillow(tuple(q0 + nrm * 30), tuple(q1 + nrm * 30), tuple(-nrm), xc, hw_in, 14.0, ins)
             # The bolsters (Service Manual 1305): the back's strips either side of the insert, below the shoulders.
             below = Box(2000, 2000, 4000, align=(Align.CENTER, Align.MAX, Align.CENTER)).moved(Location((0, hR + 540, 0)))
             strip = lambda sd: back & below & Box(200, 2000, 4000, align=(Align.MIN if sd > 0 else Align.MAX, Align.CENTER, Align.CENTER)).moved(Location((xc + sd * hw_in, 0, 0)))
             out_sd = 1 if xc > 0 else -1
             place['bolster_out'], place['bolster_in'] = strip(out_sd), strip(-out_sd)
-            back = back - place['bolster_out'] - place['bolster_in']
-            place['insert'] = insert
-        if xc == 0:                                        # the stowed armrest fills a slot in the centre back
-            slot_lo, slot_hi = A[1] + 5, A[1] + 420
-            pa, pb = A + d * ((slot_lo - A[1]) / d[1]), A + d * ((slot_hi - A[1]) / d[1])
-            slot = SH([tuple(pa + [-60, 0]), tuple(pb + [-60, 0]), tuple(pb + nrm * 75), tuple(pa + nrm * 75)], -153, 153)
-            back = back - slot
-            # Folded down onto the centre cushion, as in manual-interior-E5BB028D, with its two cupholders
-            # (rounded hexagons) near the front. 105 thick, so it folds up into the 110 mm back.
-            cush_top = hR - 26
-            arm = SH([(sR + 60, cush_top), (sR - 360, cush_top), (sR - 360, cush_top + 90), (sR - 345, cush_top + 105), (sR + 60, cush_top + 105)], -150, 150)
+            place['back'] = back - place['bolster_out'] - place['bolster_in']
+        else:
+            # The centre: below the armrest a closeout on the seat frame (300 across), then the armrest standing
+            # up as the back (hR + 55 to + 529), then the headrest to hR + 735 (photo 8E208A7B: the centre top
+            # 50 px below the outboard heads), as wide as the armrest, its top corners cut 20.
+            ha, hb, ht = hR + 55, hR + 529, hR + 735
+            place['closeout'] = slab() & XH([(-150, A[1] - 40), (150, A[1] - 40), (150, ha - 6), (-150, ha - 6)], sR - 50, sR + 700)
+            # The armrest stands in a tray open to the front (Closeout - Armrest - 2nd Row Seat, photos 849FEE02 and
+            # E01ED94A), 3 mm walls; it shows when the armrest is folded down or taken out.
+            box = lambda x, h0, h1, deep: SH([tuple(at(h0) + [-60, 0]), tuple(at(h1) + [-60, 0]), tuple(at(h1) + nrm * deep), tuple(at(h0) + nrm * deep)], -x, x)
+            region = XH([(-hw, ha - 3), (hw, ha - 3), (hw, hb + 1), (-hw, hb + 1)], sR - 50, sR + 700)
+            place['tray'] = (slab() & region) - (box(hw - 3, ha, hb - 2, t - 3) & slab())
+            arm = slab() & XH([(-hw + 4, ha + 1), (hw - 4, ha + 1), (hw - 4, hb - 4), (-hw + 4, hb - 4)], sR - 50, sR + 700) & box(hw, ha - 10, hb + 10, t - 5)
+            # Its two cupholders (rounded hexagons) on the rear face near the top, which faces up when it is folded
+            # down onto the cushion (manual-interior-E5BB028D; Armrest - 2nd Row Seat, photo 4947F2A0).
             for xh in (-62, 62):
-                arm = arm - XS(ngon(xh, sR - 290, 44, 6, math.pi / 6), cush_top + 40, cush_top + 120)
-            out['armrest_r'].append(arm)
-        if xc == 0:                                        # the centre headrest is its own (Headrest - Center - 2nd Row Seat)
-            place['headrest'] = back & Box(2000, 2000, 4000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, hR + 612, 0)))
-            back = back - place['headrest']
-        out['seat'].append(back)
+                pc = at(hb - 70) + nrm * (t - 5)
+                cup = Cylinder(44, 140).moved(Location(Plane(origin=(xh, pc[1], ZF - pc[0]), z_dir=(0, nrm[1], -nrm[0]))))
+                arm = arm - cup
+            place['armrest'] = arm
+            place['headrest'] = slab() & XH([(-hw, hb + 3), (hw, hb + 3), (hw, ht - 20), (hw - 20, ht), (-hw + 20, ht), (-hw, ht - 20)],
+                                           sR - 50, sR + 700)
         cush = SH([(sR - 430, hR - 130), (sR - 430, hR - 28), (sR - 400, hR - 18), (sR + 90, hR - 45), (sR + 100, hR - 130)],
                   xc - hw, xc + hw)
-        out['seat'].append(cush)
-        place['back'], place['cushion'] = back, cush
+        place['cushion'] = cush
         out['by_place']['l' if xc > 0 else 'r' if xc < 0 else 'c'] = place
     out['seat_base'].append(SH([(sR - 410, c['floor'] - 2), (sR - 410, hR - 128), (sR + 300, hR - 128), (sR + 300, c['floor'] - 2)], -700, 700))
     return out, hR
@@ -1629,15 +1641,19 @@ def interior(p):
     gi = [(-237.5, 1021), (-609, 1021), (-601.5, 971), (-215.5, 971)]
     glove = XH(gl, 1300, 1530) - XH(gi, 1290, 1540)
     out['dash_lower'] = lower - glove                    # the glovebox's outline, a 3 mm groove
-    # The dash as the manual takes it apart (1405, 2001; Service Manual photos, not surveyed): the quarter panels at
-    # its ends (beyond 700 out), the glovebox drawer in its groove (200 deep), the knee airbags in pockets behind the
-    # lower panel and the passenger's under the top pad, the footwell cover under the driver's side.
-    ends = lambda sd: Box(1000, 3000, 8000, align=(Align.MIN if sd > 0 else Align.MAX, Align.CENTER, Align.CENTER)).moved(Location((sd * 700, 0, 0)))
+    # The dash as the manual takes it apart (1405, 2001; Service Manual photos, not surveyed): the quarter panels are
+    # the top's outboard strips along the foot of the side glass, from the A-pillar back to the lip (Quarter Panel
+    # Assembly - LH, photos 33F4D328 in place and 532035C9 off: a long felt strip about 7 times as long as it is
+    # wide, so ~75 wide on the top's ~530 depth there); the white block runs whole to its pointed ends with the mid
+    # panel (Mid Panel Assembly, photo DC5DBB4D), the lower panel whole to the doors; the glovebox drawer in its
+    # groove (200 deep), the knee airbags in pockets behind the lower panel and the passenger's under the top pad,
+    # the footwell cover under the driver's side.
+    tb = out['dash_top'].bounding_box()
+    ends = lambda sd: Box(1000, 3000, 8000, align=(Align.MIN if sd > 0 else Align.MAX, Align.CENTER, Align.CENTER)).moved(
+        Location((sd * ((tb.max.X if sd > 0 else -tb.min.X) - 75), 0, 0)))
     for side, sd in (('l', 1), ('r', -1)):
-        out[f'quarter_white__{side}'] = out['dash_white'] & ends(sd)
-        out[f'quarter_lower__{side}'] = out['dash_lower'] & ends(sd)
-    out['dash_white'] = out['dash_white'] & Box(1400, 3000, 8000)
-    out['dash_lower'] = out['dash_lower'] & Box(1400, 3000, 8000)
+        out[f'quarter_panel__{side}'] = out['dash_top'] & ends(sd)
+    out['dash_top'] = out['dash_top'] - out['quarter_panel__l'] - out['quarter_panel__r']
     drawer = XH(gi, 1330, 1530)
     out['glovebox'] = lower & drawer
     out['dash_lower'] = out['dash_lower'] - drawer
@@ -1730,16 +1746,45 @@ def interior(p):
     top = SH([(cf - 14, crease), (se + 20, crease), (se + 20, rim_h), (cf - 14, rim_h)], -200, 200)
     lid = SH([(lid0, rim_h), (lid1, rim_h), (lid1, ah + 1), (lid0, ah + 1)], -200, 200)
     con = shell - top - lid - hollow
-    out['console'] = con
     out['console_lid'] = shell & lid
     # the band, with the grip tabs (small wedges) on each cup's inboard and outboard walls
     rim = (shell & top) - hollow
+    # The decor band runs along both top edges and round the pod; under the lid it is open to the bin, so there the
+    # band's depth belongs to the carrier (Decor - Top, photo 4C199D91).
+    under_lid = rim & SH([(lid0, crease - 1), (lid1, crease - 1), (lid1, rim_h + 1), (lid0, rim_h + 1)], -(146 - 22), 146 - 22)
+    rim = rim - under_lid
+    con = con + under_lid
     tabs = []
     for xc in (-cup_x, cup_x):
         for sd in (-1, 1):
             x0 = xc + sd * (ca - 0.5)
             tabs.append(XS([(x0, cups_s - 10), (x0, cups_s + 10), (x0 - sd * 13, cups_s)], rim_h - 70, rim_h - 36))
     out['console_rim'] = rim + Compound(tabs)
+    console_body = con                                   # whole, for the mats to clear
+    # As the Service Manual takes it apart (1519): clipped on the outside of the carrier are the LH and RH external
+    # panels (the sides below the decor band, 17 clips each; photos 25CF1877, 72246891), the front panel (the face
+    # into the footwells, 10 clips; photo 8E871D86) and the rear panel (the face under the rear screen, 10 clips,
+    # with the USB ports; photo 5CBB601B); on top the armrest cap behind the lid (7 clips; photo E7E20C9F); inside,
+    # the cupholder (10 screws; photo 6A3A10EE), the insert that holds the cups and the pinch between them. Each panel
+    # 10 mm thick, following the carrier's outer faces; what's left is the carrier (Center Console Assembly).
+    xs0, xs1 = 112.0, 146.0 - step                       # the sides' run from the floor to the band's crease
+    for sd, k in ((1, 'l'), (-1, 'r')):
+        strip = XH([(sd * (xs0 - 10), c['floor'] - 3), (sd * (xs0 + 5), c['floor'] - 3), (sd * (xs1 + 5), crease),
+                    (sd * (xs1 - 10), crease)], cf - 20, se + 20)
+        out[f'console_panel__{k}'] = con & strip
+    sides = out['console_panel__l'] + out['console_panel__r']
+    con = con - sides
+    fp = SH([(cf + 66 - 5, c['floor'] - 3), (cf - 5, 690), (cf - 5, crease), (cf + 10, crease), (cf + 10, 690), (cf + 76, c['floor'] - 3)], -150, 150)
+    out['console_front'] = con & fp
+    rp = SH([(se - 10, 760), (se + 5, 760), (se + 5, 640), (se - 85, 560), (se - 115, c['floor'] - 3), (se - 125, c['floor'] - 3),
+             (se - 95, 560), (se - 10, 640)], -150, 150)
+    out['console_rear'] = con & rp
+    cap = SH([(lid1 + 1, ah - 25), (se + 20, ah - 25), (se + 20, ah + 20), (lid1 + 1, ah + 20)], -150, 150)
+    out['console_cap'] = con & cap
+    pod = SH([(wb + 1, 700), (lid0, 700), (lid0, crease), (wb + 1, crease)], -(xs1 - 11), xs1 - 11)
+    out['cupholder'] = con & pod
+    con = con - out['console_front'] - out['console_rear'] - out['console_cap'] - out['cupholder']
+    out['console'] = con
     # the felt lining over the chargers, one piece across the slope; the rib down its middle and the lip at its foot
     def on_slope(t0, t1, off0, off1):
         return [tuple(A + d * t0 + n * off0), tuple(A + d * t1 + n * off0), tuple(A + d * t1 + n * off1), tuple(A + d * t0 + n * off1)]
@@ -1761,11 +1806,18 @@ def interior(p):
         for k, v in front_seat(sx * c['seat_x'], sx).items():
             out[f'seat_{k}__{side}'] = Compound(v)
     rear, _ = rear_bench(p)
-    for pl_, place in rear['by_place'].items():
+    bp = rear['by_place']
+    for pl_, place in bp.items():
         for k, v in place.items():
-            out[f'rear_{k}__{pl_}'] = v
-    out['seat_base__rear'] = Compound(rear['seat_base'])
-    out['rear_armrest'] = Compound(rear['armrest_r'])
+            if k not in ('cushion', 'armrest', 'headrest', 'closeout', 'tray'):
+                out[f'rear_{k}__{pl_}'] = v
+    # The LH cushion assembly holds the left and centre places; the RH one its own.
+    out['rear_cushion__l'] = Compound([bp['l']['cushion'], bp['c']['cushion']])
+    out['rear_cushion__r'] = bp['r']['cushion']
+    out['rear_armrest'] = bp['c']['armrest']
+    out['rear_headrest__c'] = bp['c']['headrest']
+    out['rear_armrest_closeout'] = bp['c']['tray']
+    out['seat_base__rear'] = Compound(rear['seat_base'] + [bp['c']['closeout']])
     # ---- seat belts. Front: the D-ring on its height adjuster on the B-pillar (manual-seatbelts-0EF5959F), the
     # belt hanging down the pillar's trim to the retractor at its foot (-25FB8DBC), the buckle on a stalk inboard
     # of the cushion (-F460CA2E). Rear outboard: from the cab's back wall at the shoulder down beside the cushion;
@@ -1998,7 +2050,7 @@ def interior(p):
     mats = [XS([(140, 1330), (640, 1330), (690, 1420), (690, 2080), (140, 2080)], c['floor'] + 13, c['floor'] + 22),
             XS([(-140, 1330), (-640, 1330), (-690, 1420), (-690, 2080), (-140, 2080)], c['floor'] + 13, c['floor'] + 22),
             XS([(-690, 2690), (690, 2690), (690, 2700 + 300), (640, 3050), (-640, 3050), (-690, 3000)], c['floor'] + 13, c['floor'] + 22)]
-    out['mats'] = Compound(mats) - out['console']
+    out['mats'] = Compound(mats) - console_body
     # Each mat's edge is bound with a smoother band, 25 wide and 2 proud (dgRcedIkNOM-25). Outlines: guess.
     def binding(pts):
         w = Wire.make_polygon([(x, 0, Z(s)) for x, s in pts], close=True)
@@ -2007,7 +2059,7 @@ def interior(p):
     outlines = [[(140, 1330), (640, 1330), (690, 1420), (690, 2080), (140, 2080)],
                 [(-140, 1330), (-640, 1330), (-690, 1420), (-690, 2080), (-140, 2080)],
                 [(-690, 2690), (690, 2690), (690, 3000), (640, 3050), (-640, 3050), (-690, 3000)]]
-    out['mat_edges'] = Compound([binding(o) for o in outlines]) - out['console']
+    out['mat_edges'] = Compound([binding(o) for o in outlines]) - console_body
     # Between the footwells, ahead of the console: a panel of brushed aluminium ribs along the truck, black between
     # them, from the dash's lower edge down to the floor (dgRcedIkNOM-16, -25, int-athens-3). Measured through the
     # dash camera (CC015C4E, the ribs' ends showing above the console, measure/int/glove.md): top at 881 high,
@@ -2061,6 +2113,32 @@ def interior(p):
     out['pedal_arms'] = Compound([
         rod(a0, (395, c['floor'] + 470, Z(1210)), (0, 0, 1), 18, 8),
         Box(56, 22, 40).moved(Location((290, c['floor'] + 11, Z(sa) - 110 * math.sin(math.radians(40)) + 6)))])
+    # ---- the cabin's trims one part each, as the Service Manual takes them off (1505, 1518, 1520, 1530): the front
+    # header (the beam the mirror hangs from; Trim - Header - Front, photo 727462DE) and the cantrails along the
+    # roof's side edges (Trim - Cantrail, photo 5B88A8A9), each sun visor, the A- and B-pillar trims of each side,
+    # and the carpets: driver's and front passenger's ahead of the B-pillar, the rear one behind it (Carpet
+    # Assembly - Rear, photo 9D85EEAE: it starts behind the front seats).
+    half = lambda sd: Box(2000, 4000, 9000, align=(Align.MIN if sd > 0 else Align.MAX, Align.CENTER, Align.CENTER))
+    mid = Box(1300, 4000, 9000)
+    head = out.pop('headliner')
+    out['headliner__front'] = head & mid
+    rails = head - mid
+    vis = out.pop('visors')
+    pil = out.pop('pillar_trim')
+    apil = out.pop('a_pillar_inner')
+    tw = out.pop('tweeters')
+    for side, sd in (('l', 1), ('r', -1)):
+        out[f'headliner__cantrail_{side}'] = rails & half(sd)
+        out[f'visors__{side}'] = vis & half(sd)
+        out[f'pillar_trim__{side}'] = pil & half(sd)
+        out[f'a_pillar_inner__{side}'] = apil & half(sd)
+        out[f'tweeters__{side}'] = tw & half(sd)
+    carpet = out.pop('carpet')
+    sB = p['seam_2']
+    ahead = Box(4000, 4000, 9000, align=(Align.CENTER, Align.CENTER, Align.MIN)).moved(Location((0, 0, Z(sB))))
+    out['carpet__driver'] = carpet & ahead & half(1)
+    out['carpet__passenger'] = carpet & ahead & half(-1)
+    out['carpet__rear'] = carpet - ahead
     return out
 
 def screen_offset(a):
