@@ -285,12 +285,53 @@ function setUpParts() {
     area: showroom.partsArea,
     moved: shadowMoved,
     prepare: shutForRemoval,
+    share: sharePart,
     onChange: () => {
       if (takingApart && cardOpen) render();
     },
   });
   partMeshes = truck.root.getChildMeshes().filter((m) => parts.partOf(m));
   for (const m of partMeshes) m.metadata = { ...(m.metadata ?? {}), pickable: m.isPickable };
+}
+
+// Everyone joined sees the same truck: each part off is a key the room keeps (p.<id>), changes batched into one
+// message a frame (putting everything back at once is 68), and a part in someone's hand is passed along as it moves.
+let shareBatch = null;
+function sharePart(id, off) {
+  if (!presence?.state.joined) return;
+  if (!shareBatch) {
+    shareBatch = {};
+    setTimeout(() => {
+      presence.setState(shareBatch);
+      shareBatch = null;
+    }, 0);
+  }
+  shareBatch[`p.${id}`] = off ? 1 : null;
+}
+const holdSent = new Map();
+const HOLD_EVERY_MS = 66;          // a held part's place, about 15 times a second
+function shareHold(id, pose) {
+  if (!presence?.state.joined) return;
+  const now = performance.now();
+  if (pose && now - (holdSent.get(id) ?? 0) < HOLD_EVERY_MS) return;
+  holdSent.set(id, pose ? now : 0);
+  presence.sendEvent(`h.${id}`, pose);
+}
+/** The room's parts: someone else's change, or everything when you join (the room's, or yours if it has none). */
+function partsFromRoom(s, from, all) {
+  if (!parts) return;
+  const ids = Object.entries(s).filter(([k]) => k.startsWith('p.'));
+  if (all) {
+    if (!ids.length) {
+      const mine = parts.offIds();
+      if (mine.length) presence.setState(Object.fromEntries(mine.map((id) => [`p.${id}`, 1])));
+    } else {
+      parts.applyAll(ids.filter(([, v]) => v).map(([k]) => k.slice(2)));
+    }
+  } else {
+    for (const [k, v] of ids) parts.apply(k.slice(2), !!v);
+  }
+  if (takingApart && cardOpen) render();
 }
 
 /** A part comes off shut: a door, the tailgate, the lid and the outlet cover closed, the bed's cover rolled shut. */
@@ -316,6 +357,73 @@ function shutForRemoval(def) {
   shadowMoved();
 }
 
+/**
+ * Grab and pull, in the headset (take-apart mode): squeeze the grip with your hand on a part (or your ray on it).
+ * In its seat it slides out along its way off as you pull, and comes free in your hand past its lift (a buzz); let
+ * go then and it goes to its place on the plinth, or back in if you let go at its seat. Let go before it's free and
+ * it slides back in. A part the manual's order doesn't let off yet stays put (a short buzz, and the card says why).
+ */
+const HAND_REACH = 0.1;           // m, from the hand to the part it takes hold of
+const heldBy = new Map();         // controller id -> { id: part, mc, free, sent }
+function setUpGrab(rig) {
+  const pose = (source) => {
+    const n = source.grip ?? source.pointer;
+    n.computeWorldMatrix(true);
+    return { position: n.getAbsolutePosition().clone(), rotation: n.absoluteRotationQuaternion.clone() };
+  };
+  const buzz = (mc, value, ms) => {
+    try {
+      mc?.pulse(value, ms);
+    } catch {}
+  };
+  const letGo = (source) => {
+    const h = heldBy.get(source.uniqueId);
+    if (!h) return;
+    heldBy.delete(source.uniqueId);
+    const r = parts.release(h.id);
+    shareHold(h.id, null);
+    if (r) {
+      partsNote = r;
+      render();
+    }
+  };
+  rig.xr.input.onControllerAddedObservable.add((source) => {
+    source.onMotionControllerInitObservable.add((mc) => {
+      const squeeze = mc.getComponent('xr-standard-squeeze');
+      squeeze?.onButtonStateChangedObservable.add((c) => {
+        if (!c.changes.pressed) return;
+        if (!c.pressed) return letGo(source);
+        if (!takingApart || ride.world !== 'showroom' || !parts || heldBy.has(source.uniqueId)) return;
+        const hand = pose(source);
+        const mesh = parts.nearest(hand.position, HAND_REACH) ?? rig.xr.pointerSelection?.getMeshUnderPointer(source.uniqueId);
+        const r = mesh && parts.grab(mesh, hand);
+        if (!r) return;
+        partsNote = r;
+        if (r.verb === 'held') {
+          heldBy.set(source.uniqueId, { id: r.id, mc, free: false, sent: 0 });
+          buzz(mc, 0.2, 20);
+        } else {
+          buzz(mc, 0.4, 120);
+        }
+        render();
+      });
+    });
+  });
+  rig.xr.input.onControllerRemovedObservable.add(letGo);
+  scene.onBeforeRenderObservable.add(() => {
+    for (const [uid, h] of heldBy) {
+      const source = rig.xr.input.controllers.find((c) => c.uniqueId === uid);
+      if (!source) continue;
+      const state = parts.hold(h.id, pose(source));
+      if (state === 'free' && !h.free) {
+        h.free = true;
+        buzz(h.mc, 0.7, 40);
+      }
+      shareHold(h.id, parts.heldPose(h.id));
+    }
+  });
+}
+
 function setTakingApart(on) {
   takingApart = on;
   partsNote = null;
@@ -333,13 +441,25 @@ function partsContent() {
   const n = parts.offCount, total = parts.count;
   const note = partsNote;
   const names = (defs) => defs.map((d) => d.name).join(', ');
-  let title = 'Tap a part to take it off', body = 'Each part comes off in the order Tesla’s Service Manual takes them off, and goes back the other way. Tap one on the truck to take it off; tap it on the plinth to put it back.';
+  let title = inXr() ? 'Grab a part and pull' : 'Tap a part to take it off';
+  let body = inXr()
+    ? 'Each part comes off in the order Tesla’s Service Manual takes them off, and goes back the other way. Squeeze the grip on a part and pull it out, or point and press the trigger.'
+    : 'Each part comes off in the order Tesla’s Service Manual takes them off, and goes back the other way. Tap one on the truck to take it off; tap it on the plinth to put it back.';
   if (note?.verb === 'off') {
     title = note.part.name;
     body = `Off, as the Service Manual's ${note.part.procedure ?? 'procedure'} takes it off${note.part.mirrored ? ' (on the other side)' : ''}. Tap it on the plinth to put it back.`;
   } else if (note?.verb === 'on') {
     title = note.part.name;
     body = 'Back on the truck.';
+  } else if (note?.verb === 'held') {
+    title = note.part.name;
+    body = 'Pull it out along its way off. Let go near its seat to put it back, anywhere else and it goes to its place on the plinth.';
+  } else if (note?.verb === 'kept') {
+    title = note.part.name;
+    body = 'Still in its seat.';
+  } else if (note?.verb === 'placed') {
+    title = note.part.name;
+    body = 'Back in its place on the plinth.';
   } else if (note?.verb === 'blocked-off') {
     title = note.part.name;
     body = `First take off: ${names(note.by)}.`;
@@ -1820,6 +1940,10 @@ async function start() {
       refreshBar(state);
       if (inXr() && cardOpen) card.setContent({ ...content(), tools: [] });
     },
+    onState: partsFromRoom,
+    onEvent: (k, v) => {
+      if (k.startsWith('h.')) parts?.remoteHold(k.slice(2), v);
+    },
   });
   refreshBar = mountPresenceControls(presence, $('.presence-controls'));
   refreshBar(presence.state);
@@ -1868,6 +1992,7 @@ async function start() {
     });
     // A, X or the menu button: the card in front of you, or away when it's already there.
     createMenuControls(scene, rig, card, { open, close });
+    setUpGrab(rig);
   }
 
   continueInVr(rig, ui.vr);
@@ -1907,4 +2032,4 @@ start().catch((err) => {
 });
 
 // For automated checks in a browser.
-window.__cyb = { get parts() { return parts; }, setTakingApart, get yoke() { return yokeControls; }, controls: screenControls, mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, tonneauPress, tonneau, hinged, setTailgate, hingePress, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };
+window.__cyb = { get parts() { return parts; }, get presence() { return presence; }, setTakingApart, get yoke() { return yokeControls; }, controls: screenControls, mirrors, scene, camera, sitIn, startRide, endRide, stopHere, stepOutOnRoad, driveOn, open, close, ride, pose, toggleCovers, toggleDoor, setDoorsAll, tonneauPress, tonneau, hinged, setTailgate, hingePress, get doors() { return doors; }, get eyes() { return eyes; }, get truck() { return truck; }, get screen() { return screen; } };

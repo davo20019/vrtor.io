@@ -39,7 +39,11 @@ const storeName = (name) => {
  * compared between people in the same `area`. `onChange(state)` fires whenever
  * what the UI shows changes. `outfit` dresses everyone's avatar for the subject (see avatar.js).
  */
-export function createPresence(scene, { subject, getPose, onChange, outfit = null }) {
+/**
+ * onState(s, from, all): shared state the room keeps ({ key: value }), from someone else; or, on joining, all of
+ * it (all true, from null; {} when the room keeps none). onEvent(k, v, from): a passing event from someone else. Both only while you're joined.
+ */
+export function createPresence(scene, { subject, getPose, onChange, outfit = null, onState = null, onEvent = null }) {
   const state = {
     status: 'connecting', // connecting | online | offline | off
     here: 0, // visible people, you included
@@ -171,6 +175,12 @@ export function createPresence(scene, { subject, getPose, onChange, outfit = nul
     } else if (msg.t === 'signal') {
       if (state.voice) voice.handle(msg.from, msg.d);
       return;
+    } else if (msg.t === 'state') {
+      if (state.joined && msg.s) onState?.(msg.s, msg.from ?? null, !!msg.all);
+      return;
+    } else if (msg.t === 'event') {
+      if (state.joined) onEvent?.(msg.k, msg.v, msg.from);
+      return;
     }
     changed();
   }
@@ -271,6 +281,14 @@ export function createPresence(scene, { subject, getPose, onChange, outfit = nul
       wantJoined = true;
       if (state.status === 'online' && !state.joined) sendJoin();
       changed();
+    },
+    /** Keeps values in the room for everyone joined ({ key: value }, null drops a key). Only while joined. */
+    setState(s) {
+      if (state.joined) send({ t: 'state', s });
+    },
+    /** A passing event for everyone joined (not kept). */
+    sendEvent(k, v) {
+      if (state.joined) send({ t: 'event', k, v });
     },
     leave() {
       wantJoined = false;

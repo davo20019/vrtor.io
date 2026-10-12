@@ -7,6 +7,11 @@
 // exchange voice signaling with other visible people. Everyone gets a random
 // name; a name people choose is only kept if it passes cleanName().
 //
+// Shared state: a subject can keep small values in the room ({ t: 'state', s: { key: value } }, value null to
+// drop a key): the room stores them, relays them to everyone visible, and gives them all to whoever joins. It
+// forgets them once nobody visible is left (the Cybertruck's parts: taken apart together, whole for the next
+// visitors). { t: 'event', k, v } is relayed but not kept (a part in someone's hand).
+//
 // Kill switches (wrangler vars, or the dashboard): PRESENCE = "off" refuses new
 // connections; VOICE = "off" stops relaying voice signaling. A deploy restarts
 // the rooms, so connected clients reconnect under the new settings.
@@ -17,6 +22,10 @@ const MAX_ROOMS = 50;
 const MAX_MESSAGE = 16_000;
 /** Messages per socket per second before the rest are dropped. */
 const RATE_LIMIT = 40;
+/** Shared state: keys a room keeps, how long a key and a value (as JSON) may be. */
+const MAX_KEYS = 400;
+const KEY = /^[a-z0-9_.:-]{1,64}$/i;
+const MAX_VALUE = 256;
 
 const ADJECTIVES = ['Curious', 'Bright', 'Swift', 'Gentle', 'Sunny', 'Brave', 'Calm', 'Quiet', 'Lucky', 'Clever', 'Kind', 'Merry'];
 const ANIMALS = ['Condor', 'Llama', 'Alpaca', 'Vicuña', 'Puma', 'Viscacha', 'Hummingbird', 'Fox', 'Toucan', 'Jaguar', 'Owl', 'Falcon'];
@@ -68,6 +77,11 @@ export class PresenceRoom extends DurableObject {
     super(ctx, env);
     /** Per-socket message counts for rate limiting (lost on hibernation, which is fine). */
     this.rate = new Map();
+    /** Shared state, kept in storage so it outlives hibernation. */
+    this.state = {};
+    ctx.blockConcurrencyWhile(async () => {
+      this.state = (await ctx.storage.get('state')) ?? {};
+    });
   }
 
   async fetch() {
@@ -97,6 +111,7 @@ export class PresenceRoom extends DurableObject {
       ws.serializeAttachment(me);
       send(ws, { t: 'you', name: me.name, rejected: msg.name !== undefined && me.name !== cleanName(msg.name) });
       send(ws, { t: 'peers', peers: this.people().filter((p) => p.id !== me.id).map(publicPerson) });
+      send(ws, { t: 'state', s: this.state, all: true });     // all of it, even empty: so the joiner knows
       this.broadcast({ t: 'joined', peer: publicPerson(me) }, ws);
       this.broadcastCount();
     } else if (msg.t === 'rename') {
@@ -113,6 +128,21 @@ export class PresenceRoom extends DurableObject {
       ws.serializeAttachment(me);
       this.broadcast({ t: 'left', id: me.id }, ws);
       this.broadcastCount();
+      await this.forgetIfEmpty(ws);
+    } else if (msg.t === 'state' && me.joined && msg.s && typeof msg.s === 'object' && !Array.isArray(msg.s)) {
+      const changed = {};
+      for (const [k, v] of Object.entries(msg.s).slice(0, MAX_KEYS)) {
+        if (!KEY.test(k) || JSON.stringify(v ?? null).length > MAX_VALUE) continue;
+        if (v === null) delete this.state[k];
+        else if (k in this.state || Object.keys(this.state).length < MAX_KEYS) this.state[k] = v;
+        else continue;
+        changed[k] = v ?? null;
+      }
+      if (!Object.keys(changed).length) return;
+      await this.ctx.storage.put('state', this.state);
+      this.broadcast({ t: 'state', s: changed, from: me.id }, ws);
+    } else if (msg.t === 'event' && me.joined && typeof msg.k === 'string' && KEY.test(msg.k) && JSON.stringify(msg.v ?? null).length <= MAX_VALUE) {
+      this.broadcast({ t: 'event', k: msg.k, v: msg.v ?? null, from: me.id }, ws);
     } else if (msg.t === 'pose' && me.joined) {
       const pose = validPose(msg.p);
       if (!pose) return;
@@ -141,6 +171,15 @@ export class PresenceRoom extends DurableObject {
     } catch {}
     if (me?.joined) this.broadcast({ t: 'left', id: me.id }, ws);
     this.broadcastCount(ws);
+    this.forgetIfEmpty(ws);
+  }
+
+  /** Nobody visible left (besides a socket on its way out): the shared state goes with them. */
+  async forgetIfEmpty(leaving) {
+    if (!Object.keys(this.state).length) return;
+    if (this.sockets(leaving).some((s) => s.deserializeAttachment()?.joined)) return;
+    this.state = {};
+    await this.ctx.storage.delete('state');
   }
 
   randomName() {

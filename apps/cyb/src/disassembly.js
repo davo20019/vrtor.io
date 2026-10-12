@@ -15,10 +15,12 @@ const ARC = 0.9;             // m, how high it arcs over on the way
 const GAP = 0.14;            // m, between parts laid out
 const MARGIN = 0.25;         // m, from the plinth's edge
 const STEP_S = 0.22;         // between parts when taking everything off or putting everything back
+const FREE = 0.12;           // m, pulled past its seat's lift before it comes free in the hand
+const NEAR_SEAT = 0.3;       // m, let go this close to its seat and a part goes back in
 
 const smooth = (t) => t * t * (3 - 2 * t);
 
-export function createDisassembly(scene, { info, byName, root, area, moved = () => {}, prepare = () => {}, onChange = () => {} }) {
+export function createDisassembly(scene, { info, byName, root, area, moved = () => {}, prepare = () => {}, onChange = () => {}, share = () => {} }) {
   const parts = new Map();
   for (const def of info.disassembly?.parts ?? []) {
     const nodes = def.nodes.map(byName).filter(Boolean);
@@ -87,7 +89,7 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
   }
   if (unplaced.length) console.warn(`[cyb] no room on the parts plinth for: ${unplaced.join(', ')}`);
 
-  // ---- moving: a part's nodes (and what it carries) ride on a holder that flies
+  // ---- moving: a part's nodes (and what it carries) ride on a holder: it flies, or a hand holds it
   const tweens = [];
   const dirWorld = (p) => Vector3.TransformNormal(Vector3.FromArray(p.def.dir), root.getWorldMatrix()).normalize();
   const capture = (n) => ({
@@ -109,14 +111,52 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
   const mark = (p, off) => {
     for (const n of p.nodes) n.metadata = { ...(n.metadata ?? {}), off };
   };
-  const centreNow = (p) => {
-    const b = boxOf(p);
-    return b.centre;
-  };
   // Parts fixed to p that aren't inside its own nodes (the airbag on the yoke): they ride along on its holder.
-  const looseKids = (p) => (kids.get(p.def.id) ?? []).filter((k) => !k.off && !k.carriedBy && !k.nodes.some((n) => p.nodes.some((pn) => n.isDescendantOf?.(pn))));
+  const looseKids = (p) => (kids.get(p.def.id) ?? []).filter((k) => !k.off && !k.carriedBy && !k.holder && !k.nodes.some((n) => p.nodes.some((pn) => n.isDescendantOf?.(pn))));
+
+  /** Out of its seat onto a holder at its centre, with what it carries; nothing moves yet. */
+  function detach(p) {
+    if (p.holder) return;
+    prepare(p.def);
+    const start = boxOf(p).centre;
+    const carried = looseKids(p);
+    p.rest = p.nodes.map(capture);
+    p.holder = new TransformNode(`parts-${p.def.id}`, scene);
+    p.holder.position.copyFrom(start);
+    p.holder.rotationQuaternion = Quaternion.Identity();
+    for (const n of p.nodes) n.setParent(p.holder);
+    p.carrying = carried;
+    for (const k of carried) {
+      k.rest = k.nodes.map(capture);
+      for (const n of k.nodes) n.setParent(p.holder);
+      k.carriedBy = p;
+    }
+    p.seat = start.clone();
+  }
+
+  /** Back in its seat, on what it's fixed to: the nodes return exactly, the holder goes. */
+  function seatBack(p) {
+    for (const r of p.rest) restore(r);
+    for (const k of p.carrying) {
+      for (const r of k.rest) restore(r);
+      k.rest = null;
+      k.carriedBy = null;
+    }
+    p.carrying = [];
+    p.holder.dispose();
+    p.holder = null;
+    p.rest = null;
+    moved();
+  }
+
+  /** Stops a part's move where it is (a move made at once overrides it). */
+  function still(p) {
+    for (const tw of tweens.filter((t) => t.p === p)) tweens.splice(tweens.indexOf(tw), 1);
+    p.busy = false;
+  }
 
   function fly(p, path, done) {
+    for (const tw of tweens.filter((t) => t.p === p)) tweens.splice(tweens.indexOf(tw), 1);
     p.busy = true;
     tweens.push({ p, path, i: 0, t: 0, done });
   }
@@ -148,63 +188,60 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
   // ---- the rules
   const offOrHidden = (q) => q.off || q.nodes.every((n) => !n.isEnabled());
   const blockersOff = (p) => p.def.after.map((id) => parts.get(id)).filter((q) => q && !offOrHidden(q));
-  const blockersOn = (p) => [...parts.values()].filter((q) => q.off && q.def.after.includes(p.def.id));
-  const onPart = (p) => (p.def.on ? parts.get(p.def.on) : null);
+  const blockersOn = (p) => {
+    const by = [...parts.values()].filter((q) => q.off && q.def.after.includes(p.def.id));
+    // Fixed to a part that's off itself, and taken off it somewhere else: that part goes back first.
+    const on = p.def.on ? parts.get(p.def.on) : null;
+    const parent = p.rest?.[0]?.parent;
+    if (on && on.off && on.holder && parent !== on.holder && !parent?.isDescendantOf?.(on.holder)) by.push(on);
+    return [...new Set(by)];
+  };
   const history = [];
 
-  function remove(p, { instant = false } = {}) {
-    prepare(p);
-    const carried = looseKids(p);
-    const start = centreNow(p);
-    p.rest = p.nodes.map(capture);
-    p.holder = new TransformNode(`parts-${p.def.id}`, scene);
-    p.holder.position.copyFrom(start);
-    p.holder.rotationQuaternion = Quaternion.Identity();
-    for (const n of p.nodes) n.setParent(p.holder);
-    p.carrying = carried;
-    for (const k of carried) {
-      k.rest = k.nodes.map(capture);
-      for (const n of k.nodes) n.setParent(p.holder);
-      k.carriedBy = p;
-    }
+  /** Off and away to its place on the plinth: out along its way off first if it's still in its seat. */
+  function remove(p, { instant = false, local = true } = {}) {
+    const inSeat = !p.holder;
+    detach(p);
+    if (!p.off) history.push(p);
     p.off = true;
     mark(p, true);
-    history.push(p);
-    const out = start.add(dirWorld(p).scale(LIFT));
-    const to = p.slot ?? out;
+    if (local) share(p.def.id, true);
+    const from = p.holder.position.clone();
+    const to = p.slot ?? from.add(dirWorld(p).scale(LIFT));
     const turn = p.turn ?? Quaternion.Identity();
     if (instant) {
+      still(p);
       p.holder.position.copyFrom(to);
       p.holder.rotationQuaternion.copyFrom(turn);
       moved();
       return;
     }
-    fly(p, [{ a: start, b: out, s: OUT_S }, { a: out, b: to, s: FLY_S, arc: ARC, qa: Quaternion.Identity(), qb: turn }]);
+    const q0 = p.holder.rotationQuaternion.clone();
+    if (inSeat) {
+      const out = from.add(dirWorld(p).scale(LIFT));
+      fly(p, [{ a: from, b: out, s: OUT_S }, { a: out, b: to, s: FLY_S, arc: ARC, qa: q0, qb: turn }]);
+    } else {
+      fly(p, [{ a: from, b: to, s: FLY_S, arc: ARC * 0.6, qa: q0, qb: turn }]);
+    }
   }
 
-  function install(p, { instant = false } = {}) {
-    const back = () => {
-      for (const r of p.rest) restore(r);
-      for (const k of p.carrying) {
-        for (const r of k.rest) restore(r);
-        k.rest = null;
-        k.carriedBy = null;
-      }
-      p.carrying = [];
-      p.holder.dispose();
-      p.holder = null;
-      p.rest = null;
+  /** Back to its seat from wherever it is, the last bit in along its way off. */
+  function install(p, { instant = false, local = true } = {}) {
+    const done = () => {
+      seatBack(p);
       p.off = false;
       mark(p, false);
-      history.splice(history.lastIndexOf(p), 1);
-      moved();
+      const i = history.lastIndexOf(p);
+      if (i >= 0) history.splice(i, 1);
     };
-    if (instant) return back();
-    // Back along the way it came: to just outside its seat, then in. Its seat is where its holder started, in
-    // whatever frame its parent is in now (a door's mirror goes back onto the door, wherever the door is).
+    if (local) share(p.def.id, false);
+    if (instant) {
+      still(p);
+      return done();
+    }
     const seat = seatOf(p);
     const out = seat.add(dirWorld(p).scale(LIFT));
-    fly(p, [{ a: p.holder.position.clone(), b: out, s: FLY_S, arc: ARC, qa: p.holder.rotationQuaternion.clone(), qb: Quaternion.Identity() }, { a: out, b: seat, s: OUT_S }], back);
+    fly(p, [{ a: p.holder.position.clone(), b: out, s: FLY_S, arc: ARC, qa: p.holder.rotationQuaternion.clone(), qb: Quaternion.Identity() }, { a: out, b: seat, s: OUT_S }], done);
   }
 
   /** Where the part's holder stands when the part is back in its seat, in the world as it is now. */
@@ -226,10 +263,11 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
     return seat;
   }
 
+  /** What a press on a part would do, and does it: a tap, or the trigger in the headset. */
   function tap(mesh) {
     const p = owner.get(mesh);
     if (!p) return null;
-    if (p.busy) return { part: p.def, verb: 'moving' };
+    if (p.busy || p.hand) return { part: p.def, verb: 'moving' };
     if (!p.off) {
       const blocked = blockersOff(p);
       if (blocked.length) return { part: p.def, verb: 'blocked-off', by: blocked.map((q) => q.def) };
@@ -237,14 +275,140 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
       return { part: p.def, verb: 'off' };
     }
     const blocked = blockersOn(p);
-    const on = onPart(p);
-    // Fixed to a part that's off itself, and taken off it somewhere else: that part goes back first.
-    if (on && on.off && !(p.rest[0].parent && p.rest[0].parent.isDescendantOf?.(on.holder)) && p.rest[0].parent !== on.holder)
-      blocked.push(on);
-    if (blocked.length) return { part: p.def, verb: 'blocked-on', by: [...new Set(blocked)].map((q) => q.def) };
+    if (blocked.length) return { part: p.def, verb: 'blocked-on', by: blocked.map((q) => q.def) };
     install(p);
     return { part: p.def, verb: 'on' };
   }
+
+  // ---- in the hand (the headset's grip): pull a part out of its seat along its way off, then it's free
+  /** Takes hold of the part a mesh belongs to: { part, verb: 'held' } or why not. hand: { position, rotation } now. */
+  function grab(mesh, hand) {
+    const p = owner.get(mesh);
+    if (!p) return null;
+    if (p.busy || p.hand) return { part: p.def, verb: 'moving' };
+    if (!p.off) {
+      const blocked = blockersOff(p);
+      if (blocked.length) return { part: p.def, verb: 'blocked-off', by: blocked.map((q) => q.def) };
+    }
+    detach(p);
+    p.hand = { from: hand.position.clone(), q0: hand.rotation.clone(), held: p.holder.position.subtract(hand.position),
+      rot: p.holder.rotationQuaternion.clone(), free: p.off, seat: p.off ? null : p.holder.position.clone() };
+    return { part: p.def, verb: 'held', id: p.def.id };
+  }
+
+  /** The hand moved: in its seat the part slides out along its way off; once out, it follows the hand. */
+  function hold(id, hand) {
+    const p = parts.get(id);
+    if (!p?.hand) return null;
+    const h = p.hand;
+    if (!h.free) {
+      const pulled = Vector3.Dot(hand.position.subtract(h.from), dirWorld(p));
+      p.holder.position.copyFrom(h.seat.add(dirWorld(p).scale(Math.max(0, Math.min(LIFT, pulled)))));
+      if (pulled > LIFT + FREE) {
+        h.free = true;                                   // out of its seat: it's in the hand now
+        h.from = hand.position.clone();
+        h.q0 = hand.rotation.clone();
+        h.held = p.holder.position.subtract(hand.position);
+        h.rot = p.holder.rotationQuaternion.clone();
+        moved();
+        return 'free';
+      }
+    } else {
+      const turn = hand.rotation.multiply(Quaternion.Inverse(h.q0));
+      p.holder.position.copyFrom(hand.position.add(h.held.applyRotationQuaternion(turn)));
+      p.holder.rotationQuaternion.copyFrom(turn.multiply(h.rot));
+    }
+    moved();
+    return h.free ? 'free' : 'seated';
+  }
+
+  /** Let go: still in its seat it slides back in; out of it, it goes back in if it's near its seat (and may), else to its place. */
+  function release(id) {
+    const p = parts.get(id);
+    if (!p?.hand) return null;
+    const h = p.hand;
+    p.hand = null;
+    if (!h.free) {
+      // Never came out: back in, as it was (nothing changed).
+      fly(p, [{ a: p.holder.position.clone(), b: h.seat, s: OUT_S * 0.5 }], () => seatBack(p));
+      return { part: p.def, verb: 'kept' };
+    }
+    const seat = seatOf(p);
+    if (Vector3.Distance(p.holder.position, seat) < NEAR_SEAT) {
+      const blocked = p.off ? blockersOn(p) : [];
+      if (!blocked.length) {
+        if (p.off) {
+          install(p);
+        } else {
+          fly(p, [{ a: p.holder.position.clone(), b: seat, s: OUT_S, qa: p.holder.rotationQuaternion.clone(), qb: Quaternion.Identity() }], () => seatBack(p));
+        }
+        return { part: p.def, verb: p.off ? 'on' : 'kept' };
+      }
+      if (p.off) {
+        remove(p);                                       // back to its place, and say why
+        return { part: p.def, verb: 'blocked-on', by: blocked.map((q) => q.def) };
+      }
+    }
+    if (!p.off) {
+      remove(p);
+      return { part: p.def, verb: 'off' };
+    }
+    remove(p, { local: false });                         // already off: just back to its place
+    return { part: p.def, verb: 'placed' };
+  }
+
+  /** Where a held part is now (to show others): [x, y, z, qx, qy, qz, qw], or null. */
+  function heldPose(id) {
+    const p = parts.get(id);
+    if (!p?.holder) return null;
+    const a = p.holder.position, q = p.holder.rotationQuaternion;
+    return [a.x, a.y, a.z, q.x, q.y, q.z, q.w].map((v) => +v.toFixed(4));
+  }
+
+  // ---- someone else's truck (multiplayer): their changes, applied here with the same motion
+  /** Someone took a part off (true) or put it back (false). Their order was the manual's; it's applied as is. */
+  function apply(id, off) {
+    const p = parts.get(id);
+    if (!p || p.hand || p.off === off) return;
+    if (p.busy) {
+      setTimeout(() => apply(id, off), 300);             // after its current move
+      return;
+    }
+    if (off) remove(p, { local: false });
+    else install(p, { local: false });
+    onChange();
+  }
+  /** A part in someone else's hand: shown where they hold it; null when they let go. */
+  function remoteHold(id, pose) {
+    const p = parts.get(id);
+    if (!p || p.hand || p.busy) return;
+    if (!pose) {
+      if (!p.off && p.holder) fly(p, [{ a: p.holder.position.clone(), b: seatOf(p), s: OUT_S, qa: p.holder.rotationQuaternion.clone(), qb: Quaternion.Identity() }], () => seatBack(p));
+      return;
+    }
+    detach(p);
+    p.holder.position.set(pose[0], pose[1], pose[2]);
+    p.holder.rotationQuaternion.set(pose[3], pose[4], pose[5], pose[6]);
+    moved();
+  }
+  /** Brings this truck to a given set of parts off (someone else's, on joining): each off part comes off (what's
+   *  fixed to a part first) and each other goes back (a part before what's fixed to it). */
+  function applyAll(offIds, { instant = true } = {}) {
+    const want = new Set(offIds);
+    const offs = [...parts.values()].filter((p) => want.has(p.def.id) && !p.off).sort((a, b) => depth(b) - depth(a));
+    const ons = [...parts.values()].filter((p) => !want.has(p.def.id) && p.off).sort((a, b) => depth(a) - depth(b));
+    for (const p of ons) {
+      p.hand = null;
+      install(p, { instant, local: false });
+    }
+    for (const p of offs) {
+      p.hand = null;
+      remove(p, { instant, local: false });
+    }
+    onChange();
+  }
+  /** Which parts are off (to bring someone who joins up to date). */
+  const offIds = () => [...parts.values()].filter((p) => p.off).map((p) => p.def.id);
 
   let queue = null;
   function run(next) {
@@ -260,7 +424,7 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
   /** Everything off, in the manual's order: what's fixed to a part comes off it first (laid out on its own). */
   function takeAll() {
     run(() => {
-      const free = [...parts.values()].filter((p) => !p.off && !p.busy && !offOrHidden(p) && !blockersOff(p).length && !p.carriedBy);
+      const free = [...parts.values()].filter((p) => !p.off && !p.busy && !p.hand && !offOrHidden(p) && !blockersOff(p).length && !p.carriedBy);
       const leaf = free.find((p) => !(kids.get(p.def.id) ?? []).some((k) => !k.off)) ?? free[0];
       if (!leaf) return [...parts.values()].some((p) => p.busy);
       remove(leaf);
@@ -271,7 +435,7 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
   /** Everything back, last off first on. */
   function putAllBack() {
     run(() => {
-      const p = [...history].reverse().find((q) => !q.busy && !q.carriedBy && !blockersOn(q).length);
+      const p = [...history].reverse().find((q) => !q.busy && !q.hand && !q.carriedBy && !blockersOn(q).length);
       if (!p) return history.length > 0 && [...parts.values()].some((q) => q.busy);
       install(p);
       onChange();
@@ -279,11 +443,15 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
     });
   }
   /** Everything back at once (before the truck drives off). */
-  function restoreNow() {
+  function restoreNow({ local = true } = {}) {
     clearInterval(queue);
     queue = null;
     for (const tw of tweens.splice(0)) tw.p.busy = false;
-    while (history.length) install(history[history.length - 1], { instant: true });
+    for (const p of parts.values()) {
+      p.hand = null;
+      if (p.holder && !p.off) seatBack(p);
+    }
+    while (history.length) install(history[history.length - 1], { instant: true, local });
     onChange();
   }
 
@@ -302,8 +470,31 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
       return list.map(({ p, box }) => ({ id: p.def.id, size: [box.size.x, box.size.y, box.size.z].map((v) => +v.toFixed(2)), slot: p.slot && [p.slot.x, p.slot.z].map((v) => +v.toFixed(2)), turned: !!p.turn && Math.abs(p.turn.y) > 0.1 }));
     },
     partOf: (mesh) => owner.get(mesh)?.def ?? null,
+    /** The part whose meshes come nearest a point within reach (a hand): its mesh, or null. */
+    nearest(point, reach) {
+      let best = null, bestD = reach;
+      for (const [m, p] of owner) {
+        if (!m.isEnabled() || m.getTotalVertices() === 0 || p.busy) continue;
+        const b = m.getBoundingInfo().boundingBox;
+        const c = Vector3.Clamp(point, b.minimumWorld, b.maximumWorld);
+        const d = Vector3.Distance(point, c);
+        if (d < bestD || (d === 0 && best && depth(p) > depth(owner.get(best)))) {
+          bestD = d;
+          best = m;
+        }
+      }
+      return best;
+    },
     isOff: (id) => parts.get(id)?.off ?? false,
     tap,
+    grab,
+    hold,
+    release,
+    heldPose,
+    apply,
+    applyAll,
+    remoteHold,
+    offIds,
     takeAll,
     putAllBack,
     restoreNow,
