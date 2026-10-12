@@ -1387,7 +1387,8 @@ def door_trim(p, d, sx, driver):
         # under it the dark panel. The dash's lip and face end there, the door's cap and ambient line carrying on.
         # The profile is the white block's and the lower dash's rear edge (interior(), 'dash_white', 'dash_lower').
         wf = [(sw + 4, hw) for sw, hw in DASH_END]
-        white = SH([(wf[0][0], belt_h(p, wf[0][0]) - 52)] + wf[1:] + [(arm_s0 + 70, ya - 2), (s1, ya - 2), (s1, bt1)], hip - 40, xw)
+        front_profile = [(wf[0][0], belt_h(p, wf[0][0]) - 52)] + wf[1:] + [(arm_s0 + 70, ya - 2), (s1, ya - 2), (s1, bt1)]
+        white = SH(front_profile, hip - 40, xw)
         out['door_lower'].append(XH([(xw, 866), (hip, 866), (hip, 1100), (xw, 1100)], 1400, arm_s0 + 72)
                                  & SH([(1434, 866), (arm_s0, 866), (arm_s0 + 70, ya - 1), wf[-1], (1434, 880)], 0, 2000))
     # Crease: front door from high at the front to low at the back; rear door the other way (a chevron).
@@ -1397,34 +1398,33 @@ def door_trim(p, d, sx, driver):
     # Each facet's third point is the corner the crease leaves: bottom-front and top-rear on the front door.
     lo_s, hi_s = (s0, s1) if d == 'f' else (s1, s0)
     out_pt = np.array([2000, 1000, Z((s0 + s1) / 2)])
-    white = plane_cut(white, c0, c1, np.array([sh + 32, ya, Z(lo_s)]), out_pt)                       # lower facet
-    white = plane_cut(white, c0, c1, np.array([sh + 60, belt_h(p, hi_s) - 34, Z(hi_s)]), out_pt)       # upper facet
-    out['trim_white'] = [white]
+    if d != 'f':
+        white = plane_cut(white, c0, c1, np.array([sh + 32, ya, Z(lo_s)]), out_pt)                   # lower facet
+        white = plane_cut(white, c0, c1, np.array([sh + 60, belt_h(p, hi_s) - 34, Z(hi_s)]), out_pt)   # upper facet
     if d == 'f':
-        # Where the block's point butts onto the shut door, the panel fills round it (int-athens-1 shows the door's white
-        # panel ending in a matching point; dgRcedIkNOM 6:16 and -32 show white meeting white there, no gap): the block's
-        # end faces are flat along the truck, the door's facets are not, so above the tip (block's top corner 783 out)
-        # and below it (bottom corner 750 out, the door's lower facet 822) the facets leave a slit and a wedge that
-        # showed dark. A white wedge on the panel's front fills both, tapering into the facets 80 behind the dash.
+        # The shut door has one moulded return matching the dash's pointed end (int-athens-3,
+        # dgRcedIkNOM-376s). Rebuild the panel as one solid BEFORE rounding; detached filler wedges
+        # left internal faces and protruded ahead of the dash's sloping seam in the seated view.
         (tcx, tch), (tpx, tph), (bcx, bch) = DASH_POINT
-        def face_x(h):                                  # the door's facets at its front, out from the centreline (2 into them)
-            return sh + 2.0 if h >= c0[1] else c0[0] + 32.0 * (c0[1] - h) / (c0[1] - ya) + 2.0
-        def meets(p0, p1):                              # where the block's end edge p0-p1 enters the door's face
-            lo, hi = 0.0, 1.0
-            for _ in range(40):
-                t = (lo + hi) / 2
-                x, h = p0[0] + t * (p1[0] - p0[0]), p0[1] + t * (p1[1] - p0[1])
-                lo, hi = (t, hi) if x < face_x(h) else (lo, t)
-            return (p0[0] + lo * (p1[0] - p0[0]), p0[1] + lo * (p1[1] - p0[1]))
-        sf0, sf1 = DASH_END[0][0] + 2, DASH_END[0][0] + 82
-        def wedge(tri):
-            f0 = Face(Wire.make_polygon([(x, h, Z(sf0)) for x, h in tri], close=True))
-            f1 = Face(Wire.make_polygon([(face_x(h) + 0.02 * (x - face_x(h)), h, Z(sf1)) for x, h in tri], close=True))
-            return loft([f0, f1])
-        top_h = bt0 + 3
-        mt, mb = meets((tcx, top_h), (tpx, tph)), meets((bcx, bch), (tpx, tph))
-        out['trim_white'].append(wedge([(tcx, top_h), mt, (face_x(top_h), top_h)]))
-        out['trim_white'].append(wedge([mb, (bcx, bch), (face_x(bch), bch)]))
+        sf0, sf1 = min(sw for sw, _ in DASH_END), s1
+        face_planes = [plane3(c0, c1, np.array(q)) for q in
+                       ([sh + 32, ya, Z(lo_s)], [sh + 60, belt_h(p, hi_s) - 34, Z(hi_s)])]
+        def face_x(h, s):
+            return max(pt[0] - (n[1] * (h - pt[1]) + n[2] * (Z(s) - pt[2])) / n[0]
+                       for pt, n in face_planes)
+        top_h, low_h = belt_h(p, DASH_END[0][0] + 4) - 52, ya - 2
+        # Carry the return into the full door's two broad facets. A short transition
+        # creates a folded triangular patch; the real crease runs down the whole door.
+        low_x = bcx + (low_h - bch) * (tpx - bcx) / (tph - bch)
+        front = [(tcx, top_h), (tpx + 1, tph), (low_x, low_h), (xw, low_h), (xw, top_h)]
+        back_top = belt_h(p, sf1) - 52
+        back_crease = c0[1] + (c1[1] - c0[1]) * (sf1 - s0) / (s1 - s0)
+        back = [(face_x(h, sf1), h) for h in (back_top, back_crease, low_h)] + [(xw, low_h), (xw, back_top)]
+        sections = [Face(Wire.make_polygon([(x, h, Z(s)) for x, h in profile], close=True))
+                    for s, profile in ((sf0, front), (sf1, back))]
+        return_panel = loft(sections, ruled=True) & SH(front_profile, hip - 40, xw)
+        white = return_panel.clean()
+    out['trim_white'] = [white]
     c0s = DASH_END[0][0] + 5 if d == 'f' else s0                    # the front door's cap starts at the dash (above)
     ct0 = belt_h(p, c0s) - 52
     out['cap'] = [SH([(c0s, ct0 + 3), (s1, bt1 + 3), (s1, belt_h(p, s1) + 6), (c0s, belt_h(p, c0s) + 6)], sh + 10, xw)]
@@ -2453,7 +2453,8 @@ if __name__ == '__main__':
         if part is None or part.volume < 1:
             continue
         if name.startswith('door_'):                     # door_<k>_<part>: rides on door k
-            save(part, f'door_{name[5:7]}_int_{name[8:]}', tolerance=2.5, angular=0.7)
+            front_white = name in ('door_fl_trim_white', 'door_fr_trim_white')
+            save(part, f'door_{name[5:7]}_int_{name[8:]}', tolerance=1.0 if front_white else 2.5, angular=0.25 if front_white else 0.7)
         else:
             fine = name in ('seats_front', 'seats_rear')       # their padded crowns are shallow curves: 4.6 degrees a facet
             small = name.startswith(('yoke', 'pedal')) and name != 'yoke_column'     # held close: its curves and small round parts need fine facets

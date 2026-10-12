@@ -489,7 +489,7 @@ bpy.context.view_layer.update()
 # from an even sky (direct and bounced) is baked into one texture, exported as the glTF occlusion map on a
 # second UV set: the app multiplies its lights by it, so corners, footwells and the underside of the roof
 # go dark and the faces open to the windows stay bright, as in the real cabin.
-ROUND = {'seats_front': 24, 'seats_rear': 24, 'rear_armrest': 14, 'dash_white': 28, 'console': 10, 'console_rim': 3, 'console_lid': 16, 'seat_base': 8,
+ROUND = {'seats_front': 24, 'seats_rear': 24, 'rear_armrest': 14, 'dash_white': 12, 'console': 10, 'console_rim': 3, 'console_lid': 16, 'seat_base': 8,
          'dash_top': 6, 'dash_lower': 6, 'dash_face': 4, 'yoke': 9, 'yoke_column': 5, 'visors': 8, 'screen_bezel': 3, 'overhead': 6,
          'armrest': 14, 'door_lower': 6, 'trim_white': 14, 'cap': 6,
          # The removed trim in Tesla's windshield service photos has rolled edges. The sight-plane
@@ -515,6 +515,23 @@ def round_edges(o, width, segments=3):
     mod.segments = segments
     mod.limit_method = 'ANGLE'
     mod.angle_limit = math.radians(25)
+    if part_key(o) == 'dash_white' or o.name.startswith(('door_fl_int_trim_white', 'door_fr_int_trim_white')):
+        # Keep the 4 mm shut-door joint crisp. A full-width bevel on these seam edges
+        # retracts the dash's point and the door's return into two mismatched scallops.
+        # The long padded dash edges and the rest of the door retain their usual rounding.
+        bpy.context.view_layer.update()
+        to_mm = root.matrix_world.inverted() @ o.matrix_world
+        bm = bmesh.new(); bm.from_mesh(o.data)
+        weights = bm.edges.layers.float.new('bevel_weight_edge')
+        for edge in bm.edges:
+            if not edge.is_manifold or edge.calc_face_angle() < math.radians(25):
+                continue
+            pts = [to_mm @ v.co for v in edge.verts]
+            seam = (all(abs(v.x) > 740 for v in pts) if part_key(o) == 'dash_white'
+                    else all(v.y < -1128.8 for v in pts))  # model z > ZF - 1567 mm
+            edge[weights] = min(2.0 / width, 1.0) if seam else 1.0
+        bm.to_mesh(o.data); bm.free()
+        mod.limit_method = 'WEIGHT'
     mod.harden_normals = True
     mod.use_clamp_overlap = True
     bpy.ops.object.select_all(action='DESELECT')
