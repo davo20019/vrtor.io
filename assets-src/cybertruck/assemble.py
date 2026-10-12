@@ -539,7 +539,10 @@ def round_edges(o, width, segments=3):
             pts = [to_mm @ v.co for v in edge.verts]
             seam = (all(abs(v.x) > 740 and v.y > -1240.8 for v in pts) if part_key(o) == 'dash_white'
                     else all(v.y < -1128.8 for v in pts))  # model z > ZF - 1567 mm
-            edge[weights] = min(0.7 / width, 1.0) if seam else 1.0
+            # The block's own end is a rounded nose standing off the door panel (dgRcedIkNOM-32, 6:16, int-athens-3:
+            # soft corners at its top, tip and bottom, the door's panel meeting it behind them); 12 mm (cad.py,
+            # NOSE_STEP), read on those frames, not measured. The door's side of the joint stays crisp.
+            edge[weights] = (min(12.0 / width, 1.0) if part_key(o) == 'dash_white' else min(0.7 / width, 1.0)) if seam else 1.0
         bm.to_mesh(o.data); bm.free()
         mod.limit_method = 'WEIGHT'
     mod.harden_normals = True

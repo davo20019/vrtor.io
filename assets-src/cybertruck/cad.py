@@ -1337,9 +1337,23 @@ def yoke_decal():
 
 # The white block's pointed end at each door in (x out, h): top corner, tip, bottom corner (int-athens-1, measure/console/athens1-whiteend.md).
 DASH_POINT = ((783.0, 1162.0), (832.0, 1120.0), (750.0, 1027.0))
+# The nose is rounded 12 mm (assemble.py), which pulls its outline in from the block's end faces by about that; the
+# end faces and the door's panel therefore sit NOSE_STEP outboard of the measured point, so the rounded nose's
+# outline lands on it and the panel meets the nose behind its rounding. Radius: guess, read on those frames.
+NOSE_STEP = 12.0
 
 # The rear edge of the dash's white block and lower dash in (s, h), top to bottom, where the front door's trim meets them.
-DASH_END = [(1467.0, 1159.0), (1488.0, 1118.0), (1492.0, 1062.0), (1462.0, 1028.0)]
+# The block is padded, not faceted (dgRcedIkNOM-32, 6:16, int-athens-3: one soft highlight over its upper half, no
+# crease between chamfers and face): its measured corners, top 1,467 / 1,159, 1,488 / 1,118, 1,492 / 1,062 and the
+# bottom 1,462 / 1,028, are rounded off by corner cutting, keeping its top, bottom and depth.
+def corner_cut(pts, rounds=2):
+    for _ in range(rounds):
+        cut = [pts[0]]
+        for (s0, h0), (s1, h1) in zip(pts, pts[1:]):
+            cut += [(0.75 * s0 + 0.25 * s1, 0.75 * h0 + 0.25 * h1), (0.25 * s0 + 0.75 * s1, 0.25 * h0 + 0.75 * h1)]
+        pts = cut[:1] + cut[2:-1] + [pts[-1]]
+    return [(round(s, 1), round(h, 1)) for s, h in pts]
+DASH_END = corner_cut([(1467.0, 1159.0), (1488.0, 1118.0), (1492.0, 1062.0), (1462.0, 1028.0)])
 
 def door_trim(p, d, sx, driver):
     """Trim on one door's inside (d 'f' or 'r', sx +1 left / -1 right), from the video frames
@@ -1405,7 +1419,9 @@ def door_trim(p, d, sx, driver):
         # The shut door has one moulded return matching the dash's pointed end (int-athens-3,
         # dgRcedIkNOM-376s). Rebuild the panel as one solid BEFORE rounding; detached filler wedges
         # left internal faces and protruded ahead of the dash's sloping seam in the seated view.
-        (tcx, tch), (tpx, tph), (bcx, bch) = DASH_POINT
+        # The block's rounded nose stands proud of the door's panel (dgRcedIkNOM-32, 6:16, int-athens-3: the panel
+        # meets it behind the nose's rounding, not flush with its point): the return starts on the block's end faces.
+        (tcx, tch), (tpx, tph), (bcx, bch) = [(x + NOSE_STEP, h) for x, h in DASH_POINT]
         sf0, sf1 = min(sw for sw, _ in DASH_END), s1
         face_planes = [plane3(c0, c1, np.array(q)) for q in
                        ([sh + 32, ya, Z(lo_s)], [sh + 60, belt_h(p, hi_s) - 34, Z(hi_s)])]
@@ -1543,14 +1559,14 @@ def interior(p):
     out['dash_face'] = across([(1400, 1180), (1440, 1180), (1441, 1190), (1452, 1188), (1466, 1167), (1466, 1160), (1400, 1160)])
     out['dash_vent'] = across([(1396, 1180), (1404, 1180), (1404, c['dash_h'] - 11), (1396, c['dash_h'] - 11)])
     out['ambient'] = across([(1452, 1159.5), (1471, 1159.5), (1471, 1163.5), (1452, 1163.5)])
-    white = across([(1467, 1159), (1488, 1118), (1492, 1062), (1462, 1028), (1300, 1028), (1300, 1159)])
+    white = across([*DASH_END, (1300, 1028), (1300, 1159)])
     # At each door the block ends in a point, measured on its face through int-athens-1's solved camera
     # (measure/console/athens1-whiteend.md): the top corner 783 out at 1,162, the tip 832 out at 1,120, the
     # bottom corner 750 out at 1,027 (its top and bottom read 1,167 and 1,027 there, the model's 1,159 and 1,028).
     # The end faces run straight back along the truck (dgRcedIkNOM 3:14: the end is flat toward the door).
     def line_h(p0, p1, x):
         return p0[1] + (x - p0[0]) * (p1[1] - p0[1]) / (p1[0] - p0[0])
-    TC, TIP, BC = DASH_POINT
+    TC, TIP, BC = [(x + NOSE_STEP, h) for x, h in DASH_POINT]       # the end faces, outside the rounded nose's outline
     cuts = []
     for sx in (1, -1):
         up = [(sx * 770, line_h(TC, TIP, 770)), (sx * 1000, line_h(TC, TIP, 1000)), (sx * 1000, 1250), (sx * 770, 1250)]

@@ -1,0 +1,24 @@
+{
+ "glbFrame": "y-up",
+ "samples": 32,
+ "sunEnergy": 0,
+ "exposure": 1,
+ "cameras": {
+  "v376f838": {
+   "measure": "../../measure/console/v376f838.camera.json",
+   "photo": "../../refs/video/frames/dgRcedIkNOM-376s.jpg"
+  },
+  "athens3x": {
+   "measure": "../../measure/console/athens3x.camera.json",
+   "photo": "../../refs/web/int-athens-3.jpg"
+  },
+  "athens1x": {
+   "measure": "../../measure/console/athens1x.camera.json",
+   "photo": "../../refs/web/int-athens-1.jpg"
+  },
+  "d32": {
+   "measure": "../../measure/console/d32f1100.camera.json",
+   "photo": "../../refs/video/frames/dgRcedIkNOM-32.jpg"
+  }
+ }
+}
