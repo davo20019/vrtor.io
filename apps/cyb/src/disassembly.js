@@ -12,7 +12,7 @@ const OUT_S = 0.45;          // out of its seat
 const FLY_S = 1.1;           // across to its place, or back
 const LIFT = 0.3;            // m, out of its seat before it flies
 const ARC = 0.9;             // m, how high it arcs over on the way
-const GAP = 0.14;            // m, between parts laid out
+const GAP = 0.08;            // m, between parts laid out
 const MARGIN = 0.25;         // m, from the plinth's edge
 const STEP_S = 0.22;         // between parts when taking everything off or putting everything back
 const FREE = 0.12;           // m, pulled past its seat's lift before it comes free in the hand
@@ -24,7 +24,7 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
   const parts = new Map();
   for (const def of info.disassembly?.parts ?? []) {
     const nodes = def.nodes.map(byName).filter(Boolean);
-    if (nodes.length) parts.set(def.id, { def, nodes, off: false, busy: false, holder: null, rest: null, carriedBy: null, carrying: [], slot: null });
+    if (nodes.length) parts.set(def.id, { def, nodes, off: false, busy: false, holder: null, rest: null, slot: null });
   }
   const kids = new Map();
   for (const p of parts.values()) if (p.def.on && parts.has(p.def.on)) (kids.get(p.def.on) ?? kids.set(p.def.on, []).get(p.def.on)).push(p);
@@ -36,8 +36,9 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
 
   // ---- where each part lies in the parts space: its footprint as it sits on the truck, rows across the plinth
   root.computeWorldMatrix(true);
-  const boxOf = (p) => {
-    const ms = meshesOf([...p.nodes, ...(kids.get(p.def.id) ?? []).flatMap((k) => k.nodes)]).filter((m) => m.getTotalVertices() > 0);
+  const boxOf = (p) => boxOfNodes([...p.nodes, ...(kids.get(p.def.id) ?? []).flatMap((k) => k.nodes)]);
+  function boxOfNodes(nodes) {
+    const ms = meshesOf(nodes).filter((m) => m.getTotalVertices() > 0 && m.isEnabled());
     const lo = new Vector3(Infinity, Infinity, Infinity), hi = lo.scale(-1);
     for (const m of ms) {
       m.computeWorldMatrix(true);
@@ -46,11 +47,12 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
       hi.maximizeInPlace(b.maximumWorld);
     }
     return { lo, hi, size: hi.subtract(lo), centre: lo.add(hi).scale(0.5) };
-  };
+  }
   const list = [...parts.values()].map((p) => ({ p, box: boxOf(p) })).filter((q) => Number.isFinite(q.box.size.x));
   // Biggest first, each into the free rectangle it fits most snugly (MaxRects, best short side), turned a quarter
   // about the vertical if that fits better: a rocker lies along the plinth, a fascia across it.
-  list.sort((a, b) => b.box.size.x * b.box.size.z - a.box.size.x * a.box.size.z);
+  // Longest first: the long thin ones (seals, rockers, straps) need a long free strip, which the big ones leave least of.
+  list.sort((a, b) => Math.max(b.box.size.x, b.box.size.z) - Math.max(a.box.size.x, a.box.size.z) || b.box.size.x * b.box.size.z - a.box.size.x * a.box.size.z);
   const W = area.width - 2 * MARGIN, D = area.depth - 2 * MARGIN;
   let free = [{ x: 0, z: 0, w: W, d: D }];
   const unplaced = [];
@@ -111,38 +113,30 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
   const mark = (p, off) => {
     for (const n of p.nodes) n.metadata = { ...(n.metadata ?? {}), off };
   };
-  // Parts fixed to p that aren't inside its own nodes (the airbag on the yoke): they ride along on its holder.
-  const looseKids = (p) => (kids.get(p.def.id) ?? []).filter((k) => !k.off && !k.carriedBy && !k.holder && !k.nodes.some((n) => p.nodes.some((pn) => n.isDescendantOf?.(pn))));
+  // Parts fixed to p that aren't inside its own nodes (the airbag on the yoke, a seat's trim): the first time p moves
+  // they're hung on its first node for good, so they go wherever it goes, and come off it and back onto it there.
+  const looseKids = (p) => (kids.get(p.def.id) ?? []).filter((k) => !k.off && !k.holder && !k.nodes.some((n) => p.nodes.some((pn) => n.isDescendantOf?.(pn))));
 
   /** Out of its seat onto a holder at its centre, with what it carries; nothing moves yet. */
   function detach(p) {
     if (p.holder) return;
     prepare(p.def);
-    const start = boxOf(p).centre;
-    const carried = looseKids(p);
+    for (const k of looseKids(p)) for (const n of k.nodes) n.setParent(p.nodes[0]);
+    // Its own box as it is now (with what's still on it), about its centre: where it lands is worked out from this.
+    const own = boxOfNodes(p.nodes);
+    const start = own.centre;
+    p.rel = { lo: own.lo.subtract(start), hi: own.hi.subtract(start) };
     p.rest = p.nodes.map(capture);
     p.holder = new TransformNode(`parts-${p.def.id}`, scene);
     p.holder.position.copyFrom(start);
     p.holder.rotationQuaternion = Quaternion.Identity();
     for (const n of p.nodes) n.setParent(p.holder);
-    p.carrying = carried;
-    for (const k of carried) {
-      k.rest = k.nodes.map(capture);
-      for (const n of k.nodes) n.setParent(p.holder);
-      k.carriedBy = p;
-    }
     p.seat = start.clone();
   }
 
   /** Back in its seat, on what it's fixed to: the nodes return exactly, the holder goes. */
   function seatBack(p) {
     for (const r of p.rest) restore(r);
-    for (const k of p.carrying) {
-      for (const r of k.rest) restore(r);
-      k.rest = null;
-      k.carriedBy = null;
-    }
-    p.carrying = [];
     p.holder.dispose();
     p.holder = null;
     p.rest = null;
@@ -207,8 +201,8 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
     mark(p, true);
     if (local) share(p.def.id, true);
     const from = p.holder.position.clone();
-    const to = p.slot ?? from.add(dirWorld(p).scale(LIFT));
     const turn = p.turn ?? Quaternion.Identity();
+    const to = p.slot ? landing(p, turn) : from.add(dirWorld(p).scale(LIFT));
     if (instant) {
       still(p);
       p.holder.position.copyFrom(to);
@@ -223,6 +217,17 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
     } else {
       fly(p, [{ a: from, b: to, s: FLY_S, arc: ARC * 0.6, qa: q0, qb: turn }]);
     }
+  }
+
+  /** Where its holder goes to lie on its place: centred on it, turned as laid out, its lowest point on the plinth. */
+  function landing(p, turn) {
+    const lo = new Vector3(Infinity, Infinity, Infinity), hi = lo.scale(-1);
+    for (const x of [p.rel.lo.x, p.rel.hi.x]) for (const y of [p.rel.lo.y, p.rel.hi.y]) for (const z of [p.rel.lo.z, p.rel.hi.z]) {
+      const c = new Vector3(x, y, z).applyRotationQuaternion(turn);
+      lo.minimizeInPlace(c);
+      hi.maximizeInPlace(c);
+    }
+    return new Vector3(p.slot.x - (lo.x + hi.x) / 2, area.top + 0.01 - lo.y, p.slot.z - (lo.z + hi.z) / 2);
   }
 
   /** Back to its seat from wherever it is, the last bit in along its way off. */
@@ -424,7 +429,7 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
   /** Everything off, in the manual's order: what's fixed to a part comes off it first (laid out on its own). */
   function takeAll() {
     run(() => {
-      const free = [...parts.values()].filter((p) => !p.off && !p.busy && !p.hand && !offOrHidden(p) && !blockersOff(p).length && !p.carriedBy);
+      const free = [...parts.values()].filter((p) => !p.off && !p.busy && !p.hand && !offOrHidden(p) && !blockersOff(p).length);
       const leaf = free.find((p) => !(kids.get(p.def.id) ?? []).some((k) => !k.off)) ?? free[0];
       if (!leaf) return [...parts.values()].some((p) => p.busy);
       remove(leaf);
@@ -435,7 +440,7 @@ export function createDisassembly(scene, { info, byName, root, area, moved = () 
   /** Everything back, last off first on. */
   function putAllBack() {
     run(() => {
-      const p = [...history].reverse().find((q) => !q.busy && !q.hand && !q.carriedBy && !blockersOn(q).length);
+      const p = [...history].reverse().find((q) => !q.busy && !q.hand && !blockersOn(q).length);
       if (!p) return history.length > 0 && [...parts.values()].some((q) => q.busy);
       install(p);
       onChange();
