@@ -505,7 +505,7 @@ def part_key(o):
         return 'open'
     return n.split('_int_', 1)[1] if '_int_' in n else n[4:] if n.startswith('int_') else n
 
-ROUND_SEGMENTS = {'yoke': 3, 'a_pillar_inner': 3}             # the rim: a padded grip, round in section, not a bevelled plate
+ROUND_SEGMENTS = {'yoke': 3, 'a_pillar_inner': 4}
 
 def round_edges(o, width, segments=3):
     for m in list(o.modifiers):          # smooth-by-angle would mark the rounded edges sharp again; hardened normals shade instead
@@ -515,8 +515,18 @@ def round_edges(o, width, segments=3):
     mod.segments = segments
     mod.limit_method = 'ANGLE'
     mod.angle_limit = math.radians(25)
+    if part_key(o) == 'a_pillar_inner':
+        # Tiny boolean seam edges used to clamp the entire post's bevel to almost
+        # zero. Round the long moulded edges without beveling those internal joins.
+        bm = bmesh.new(); bm.from_mesh(o.data)
+        weights = bm.edges.layers.float.new('bevel_weight_edge')
+        for edge in bm.edges:
+            if edge.is_manifold and edge.calc_length() > 25 and edge.calc_face_angle() > math.radians(25):
+                edge[weights] = 1.0
+        bm.to_mesh(o.data); bm.free()
+        mod.limit_method = 'WEIGHT'
     if part_key(o) == 'dash_white' or o.name.startswith(('door_fl_int_trim_white', 'door_fr_int_trim_white')):
-        # Keep the 4 mm shut-door joint crisp. A full-width bevel on these seam edges
+        # Keep the 2 mm shut-door joint crisp. A full-width bevel on these seam edges
         # retracts the dash's point and the door's return into two mismatched scallops.
         # The long padded dash edges and the rest of the door retain their usual rounding.
         bpy.context.view_layer.update()
@@ -527,13 +537,13 @@ def round_edges(o, width, segments=3):
             if not edge.is_manifold or edge.calc_face_angle() < math.radians(25):
                 continue
             pts = [to_mm @ v.co for v in edge.verts]
-            seam = (all(abs(v.x) > 740 for v in pts) if part_key(o) == 'dash_white'
+            seam = (all(abs(v.x) > 740 and v.y > -1240.8 for v in pts) if part_key(o) == 'dash_white'
                     else all(v.y < -1128.8 for v in pts))  # model z > ZF - 1567 mm
-            edge[weights] = min(2.0 / width, 1.0) if seam else 1.0
+            edge[weights] = min(0.7 / width, 1.0) if seam else 1.0
         bm.to_mesh(o.data); bm.free()
         mod.limit_method = 'WEIGHT'
     mod.harden_normals = True
-    mod.use_clamp_overlap = True
+    mod.use_clamp_overlap = part_key(o) != 'a_pillar_inner'
     bpy.ops.object.select_all(action='DESELECT')
     bpy.context.view_layer.objects.active = o
     o.select_set(True)

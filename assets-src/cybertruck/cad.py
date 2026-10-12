@@ -1381,13 +1381,13 @@ def door_trim(p, d, sx, driver):
     out['open'] = [Box(24, 8, 30).moved(Location((hip + 15, ya + 3, Z(arm_s0 + 160))))]   # the door-open button, ahead of the pull pocket
     white = SH([(s0, ya - 2), (s1, ya - 2), (s1, bt1), (s0, bt0)], hip - 40, xw)
     if d == 'f':
-        # With the door shut its trim runs forward past the seam to the dash, 4 mm behind its rear face (dgRcedIkNOM
+        # With the door shut its trim runs forward past the seam to the dash, 2 mm behind its rear face (dgRcedIkNOM
         # 6:16 and 7:13): the white block's point butts onto the door's white panel, whose top meets the block's top
         # corner, and whose lower edge leaves the block's bottom corner (1,028) and falls back to the armrest's front;
         # under it the dark panel. The dash's lip and face end there, the door's cap and ambient line carrying on.
         # The profile is the white block's and the lower dash's rear edge (interior(), 'dash_white', 'dash_lower').
-        wf = [(sw + 4, hw) for sw, hw in DASH_END]
-        front_profile = [(wf[0][0], belt_h(p, wf[0][0]) - 52)] + wf[1:] + [(arm_s0 + 70, ya - 2), (s1, ya - 2), (s1, bt1)]
+        wf = [(sw + 2, hw) for sw, hw in DASH_END]
+        front_profile = wf + [(arm_s0 + 70, ya - 2), (s1, ya - 2), (s1, bt1)]
         white = SH(front_profile, hip - 40, xw)
         out['door_lower'].append(XH([(xw, 866), (hip, 866), (hip, 1100), (xw, 1100)], 1400, arm_s0 + 72)
                                  & SH([(1434, 866), (arm_s0, 866), (arm_s0 + 70, ya - 1), wf[-1], (1434, 880)], 0, 2000))
@@ -1412,11 +1412,11 @@ def door_trim(p, d, sx, driver):
         def face_x(h, s):
             return max(pt[0] - (n[1] * (h - pt[1]) + n[2] * (Z(s) - pt[2])) / n[0]
                        for pt, n in face_planes)
-        top_h, low_h = belt_h(p, DASH_END[0][0] + 4) - 52, ya - 2
+        top_h, low_h = DASH_END[0][1], ya - 2
         # Carry the return into the full door's two broad facets. A short transition
         # creates a folded triangular patch; the real crease runs down the whole door.
         low_x = bcx + (low_h - bch) * (tpx - bcx) / (tph - bch)
-        front = [(tcx, top_h), (tpx + 1, tph), (low_x, low_h), (xw, low_h), (xw, top_h)]
+        front = [(tcx + (top_h - tch) * (tpx - tcx) / (tph - tch), top_h), (tpx, tph), (low_x, low_h), (xw, low_h), (xw, top_h)]
         back_top = belt_h(p, sf1) - 52
         back_crease = c0[1] + (c1[1] - c0[1]) * (sf1 - s0) / (s1 - s0)
         back = [(face_x(h, sf1), h) for h in (back_top, back_crease, low_h)] + [(xw, low_h), (xw, back_top)]
@@ -1425,10 +1425,18 @@ def door_trim(p, d, sx, driver):
         return_panel = loft(sections, ruled=True) & SH(front_profile, hip - 40, xw)
         white = return_panel.clean()
     out['trim_white'] = [white]
-    c0s = DASH_END[0][0] + 5 if d == 'f' else s0                    # the front door's cap starts at the dash (above)
-    ct0 = belt_h(p, c0s) - 52
+    c0s = DASH_END[0][0] + 3 if d == 'f' else s0
+    ct0 = DASH_END[0][1] if d == 'f' else belt_h(p, c0s) - 52
     out['cap'] = [SH([(c0s, ct0 + 3), (s1, bt1 + 3), (s1, belt_h(p, s1) + 6), (c0s, belt_h(p, c0s) + 6)], sh + 10, xw)]
     out['ambient'] = [SH([(c0s, ct0 - 0.5), (s1 - 4, bt1 - 0.5), (s1 - 4, bt1 + 3.5), (c0s, ct0 + 3.5)], sh + 12, sh + 40)]
+    if d == 'f':
+        # The cap and light turn inward with the dash end. A constant shoulder-room
+        # width left a 30 mm black notch between the two ambient strips.
+        x0 = tcx + (ct0 - tch) * (tpx - tcx) / (tph - tch)
+        out['cap'] = [SH([(c0s, ct0 + 3), (s1, bt1 + 3), (s1, belt_h(p, s1) + 6), (c0s, belt_h(p, c0s) + 6)], 0, xw)
+                      & XS([(x0 + 2, c0s), (sh + 10, s1), (xw, s1), (xw, c0s)], 1000, 1400)]
+        out['ambient'] = [SH([(c0s, ct0 - 0.5), (s1 - 4, bt1 - 0.5), (s1 - 4, bt1 + 3.5), (c0s, ct0 + 3.5)], 0, xw)
+                          & XS([(x0 + 2, c0s), (sh + 12, s1 - 4), (sh + 40, s1 - 4), (x0 + 25, c0s)], 1000, 1400)]
     if d == 'f':
         g = [(s0 + 50, 470), (s0 + 330, 470), (s0 + 300, 640), (s0 + 50, 640)]
     else:
@@ -1721,8 +1729,10 @@ def interior(p):
     # shows nothing behind the mirror housing). Before, bare glass there showed the seats from outside.
     beams = [band & sband(h0, apex_front + 5) & roof_only, ceiling_band(p, 10 - c['wall'], 24) & sband(apex_front, p['apex_s'] + 40) & roof_only]
     rails = []
-    for ka, kb, s0, s1, reach in (('roof', 'window_l', 1000, p['apex_s'], 45), ('deck', 'window_l', p['apex_s'], c['cab_rear_s'] - 10, 45),
-                                  ('roof', 'window_r', 1000, p['apex_s'], 45), ('deck', 'window_r', p['apex_s'], c['cab_rear_s'] - 10, 45)):
+    # The windshield bar already carries the front roof-edge trim. A second ceiling-band
+    # rail intersected it at a different depth and made two open slits over the quarter glass.
+    for ka, kb, s0, s1, reach in (('deck', 'window_l', p['apex_s'], c['cab_rear_s'] - 10, 45),
+                                  ('deck', 'window_r', p['apex_s'], c['cab_rear_s'] - 10, 45)):
         rails.append(band & sband(s0, s1) & edge_wedge(p, ka, kb, reach))
     head = Compound(beams + rails)
     out['headliner'] = fixed(head & Box(2400, 2400, 8000, align=(Align.CENTER, Align.MIN, Align.CENTER)).moved(Location((0, c['dash_h'] + 40, 0))))
@@ -1736,6 +1746,8 @@ def interior(p):
     # (5.9 px RMS, measure/console/athens1-pillar.md): 1,410 back at the dash, 1,470 at 1,370 high, the rounded
     # corner at 1,496 and 1,399.
     apil, grilles = [], []
+    # The post's camera-fitted rear face remains in its measured position. Widening
+    # the glass must not widen the visible cabin face with it.
     trim_pl = planes(PILLAR_REFERENCE)
     for key in ('window_l', 'window_r'):
         sx = 1 if key == 'window_l' else -1
@@ -1752,10 +1764,10 @@ def interior(p):
         # RMS), dgRcedIkNOM-32 (9 px) and, mirrored, dgRcedIkNOM at 6:16 (measure/console/pillar_hull.py), so it
         # shows those outlines from those cameras. Its faces are rounded, so each camera's outline is a different
         # line on them (crossing two outlines as if one edge put it outside the glass).
-        hull_pl = pillar_planes(sx, PILLAR_REFERENCE)
+        hull_pl = pillar_planes(sx, p)
         for k in ('post athens1', 'post athens2', 'post d32'):
             col = halfspace_cut(col, *hull_pl[k])
-        rp = trim_pl['roof']
+        rp = planes(p)['roof']
         rn = np.array(rp[1], float); rn = rn if rn[1] > 0 else -rn
         r0 = np.array(rp[0], float) - rn * 12
         col = plane_cut(col, r0, r0 + np.cross(rn, [1, 0, 0]) * 100, r0 + np.array([100.0, 0, 0]), inside)        # under the windshield
@@ -1815,11 +1827,6 @@ def interior(p):
         # glass all the way up, post and strip one surface above the glass triangle. Behind the window opening it
         # keeps to the crease (no deeper than the roof-edge rail), so it doesn't stand out over the side window.
         # The strip's measured inner face is independent of the newly corrected pane width.
-        # Keep the original sight-plane attachment, then cap it against the physical pane below.
-        old_r, old_w = trim_pl['roof'], trim_pl[key]
-        w0, w1 = [on_plane(old_r, x=sx * (abs(edge_point(old_r, old_w, ZF - q)[0]) - PILLAR_REFERENCE['win_margin']),
-                           z=ZF - q) for q in (PILLAR_REFERENCE['cowl_s'] + 30, p['apex_s'] - 40)]
-        c0, c1 = w0 - np.array([sx * 100.0, 0, 0]), w1 - np.array([sx * 100.0, 0, 0])
         strip = strip & Box(2400, 3000, p['apex_s'] - 800, align=(Align.CENTER, Align.CENTER, Align.MIN)).moved(Location((0, 0, ZF - p['apex_s'])))
         # Ahead of the post's rear face (the door opening's edge, A-B above) the strip keeps its full section; behind
         # it only the rail along the crease.
@@ -1843,9 +1850,8 @@ def interior(p):
         gz = halfspace_cut(gz, apt(1400, 1300, 10 + 55), -an)
         grilles.append(gz & sband(1310, 1375))
         col = col + strip
-        actual_ws, actual_n = panels(p)['windshield'][:2]
-        col = col - prism(actual_ws, actual_n, out=400.0, depth=10.0)
-        col = col & hull(p, inset=10.0)  # the trim must stay inside the corrected physical body
+        # The measured post is capped below the current windshield before joining
+        # the bar; subtracting the pane footprint afterwards left thin shards.
         apil.append(col)
     out['a_pillar_inner'] = Compound(apil)
     out['tweeters'] = fixed(Compound(grilles))         # the speaker grilles on the post and the strip (both drawn above)

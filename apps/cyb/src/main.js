@@ -223,7 +223,7 @@ const doorTargets = new Map();
 async function loadTruck() {
   const info = await (await fetch(`${BASE}models/cybertruck.json`)).json();
   // The stable model path is cached for an hour; select the rebuilt corner immediately.
-  const container = await LoadAssetContainerAsync(`${BASE}models/cybertruck.glb?v=8fac356f6f3f`, scene, {
+  const container = await LoadAssetContainerAsync(`${BASE}models/cybertruck.glb?v=85e6fee23e15`, scene, {
     onProgress: (e) => e.lengthComputable && (ui.pct.textContent = `${Math.round((e.loaded / e.total) * 100)}%`),
   });
   container.addAllToScene();
