@@ -1,0 +1,11 @@
+import { chromium } from 'playwright-core';
+const exe = process.env.HOME + '/Library/Caches/ms-playwright/chromium-1228/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
+const browser = await chromium.launch({ executablePath: exe, args: ['--use-angle=metal'] });
+const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+const warn = [];
+page.on('console', (m) => { if (/cyb/.test(m.text())) warn.push(m.text()); });
+await page.goto('http://localhost:8790/cyb/', { waitUntil: 'load' });
+await page.waitForFunction(() => window.__cyb?.parts, null, { timeout: 120000 });
+console.log(warn);
+console.log((await page.evaluate(() => window.__cyb.parts.layout)).filter(q => q.turned).map(q => q.id).join(' '));
+await browser.close();
