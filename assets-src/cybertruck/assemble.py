@@ -318,7 +318,10 @@ INTERIOR = {'trim_white': 'trim_white', 'dash_top': 'dash_shelf', 'dash_face': '
             'overhead_strip': 'bezel', 'overhead_keys': 'switch', 'overhead_arms': 'overhead', 'mirror_glass': 'mirror_glass', 'tweeters': 'grille', 'window_edge': 'bezel', 'usb': 'screen',
             # on the doors (door_<k>_int_<name>)
             'armrest': 'armrest', 'door_lower': 'door_dark', 'switch_pod': 'bezel', 'switch': 'door_button', 'open': 'door_button',
-            'cap': 'dash_top', 'grilles': 'grille'}
+            'cap': 'dash_top', 'grilles': 'grille',
+            # inside a front door (cad.py front_door_inner)
+            'closeout': 'door_dark', 'closeout_speaker': 'grille', 'closeout_module': 'switch', 'regulator_motor': 'trim_white',
+            'regulator': 'tiedown', 'nvh_foam': 'carpet'}
 # A part split into individual ones ('seats_front__l', 'seats_front__r') takes its material by the name before '__'.
 cabin_parts = [stl(f.stem, M[INTERIOR[f.stem[4:].split('__')[0]]], smooth_angle=25)
                for f in sorted(PARTS.glob('int_*.stl')) if f.stem[4:].split('__')[0] in INTERIOR]

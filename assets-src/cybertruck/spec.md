@@ -196,7 +196,17 @@ screens, rearview mirror, console), with the order from the manual's procedures.
 cladding are saved one piece each (cad.py, '__' names). The parts plinth grew to 6.0 x 9.6 m: the 68 laid out by
 footprint take about 31 m² with room round each, more than the 4.6 x 8.4 m one held.
 
-Triangles: the GLB draws 60,810 (61,222 before this, with the front plate in it twice). review.py counted 60,365
+Inside the front doors (2026-10-12): the door is a skin and an inner panel 60 mm apart, the cavity the glass drops
+into between them; the inner panel's large opening is closed by the closeout panel, a black tub with the woofer, the
+door's control module and the window motor on the cabin side and the regulator's two rails on the cavity side; a
+felt NVH pad on it, the trim 6.5 mm off the steel over that (cad.py front_door_inner). They come off in the manual's
+order: beltline, trim, felt, glass, closeout panel, regulator. The opening is read off the manual's drawing of the
+inner panel scaled to the door (1.61 x 1.42 mm/px), the panel's parts off its photo taken off, the woofer as a cone,
+module and motor as boxes of their sizes there: read from pictures, about +-25 mm, not surveyed. Review renders:
+review/doorinner/sheet_bright.png (assembled; trim off; felt off; closeout off). Still to come on the doors: the
+hinges and their stud plates, check strap, door presenter, latch, seals; the rear doors' insides.
+
+Triangles: the GLB draws 62,398 with the doors' insides (1,724 of them); before them 60,810 (61,222 before this, with the front plate in it twice). review.py counted 60,365
 and, before, 59,825: Blender's importer drops degenerate triangles the GPU still draws, so the review undercounts.
 Both counts are over the 60,000 budget; a truck that comes apart part by part will need far more, so the budget
 waits on a frame rate measured on the Quest, not on a guess.

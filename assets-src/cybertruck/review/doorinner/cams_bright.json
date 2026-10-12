@@ -1,0 +1,144 @@
+{
+ "glbFrame": "y-up",
+ "samples": 24,
+ "sunEnergy": 0,
+ "exposure": 2.2,
+ "cameras": {
+  "0-assembled": {
+   "eye": [
+    -150,
+    950,
+    640
+   ],
+   "look": [
+    950,
+    840,
+    640
+   ],
+   "fovDeg": 66,
+   "size": [
+    1200,
+    900
+   ],
+   "hide": [
+    "int_seats_front__",
+    "int_seat_base__l",
+    "int_seat_base__r",
+    "int_piping__",
+    "int_seat_knobs__",
+    "int_console",
+    "int_belts",
+    "int_belt_hw"
+   ]
+  },
+  "2-trim-off": {
+   "eye": [
+    -150,
+    950,
+    640
+   ],
+   "look": [
+    950,
+    840,
+    640
+   ],
+   "fovDeg": 66,
+   "size": [
+    1200,
+    900
+   ],
+   "hide": [
+    "int_seats_front__",
+    "int_seat_base__l",
+    "int_seat_base__r",
+    "int_piping__",
+    "int_seat_knobs__",
+    "int_console",
+    "int_belts",
+    "int_belt_hw",
+    "door_fl_int_cap",
+    "door_fl_int_ambient",
+    "door_fl_int_trim_white",
+    "door_fl_int_armrest",
+    "door_fl_int_door_lower",
+    "door_fl_int_switch",
+    "door_fl_int_grilles",
+    "open_fl"
+   ]
+  },
+  "3-felt-off": {
+   "eye": [
+    -150,
+    950,
+    640
+   ],
+   "look": [
+    950,
+    840,
+    640
+   ],
+   "fovDeg": 66,
+   "size": [
+    1200,
+    900
+   ],
+   "hide": [
+    "int_seats_front__",
+    "int_seat_base__l",
+    "int_seat_base__r",
+    "int_piping__",
+    "int_seat_knobs__",
+    "int_console",
+    "int_belts",
+    "int_belt_hw",
+    "door_fl_int_cap",
+    "door_fl_int_ambient",
+    "door_fl_int_trim_white",
+    "door_fl_int_armrest",
+    "door_fl_int_door_lower",
+    "door_fl_int_switch",
+    "door_fl_int_grilles",
+    "open_fl",
+    "door_fl_int_nvh_foam"
+   ]
+  },
+  "5-closeout-off": {
+   "eye": [
+    -150,
+    950,
+    640
+   ],
+   "look": [
+    950,
+    840,
+    640
+   ],
+   "fovDeg": 66,
+   "size": [
+    1200,
+    900
+   ],
+   "hide": [
+    "int_seats_front__",
+    "int_seat_base__l",
+    "int_seat_base__r",
+    "int_piping__",
+    "int_seat_knobs__",
+    "int_console",
+    "int_belts",
+    "int_belt_hw",
+    "door_fl_int_cap",
+    "door_fl_int_ambient",
+    "door_fl_int_trim_white",
+    "door_fl_int_armrest",
+    "door_fl_int_door_lower",
+    "door_fl_int_switch",
+    "door_fl_int_grilles",
+    "open_fl",
+    "door_fl_int_nvh_foam",
+    "door_fl_glass",
+    "door_fl_int_closeout"
+   ]
+  }
+ }
+}

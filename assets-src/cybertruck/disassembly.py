@@ -8,8 +8,9 @@ manual's (the procedure's own "Remove ... See ..." steps), kept to the parts the
 more than the manual names, 'why' says so. assemble.py checks every name against the model and writes the list
 into cybertruck.json (disassembly).
 
-v1 (2026-10-12): the parts the model already has as separate pieces, at the manual's level. Deeper parts (each
-door's closeout panel, regulator, hinges; the seats' covers; the dash's panels) come as they're built.
+v1 (2026-10-12): the parts the model already has as separate pieces, at the manual's level, and inside each front
+door the felt pad, closeout panel and window regulator. Deeper parts (the hinges, check straps, latches, seals; the
+rear doors' insides; the seats' covers; the dash's panels) come as they're built.
 """
 
 CORNER = {'fl': ('Front', 'LH', 1), 'fr': ('Front', 'RH', -1), 'rl': ('Rear', 'LH', 1), 'rr': ('Rear', 'RH', -1)}
@@ -55,6 +56,18 @@ def parts():
                  after=[f'door_trim_{k}', f'beltline_{k}'], on=d),
             part(d, f'Door - {end} - {side}', [d], (sx, 0, 0)),
         ]
+        if end == 'Front':
+            # Under the trim (cad.py front_door_inner): the felt pad, the closeout panel with the woofer and the
+            # door's module on it, and the window regulator on the panel's far side.
+            out += [
+                part(f'nvh_foam_{k}', f'NVH Foam - Door - Front - {side}', [f'{d}_int_nvh_foam'], (-sx, 0, 0),
+                     after=[f'door_trim_{k}'], on=d),
+                part(f'closeout_{k}', f'Closeout Panel - Front Door - {side}',
+                     [f'{d}_int_closeout', f'{d}_int_closeout_speaker', f'{d}_int_closeout_module'], (-sx, 0, 0),
+                     after=[f'door_trim_{k}', f'door_glass_{k}', f'nvh_foam_{k}'], on=d, why='the felt pad lies on it'),
+                part(f'regulator_{k}', f'Window Regulator - Front Door - {side}', [f'{d}_int_regulator', f'{d}_int_regulator_motor'],
+                     (-sx, 0, 0), on=f'closeout_{k}'),
+            ]
     # ---- glass and the wiper (1020, 1750)
     out += [
         part('wiper_arm', 'Wiper Arm and Blade Assembly - Windshield', ['wiper_arm'], (0, 1, 0.3)),

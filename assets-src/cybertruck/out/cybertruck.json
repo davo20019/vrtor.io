@@ -4434,6 +4434,72 @@
         "mirrored": false
       },
       {
+        "id": "nvh_foam_fl",
+        "name": "NVH Foam - Door - Front - LH",
+        "manual": "NVH Foam - Door - Front - LH",
+        "nodes": [
+          "door_fl_int_nvh_foam"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "door_trim_fl"
+        ],
+        "on": "door_fl",
+        "why": null,
+        "procedure": "NVH Foam - Door - Front - LH",
+        "page": "GUID-632C5EBD-5870-43B0-8732-BE512084D6F7.html",
+        "mirrored": false
+      },
+      {
+        "id": "closeout_fl",
+        "name": "Closeout Panel - Front Door - LH",
+        "manual": "Closeout Panel - Front Door - LH",
+        "nodes": [
+          "door_fl_int_closeout",
+          "door_fl_int_closeout_speaker",
+          "door_fl_int_closeout_module"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [
+          "door_trim_fl",
+          "door_glass_fl",
+          "nvh_foam_fl"
+        ],
+        "on": "door_fl",
+        "why": "the felt pad lies on it",
+        "procedure": "Closeout Panel - Front Door - LH",
+        "page": "GUID-E6DCF1A8-5507-437B-960B-B5EE4935F35A.html",
+        "mirrored": false
+      },
+      {
+        "id": "regulator_fl",
+        "name": "Window Regulator - Front Door - LH",
+        "manual": "Window Regulator - Front Door - LH",
+        "nodes": [
+          "door_fl_int_regulator",
+          "door_fl_int_regulator_motor"
+        ],
+        "dir": [
+          -1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "closeout_fl",
+        "why": null,
+        "procedure": "Window Regulator - Front Door - LH",
+        "page": "GUID-CAC872D6-ADA7-4A31-9806-4C2EAF0C2523.html",
+        "mirrored": false
+      },
+      {
         "id": "mirror_glass_fr",
         "name": "Exterior Mirror Glass - Flat - Electrochromic Dimming - RH",
         "manual": "Exterior Mirror Glass - Flat - Electrochromic Dimming - RH",
@@ -4578,6 +4644,72 @@
         "why": null,
         "procedure": "Door - Front - LH",
         "page": "GUID-600F196C-8500-4ED6-8625-B938F5E7E291.html",
+        "mirrored": true
+      },
+      {
+        "id": "nvh_foam_fr",
+        "name": "NVH Foam - Door - Front - RH",
+        "manual": "NVH Foam - Door - Front - RH",
+        "nodes": [
+          "door_fr_int_nvh_foam"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "door_trim_fr"
+        ],
+        "on": "door_fr",
+        "why": null,
+        "procedure": "NVH Foam - Door - Front - LH",
+        "page": "GUID-632C5EBD-5870-43B0-8732-BE512084D6F7.html",
+        "mirrored": true
+      },
+      {
+        "id": "closeout_fr",
+        "name": "Closeout Panel - Front Door - RH",
+        "manual": "Closeout Panel - Front Door - RH",
+        "nodes": [
+          "door_fr_int_closeout",
+          "door_fr_int_closeout_speaker",
+          "door_fr_int_closeout_module"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [
+          "door_trim_fr",
+          "door_glass_fr",
+          "nvh_foam_fr"
+        ],
+        "on": "door_fr",
+        "why": "the felt pad lies on it",
+        "procedure": "Closeout Panel - Front Door - LH",
+        "page": "GUID-E6DCF1A8-5507-437B-960B-B5EE4935F35A.html",
+        "mirrored": true
+      },
+      {
+        "id": "regulator_fr",
+        "name": "Window Regulator - Front Door - RH",
+        "manual": "Window Regulator - Front Door - RH",
+        "nodes": [
+          "door_fr_int_regulator",
+          "door_fr_int_regulator_motor"
+        ],
+        "dir": [
+          1,
+          0,
+          0
+        ],
+        "after": [],
+        "on": "closeout_fr",
+        "why": null,
+        "procedure": "Window Regulator - Front Door - LH",
+        "page": "GUID-CAC872D6-ADA7-4A31-9806-4C2EAF0C2523.html",
         "mirrored": true
       },
       {
