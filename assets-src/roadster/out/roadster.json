@@ -1,0 +1,90 @@
+{
+  "units": "metres; glTF frame: up +y, front +z, +x the car's left; origin on the ground midway between the axles",
+  "wheels": {
+    "fl": {
+      "centre": [
+        0.8250000000000001,
+        0.33811,
+        1.48241
+      ]
+    },
+    "rl": {
+      "centre": [
+        0.8215,
+        0.37568,
+        -1.48241
+      ]
+    },
+    "fr": {
+      "centre": [
+        -0.8250000000000001,
+        0.33811,
+        1.48241
+      ]
+    },
+    "rr": {
+      "centre": [
+        -0.8215,
+        0.37568,
+        -1.48241
+      ]
+    }
+  },
+  "spin": {
+    "nodes": [
+      "wheel_fl",
+      "wheel_rl",
+      "wheel_fr",
+      "wheel_rr"
+    ],
+    "axis": [
+      1,
+      0,
+      0
+    ],
+    "note": "wheel_*.rotation.x += distance_m / radius_m (front 0.338 m, rear 0.376 m)"
+  },
+  "steer": {
+    "nodes": [
+      "steer_fl",
+      "steer_fr"
+    ],
+    "axis": [
+      0,
+      1,
+      0
+    ],
+    "note": "steer_*.rotation.y = angle; pivot is the vertical through the wheel centre (the kingpin is not published)"
+  },
+  "doors": {
+    "door_l": {
+      "pivot": [
+        0.892899,
+        0.7732290138549308,
+        1.0830776371308017
+      ],
+      "axis": [
+        0.9291641282577402,
+        -0.36966744887673536,
+        0.0
+      ],
+      "openDeg": 65,
+      "note": "quaternion from axis-angle: angle 0 shut, openDeg open. The hinge is not published (spec.md, \"Doors\")."
+    },
+    "door_r": {
+      "pivot": [
+        -0.892899,
+        0.7732290138549308,
+        1.0830776371308017
+      ],
+      "axis": [
+        0.9291641282577402,
+        0.36966744887673536,
+        -0.0
+      ],
+      "openDeg": 65,
+      "note": "quaternion from axis-angle: angle 0 shut, openDeg open. The hinge is not published (spec.md, \"Doors\")."
+    }
+  },
+  "triangles": 18152
+}

@@ -19,6 +19,8 @@ const EARTH = { name: 'Earth', code: 'geo', service: 'GEO' };
 const JUMP = { name: 'Parachute', code: 'jump', service: 'JUMP' };
 // A full-size Cybertruck to walk around and sit in, built with the building-3d-replicas skill (apps/cyb).
 const CYB = { name: 'Cybertruck', code: 'cyb', service: 'CYB' };
+// The second-generation Roadster revealed on 15 October 2026, built the same way from the reveal photos (apps/rds).
+const RDS = { name: 'Roadster', code: 'rds', service: 'RDS' };
 const SOUND_LAB = { name: 'Sound Lab', code: 'snd', service: 'SND' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
@@ -77,6 +79,10 @@ export const SUBJECTS = {
   cyb: CYB,
   cybertruck: CYB,
   truck: CYB,
+
+  rds: RDS,
+  roadster: RDS,
+  'tesla-roadster': RDS,
 
   mec: MECHANICS,
   mechanics: MECHANICS,

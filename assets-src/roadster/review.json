@@ -1,0 +1,418 @@
+{
+ "glb": "out/roadster_raw.glb",
+ "glbFrame": "y-up",
+ "frontFrameMm": 5000,
+ "threeQuarter": [
+  0.2,
+  0.06,
+  0.16
+ ],
+ "environment": "sky",
+ "expectMm": {
+  "body": [
+   1984.2,
+   null,
+   4580.0
+  ]
+ },
+ "toleranceMm": 10,
+ "budget": {
+  "triangles": 60000,
+  "glbKB": 3072,
+  "texturePx": 2048
+ },
+ "exposure": -1.6,
+ "fit": {
+  "solid": "fit_parts",
+  "viewDark": "VIEW_DARK",
+  "landmarks": "landmarks",
+  "centreMm": [
+   0,
+   650,
+   0
+  ],
+  "tessellation": [
+   3.0,
+   0.3
+  ],
+  "iouWeightMm": 1000,
+  "darkWeightMm": 300,
+  "workPx": 1200,
+  "params": {
+   "nose_z": [
+    2250,
+    2500
+   ],
+   "tail_z": [
+    -2400,
+    -2100
+   ],
+   "half_w": [
+    940,
+    1060
+   ],
+   "roof_h": [
+    1150,
+    1300
+   ],
+   "nose_h": [
+    430,
+    600
+   ],
+   "tail_h": [
+    860,
+    1020
+   ],
+   "hood_drop": [
+    -60,
+    120
+   ],
+   "wheelbase": [
+    2850,
+    3100
+   ],
+   "r_f": [
+    320,
+    400
+   ],
+   "r_r": [
+    330,
+    410
+   ]
+  },
+  "_params": "empty first: cut-outs and cameras only",
+  "landmarkWeight": 5,
+  "cameraHeightMm": [
+   100,
+   40000
+  ],
+  "maxShapeEvals": 120,
+  "rounds": 2,
+  "photos": [
+   {
+    "name": "side",
+    "photo": "refs/news/ek-roadster-02-pilot-tesla-roadster-2026.jpg",
+    "view": [
+     2,
+     -90,
+     0
+    ],
+    "search": {
+     "pitch": [
+      -3,
+      9,
+      2
+     ],
+     "yaw": [
+      -96,
+      -84,
+      3
+     ]
+    },
+    "mask": {
+     "method": "file",
+     "path": "refs/masks/side.png"
+    },
+    "landmarks": {
+     "wheel_fl": [
+      1707,
+      699
+     ],
+     "wheel_rl": [
+      2963,
+      688
+     ],
+     "contact_fl": [
+      1707,
+      843
+     ],
+     "contact_rl": [
+      2963,
+      845
+     ]
+    },
+    "parts": "side",
+    "dark": {
+     "valueMax": 45
+    }
+   },
+   {
+    "name": "front",
+    "photo": "refs/news/ek-roadster-03-carousel-slide-1-tesla-roadster-2026.jpg",
+    "view": [
+     3,
+     0,
+     0
+    ],
+    "search": {
+     "pitch": [
+      -3,
+      9,
+      3
+     ],
+     "yaw": [
+      -2,
+      2,
+      2
+     ]
+    },
+    "mask": {
+     "method": "grabcut",
+     "rect": [
+      560,
+      230,
+      1660,
+      820
+     ],
+     "ground": [
+      [
+       600,
+       803
+      ],
+      [
+       1600,
+       803
+      ]
+     ],
+     "refine": true
+    },
+    "landmarks": {
+     "lightbar_f_L": [
+      1398,
+      609
+     ],
+     "lightbar_f_R": [
+      818,
+      609
+     ]
+    },
+    "parts": "front",
+    "dark": {
+     "valueMax": 45
+    }
+   },
+   {
+    "name": "top",
+    "photo": "refs/press/Roadster_92.jpg",
+    "view": [
+     89,
+     0,
+     -90
+    ],
+    "search": {
+     "pitch": [
+      80,
+      90,
+      5
+     ],
+     "yaw": [
+      -6,
+      6,
+      3
+     ]
+    },
+    "mask": {
+     "method": "grabcut",
+     "rect": [
+      1225,
+      955,
+      2585,
+      1595
+     ],
+     "refine": false
+    },
+    "landmarks": {},
+    "parts": "top",
+    "dark": {
+     "valueMax": 110
+    },
+    "_view": "roll -90: the nose to the photo's left (roll +90 solved the car end for end with a near-equal outline)"
+   },
+   {
+    "name": "q34",
+    "photo": "refs/press/Roadster_90.jpg",
+    "view": [
+     3,
+     -140,
+     0
+    ],
+    "search": {
+     "pitch": [
+      -2,
+      10,
+      3
+     ],
+     "yaw": [
+      -160,
+      -120,
+      5
+     ]
+    },
+    "mask": {
+     "method": "grabcut",
+     "rect": [
+      1430,
+      680,
+      3270,
+      1300
+     ],
+     "ground": [
+      [
+       1547,
+       1262
+      ],
+      [
+       2345,
+       1283
+      ]
+     ],
+     "refine": true,
+     "exclude": [
+      [
+       [
+        1430,
+        680
+       ],
+       [
+        1470,
+        680
+       ],
+       [
+        1470,
+        900
+       ],
+       [
+        1430,
+        900
+       ]
+      ]
+     ]
+    },
+    "landmarks": {
+     "wheel_rl": [
+      2337,
+      1095
+     ],
+     "wheel_fl": [
+      1547,
+      1115
+     ],
+     "plate_Rt": [
+      3032,
+      885
+     ],
+     "plate_Rb": [
+      3047,
+      958
+     ],
+     "plate_Lt": [
+      2922,
+      885
+     ],
+     "plate_Lb": [
+      2940,
+      960
+     ]
+    },
+    "parts": "side",
+    "dark": {
+     "valueMax": 45
+    }
+   },
+   {
+    "name": "rear_high",
+    "photo": "refs/press/Roadster_77.jpg",
+    "view": [
+     35,
+     180,
+     0
+    ],
+    "search": {
+     "pitch": [
+      25,
+      50,
+      5
+     ],
+     "yaw": [
+      172,
+      188,
+      4
+     ]
+    },
+    "mask": {
+     "method": "file",
+     "path": "refs/masks/rear_high.png"
+    },
+    "landmarks": {
+     "plate_Lt": [
+      1776,
+      1613
+     ],
+     "plate_Lb": [
+      1776,
+      1743
+     ],
+     "plate_Rt": [
+      2045,
+      1613
+     ],
+     "plate_Rb": [
+      2045,
+      1743
+     ]
+    },
+    "parts": "rear",
+    "dark": {
+     "valueMax": 45
+    }
+   },
+   {
+    "name": "front_q34",
+    "photo": "refs/press/tesla-Roadster-08-End-Desktop.jpg",
+    "view": [
+     5,
+     -40,
+     0
+    ],
+    "search": {
+     "pitch": [
+      0,
+      12,
+      3
+     ],
+     "yaw": [
+      -60,
+      -25,
+      5
+     ]
+    },
+    "mask": {
+     "method": "file",
+     "path": "refs/masks/front_q34.png"
+    },
+    "landmarks": {
+     "wheel_fl": [
+      1539,
+      1288
+     ],
+     "lightbar_f_L": [
+      1124,
+      1237
+     ],
+     "lightbar_f_R": [
+      536,
+      1216
+     ]
+    },
+    "parts": "side",
+    "dark": {
+     "valueMax": 45
+    },
+    "_view": "front left three-quarter: facing the front, the car's left is on the photo's right"
+   }
+  ]
+ },
+ "expectAxes": true,
+ "_expectMm": "the body's fitted width (2 x half_w) and length (nose_z - tail_z); its height is checked by eye against the side photo",
+ "_glb": "the uncompressed build (build.sh copies it before meshopt); the shipped out/roadster.glb is ~150 KB"
+}

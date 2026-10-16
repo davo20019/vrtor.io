@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XH9FQG8X8F"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XH9FQG8X8F');
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Roadster · VRtor</title>
+  <meta name="description" content="Walk around a full-size model of the two-seat electric roadster revealed in October 2026 and open its doors, in a VR headset's browser or any web browser." />
+  <link rel="canonical" href="https://vrtor.io/rds/" />
+  <meta name="theme-color" content="#0d1014" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:title" content="Roadster · VRtor" />
+  <meta property="og:description" content="Walk around a full-size model of the new Roadster, built from the reveal photos, and open its dihedral doors. In VR, right in your browser." />
+  <meta property="og:image" content="https://vrtor.io/assets/cards/roadster.jpg" />
+  <meta property="og:url" content="https://vrtor.io/rds/" />
+</head>
+<body>
+  <canvas id="scene" tabindex="0" aria-label="3D scene: a white two-seat sports car on a turntable in a dark studio"></canvas>
+
+  <header class="top">
+    <a class="brand" href="/">VRtor<span>Roadster</span></a>
+  </header>
+
+  <div class="loading" role="status">
+    <p>Rolling it out…</p>
+    <p class="loading-pct">0%</p>
+    <button class="btn" type="button" data-retry hidden>Try again</button>
+  </div>
+
+  <section class="card" aria-live="polite" hidden>
+    <button class="card-close" type="button" aria-label="Close card">×</button>
+    <p class="card-kicker"></p>
+    <h1 class="card-title"></h1>
+    <p class="card-body"></p>
+    <p class="card-fact"></p>
+    <div class="card-actions"></div>
+  </section>
+
+  <button class="vr-cta" type="button" data-enter-vr hidden>
+    <svg viewBox="0 0 32 20" width="40" height="25" aria-hidden="true"><path fill="currentColor" d="M4 0h24a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4h-6.2a3 3 0 0 1-2.6-1.6l-1.5-2.7a2 2 0 0 0-3.4 0l-1.5 2.7A3 3 0 0 1 10.2 18H4a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4Zm5 5.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm14 0a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/></svg>
+    <span class="vr-cta-text"><strong>Enter VR</strong><small>Stand beside it at full size</small></span>
+  </button>
+
+  <nav class="bar" aria-label="Controls">
+    <button class="btn btn-primary" type="button" data-doors disabled>Open doors</button>
+    <button class="btn" type="button" data-turn disabled>Turntable</button>
+    <button class="btn" type="button" data-view="front" disabled>Front</button>
+    <button class="btn" type="button" data-view="side" disabled>Side</button>
+    <button class="btn" type="button" data-view="rear" disabled>Rear</button>
+    <button class="btn" type="button" data-view="top" disabled>Above</button>
+    <button class="btn" type="button" data-menu disabled>About</button>
+    <div class="presence-controls"></div>
+    <p class="hint" hidden>Drag to look around · scroll to zoom · click a door to open it</p>
+  </nav>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

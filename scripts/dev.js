@@ -24,6 +24,8 @@ const children = [
   run('npm', ['run', 'watch', '-w', '@vrtor/geo']),
   run('npm', ['run', 'watch', '-w', '@vrtor/jump']),
   run('npm', ['run', 'watch', '-w', '@vrtor/cyb']),
+  run('npm', ['run', 'watch', '-w', '@vrtor/rds']),
+  run('npx', ['wrangler', 'dev', '-c', 'apps/rds/wrangler.jsonc', '--port', '8801', '--inspector-port', '9251']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/snd/wrangler.jsonc', '--port', '8800', '--inspector-port', '9250']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/cyb/wrangler.jsonc', '--port', '8799', '--inspector-port', '9249']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/jump/wrangler.jsonc', '--port', '8798', '--inspector-port', '9248']),
