@@ -4,3 +4,4 @@ out/build.log
 out/*.glb
 out/test.log
 out/build-*.json
+out/z-all.json

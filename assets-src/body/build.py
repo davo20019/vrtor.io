@@ -13,12 +13,13 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OBJ = os.path.join(HERE, 'raw', 'objisa', 'isa_BP3D_4.0_obj_99')
+ZEXTRA = os.path.join(HERE, 'raw', 'zextra')      # Z-Anatomy's additions (zexport.py)
 OUT = os.path.join(HERE, 'out')
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 def arg(name, default):
     return type(default)(argv[argv.index(name) + 1]) if name in argv else default
-BUDGET = arg('--budget', 1200000)       # triangles, the whole body
+BUDGET = arg('--budget', 1350000)       # triangles, the whole body
 MIN_TRIS = arg('--min', 240)             # no part cut below this (or its own count, if smaller)
 ONLY = arg('--only', '')
 
@@ -42,13 +43,14 @@ def read_obj(path):
 # ---- read everything first: the triangle budget is shared out by count
 parts = []
 for n in leaves:
-    v, f = read_obj(os.path.join(OBJ, n['el'] + '.obj'))
+    v, f = read_obj(os.path.join(ZEXTRA if n.get('src') == 'za' else OBJ, n['el'] + '.obj'))
     parts.append({'node': n, 'v': v, 'f': f})
 
 # Placed: soles at 0, midline (the skeleton's centre in x and y) at 0. From all the parts, so --only keeps the frame.
 allv = np.concatenate([p['v'] for p in parts])
 lo, hi = allv.min(0), allv.max(0)
-frame = json.load(open(os.path.join(OUT, 'frame.json'))) if ONLY and os.path.exists(os.path.join(OUT, 'frame.json')) else None
+# Once set, the frame stays: parts added later (Z-Anatomy's) must not shift the body.
+frame = json.load(open(os.path.join(OUT, 'frame.json'))) if os.path.exists(os.path.join(OUT, 'frame.json')) else None
 if not frame:
     frame = {'offset_mm': [-(lo[0] + hi[0]) / 2, -(lo[1] + hi[1]) / 2, -lo[2]], 'height_mm': float(hi[2] - lo[2])}
     json.dump(frame, open(os.path.join(OUT, 'frame.json'), 'w'))
@@ -59,12 +61,16 @@ print(f"[body] {len(parts)} parts, height {frame['height_mm']:.0f} mm")
 # Some tissues are looked at closer than others: the skin and the bones keep more of their shape, the
 # thousand-odd vessel branches (thin tubes, mostly seen in passing) less.
 DETAIL = {'skin': 5.0, 'bone': 2.0, 'tooth': 1.5, 'brain': 1.6, 'whitematter': 1.3, 'liver': 1.6, 'heart': 1.8, 'valve': 1.5,
-          'kidney': 1.5, 'gut': 1.3, 'stomach': 1.3, 'muscle': 1.0, 'artery': 0.6, 'vein': 0.6, 'bronchus': 0.7}
+          'kidney': 1.5, 'lung': 1.3, 'gut': 1.3, 'stomach': 1.3, 'muscle': 1.0, 'artery': 0.6, 'vein': 0.6, 'bronchus': 0.7}
 counts = np.array([len(p['f']) for p in parts], dtype=np.float64)
-weights = counts ** 0.7 * np.array([DETAIL.get(p['node']['tissue'], 1.0) for p in parts])
-target = np.maximum(np.minimum(counts, MIN_TRIS), BUDGET * weights / weights.sum())
+# Z-Anatomy's face muscles are thin sheets over the skull: they keep twice their share.
+weights = counts ** 0.7 * np.array([DETAIL.get(p['node']['tissue'], 1.0) * (2.0 if p['node'].get('src') == 'za' else 1.0) for p in parts])
+# Every part keeps at least MIN_TRIS (or all it has), and a small part at least a fifth of its own: a long thin
+# vessel of 2,000 triangles cut to 250 had lost its shape.
+floor = np.minimum(counts, np.maximum(MIN_TRIS, np.where(counts < 2500, 0.2 * counts, 0)))
+target = np.maximum(floor, BUDGET * weights / weights.sum())
 for _ in range(8):                         # parts that can't use their share give it back
-    target = np.minimum(target, counts)
+    target = np.maximum(np.minimum(target, counts), floor)
     spare = BUDGET - target.sum()
     free = target < counts
     if spare <= 1 or not free.any():
@@ -175,7 +181,8 @@ for p, t in zip(parts, target):
     me.set_sharp_from_angle(angle=math.radians(60))
     cavity(me)
     me.materials.append(material(n['tissue']))
-    by_system.setdefault(n['system'], []).append(ob)
+    # Z-Anatomy's parts (CC BY-SA 4.0) go in a file of their own, apart from BodyParts3D's (CC BY 4.0).
+    by_system.setdefault('za' if n.get('src') == 'za' else n['system'], []).append(ob)
     info[n['el']] = {'tris': len(me.polygons), 'from': have}
 
 print('[body] triangles', sum(i['tris'] for i in info.values()), 'of', sum(i['from'] for i in info.values()))

@@ -22,7 +22,8 @@ export const TISSUES = {
   whitematter: { color: '#eee2d2', rough: 0.45, coat: 0.5 },
   ventricle:   { color: '#9fc4d8', rough: 0.2, coat: 0.8, alpha: 0.55 },
   bronchus:    { color: '#e9cbbd', rough: 0.42, coat: 0.5 },
-  lung:        { color: '#d99a95', rough: 0.55, coat: 0.5 },
+  // Seen through a little, so the airways and vessels inside each lobe show.
+  lung:        { color: '#d9958e', rough: 0.6, coat: 0.5, alpha: 0.62 },
   liver:       { color: '#6a2117', rough: 0.3, coat: 0.9 },
   bile:        { color: '#5d7a33', rough: 0.3, coat: 0.8 },
   spleen:      { color: '#5c2235', rough: 0.35, coat: 0.8 },

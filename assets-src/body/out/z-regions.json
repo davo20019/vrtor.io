@@ -1,0 +1,62 @@
+{
+ "head": {
+  "scale": 0.9773254001049445,
+  "t": [
+   0.0007073011950223481,
+   0.08586357798806706,
+   0.10649128887037158
+  ],
+  "bones": [
+   "Frontal bone",
+   "Lacrimal bone.l",
+   "Lacrimal bone.r",
+   "Mandible",
+   "Maxilla.l",
+   "Maxilla.r",
+   "Nasal bone.l",
+   "Nasal bone.r",
+   "Occipital bone",
+   "Parietal bone.l",
+   "Parietal bone.r",
+   "Sphenoid bone",
+   "Temporal bone.l",
+   "Temporal bone.r",
+   "Zygomatic bone.l",
+   "Zygomatic bone.r"
+  ],
+  "rms_mm": 0.7043510807694202,
+  "max_mm": 2.719712952997222
+ },
+ "thorax": {
+  "scale": 1.0422992779948126,
+  "t": [
+   0.0006545457904999417,
+   0.10290675852464445,
+   0.01928440380533148
+  ],
+  "bones": [
+   "Eighth rib.l",
+   "Eighth rib.r",
+   "Fifth rib.l",
+   "Fifth rib.r",
+   "First rib.l",
+   "First rib.r",
+   "Fourth rib.l",
+   "Fourth rib.r",
+   "Ninth rib.l",
+   "Ninth rib.r",
+   "Second rib.r",
+   "Scapula.l",
+   "Scapula.r",
+   "Second rib.l",
+   "Seventh rib.l",
+   "Seventh rib.r",
+   "Sixth rib.l",
+   "Sixth rib.r",
+   "Third rib.l",
+   "Third rib.r"
+  ],
+  "rms_mm": 3.26319344787164,
+  "max_mm": 9.942756306595246
+ }
+}

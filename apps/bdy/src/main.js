@@ -1,4 +1,4 @@
-// VRtor Body (/bdy): a whole human body, life size, made of the 2,234 separate parts of BodyParts3D (bones,
+// VRtor Body (/bdy): a whole human body, life size, made of 2,275 separate parts from BodyParts3D and Z-Anatomy (bones,
 // muscles, organs, vessels, nerves, the eyes and ears), every one of which can be taken out, and taken out
 // with everything that belongs to it.
 //
@@ -34,7 +34,7 @@ import { createRoom, PLINTH_TOP } from './room.js';
 import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
-const MODEL_V = '4';
+const MODEL_V = '6';
 const $ = (sel) => document.querySelector(sel);
 const canvas = $('#scene');
 const ui = {
@@ -299,9 +299,9 @@ function content() {
   }
   if (picked === null) {
     return {
-      kicker: 'Human body · 2,234 parts',
+      kicker: `Human body · ${body.count.toLocaleString('en')} parts`,
       title: 'Take the body apart',
-      body: 'Every bone, muscle, organ, vessel and nerve here is its own part, in its place in an adult man’s body: the BodyParts3D atlas, built from a whole-body MRI and refined by medical illustrators. Any part comes out, alone or with all that belongs to it.',
+      body: 'Every bone, muscle, organ, vessel and nerve here is its own part, in its place in an adult man’s body: the BodyParts3D atlas, built from a whole-body MRI and refined by medical illustrators, with the face’s muscles and the lungs from Z-Anatomy. Any part comes out, alone or with all that belongs to it.',
       fact: inXr() ? XR_HOWTO : FLAT_HOWTO,
       actions: rig && !inXr()
         ? [act('Explore', close), act('Enter VR', enterVr, true)]

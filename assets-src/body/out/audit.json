@@ -1,0 +1,1004 @@
+{
+ "side": [
+  [
+   "Anterior papillary muscle of right ventricle",
+   "FJ2419",
+   29.6
+  ],
+  [
+   "First anterior ventricular branch of right coronary artery, 2 of 3",
+   "FJ2673",
+   22.5
+  ],
+  [
+   "First anterior ventricular branch of right coronary artery, 3 of 3",
+   "FJ2677",
+   27.6
+  ],
+  [
+   "First posterior ventricular branch of right coronary artery, 1 of 9",
+   "FJ2714",
+   43.8
+  ],
+  [
+   "First posterior ventricular branch of right coronary artery, 2 of 9",
+   "FJ2715",
+   70.6
+  ],
+  [
+   "First posterior ventricular branch of right coronary artery, 3 of 9",
+   "FJ2716",
+   69.8
+  ],
+  [
+   "First posterior ventricular branch of right coronary artery, 4 of 9",
+   "FJ2717",
+   34.3
+  ],
+  [
+   "First posterior ventricular branch of right coronary artery, 5 of 9",
+   "FJ2718",
+   41.8
+  ],
+  [
+   "First posterior ventricular branch of right coronary artery, 6 of 9",
+   "FJ2719",
+   44.7
+  ],
+  [
+   "First posterior ventricular branch of right coronary artery, 7 of 9",
+   "FJ2720",
+   59.3
+  ],
+  [
+   "First posterior ventricular branch of right coronary artery, 8 of 9",
+   "FJ2721",
+   67.1
+  ],
+  [
+   "First posterior ventricular branch of right coronary artery, 9 of 9",
+   "FJ2722",
+   62.3
+  ],
+  [
+   "First septal branch of right posterior interventricular artery",
+   "FJ2735",
+   12.1
+  ],
+  [
+   "Left lobe branch of left hepatic artery",
+   "FJ1874",
+   -21.7
+  ],
+  [
+   "Marginal branch of right coronary artery, 1 of 5",
+   "FJ2667",
+   23.6
+  ],
+  [
+   "Marginal branch of right coronary artery, 2 of 5",
+   "FJ2668",
+   29.7
+  ],
+  [
+   "Medial superior tributary of left hepatic biliary tree, 2 of 2",
+   "FJ3105",
+   -21.0
+  ],
+  [
+   "Posterior interventricular branch of right coronary artery, 3 of 9",
+   "FJ2694",
+   26.1
+  ],
+  [
+   "Posterior interventricular branch of right coronary artery, 4 of 9",
+   "FJ2695",
+   42.1
+  ],
+  [
+   "Posterior interventricular branch of right coronary artery, 5 of 9",
+   "FJ2696",
+   24.5
+  ],
+  [
+   "Posterior interventricular branch of right coronary artery, 6 of 9",
+   "FJ2697",
+   40.2
+  ],
+  [
+   "Posterior interventricular branch of right coronary artery, 7 of 9",
+   "FJ2698",
+   42.3
+  ],
+  [
+   "Posterior interventricular branch of right coronary artery, 8 of 9",
+   "FJ2699",
+   63.6
+  ],
+  [
+   "Posterior interventricular branch of right coronary artery, 9 of 9",
+   "FJ2700",
+   59.6
+  ],
+  [
+   "Right anterior cusp of pulmonary valve",
+   "FJ2434",
+   18.1
+  ],
+  [
+   "Right conus artery, 2 of 2",
+   "FJ2676",
+   25.6
+  ],
+  [
+   "Right marginal vein, 3 of 3",
+   "FJ2729",
+   20.3
+  ],
+  [
+   "Second septal branch of right posterior interventricular artery",
+   "FJ2736",
+   26.3
+  ],
+  [
+   "Septal papillary muscle of right ventricle",
+   "FJ2437",
+   22.5
+  ]
+ ],
+ "twin": [
+  [
+   [
+    "Left oblique arytenoid",
+    "FJ2780"
+   ],
+   [
+    "Right oblique arytenoid",
+    "FJ2798"
+   ]
+  ]
+ ],
+ "pair": [
+  [
+   "Left adrenal gland",
+   "Right adrenal gland",
+   [
+    48.0,
+    20.0,
+    45.0
+   ],
+   [
+    32.0,
+    27.0,
+    42.0
+   ],
+   19
+  ],
+  [
+   "Left anterior basal segmental bronchial tree, 1 of 3",
+   "Right anterior basal segmental bronchial tree, 1 of 3",
+   [
+    43.0,
+    29.0,
+    18.0
+   ],
+   [
+    71.0,
+    27.0,
+    38.0
+   ],
+   13
+  ],
+  [
+   "Left anterior basal segmental bronchial tree, 2 of 3",
+   "Right anterior basal segmental bronchial tree, 2 of 3",
+   [
+    17.0,
+    51.0,
+    40.0
+   ],
+   [
+    38.0,
+    18.0,
+    19.0
+   ],
+   14
+  ],
+  [
+   "Left anterior basal segmental bronchial tree, 3 of 3",
+   "Right anterior basal segmental bronchial tree, 3 of 3",
+   [
+    18.0,
+    6.0,
+    41.0
+   ],
+   [
+    5.0,
+    13.0,
+    12.0
+   ],
+   31
+  ],
+  [
+   "Left aryepiglotticus",
+   "Right aryepiglotticus",
+   [
+    4.0,
+    12.0,
+    23.0
+   ],
+   [
+    17.0,
+    12.0,
+    23.0
+   ],
+   0
+  ],
+  [
+   "Left ascending lumbar vein",
+   "Right ascending lumbar vein",
+   [
+    13.0,
+    31.0,
+    159.0
+   ],
+   [
+    20.0,
+    19.0,
+    150.0
+   ],
+   12
+  ],
+  [
+   "Left choroid, 1 of 2",
+   "Right choroid, 1 of 2",
+   [
+    24.0,
+    19.0,
+    24.0
+   ],
+   [
+    22.0,
+    7.0,
+    22.0
+   ],
+   0
+  ],
+  [
+   "Left choroid, 2 of 2",
+   "Right choroid, 2 of 2",
+   [
+    22.0,
+    7.0,
+    22.0
+   ],
+   [
+    77.0,
+    19.0,
+    24.0
+   ],
+   0
+  ],
+  [
+   "Left colic artery",
+   "Right colic artery",
+   [
+    19.0,
+    10.0,
+    7.0
+   ],
+   [
+    64.0,
+    31.0,
+    53.0
+   ],
+   37
+  ],
+  [
+   "Left common iliac artery, main part",
+   "Right common iliac artery, main part",
+   [
+    35.0,
+    39.0,
+    63.0
+   ],
+   [
+    48.0,
+    25.0,
+    61.0
+   ],
+   1
+  ],
+  [
+   "Left conus elasticus",
+   "Right conus elasticus",
+   [
+    15.0,
+    18.0,
+    13.0
+   ],
+   [
+    7.0,
+    18.0,
+    13.0
+   ],
+   0
+  ],
+  [
+   "Left cornea",
+   "Right cornea",
+   [
+    14.0,
+    5.0,
+    14.0
+   ],
+   [
+    69.0,
+    5.0,
+    14.0
+   ],
+   0
+  ],
+  [
+   "Left gastric artery",
+   "Right gastric artery",
+   [
+    22.0,
+    47.0,
+    45.0
+   ],
+   [
+    34.0,
+    32.0,
+    13.0
+   ],
+   21
+  ],
+  [
+   "Left gastric vein",
+   "Right gastric vein",
+   [
+    40.0,
+    46.0,
+    50.0
+   ],
+   [
+    24.0,
+    26.0,
+    17.0
+   ],
+   21
+  ],
+  [
+   "Left gastro-epiploic artery",
+   "Right gastro-epiploic artery",
+   [
+    35.0,
+    65.0,
+    39.0
+   ],
+   [
+    77.0,
+    41.0,
+    28.0
+   ],
+   13
+  ],
+  [
+   "Left gastroepiploic vein",
+   "Right gastroepiploic vein",
+   [
+    34.0,
+    70.0,
+    37.0
+   ],
+   [
+    78.0,
+    42.0,
+    23.0
+   ],
+   25
+  ],
+  [
+   "Left hepatic duct",
+   "Right hepatic duct",
+   [
+    33.0,
+    17.0,
+    31.0
+   ],
+   [
+    10.0,
+    7.0,
+    8.0
+   ],
+   11
+  ],
+  [
+   "Left hepatic vein",
+   "Right hepatic vein",
+   [
+    64.0,
+    54.0,
+    38.0
+   ],
+   [
+    88.0,
+    81.0,
+    70.0
+   ],
+   14
+  ],
+  [
+   "Left iliococcygeus",
+   "Right iliococcygeus",
+   [
+    49.0,
+    73.0,
+    46.0
+   ],
+   [
+    94.0,
+    73.0,
+    46.0
+   ],
+   0
+  ],
+  [
+   "Left inferior suprarenal artery",
+   "Right inferior suprarenal artery",
+   [
+    54.0,
+    38.0,
+    48.0
+   ],
+   [
+    40.0,
+    28.0,
+    41.0
+   ],
+   13
+  ],
+  [
+   "Left lateral basal segmental bronchial tree, 1 of 4",
+   "Right lateral basal segmental bronchial tree, 1 of 4",
+   [
+    55.0,
+    34.0,
+    85.0
+   ],
+   [
+    75.0,
+    16.0,
+    85.0
+   ],
+   11
+  ],
+  [
+   "Left lateral basal segmental bronchial tree, 2 of 4",
+   "Right lateral basal segmental bronchial tree, 2 of 4",
+   [
+    18.0,
+    16.0,
+    58.0
+   ],
+   [
+    6.0,
+    11.0,
+    18.0
+   ],
+   6
+  ],
+  [
+   "Left lateral basal segmental bronchial tree, 3 of 4",
+   "Right lateral basal segmental bronchial tree, 3 of 4",
+   [
+    9.0,
+    13.0,
+    34.0
+   ],
+   [
+    37.0,
+    8.0,
+    10.0
+   ],
+   46
+  ],
+  [
+   "Left lateral basal segmental bronchial tree, 4 of 4",
+   "Right lateral basal segmental bronchial tree, 4 of 4",
+   [
+    5.0,
+    18.0,
+    15.0
+   ],
+   [
+    11.0,
+    8.0,
+    7.0
+   ],
+   34
+  ],
+  [
+   "Left lateral basal segmental vein, 1 of 4",
+   "Right lateral basal segmental vein, 1 of 4",
+   [
+    49.0,
+    26.0,
+    88.0
+   ],
+   [
+    86.0,
+    22.0,
+    55.0
+   ],
+   19
+  ],
+  [
+   "Left lateral basal segmental vein, 2 of 4",
+   "Right lateral basal segmental vein, 2 of 4",
+   [
+    11.0,
+    7.0,
+    24.0
+   ],
+   [
+    57.0,
+    14.0,
+    12.0
+   ],
+   54
+  ],
+  [
+   "Left lateral basal segmental vein, 3 of 4",
+   "Right lateral basal segmental vein, 3 of 4",
+   [
+    44.0,
+    7.0,
+    25.0
+   ],
+   [
+    17.0,
+    5.0,
+    4.0
+   ],
+   4
+  ],
+  [
+   "Left lateral basal segmental vein, 4 of 4",
+   "Right lateral basal segmental vein, 4 of 4",
+   [
+    26.0,
+    7.0,
+    31.0
+   ],
+   [
+    35.0,
+    14.0,
+    13.0
+   ],
+   17
+  ],
+  [
+   "Left lobe of thymus",
+   "Right lobe of thymus",
+   [
+    25.0,
+    40.0,
+    59.0
+   ],
+   [
+    27.0,
+    22.0,
+    69.0
+   ],
+   8
+  ],
+  [
+   "Left marginal vein, 1 of 3",
+   "Right marginal vein, 1 of 3",
+   [
+    37.0,
+    56.0,
+    26.0
+   ],
+   [
+    76.0,
+    8.0,
+    28.0
+   ],
+   12
+  ],
+  [
+   "Left marginal vein, 2 of 3",
+   "Right marginal vein, 2 of 3",
+   [
+    4.0,
+    12.0,
+    14.0
+   ],
+   [
+    7.0,
+    1.0,
+    12.0
+   ],
+   14
+  ],
+  [
+   "Left marginal vein, 3 of 3",
+   "Right marginal vein, 3 of 3",
+   [
+    5.0,
+    8.0,
+    15.0
+   ],
+   [
+    16.0,
+    5.0,
+    11.0
+   ],
+   8
+  ],
+  [
+   "Left medial basal segmental bronchial tree, 1 of 2",
+   "Right medial basal segmental bronchial tree, 1 of 2",
+   [
+    59.0,
+    67.0,
+    85.0
+   ],
+   [
+    29.0,
+    25.0,
+    33.0
+   ],
+   41
+  ],
+  [
+   "Left medial basal segmental bronchial tree, 2 of 2",
+   "Right medial basal segmental bronchial tree, 2 of 2",
+   [
+    16.0,
+    18.0,
+    11.0
+   ],
+   [
+    13.0,
+    13.0,
+    30.0
+   ],
+   48
+  ],
+  [
+   "Left middle suprarenal artery",
+   "Right middle suprarenal artery",
+   [
+    50.0,
+    46.0,
+    41.0
+   ],
+   [
+    62.0,
+    30.0,
+    23.0
+   ],
+   10
+  ],
+  [
+   "Left portal vein, 1 of 2",
+   "Right portal vein, 1 of 2",
+   [
+    82.0,
+    49.0,
+    49.0
+   ],
+   [
+    56.0,
+    108.0,
+    75.0
+   ],
+   18
+  ],
+  [
+   "Left portal vein, 2 of 2",
+   "Right portal vein, 2 of 2",
+   [
+    138.0,
+    72.0,
+    89.0
+   ],
+   [
+    76.0,
+    102.0,
+    58.0
+   ],
+   9
+  ],
+  [
+   "Left posterior basal segmental bronchial tree, 2 of 6",
+   "Right posterior basal segmental bronchial tree, 2 of 6",
+   [
+    42.0,
+    17.0,
+    38.0
+   ],
+   [
+    16.0,
+    20.0,
+    26.0
+   ],
+   19
+  ],
+  [
+   "Left posterior basal segmental bronchial tree, 3 of 6",
+   "Right posterior basal segmental bronchial tree, 3 of 6",
+   [
+    11.0,
+    43.0,
+    26.0
+   ],
+   [
+    7.0,
+    11.0,
+    10.0
+   ],
+   58
+  ],
+  [
+   "Left posterior basal segmental bronchial tree, 4 of 6",
+   "Right posterior basal segmental bronchial tree, 4 of 6",
+   [
+    13.0,
+    11.0,
+    16.0
+   ],
+   [
+    2.0,
+    13.0,
+    11.0
+   ],
+   31
+  ],
+  [
+   "Left posterior basal segmental bronchial tree, 5 of 6",
+   "Right posterior basal segmental bronchial tree, 5 of 6",
+   [
+    10.0,
+    14.0,
+    32.0
+   ],
+   [
+    31.0,
+    30.0,
+    24.0
+   ],
+   13
+  ],
+  [
+   "Left posterior basal segmental bronchial tree, 6 of 6",
+   "Right posterior basal segmental bronchial tree, 6 of 6",
+   [
+    5.0,
+    8.0,
+    12.0
+   ],
+   [
+    12.0,
+    17.0,
+    18.0
+   ],
+   4
+  ],
+  [
+   "Left pubococcygeus",
+   "Right pubococcygeus",
+   [
+    32.0,
+    90.0,
+    47.0
+   ],
+   [
+    64.0,
+    90.0,
+    47.0
+   ],
+   0
+  ],
+  [
+   "Left puborectalis",
+   "Right puborectalis",
+   [
+    29.0,
+    81.0,
+    29.0
+   ],
+   [
+    57.0,
+    81.0,
+    29.0
+   ],
+   0
+  ],
+  [
+   "Left rectus capitis anterior",
+   "Right rectus capitis anterior",
+   [
+    26.0,
+    10.0,
+    22.0
+   ],
+   [
+    49.0,
+    10.0,
+    21.0
+   ],
+   0
+  ],
+  [
+   "Left renal artery, main part",
+   "Right renal artery, main part",
+   [
+    36.0,
+    24.0,
+    13.0
+   ],
+   [
+    55.0,
+    22.0,
+    24.0
+   ],
+   6
+  ],
+  [
+   "Left renal vein, 1 of 2",
+   "Right renal vein, 1 of 2",
+   [
+    47.0,
+    43.0,
+    16.0
+   ],
+   [
+    22.0,
+    25.0,
+    12.0
+   ],
+   4
+  ],
+  [
+   "Left sclera",
+   "Right sclera",
+   [
+    26.0,
+    25.0,
+    26.0
+   ],
+   [
+    75.0,
+    25.0,
+    26.0
+   ],
+   0
+  ],
+  [
+   "Left seventh costal cartilage",
+   "Right seventh costal cartilage",
+   [
+    105.0,
+    42.0,
+    84.0
+   ],
+   [
+    159.0,
+    42.0,
+    84.0
+   ],
+   0
+  ],
+  [
+   "Left sternocleidomastoid",
+   "Right sternocleidomastoid",
+   [
+    61.0,
+    119.0,
+    201.0
+   ],
+   [
+    124.0,
+    120.0,
+    201.0
+   ],
+   0
+  ],
+  [
+   "Left subclavian artery",
+   "Right subclavian artery",
+   [
+    69.0,
+    19.0,
+    49.0
+   ],
+   [
+    72.0,
+    18.0,
+    22.0
+   ],
+   10
+  ],
+  [
+   "Left subcostal vein",
+   "Right subcostal vein",
+   [
+    61.0,
+    39.0,
+    65.0
+   ],
+   [
+    71.0,
+    64.0,
+    66.0
+   ],
+   1
+  ],
+  [
+   "Left superficial dorsal vein of penis",
+   "Right superficial dorsal vein of penis",
+   [
+    10.0,
+    88.0,
+    77.0
+   ],
+   [
+    2.0,
+    53.0,
+    77.0
+   ],
+   0
+  ],
+  [
+   "Left superior intercostal vein",
+   "Right superior intercostal vein",
+   [
+    16.0,
+    20.0,
+    53.0
+   ],
+   [
+    27.0,
+    29.0,
+    73.0
+   ],
+   10
+  ],
+  [
+   "Left suprarenal vein",
+   "Right suprarenal vein",
+   [
+    17.0,
+    19.0,
+    65.0
+   ],
+   [
+    27.0,
+    28.0,
+    49.0
+   ],
+   8
+  ],
+  [
+   "Left thyrohyoid",
+   "Right thyrohyoid",
+   [
+    12.0,
+    26.0,
+    31.0
+   ],
+   [
+    38.0,
+    26.0,
+    31.0
+   ],
+   0
+  ]
+ ],
+ "cut": []
+}

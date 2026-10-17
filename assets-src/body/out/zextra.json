@@ -1,0 +1,374 @@
+[
+ {
+  "el": "ZA0001",
+  "name": "Left buccinator",
+  "z": "Bucinator.l",
+  "tris": 884
+ },
+ {
+  "el": "ZA0002",
+  "name": "Right buccinator",
+  "z": "Bucinator.r",
+  "tris": 884
+ },
+ {
+  "el": "ZA0003",
+  "name": "Left corrugator supercilii",
+  "z": "Corrugator supercilii.l",
+  "tris": 278
+ },
+ {
+  "el": "ZA0004",
+  "name": "Right corrugator supercilii",
+  "z": "Corrugator supercilii.r",
+  "tris": 278
+ },
+ {
+  "el": "ZA0005",
+  "name": "Deep part of left masseter",
+  "z": "Deep part of masseter.l",
+  "tris": 994
+ },
+ {
+  "el": "ZA0006",
+  "name": "Deep part of right masseter",
+  "z": "Deep part of masseter.r",
+  "tris": 994
+ },
+ {
+  "el": "ZA0007",
+  "name": "Superficial part of left masseter",
+  "z": "Superficial part of masseter.l",
+  "tris": 1404
+ },
+ {
+  "el": "ZA0008",
+  "name": "Superficial part of right masseter",
+  "z": "Superficial part of masseter.r",
+  "tris": 1404
+ },
+ {
+  "el": "ZA0009",
+  "name": "Left depressor anguli oris",
+  "z": "Depressor anguli oris.l",
+  "tris": 594
+ },
+ {
+  "el": "ZA0010",
+  "name": "Right depressor anguli oris",
+  "z": "Depressor anguli oris.r",
+  "tris": 594
+ },
+ {
+  "el": "ZA0011",
+  "name": "Left depressor labii inferioris",
+  "z": "Depressor labii inferioris.l",
+  "tris": 832
+ },
+ {
+  "el": "ZA0012",
+  "name": "Right depressor labii inferioris",
+  "z": "Depressor labii inferioris.r",
+  "tris": 832
+ },
+ {
+  "el": "ZA0013",
+  "name": "Left depressor septi nasi",
+  "z": "Depressor septi nasi.l",
+  "tris": 276
+ },
+ {
+  "el": "ZA0014",
+  "name": "Right depressor septi nasi",
+  "z": "Depressor septi nasi.r",
+  "tris": 276
+ },
+ {
+  "el": "ZA0015",
+  "name": "Left epicranial aponeurosis",
+  "z": "Epicranial aponeurosis.l",
+  "tris": 20118
+ },
+ {
+  "el": "ZA0016",
+  "name": "Right epicranial aponeurosis",
+  "z": "Epicranial aponeurosis.r",
+  "tris": 20118
+ },
+ {
+  "el": "ZA0017",
+  "name": "Left frontalis",
+  "z": "Frontalis muscle.l",
+  "tris": 5874
+ },
+ {
+  "el": "ZA0018",
+  "name": "Right frontalis",
+  "z": "Frontalis muscle.r",
+  "tris": 5874
+ },
+ {
+  "el": "ZA0019",
+  "name": "Inferior head of left lateral pterygoid",
+  "z": "Inferior head of lateral pterygoid muscle.l",
+  "tris": 326
+ },
+ {
+  "el": "ZA0020",
+  "name": "Inferior head of right lateral pterygoid",
+  "z": "Inferior head of lateral pterygoid muscle.r",
+  "tris": 326
+ },
+ {
+  "el": "ZA0021",
+  "name": "Superior head of left lateral pterygoid",
+  "z": "Superior head of lateral pterygoid muscle.l",
+  "tris": 226
+ },
+ {
+  "el": "ZA0022",
+  "name": "Superior head of right lateral pterygoid",
+  "z": "Superior head of lateral pterygoid muscle.r",
+  "tris": 226
+ },
+ {
+  "el": "ZA0023",
+  "name": "Left medial pterygoid",
+  "z": "Medial pterygoid muscle.l",
+  "tris": 496
+ },
+ {
+  "el": "ZA0024",
+  "name": "Right medial pterygoid",
+  "z": "Medial pterygoid muscle.r",
+  "tris": 496
+ },
+ {
+  "el": "ZA0025",
+  "name": "Left levator anguli oris",
+  "z": "Levator anguli oris.l",
+  "tris": 330
+ },
+ {
+  "el": "ZA0026",
+  "name": "Right levator anguli oris",
+  "z": "Levator anguli oris.r",
+  "tris": 330
+ },
+ {
+  "el": "ZA0027",
+  "name": "Left levator labii superioris",
+  "z": "Levator labii superioris.l",
+  "tris": 540
+ },
+ {
+  "el": "ZA0028",
+  "name": "Right levator labii superioris",
+  "z": "Levator labii superioris.r",
+  "tris": 540
+ },
+ {
+  "el": "ZA0029",
+  "name": "Left levator labii superioris alaeque nasi",
+  "z": "Levator nasolabialis.l",
+  "tris": 172
+ },
+ {
+  "el": "ZA0030",
+  "name": "Right levator labii superioris alaeque nasi",
+  "z": "Levator nasolabialis.r",
+  "tris": 172
+ },
+ {
+  "el": "ZA0031",
+  "name": "Left mentalis",
+  "z": "Mentalis muscle.l",
+  "tris": 166
+ },
+ {
+  "el": "ZA0032",
+  "name": "Right mentalis",
+  "z": "Mentalis muscle.r",
+  "tris": 166
+ },
+ {
+  "el": "ZA0033",
+  "name": "Left nasalis",
+  "z": "Nasalis muscle.l",
+  "tris": 704
+ },
+ {
+  "el": "ZA0034",
+  "name": "Right nasalis",
+  "z": "Nasalis muscle.r",
+  "tris": 704
+ },
+ {
+  "el": "ZA0035",
+  "name": "Left occipitalis",
+  "z": "Occipitalis muscle.l",
+  "tris": 2602
+ },
+ {
+  "el": "ZA0036",
+  "name": "Right occipitalis",
+  "z": "Occipitalis muscle.r",
+  "tris": 2602
+ },
+ {
+  "el": "ZA0037",
+  "name": "Left orbicularis oris",
+  "z": "Orbicularis oris muscle.l",
+  "tris": 1880
+ },
+ {
+  "el": "ZA0038",
+  "name": "Right orbicularis oris",
+  "z": "Orbicularis oris muscle.r",
+  "tris": 1880
+ },
+ {
+  "el": "ZA0039",
+  "name": "Orbital part of left orbicularis oculi",
+  "z": "Orbital part of orbicularis oculi.l",
+  "tris": 2390
+ },
+ {
+  "el": "ZA0040",
+  "name": "Orbital part of right orbicularis oculi",
+  "z": "Orbital part of orbicularis oculi.r",
+  "tris": 2390
+ },
+ {
+  "el": "ZA0041",
+  "name": "Palpebral part of left orbicularis oculi",
+  "z": "Palpebral part of orbicularis oculi.l",
+  "tris": 830
+ },
+ {
+  "el": "ZA0042",
+  "name": "Palpebral part of right orbicularis oculi",
+  "z": "Palpebral part of orbicularis oculi.r",
+  "tris": 830
+ },
+ {
+  "el": "ZA0043",
+  "name": "Left procerus",
+  "z": "Procerus muscle.l",
+  "tris": 546
+ },
+ {
+  "el": "ZA0044",
+  "name": "Right procerus",
+  "z": "Procerus muscle.r",
+  "tris": 546
+ },
+ {
+  "el": "ZA0045",
+  "name": "Left risorius",
+  "z": "Risorius muscle.l",
+  "tris": 592
+ },
+ {
+  "el": "ZA0046",
+  "name": "Right risorius",
+  "z": "Risorius muscle.r",
+  "tris": 592
+ },
+ {
+  "el": "ZA0047",
+  "name": "Left temporalis",
+  "z": "Temporalis muscle.l",
+  "tris": 10260
+ },
+ {
+  "el": "ZA0048",
+  "name": "Right temporalis",
+  "z": "Temporalis muscle.r",
+  "tris": 10260
+ },
+ {
+  "el": "ZA0049",
+  "name": "Left temporoparietalis",
+  "z": "Temporoparietalis muscle.l",
+  "tris": 11972
+ },
+ {
+  "el": "ZA0050",
+  "name": "Right temporoparietalis",
+  "z": "Temporoparietalis muscle.r",
+  "tris": 11972
+ },
+ {
+  "el": "ZA0051",
+  "name": "Left zygomaticus major",
+  "z": "Zygomaticus major muscle.l",
+  "tris": 798
+ },
+ {
+  "el": "ZA0052",
+  "name": "Right zygomaticus major",
+  "z": "Zygomaticus major muscle.r",
+  "tris": 798
+ },
+ {
+  "el": "ZA0053",
+  "name": "Left zygomaticus minor",
+  "z": "Zygomaticus minor muscle.l",
+  "tris": 432
+ },
+ {
+  "el": "ZA0054",
+  "name": "Right zygomaticus minor",
+  "z": "Zygomaticus minor muscle.r",
+  "tris": 432
+ },
+ {
+  "el": "ZA0055",
+  "name": "Left parotid gland",
+  "z": "Parotid gland.l",
+  "tris": 1704
+ },
+ {
+  "el": "ZA0056",
+  "name": "Right parotid gland",
+  "z": "Parotid gland.r",
+  "tris": 1704
+ },
+ {
+  "el": "ZA0057",
+  "name": "Thyroid gland",
+  "z": "Thyroid gland",
+  "tris": 2600
+ },
+ {
+  "el": "ZA0058",
+  "name": "Tissue of upper lobe of left lung",
+  "z": "Superior lobe of left lung",
+  "tris": 9290
+ },
+ {
+  "el": "ZA0059",
+  "name": "Tissue of lower lobe of left lung",
+  "z": "Inferior lobe of left lung",
+  "tris": 9258
+ },
+ {
+  "el": "ZA0060",
+  "name": "Tissue of upper lobe of right lung",
+  "z": "Superior lobe of right lung",
+  "tris": 7748
+ },
+ {
+  "el": "ZA0061",
+  "name": "Tissue of middle lobe of right lung",
+  "z": "Middle lobe of right lung",
+  "tris": 7396
+ },
+ {
+  "el": "ZA0062",
+  "name": "Tissue of lower lobe of right lung",
+  "z": "Inferior lobe of right lung",
+  "tris": 8452
+ }
+]

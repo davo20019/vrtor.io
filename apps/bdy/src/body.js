@@ -1,10 +1,10 @@
-// The body: BodyParts3D's 2,234 parts (assets-src/body), each its own mesh, hung in the anatomy's own tree
+// The body: BodyParts3D's parts and Z-Anatomy's additions, 2,275 in all (assets-src/body), each its own mesh, hung in the anatomy's own tree
 // (models/body.json): Human body > system > organ > part > ... > the meshes. Every node of the tree is a
 // TransformNode, so moving a node moves everything under it: take hold of the heart and its valves, walls and
 // coronary vessels come along; take hold of one valve and only it comes out.
 //
 // A node that has been moved remembers where it belongs: let go of it close to there and it goes back in.
-// Meshes and nodes that aren't moving have their world matrices frozen (2,234 meshes would otherwise be
+// Meshes and nodes that aren't moving have their world matrices frozen (2,275 meshes would otherwise be
 // recomputed every frame); taking hold of a node thaws it and everything under it until it settles.
 import { DracoDecoder, LoadAssetContainerAsync, Matrix, Quaternion, TransformNode, Vector3 } from '@babylonjs/core';
 import '@babylonjs/loaders/glTF';
@@ -56,16 +56,18 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
   const nodeOfMesh = new Map();
   const systems = info.systems;
 
-  const progress = Object.fromEntries(systems.map((s) => [s.id, 0]));
+  // One file per system of BodyParts3D's parts, and one of Z-Anatomy's additions (body-za.glb, its own licence).
+  const files = info.files ?? systems.map((s) => s.id);
+  const progress = Object.fromEntries(files.map((f) => [f, 0]));
   const sizes = info.sizes ?? {};
-  const total = systems.reduce((a, s) => a + (sizes[s.id] ?? 1), 0);
-  const report = () => onProgress(systems.reduce((a, s) => a + progress[s.id] * (sizes[s.id] ?? 1), 0) / total);
+  const total = files.reduce((a, f) => a + (sizes[f] ?? 1), 0);
+  const report = () => onProgress(files.reduce((a, f) => a + progress[f] * (sizes[f] ?? 1), 0) / total);
 
-  async function loadSystem(s) {
-    const container = await LoadAssetContainerAsync(`${BASE}models/body-${s.id}.glb?v=${version}`, scene, {
+  async function loadFile(file) {
+    const container = await LoadAssetContainerAsync(`${BASE}models/body-${file}.glb?v=${version}`, scene, {
       onProgress: (e) => {
         if (!e.lengthComputable) return;
-        progress[s.id] = e.loaded / e.total;
+        progress[file] = e.loaded / e.total;
         report();
       },
     });
@@ -84,10 +86,10 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
     }
     for (const m of container.meshes) if (!nodeOfMesh.has(m)) m.dispose();
     for (const mat of container.materials) mat.dispose();
-    progress[s.id] = 1;
+    progress[file] = 1;
     report();
   }
-  await Promise.all(systems.map(loadSystem));
+  await Promise.all(files.map(loadFile));
 
   // ---- the tree's helpers
   const kids = (id) => nodes[id].kids;

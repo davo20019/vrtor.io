@@ -12,3 +12,12 @@ done
 mkdir -p objisa obj
 unzip -q -o isa_BP3D_4.0_obj_99.zip -d objisa
 unzip -q -o partof_BP3D_4.0_obj_99.zip -d obj
+
+# Z-Anatomy (CC BY-SA 4.0): the face's and the jaw's muscles, the lungs' lobes and two glands BodyParts3D lacks
+# (zexport.py takes them out of its Blender file). About 90 MB.
+mkdir -p zanatomy && cd zanatomy
+Z=https://raw.githubusercontent.com/Z-Anatomy/Models-of-human-anatomy/master
+for f in Z-Anatomy.zip License.txt Readme.md; do
+  [ -f "$f" ] || curl -sSfLo "$f" "$Z/$f"
+done
+mkdir -p x && unzip -q -o Z-Anatomy.zip -d x

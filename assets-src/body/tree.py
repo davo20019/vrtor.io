@@ -14,6 +14,9 @@ import collections, json, os, re
 HERE = os.path.dirname(os.path.abspath(__file__))
 RAW = os.path.join(HERE, 'raw')
 OBJ = os.path.join(RAW, 'objisa', 'isa_BP3D_4.0_obj_99')
+# What BodyParts3D lacks, from Z-Anatomy (zexport.py): the face's and the jaw's muscles, the lungs' lobes, glands.
+ZEXTRA = os.path.join(RAW, 'zextra')
+SOURCES = [(OBJ, 'bp'), (ZEXTRA, 'za')]
 
 
 def table(name):
@@ -24,22 +27,42 @@ def table(name):
 
 # ---- elements: one OBJ each
 elements = {}
-for fn in sorted(os.listdir(OBJ)):
-    if not fn.endswith('.obj'):
-        continue
-    e = {'id': fn[:-4], 'name': None, 'fma': None, 'lo': None, 'hi': None}
-    with open(os.path.join(OBJ, fn), encoding='utf-8', errors='ignore') as f:
-        for line in f:
-            if not line.startswith('#'):
-                break
-            if line.startswith('# English name'):
-                e['name'] = line.split(':', 1)[1].strip()
-            elif line.startswith('# Concept ID'):
-                e['fma'] = line.split(':', 1)[1].strip()
-            elif line.startswith('# Bounds(mm)'):
-                nums = [float(x) for x in re.findall(r'-?\d+(?:\.\d+)?', line.split(':', 1)[1])]
-                e['lo'], e['hi'] = nums[:3], nums[3:6]
-    elements[e['id']] = e
+for src_dir, src in SOURCES:
+    for fn in sorted(os.listdir(src_dir)) if os.path.isdir(src_dir) else []:
+        if not fn.endswith('.obj'):
+            continue
+        e = {'id': fn[:-4], 'name': None, 'fma': None, 'lo': None, 'hi': None, 'src': src}
+        with open(os.path.join(src_dir, fn), encoding='utf-8', errors='ignore') as f:
+            for line in f:
+                if not line.startswith('#'):
+                    break
+                if line.startswith('# English name'):
+                    e['name'] = line.split(':', 1)[1].strip()
+                elif line.startswith('# Concept ID'):
+                    e['fma'] = line.split(':', 1)[1].strip()
+                elif line.startswith('# Bounds(mm)'):
+                    nums = [float(x) for x in re.findall(r'-?\d+(?:\.\d+)?', line.split(':', 1)[1])]
+                    e['lo'], e['hi'] = nums[:3], nums[3:6]
+        elements[e['id']] = e
+
+# ---- corrections to BodyParts3D, each checked against where the part actually lies (audit.py; right is -x):
+FIXES = {
+    # named for the other side: each lies in the other hand / beside the other side of the spine
+    'FJ1469': 'Right flexor pollicis brevis', 'FJ1469M': 'Left flexor pollicis brevis',
+    'FJ3589': 'Left ascending lumbar vein', 'FJ3493': 'Right ascending lumbar vein',
+    # "Right fibular vein": in the left thigh (x +64..+91 mm, 540..718 mm up), the mirror image of the right
+    # thigh's "Set of perforating veins" (FJ2192)
+    'FJ2190': 'Set of perforating veins',
+}
+for el, name in FIXES.items():
+    elements[el]['name'] = name
+    elements[el]['fixed'] = True
+# Mislabelled copies, dropped: both "superior epigastric vein" meshes are copies of the superficial epigastric veins
+# (same surface within 0.3 mm, 805..933 mm up at the groin), while the superior epigastric vessels run 1,008..1,175 mm
+# up beside the rectus. BodyParts3D has no mesh of the real ones.
+DROP = {'FJ3615', 'FJ3530'}
+for el in DROP:
+    del elements[el]
 
 # ---- concepts: sets of elements, and the IS-A ancestry of each concept
 sets = {'partof': collections.defaultdict(set), 'isa': collections.defaultdict(set)}
@@ -94,6 +117,67 @@ for e in elements.values():
         e['name'] = cname[c][:1].upper() + cname[c][1:]
 
 
+# The same mesh stored twice or more under different names (the hyoid bone, the cricoid cartilage, the celiac trunk
+# three times...): one is kept, so they don't flicker against each other. Kept: the plainest name.
+def verts(e):
+    path = os.path.join(OBJ if e['src'] == 'bp' else ZEXTRA, e['id'] + '.obj')
+    import numpy as np
+    return np.array([[float(x) for x in l.split()[1:4]] for l in open(path, errors='ignore') if l.startswith('v ')])
+
+
+def shape_key(e):
+    """Same box to about 2 mm: the candidates, confirmed point by point below."""
+    v = verts(e)
+    return tuple(np.round(np.concatenate([v.min(0), v.max(0)]) / 2).astype(int)) if len(v) else e['id']
+
+
+def nearest(va, vb):
+    return np.concatenate([np.sqrt(((va[i:i + 400, None, :] - vb[None, :, :]) ** 2).sum(-1)).min(1) for i in range(0, len(va), 400)])
+
+
+def same_shape(a, b):
+    """The same surface: within 0.1 mm everywhere (a copy), or within half a millimetre on the whole both ways (the
+    same muscle modelled twice, as the pelvic floor's are)."""
+    va, vb = verts(a), verts(b)
+    if len(va) == len(vb) and nearest(va, vb).max() <= 0.1:
+        return True
+    da, db = nearest(va, vb), nearest(vb, va)
+    return np.median(da) < 0.6 and np.median(db) < 0.6 and np.percentile(da, 90) < 1.6 and np.percentile(db, 90) < 1.6
+
+
+import numpy as np
+by_key = collections.defaultdict(list)
+for e in elements.values():
+    by_key[shape_key(e)].append(e)
+groups = []
+for cands in by_key.values():
+    while len(cands) > 1:
+        first, rest = cands[0], cands[1:]
+        same = [first] + [c for c in rest if same_shape(first, c)]
+        if len(same) > 1:
+            groups.append(same)
+        cands = [c for c in rest if c not in same]
+dropped = []
+for group in groups:
+    keep = min(group, key=lambda e: (e['name'].lower().startswith('set of'), 'part of' in e['name'].lower(), len(e['name']), e['id']))
+    for e in group:
+        if e is not keep:
+            dropped.append((e['id'], e['name'], keep['name']))
+            del elements[e['id']]
+        else:
+            # a dropped twin may have been in groups this one isn't: it stands for them all
+            e['twins'] = [x['id'] for x in group if x is not keep]
+twin_of = {t: e['id'] for e in elements.values() for t in e.get('twins', ())}
+
+for tree in ('partof', 'isa'):
+    for c in sets[tree]:
+        sets[tree][c] = {twin_of.get(x, x) for x in sets[tree][c] if twin_of.get(x, x) in elements}
+holders = collections.defaultdict(set)
+for tree in ('partof', 'isa'):
+    for c, els in sets[tree].items():
+        for el in els:
+            holders[el].add(c)
+
 # ---- systems, by what each element is. Order matters: the first rule an element matches wins.
 SYSTEMS = [
     ('skin', 'Skin and hair', [r'\bskin\b', r'integument', r'\bhair\b', r'eyebrow', r'eyelash', r'\bnail\b']),
@@ -130,7 +214,8 @@ SYSTEMS = [
                             r'brachialis', r'brachioradialis', r'anconeus', r'coracobrachialis', r'teres', r'supraspinatus', r'infraspinatus',
                             r'subscapularis', r'palmaris', r'opponens', r'pectineus', r'vastus', r'tibialis', r'fibularis', r'peroneus', r'hallucis',
                             r'digitorum', r'pollicis', r'digiti minimi', r'intercostal', r'subcostal', r'cremaster', r'fascia', r'retinaculum',
-                            r'interossei', r'interspinales', r'tendinous ring', r'raphe', r'linea alba', r'musculature']),
+                            r'interossei', r'interspinales', r'tendinous ring', r'raphe', r'linea alba', r'musculature',
+                            r'corrugator', r'temporoparietalis', r'epicranial']),
     ('skeleton', 'Skeleton', [r'bone', r'skelet', r'vertebra', r'\brib\b', r'costal cartilage', r'sternum', r'manubrium', r'xiphoid', r'sacrum', r'coccyx',
                               r'skull', r'cranium', r'mandible', r'maxilla', r'clavicle', r'scapula', r'humerus', r'radius', r'ulna', r'carpal', r'scaphoid',
                               r'lunate', r'triquetr', r'pisiform', r'trapezi', r'capitate', r'hamate', r'metacarp', r'phalan', r'femur', r'patella',
@@ -320,6 +405,9 @@ for mname, els in muscle_parts.items():
 # Organs BodyParts3D has no single concept for, made from what's in them.
 SKULL = re.compile(r'neurocranium|maxilla|zygomatic bone|palatine bone|mandible|sphenoid bone|nasal bone|vomer|ethmoid|frontal bone|'
                    r'occipital bone|parietal bone|temporal bone|nasal concha|nasal cartilage|alar cartilage|septal nasal')
+FACIAL = re.compile(r'buccinator|corrugator|depressor (anguli oris|labii|septi)|epicranial|frontalis|levator (anguli oris|labii)|mentalis|'
+                    r'nasalis|occipitalis|orbicularis|procerus|risorius|temporoparietalis|zygomaticus')
+CHEWING = re.compile(r'masseter|temporalis$|pterygoid')
 LARYNX = re.compile(r'arytenoid|cricoid|crico-|thyroid cartilage|epiglott|vocal|conus elasticus|thyro-|corniculate|aryepiglottic')
 SYNTH = [
     ('nerves', 'brain', lambda e: e['tissue'] in ('brain', 'whitematter', 'ventricle')),
@@ -328,6 +416,9 @@ SYNTH = [
     ('nerves', 'cranial nerves', lambda e: e['tissue'] == 'nerve'),
     ('lungs', 'larynx', lambda e: LARYNX.search(e['name'].lower())),
     ('skeleton', 'skull', lambda e: SKULL.search(e['name'].lower())),
+    # The face's muscles (Z-Anatomy's; BodyParts3D has none) and the jaw's.
+    ('muscles', 'muscles of facial expression', lambda e: FACIAL.search(e['name'].lower())),
+    ('muscles', 'muscles of mastication', lambda e: CHEWING.search(e['name'].lower())),
     ('lungs', 'airway', lambda e: e['tissue'] in ('bronchus',) or 'trachea' in e['name'].lower() or 'bronch' in e['name'].lower()),
     ('heart', 'arteries', lambda e: e['tissue'] == 'artery' and 'coronary' not in e['name'].lower()),
     ('heart', 'veins', lambda e: e['tissue'] == 'vein' and 'cardiac' not in e['name'].lower() and 'coronary' not in e['name'].lower()),
@@ -446,6 +537,12 @@ ADOPT = [
      r'stria medullaris|septum of telencephalon|commissure|tentorium|central canal|brachium of', 'Brain'),
     (r'arytenoid|cricothyroid|crico-arytenoid|vocal|conus elasticus|corniculate|thyro-epiglottic|thyrohyoid', 'Larynx'),
     (r'eyeball|retina|corona ciliaris|lacrimal', '{side} eye'),
+    # A lobe's tissue (Z-Anatomy's) goes in with that lobe's airways (BodyParts3D's): taking the lobe takes both.
+    (r'^tissue of upper lobe of left lung', 'Upper lobe of left lung'),
+    (r'^tissue of lower lobe of left lung', 'Lower lobe of left lung'),
+    (r'^tissue of upper lobe of right lung', 'Upper lobe of right lung'),
+    (r'^tissue of middle lobe of right lung', 'Middle lobe of lung'),
+    (r'^tissue of lower lobe of right lung', 'Lower lobe of right lung'),
     (r'^spleen$', None),
 ]
 ADOPT_RE = [(re.compile(p), g) for p, g in ADOPT]
@@ -499,6 +596,8 @@ for n in alive:
     if 'el' in n:
         m['el'] = n['el']
         m['tissue'] = n['tissue']
+        if elements[n['el']]['src'] != 'bp':
+            m['src'] = elements[n['el']]['src']
     m['kids'] = sorted((new[k] for k in n['kids']), key=lambda k: alive[k]['name'])
     out.append(m)
 # Parts that share a name with each other or with their group ("Set of perforating veins" in "Set of perforating
@@ -510,7 +609,7 @@ for m in out:
         nm = out[k]['name']
         if names[nm] > 1 or nm == m['name']:
             seen[nm] += 1
-            out[k]['name'] = f'{nm}, {seen[nm]} of {names[nm]}' if names[nm] > 1 else f'{nm} (one part)'
+            out[k]['name'] = f'{nm}, {seen[nm]} of {names[nm]}' if names[nm] > 1 else f'{nm}, main part'
 
 os.makedirs(os.path.join(HERE, 'out'), exist_ok=True)
 with open(os.path.join(HERE, 'out', 'tree.json'), 'w') as f:
@@ -531,6 +630,6 @@ print('elements', len(elements), 'unassigned', len(unassigned))
 print('systems', dict(counts))
 print('tissues', dict(tissues))
 print('nodes', len(out), 'groups', sum(1 for n in out if 'el' not in n), 'max depth', max(depth.values()))
-print('adopted', len(adopted))
+print('adopted', len(adopted)); print('fixed', len(FIXES), 'dropped twins', len(dropped)); [print('   drop', d) for d in dropped]
 if unassigned:
     print('UNASSIGNED', sorted(set(unassigned))[:200])
