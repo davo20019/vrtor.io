@@ -293,14 +293,15 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
   // ---- showing and hiding: by system, or by node
   const hidden = new Set();     // node ids hidden by the visitor
   const systemOn = Object.fromEntries(systems.map((s) => [s.id, true]));
-  /** "Show only this": everything else hidden, whatever the layer; null shows the layer again. */
+  /** "Show only this" (a node id, or several in an array for a tour's stop): everything else hidden, whatever the layer; null shows the layer again. */
   let only = null;
+  let onlySet = null;
   function refreshVisibility() {
     for (const n of nodes) {
       const m = meshOf[n.id];
       if (!m) continue;
       let on, inside = false;
-      for (let i = n.id; i !== null; i = parentOf(i)) if (i === only) inside = true;
+      if (onlySet) for (let i = n.id; i !== null; i = parentOf(i)) if (onlySet.has(i)) inside = true;
       if (only !== null) {
         on = inside;
       } else {
@@ -312,8 +313,12 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
   }
   function isolate(id) {
     only = id;
+    onlySet = id === null ? null : new Set(Array.isArray(id) ? id : [id]);
     refreshVisibility();
   }
+  /** The node with this exact name (tours and the quiz name their parts), or null. */
+  const byName = new Map(nodes.map((n) => [n.name, n.id]));
+  const idOf = (name) => byName.get(name) ?? null;
   function setSystem(id, on) {
     systemOn[id] = on;
     refreshVisibility();
@@ -376,6 +381,7 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
     hiddenCount: () => hidden.size,
     isolate,
     isolated: () => only,
+    idOf,
     highlight,
     count: nodes.filter((n) => n.el).length,
   };

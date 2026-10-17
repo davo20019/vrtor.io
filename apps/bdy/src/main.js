@@ -30,6 +30,7 @@ import {
 import { continueInVr, createCard, createMenuControls, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, roomsCard, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { loadBody } from './body.js';
 import { canSpeak, loadLearning, speak } from './learn.js';
+import { QUIZ, TOURS } from './tours.js';
 import { setLite } from './tissues.js';
 import { createRoom, PLINTH_TOP } from './room.js';
 import './style.css';
@@ -51,6 +52,7 @@ const ui = {
   vr: $('[data-enter-vr]'),
   layers: [...document.querySelectorAll('[data-layer]')],
   systems: $('[data-systems]'),
+  learn: $('[data-learn]'),
   back: $('[data-back]'),
   hint: $('.hint'),
   names: $('.card-names'),
@@ -62,6 +64,8 @@ const ui = {
 
 const HOVER = Color3.FromHexString('#ffd27a');
 const PICKED = Color3.FromHexString('#ffb020');
+const RIGHT = Color3.FromHexString('#4cd07d');
+const WRONG = Color3.FromHexString('#ff5a4f');
 
 // ---------------------------------------------------------------- scene
 
@@ -182,6 +186,7 @@ function refreshBar() {
 const phone = () => matchMedia('(max-width: 640px)').matches;
 
 function pick(id) {
+  if (page === 'quiz' && quiz?.q?.type === 'find' && !quiz.answered) return answerFind(id);
   picked = id;
   page = 'part';
   note = '';
@@ -307,6 +312,240 @@ function hidePart(id) {
   render();
 }
 
+// ---------------------------------------------------------------- tours and the quiz (content in tours.js)
+
+/** The tour being taken: { t, i } (stop index), or null. */
+let tour = null;
+/** The quiz: { qs, n, score, q, answered: null | { ok, id?, choice? } }, or null. */
+let quiz = null;
+const QUESTIONS = 10;
+
+function openLearn() {
+  page = 'learn';
+  cardOpen = true;
+  render();
+}
+
+function learnPage() {
+  return {
+    kicker: 'Learn',
+    title: 'Tours and quiz',
+    body: TOURS.map((t) => `${t.title}: ${t.blurb}`).join('\n'),
+    fact: 'A tour shows and explains a few parts, one stop at a time. The quiz asks you to find parts and to name them.',
+    actions: [
+      ...TOURS.map((t) => act(t.title, () => startTour(t))),
+      act(`Quiz: ${QUESTIONS} questions`, startQuiz, true),
+      act('Back', () => { page = 'part'; render(); }),
+    ],
+  };
+}
+
+const ids = (names) => (names ?? []).map((n) => body.idOf(n)).filter((i) => i !== null);
+/** A tour's stops whose parts are all there (a missing part is logged, and its stop skipped). */
+function stopsOf(t) {
+  return t.stops.filter((s) => {
+    const want = [...(s.only ?? []), ...(s.out ?? []), s.pick];
+    const missing = want.filter((n) => body.idOf(n) === null);
+    if (missing.length) console.warn('[bdy] tour stop left out, missing', missing);
+    return !missing.length;
+  });
+}
+
+function startTour(t) {
+  tour = { t, stops: stopsOf(t), i: 0 };
+  page = 'tour';
+  showStop();
+}
+
+/** Sets the scene for the current stop: its layer, only its parts, any lifted out of the way, the view on them. */
+function showStop() {
+  const s = tour.stops[tour.i];
+  body.putAllBack();
+  if (s.layer) setLayer(s.layer);
+  const only = ids(s.only);
+  if (only.length) body.isolate(only);
+  // Lifted straight up, a little apart: out of the way, still in view.
+  ids(s.out).forEach((id, k) => body.sendTo(id, body.centreOf(id).add(new Vector3((k - 1) * 0.12, 0.2, 0.05))));
+  picked = body.idOf(s.pick);
+  body.highlight('picked', picked, PICKED);
+  if (!inXr()) {
+    const box = union(only.length ? only : [picked]);
+    look(box.centre, Math.max(0.35, Math.min(2.6, box.size * 1.5)));
+  }
+  cardOpen = true;
+  refreshBar();
+  render();
+}
+function union(list) {
+  const lo = new Vector3(Infinity, Infinity, Infinity), hi = lo.scale(-1);
+  for (const id of list) {
+    const b = body.boxOf(id);
+    lo.minimizeInPlace(b.lo);
+    hi.maximizeInPlace(b.hi);
+  }
+  return { centre: lo.add(hi).scale(0.5), size: hi.subtract(lo).length() };
+}
+
+function tourPage() {
+  const { t, stops, i } = tour;
+  const s = stops[i];
+  const last = i === stops.length - 1;
+  const pid = body.idOf(s.pick);
+  const info = learn?.about(pid) ?? {};
+  return {
+    kicker: `Tour · ${t.title} · ${i + 1} of ${stops.length}`,
+    title: s.title,
+    names: info.latin ? `${name(pid)} · Latin: ${info.latin}` : name(pid),
+    body: s.text,
+    fact: inXr() ? 'Squeeze the grip on a part to take it in your hand.' : 'Drag the lit part to pull it out; drag elsewhere to turn the view.',
+    actions: [
+      ...(i > 0 ? [act('Back', () => { tour.i--; showStop(); })] : []),
+      act(last ? 'Finish' : 'Next', () => (last ? endTour() : (tour.i++, showStop())), true),
+      act('End tour', endTour),
+    ],
+  };
+}
+
+function endTour() {
+  tour = null;
+  body.isolate(null);
+  body.putAllBack();
+  picked = null;
+  body.highlight('picked', null);
+  setLayer('muscles');
+  page = 'learn';
+  render();
+}
+
+// ---- the quiz: "Find the femur" (tap it, or point and pull the trigger: either side counts) and "What is this?"
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz() {
+  const pool = QUIZ.map((q) => ({ ...q, ids: ids(q.parts) })).filter((q) => q.ids.length);
+  const qs = shuffle(pool.slice()).slice(0, QUESTIONS).map((q, k) => ({ ...q, type: k % 5 < 3 ? 'find' : 'name' }));
+  for (const q of qs) {
+    if (q.type !== 'name') continue;
+    const others = shuffle(pool.filter((p) => p.kind === q.kind && p.name !== q.name)).slice(0, 3).map((p) => p.name);
+    q.choices = shuffle([q.name, ...others]);
+    q.shown = q.ids[Math.floor(Math.random() * q.ids.length)];
+  }
+  quiz = { qs, n: 0, score: 0, q: null, answered: null };
+  page = 'quiz';
+  nextQuestion();
+}
+
+function nextQuestion() {
+  body.isolate(null);
+  body.highlight('quiz', null);
+  body.highlight('quiz-wrong', null);
+  if (quiz.n >= quiz.qs.length) {
+    quiz.q = null;
+    return render();
+  }
+  const q = (quiz.q = quiz.qs[quiz.n]);
+  quiz.answered = null;
+  body.putAllBack();
+  setLayer(q.layer);
+  picked = null;
+  body.highlight('picked', null);
+  if (q.type === 'name') {
+    // An organ or a muscle may lie under others (the pancreas behind the stomach, the cerebellum inside the skull):
+    // it shows alone, to be known by its shape. A bone shows in the skeleton as it is.
+    if (q.kind !== 'bone') body.isolate(q.shown);
+    body.highlight('quiz', q.shown, PICKED);
+    if (!inXr()) look(body.centreOf(q.shown), Math.max(0.5, Math.min(2.2, size(q.shown) * 2.5)));
+  } else if (!inXr()) {
+    look(new Vector3(0, 1.0, 0), 3.1);
+  }
+  cardOpen = true;
+  render();
+}
+
+function answerFind(id) {
+  const q = quiz.q;
+  const ok = id >= 0 && q.ids.some((t) => isUnder(id, t));
+  quiz.answered = { ok, id };
+  if (ok) quiz.score++;
+  const target = ok ? q.ids.find((t) => isUnder(id, t)) : q.ids[0];
+  body.highlight('quiz', target, RIGHT);
+  if (!ok && id >= 0) body.highlight('quiz-wrong', id, WRONG);     // "Show me" has no wrong part
+  if (!inXr()) look(body.centreOf(target), Math.max(0.5, Math.min(2.2, size(target) * 2.5)));
+  render();
+}
+
+function answerName(choice) {
+  const q = quiz.q;
+  const ok = choice === q.name;
+  quiz.answered = { ok, choice };
+  if (ok) quiz.score++;
+  body.highlight('quiz', q.shown, ok ? RIGHT : WRONG);
+  render();
+}
+
+function quizPage() {
+  const { q, n, qs, score, answered } = quiz;
+  if (!q) {
+    const great = score >= qs.length * 0.8;
+    return {
+      kicker: 'Quiz · done',
+      title: `${score} of ${qs.length}`,
+      body: great ? 'Well done: you know your way around the body.' : 'Every miss showed you where the part really is. Try another round: the questions change each time.',
+      actions: [act('Another round', startQuiz, true), act('Done', endQuiz)],
+    };
+  }
+  const kicker = `Quiz · ${n + 1} of ${qs.length} · score ${score}`;
+  const next = act(n + 1 < qs.length ? 'Next question' : 'See my score', () => { quiz.n++; nextQuestion(); }, true);
+  const article = (s) => (/^[aeiou]/.test(s) ? 'an' : 'a');
+  if (q.type === 'find') {
+    if (!answered) {
+      return {
+        kicker,
+        title: `Find the ${q.name}`,
+        body: inXr() ? 'Point at it and pull the trigger. Either side counts.' : 'Tap or click it. Either side counts. Drag to turn the body, pinch or scroll to zoom.',
+        actions: [act('Show me', () => answerFind(-1)), act('End quiz', endQuiz)],
+      };
+    }
+    const what = answered.id >= 0 ? name(answered.id) : null;
+    return {
+      kicker,
+      title: answered.ok ? 'Right!' : 'Not quite',
+      body: answered.ok ? `That’s the ${q.name}, lit up in green.` : `${what ? `You chose the ${what.toLowerCase()}, in red. ` : ''}The ${q.name} is lit up in green.`,
+      actions: [next, act('End quiz', endQuiz)],
+    };
+  }
+  if (!answered) {
+    return {
+      kicker,
+      title: 'What is this?',
+      body: q.kind === 'bone' ? 'The lit part is a bone. Which one?' : `This is ${article(q.kind)} ${q.kind}, shown on its own. Which one? Turn it around to see its shape.`,
+      actions: [...q.choices.map((c) => act(c[0].toUpperCase() + c.slice(1), () => answerName(c))), act('End quiz', endQuiz)],
+    };
+  }
+  return {
+    kicker,
+    title: answered.ok ? 'Right!' : 'Not quite',
+    body: answered.ok ? `It’s the ${q.name}.` : `It’s the ${q.name}, not the ${answered.choice}.`,
+    actions: [next, act('End quiz', endQuiz)],
+  };
+}
+
+function endQuiz() {
+  quiz = null;
+  body.isolate(null);
+  body.highlight('quiz', null);
+  body.highlight('quiz-wrong', null);
+  body.putAllBack();
+  setLayer('muscles');
+  page = 'learn';
+  render();
+}
+
 // ---------------------------------------------------------------- the card
 
 const XR_HOWTO = 'Put your hand on a part and squeeze the grip to take it. While holding, pull the trigger to take the whole of what it belongs to. Let go anywhere and it stays; let go where it belongs and it goes back in. Left stick walks, right stick teleports and turns. A or X opens this card.';
@@ -317,6 +556,9 @@ const act = (label, onClick, primary = false) => ({ label, onClick, primary });
 function content() {
   if (page === 'rooms') return roomsCard('bdy', rig, act, () => { page = 'part'; render(); });
   if (page === 'people' && presence) return presenceCard(presence, act, () => { page = 'part'; render(); });
+  if (page === 'learn') return learnPage();
+  if (page === 'tour' && tour) return tourPage();
+  if (page === 'quiz' && quiz) return quizPage();
   if (page === 'systems') {
     return {
       kicker: 'Body systems',
@@ -336,8 +578,8 @@ function content() {
       body: 'Every bone, muscle, organ, vessel and nerve here is its own part, in its place in an adult man’s body: the BodyParts3D atlas, built from a whole-body MRI and refined by medical illustrators, with the face’s muscles, the lungs, ligaments, nerves and lymph nodes from Z-Anatomy. Any part comes out, alone or with all that belongs to it.',
       fact: inXr() ? XR_HOWTO : FLAT_HOWTO,
       actions: rig && !inXr()
-        ? [act('Explore', close), act('Enter VR', enterVr, true)]
-        : [act(inXr() ? 'Close' : 'Explore', close, true), ...peopleAction()],
+        ? [act('Explore', close), act('Tours and quiz', openLearn), act('Enter VR', enterVr, true)]
+        : [act(inXr() ? 'Close' : 'Explore', close, true), act('Tours and quiz', openLearn), ...peopleAction()],
     };
   }
   const id = picked;
@@ -356,6 +598,9 @@ function content() {
   if (canSpeak()) actions.push(act('Hear it', () => speak(n.name.replace(/, (\d+ of \d+|main part)$/, ''))));
   if (inXr()) actions.push(act('Close', close));
   else actions.push(act('Hide', () => hidePart(id)));
+  // Looked at a part mid-tour or mid-quiz: the way back first.
+  if (tour) actions.unshift(act('Back to tour', () => { page = 'tour'; render(); }));
+  else if (quiz) actions.unshift(act('Back to quiz', () => { page = 'quiz'; render(); }));
   const info = learn?.about(id) ?? {};
   const where = trail.length ? `In ${trail.join(' › ')}.` : n.el ? `In ${sys?.name.toLowerCase() ?? 'the body'}.` : '';
   const names = [info.latin && `Latin: ${info.latin}`, info.local && `${info.local.label}: ${info.local.name}`].filter(Boolean).join(' · ');
@@ -386,6 +631,7 @@ function tools() {
   return [
     ...Object.entries(LAYERS).map(([id, l]) => act(l.label, () => setLayer(id), layer === id)),
     act('Systems', () => { page = 'systems'; cardOpen = true; render(); }),
+    act('Learn', openLearn),
     act('Put everything back', putAllBack),
     act('Change room', () => { page = 'rooms'; cardOpen = true; render(); }),
   ];
@@ -755,7 +1001,7 @@ async function start() {
   ui.loading.hidden = true;
   ui.hint.hidden = false;
   document.querySelector('.height').hidden = false;
-  for (const b of [...ui.layers, ui.systems, ui.back]) b.disabled = false;
+  for (const b of [...ui.layers, ui.systems, ui.learn, ui.back]) b.disabled = false;
   refreshBar();
   render();
 }
@@ -829,6 +1075,7 @@ ui.vr.addEventListener('click', enterVr);
 $('.card-close').addEventListener('click', close);
 for (const b of ui.layers) b.addEventListener('click', () => setLayer(b.dataset.layer));
 ui.systems.addEventListener('click', () => { page = page === 'systems' ? 'part' : 'systems'; cardOpen = true; render(); });
+ui.learn.addEventListener('click', openLearn);
 ui.back.addEventListener('click', putAllBack);
 ui.retry.addEventListener('click', () => location.reload());
 addEventListener('keydown', (e) => {
@@ -854,4 +1101,4 @@ start().catch((err) => {
 });
 
 // For automated checks in a browser.
-window.__bdy = { scene, camera, get body() { return body; }, pick, takeOut, putAllBack, setLayer, content: () => content() };
+window.__bdy = { scene, camera, get body() { return body; }, pick, takeOut, putAllBack, setLayer, content: () => content(), startTour: (i) => startTour(TOURS[i]), startQuiz, get state() { return { page, tour: tour && { id: tour.t.id, i: tour.i, n: tour.stops.length }, quiz: quiz && { n: quiz.n, score: quiz.score, q: quiz.q && { type: quiz.q.type, name: quiz.q.name, ids: quiz.q.ids } } }; } };
