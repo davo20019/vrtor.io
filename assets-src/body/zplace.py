@@ -17,6 +17,7 @@ fits = json.load(open(os.path.join(HERE, 'out', 'bonefit.json')))
 tree = json.load(open(os.path.join(HERE, 'out', 'tree.json')))['nodes']
 
 # Left out: anything of the inner ear (Z-Anatomy adapted it from a NonCommercial model), and labels.
+# Its ossicles are left out too: the Dundee inner-ear model (CC BY-NC-SA 4.0) has the malleus, incus and stapes.
 NC = re.compile(r'cochle|vestibul|semicircular|utricle|saccule|spiral ganglion|endolymph|perilymph', re.I)
 # Z-Anatomy's collections that only say where a part is, not what it belongs to.
 PLACE = re.compile(r'^(\d+:|Trunk|Head|Neck|Thorax|Abdomen|Back|Pelvis|Left |Right |Lymphoid system|Bursae|Fascia$|Tendon sheaths|'
@@ -70,7 +71,7 @@ def carry(v):
 
 
 # What BodyParts3D has of the same kinds, to leave out what it already shows.
-SAME_KIND = {'joint': {'skeleton', 'muscles', 'lungs'}, 'nerve': {'nerves', 'senses'}, 'lymph': {'gut', 'glands'},
+SAME_KIND = {'bone': {'skeleton'}, 'joint': {'skeleton', 'muscles', 'lungs'}, 'nerve': {'nerves', 'senses'}, 'lymph': {'gut', 'glands'},
              'fascia': {'muscles', 'skeleton'}, 'muscle': {'muscles', 'gut', 'lungs', 'senses'}}
 ours = []
 for n in tree:
@@ -105,7 +106,9 @@ def stems(name):
 def side(name):
     n = name.lower()
     return 'left' if re.search(r'\bleft\b', n) else 'right' if re.search(r'\bright\b', n) else ''
-our_muscles = [(stems(n['name']), side(n['name'])) for n in tree if n.get('system') in ('muscles', 'lungs', 'gut')]
+# (Not the ones this script placed last time, which tree.json now holds: they'd each be left out as their own twin.)
+our_muscles = [(stems(n['name']), side(n['name'])) for n in tree
+               if n.get('system') in ('muscles', 'lungs', 'gut') and not str(n.get('el', '')).startswith('ZB')]
 for f in os.listdir(OUT):
     if f.startswith('ZA'):
         nm = next((l.split(':', 1)[1].strip() for l in open(os.path.join(OUT, f)) if l.startswith('# English name')), '')
@@ -156,6 +159,9 @@ def our_name(z):
     return re.sub(r'^\((.*)\)$', r'\1', z.strip())
 
 
+# The bones BodyParts3D lacks, carried like the rest by the bones around them (the coccyx by the sacrum).
+EXTRA_BONES = {'Coccyx'}
+
 # Z-Anatomy's own side mix-ups (audit.py: each lies on the other side), by its object names.
 SWAP_SIDE = {'Lateral temporomandibular ligament.l': 'Lateral temporomandibular ligament.r',
              'Lateral temporomandibular ligament.r': 'Lateral temporomandibular ligament.l'}
@@ -167,7 +173,7 @@ for f in os.listdir(OUT):
 report = {'placed': [], 'already': [], 'skipped': []}
 i = 0
 for name, kind, colls, v, f in objs:
-    if kind == 'bone':
+    if kind == 'bone' and name not in EXTRA_BONES:
         continue
     if NC.search(name) or len(f) == 0:
         report['skipped'].append(name)

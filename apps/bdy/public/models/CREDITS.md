@@ -93,6 +93,11 @@ hand; listed in `tree.py`:
   renamed.
 - The same mesh stored two or three times under different names (the hyoid bone, the cricoid cartilage, the celiac
   trunk, the portal vein, the pancreas, pelvic-floor muscles modelled twice...): 19 copies dropped, one kept.
+- "Sacrum" (FJ3393) is the sacrum and the coccyx as one mesh, and BodyParts3D has no coccyx of its own: cut in two
+  at the sacrococcygeal joint (`cut.py`): along the plane where Z-Anatomy's sacrum and coccyx (moved by the sacrum's
+  fit) meet, each side's cut closed flat. Both stay BodyParts3D's own surface; the coccyx (1,138 triangles, 4.4 cm3)
+  lies within 0.75 mm of Z-Anatomy's (median). Not taken: Z-Anatomy's ear ossicles (malleus, incus,
+  stapes), which BodyParts3D lacks too, since the NonCommercial Dundee inner-ear model it adapted has them.
 - Both "superior epigastric vein" meshes are copies of the superficial epigastric veins at the groin: dropped.
 
 ## What we changed
@@ -100,8 +105,9 @@ hand; listed in `tree.py`:
 - `tree.py`: one tree of every part: body > system > organ > part > ..., from both tables (only the groups that
   nest cleanly), plus a few organs the tables have no single concept for (brain, larynx, skull, a muscle
   from its heads). Each part gets a system and a tissue from its name and what it is.
-- `build.py` (Blender): the meshes in metres, the soles at 0, cut from 6.7 million triangles to about 1.3
-  million (smaller parts keep more of theirs), one GLB per system, Draco-compressed. Each part keeps its own
+- `build.py` (Blender): the meshes in metres, the soles at 0, cut from 9 million triangles to about 2.2
+  million (smaller parts keep more of theirs; the bones and teeth keep all of theirs), one GLB per system,
+  Draco-compressed. Each part keeps its own
   mesh and its BodyParts3D file id as its name.
 - `ship.py`: copies the GLBs and the tree (`body.json`) into `apps/bdy/public/models`.
 
@@ -110,6 +116,8 @@ The colours and surfaces are ours (`apps/bdy/src/tissues.js`): the data has none
 ## Known gaps
 
 - No fat. No lymph vessels, only nodes.
+- No ear ossicles (see above), no wisdom teeth, no sesamoids of the thumb. The bones' surfaces are only as fine as
+  BodyParts3D's: the big ridges and processes, not the small foramina or the sutures.
 - The quadrangular membranes and cricopharyngeal ligaments were taken for parts we have and left out.
 - No real superior epigastric veins (see above).
 - One body (male); no female organs.
@@ -122,7 +130,7 @@ The colours and surfaces are ours (`apps/bdy/src/tissues.js`): the data has none
     blender -b --disable-autoexec raw/zanatomy/x/Z-Anatomy/Startup.blend -P zexport.py
     python3 tree.py && blender -b -P lungfit.py && python3 tree.py
     blender -b --disable-autoexec raw/zanatomy/x/Z-Anatomy/Startup.blend -P zdump.py
-    python3 bonefit.py && python3 zplace.py && python3 tree.py
+    python3 bonefit.py && python3 zplace.py && python3 cut.py && python3 tree.py
     blender -b --disable-autoexec raw/zanatomy/x/Z-Anatomy/Startup.blend -P zpaths.py
     python3 vjoin.py && python3 tree.py && python3 vessels.py
     python3 learn_names.py && python3 learn_wiki.py

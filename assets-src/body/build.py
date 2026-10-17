@@ -14,6 +14,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 OBJ = os.path.join(HERE, 'raw', 'objisa', 'isa_BP3D_4.0_obj_99')
 ZEXTRA = os.path.join(HERE, 'raw', 'zextra')      # Z-Anatomy's additions (zexport.py)
+CUT = os.path.join(HERE, 'raw', 'cut')            # BodyParts3D's parts as cut in two (cut.py: the sacrum, its coccyx off)
 OUT = os.path.join(HERE, 'out')
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
@@ -43,7 +44,8 @@ def read_obj(path):
 # ---- read everything first: the triangle budget is shared out by count
 parts = []
 for n in leaves:
-    v, f = read_obj(os.path.join(ZEXTRA if n.get('src') == 'za' else OBJ, n['el'] + '.obj'))
+    cut = os.path.join(CUT, n['el'] + '.obj')
+    v, f = read_obj(cut if n.get('src') != 'za' and os.path.exists(cut) else os.path.join(ZEXTRA if n.get('src') == 'za' else OBJ, n['el'] + '.obj'))
     parts.append({'node': n, 'v': v, 'f': f})
 
 # Placed: soles at 0, midline (the skeleton's centre in x and y) at 0. From all the parts, so --only keeps the frame.
@@ -81,8 +83,12 @@ for _ in range(8):                         # parts that can't use their share gi
 target = np.minimum(target, counts)
 # Vessels that simplifying would part from the one they join (vcheck_built.py found them): kept whole.
 KEEP = set(json.load(open(os.path.join(OUT, 'keep_whole.json')))) if os.path.exists(os.path.join(OUT, 'keep_whole.json')) else set()
+# And the bones and teeth, whatever their size: they're what you pick up and turn to look at closely, and
+# BodyParts3D's are only as fine as an MRI gives (a whole femur in 3,102 triangles); cut, they lost their ridges.
+# Kept on top of the budget, so every other part keeps what it had.
+WHOLE = {'bone', 'tooth'}
 for i, p in enumerate(parts):
-    if p['node']['el'] in KEEP:
+    if p['node']['el'] in KEEP or p['node']['tissue'] in WHOLE:
         target[i] = counts[i]
 
 # ---- materials, one per tissue (stand-ins: the app sets the real look)
