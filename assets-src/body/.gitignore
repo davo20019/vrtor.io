@@ -6,3 +6,5 @@ out/test.log
 out/build-*.json
 out/z-all.json
 out/zplace.json
+out/wiki.json
+out/names.json

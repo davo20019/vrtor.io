@@ -27,6 +27,10 @@
 
   <header class="top">
     <a class="brand" href="/">VRtor<span>Body</span></a>
+    <div class="search" role="search">
+      <input type="search" placeholder="Search the body: femur, vagus, corazón…" aria-label="Search for a part of the body" aria-controls="search-results" aria-autocomplete="list" aria-expanded="false" autocomplete="off" disabled />
+      <ul id="search-results" class="search-results" role="listbox" hidden></ul>
+    </div>
   </header>
 
   <div class="loading" role="status">
@@ -39,8 +43,11 @@
     <button class="card-close" type="button" aria-label="Close card">×</button>
     <p class="card-kicker"></p>
     <h1 class="card-title"></h1>
+    <p class="card-names" hidden></p>
+    <p class="card-trail" hidden></p>
     <p class="card-body"></p>
     <p class="card-fact"></p>
+    <p class="card-source" hidden></p>
     <div class="card-actions"></div>
   </section>
 

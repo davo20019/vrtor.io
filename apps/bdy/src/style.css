@@ -110,3 +110,32 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); c
   .height { right: 8px; top: 40%; padding: 8px 4px; }
   .height input { height: 30vh; }
 }
+
+/* Search, in the header: results drop under it. */
+.top { pointer-events: none; }
+.search { pointer-events: auto; position: relative; flex: 0 1 340px; }
+.search input { width: 100%; font: inherit; font-size: 15px; color: var(--text); background: var(--panel); border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; padding: 8px 16px; outline: none; }
+.search input:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,176,32,0.35); }
+.search input::placeholder { color: var(--muted); opacity: 0.8; }
+.search-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; margin: 0; padding: 6px; list-style: none; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,0.45); max-height: min(60vh, 420px); overflow: auto; z-index: 3; }
+.search-results[hidden] { display: none; }
+.search-results li { display: grid; gap: 1px; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+.search-results li[aria-selected="true"], .search-results li:hover { background: rgba(255,255,255,0.08); }
+.hit-name { font-weight: 600; }
+.hit-sys { font-size: 12px; color: var(--muted); }
+
+/* The card's names, path and source. */
+.card-names { margin: -4px 0 8px; color: var(--fact); font-size: 14px; font-style: italic; }
+.card-names[hidden], .card-trail[hidden], .card-source[hidden] { display: none; }
+.card-trail { margin: 0 0 8px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.trail-step { font: inherit; color: var(--text); background: none; border: 0; padding: 0; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.3); text-underline-offset: 3px; cursor: pointer; }
+.trail-step:hover { color: var(--accent); }
+.trail-step:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+.card-source { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.card-source a { color: var(--muted); }
+.card { max-height: calc(100vh - var(--bar-top, 58px) - 110px); overflow: auto; }
+@media (max-width: 640px) {
+  .search { flex: 1 1 auto; }
+  .search input { font-size: 16px; padding: 7px 14px; }
+  .card.compact .card-names, .card.compact .card-trail, .card.compact .card-source { display: none; }
+}

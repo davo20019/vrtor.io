@@ -47,6 +47,18 @@ interosseous membranes, optic, ophthalmic and trochlear nerves; 48 parts by plac
 nerves (Z-Anatomy adapted them from a NonCommercial model). Z-Anatomy's lateral temporomandibular ligaments are
 named for the wrong side: swapped.
 
+## Names and descriptions on the cards
+
+- **Latin and translated names** (Spanish, French, Portuguese, Italian): Terminologia Anatomica 2, as tabulated in
+  Z-Anatomy's `TA2.csv` (CC BY-SA 4.0), matched by name (`learn_names.py`): 1,139 names, about 60 % of the parts;
+  the rest are mostly BodyParts3D's numbered vessel segments, which have no standard term.
+- **What each part is**: the lead of its English Wikipedia article (CC BY-SA 4.0, by its contributors), credited
+  with a link on every card (`learn_wiki.py`). Only articles about anatomy are taken ("Atlas (anatomy)", not the
+  titan). Where Wikipedia sends a name to an article titled otherwise, a synonym is shown as the part's own text, an
+  article on something related is introduced by its title ("From the article on the rib cage"), and wrong ones are
+  left out (read through by hand; lists in `ship.py`). A part with no article of its own shares what it is part of
+  ("Part of the tricuspid valve"), or, last, what kind of thing it is ("About lymph nodes").
+
 ## Corrections to BodyParts3D
 
 Found by `audit.py` (where each part lies against its name, parts stored twice, left and right twins) and checked by
@@ -87,4 +99,5 @@ The colours and surfaces are ours (`apps/bdy/src/tissues.js`): the data has none
     python3 tree.py && blender -b -P lungfit.py && python3 tree.py
     blender -b --disable-autoexec raw/zanatomy/x/Z-Anatomy/Startup.blend -P zdump.py
     python3 bonefit.py && python3 zplace.py && python3 tree.py
+    python3 learn_names.py && python3 learn_wiki.py
     blender -b -P build.py && python3 ship.py && python3 audit.py

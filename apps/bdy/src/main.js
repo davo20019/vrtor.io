@@ -29,6 +29,7 @@ import {
 } from '@babylonjs/core';
 import { continueInVr, createCard, createMenuControls, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, roomsCard, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { loadBody } from './body.js';
+import { canSpeak, loadLearning, speak } from './learn.js';
 import { setLite } from './tissues.js';
 import { createRoom, PLINTH_TOP } from './room.js';
 import './style.css';
@@ -52,6 +53,11 @@ const ui = {
   systems: $('[data-systems]'),
   back: $('[data-back]'),
   hint: $('.hint'),
+  names: $('.card-names'),
+  trail: $('.card-trail'),
+  source: $('.card-source'),
+  search: $('.search input'),
+  results: $('.search-results'),
 };
 
 const HOVER = Color3.FromHexString('#ffd27a');
@@ -119,6 +125,8 @@ stand.position.y = PLINTH_TOP;
 // ---------------------------------------------------------------- state
 
 let body = null;
+/** Names, descriptions and search (learn.js). */
+let learn = null;
 let rig = null;
 let presence = null;
 const card = createCard(scene, { name: 'body-card', width: 0.8, height: 0.6 });
@@ -147,6 +155,7 @@ const LAYERS = {
 };
 function setLayer(id) {
   layer = id;
+  body.isolate(null);
   for (const s of body.systems) body.setSystem(s.id, !LAYERS[id].off.includes(s.id));
   if (picked !== null && !visible(picked)) picked = null;
   refreshBar();
@@ -164,7 +173,7 @@ function toggleSystem(id) {
 
 function refreshBar() {
   for (const b of ui.layers) b.setAttribute('aria-pressed', String(b.dataset.layer === layer));
-  if (body) ui.back.disabled = !body.movedCount() && !body.hiddenCount();
+  if (body) ui.back.disabled = !body.movedCount() && !body.hiddenCount() && body.isolated() === null;
 }
 
 // ---------------------------------------------------------------- choosing and taking out
@@ -264,11 +273,32 @@ function putBack(id) {
 function putAllBack() {
   body.putAllBack();
   body.showAll();
+  body.isolate(null);
   if (layer) setLayer(layer);
   note = '';
   setTimeout(refreshBar, 700);
   render();
 }
+/** "Show only this" (or everything again, with null). */
+function showOnly(id) {
+  body.isolate(id);
+  if (id !== null && !inXr()) look(body.centreOf(id), Math.max(0.35, Math.min(2.2, size(id) * 1.8)));
+  refreshBar();
+  render();
+}
+
+/** Where a part can be seen: the layer that shows its system (a bone: Skeleton; a muscle: Muscles). */
+const LAYER_OF = { skeleton: 'skeleton', muscles: 'muscles', skin: 'skin' };
+/** From search: makes the part visible, chooses it and brings the view to it. */
+function showPart(id) {
+  body.isolate(null);
+  const sys = body.systemOf(id);
+  if (sys === 'fascia') body.setSystem('fascia', true);
+  else if (!body.meshesBelow(id).some((m) => m.isEnabled())) setLayer(LAYER_OF[sys] ?? 'organs');
+  pick(id);
+  if (!inXr()) look(body.centreOf(id), Math.max(0.35, Math.min(2.2, size(id) * 2.2)));
+}
+
 function hidePart(id) {
   body.hide(id);
   picked = null;
@@ -321,16 +351,31 @@ function content() {
   const actions = [];
   if (up !== null && up !== 0) actions.push(act(up === sys?.node ? `All ${sys.name.toLowerCase()}` : `Whole ${name(up).toLowerCase()}`, climb));
   actions.push(home ? act('Take it out', () => takeOut(id), true) : act('Put it back', () => putBack(id), true));
-  actions.push(act('Hide', () => hidePart(id)));
+  const alone = body.isolated() === id;
+  actions.push(act(alone ? 'Show everything' : 'Show only this', () => showOnly(alone ? null : id)));
+  if (canSpeak()) actions.push(act('Hear it', () => speak(n.name.replace(/, (\d+ of \d+|main part)$/, ''))));
   if (inXr()) actions.push(act('Close', close));
+  else actions.push(act('Hide', () => hidePart(id)));
+  const info = learn?.about(id) ?? {};
   const where = trail.length ? `In ${trail.join(' › ')}.` : n.el ? `In ${sys?.name.toLowerCase() ?? 'the body'}.` : '';
+  const names = [info.latin && `Latin: ${info.latin}`, info.local && `${info.local.label}: ${info.local.name}`].filter(Boolean).join(' · ');
+  const about = !info.text ? ''
+    : info.kind ? `About ${info.kind}: ${info.text}`
+    : info.from ? `Part of the ${info.from.toLowerCase()}. ${info.text}`
+    : info.article ? `From the article on the ${info.article.toLowerCase()}: ${info.text}`
+    : info.text;
+  const howto = inXr()
+    ? 'Squeeze the grip on it to take it in your hand; pull the trigger while holding to take the whole of what it belongs to.'
+    : 'Drag it to pull it out; drag anywhere else to turn the view.';
   return {
     kicker: sys ? `${sys.name}${n.el ? '' : ` · ${count} parts`}` : 'Human body',
     title: n.name,
-    body: [where, n.el ? '' : `${count} parts move together when you take it out.`].filter(Boolean).join(' '),
-    fact: note || (inXr()
-      ? 'Squeeze the grip on it to take it in your hand. Pull the trigger while holding to take the whole of what it belongs to.'
-      : 'Drag it to pull it out; drag anywhere else to turn the view. “Whole …” chooses what it belongs to.'),
+    names,
+    // The headset's card is text only: the path and the names go in its body.
+    body: inXr() ? [names, about || where].filter(Boolean).join('\n') : about || [where, n.el ? '' : `${count} parts move together when you take it out.`].filter(Boolean).join(' '),
+    trail: body.path(id).slice(1, -1),
+    source: info.source,
+    fact: note || (inXr() && info.source ? `${howto} Text: Wikipedia, CC BY-SA.` : howto),
     actions,
   };
 }
@@ -385,7 +430,23 @@ function render() {
   ui.card.classList.toggle('compact', phone() && page === 'part' && picked !== null);
   ui.kicker.textContent = data.kicker;
   ui.title.textContent = data.title;
+  ui.names.textContent = data.names ?? '';
+  ui.names.hidden = !data.names;
+  // The path, each step a button that chooses it: Heart and vessels › Heart › Right side of heart.
+  ui.trail.replaceChildren(...(data.trail ?? []).flatMap((i, k) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'trail-step';
+    b.textContent = name(i);
+    b.addEventListener('click', () => pick(i));
+    return k ? [document.createTextNode(' › '), b] : [b];
+  }));
+  ui.trail.hidden = !data.trail?.length;
   ui.body.textContent = data.body;
+  if (data.source) {
+    ui.source.replaceChildren('Text: ', Object.assign(document.createElement('a'), { href: data.source.url, target: '_blank', rel: 'noopener', textContent: `Wikipedia, “${data.source.title}”` }), ', CC BY-SA 4.0');
+  }
+  ui.source.hidden = !data.source;
   ui.fact.textContent = data.fact ?? '';
   ui.fact.hidden = !data.fact;
   ui.actions.replaceChildren(...data.actions.map((a) => {
@@ -639,6 +700,8 @@ async function start() {
     mat.realTimeFilteringQuality = Constants.TEXTURE_FILTERING_QUALITY_LOW;
   }
   setLayer(layer);
+  learn = await loadLearning(body, MODEL_V);
+  setUpSearch();
 
   let refreshPresence = () => {};
   presence = createPresence(scene, {
@@ -697,6 +760,59 @@ async function start() {
   render();
 }
 
+// ---------------------------------------------------------------- search
+
+function setUpSearch() {
+  const input = ui.search, list = ui.results;
+  let hits = [], at = -1;
+  const show = () => {
+    list.replaceChildren(...hits.map((id, k) => {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'option');
+      li.id = `hit-${k}`;
+      li.setAttribute('aria-selected', String(k === at));
+      const sys = body.systems.find((s) => s.id === body.systemOf(id));
+      li.innerHTML = '<span class="hit-name"></span><span class="hit-sys"></span>';
+      li.firstChild.textContent = name(id);
+      li.lastChild.textContent = body.nodes[id].el ? sys?.name ?? '' : `${sys?.name ?? ''} · ${partCount(id)} parts`;
+      li.addEventListener('pointerdown', (e) => { e.preventDefault(); choose(id); });
+      return li;
+    }));
+    list.hidden = !hits.length;
+    input.setAttribute('aria-expanded', String(!!hits.length));
+    if (at >= 0) input.setAttribute('aria-activedescendant', `hit-${at}`);
+    else input.removeAttribute('aria-activedescendant');
+  };
+  const choose = (id) => {
+    hits = [];
+    show();
+    input.value = '';
+    input.blur();
+    showPart(id);
+  };
+  input.addEventListener('input', () => {
+    hits = learn.search(input.value);
+    at = hits.length ? 0 : -1;
+    show();
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!hits.length) return;
+      at = (at + (e.key === 'ArrowDown' ? 1 : hits.length - 1)) % hits.length;
+      show();
+    } else if (e.key === 'Enter' && hits[at] !== undefined) {
+      choose(hits[at]);
+    } else if (e.key === 'Escape') {
+      hits = [];
+      show();
+      input.blur();
+    }
+  });
+  input.addEventListener('blur', () => setTimeout(() => { hits = []; show(); }, 150));
+  input.disabled = false;
+}
+
 async function enterVr() {
   if (!rig || inXr()) return;
   ui.vr.disabled = true;
@@ -716,6 +832,12 @@ ui.systems.addEventListener('click', () => { page = page === 'systems' ? 'part' 
 ui.back.addEventListener('click', putAllBack);
 ui.retry.addEventListener('click', () => location.reload());
 addEventListener('keydown', (e) => {
+  if (document.activeElement === ui.search) return;
+  if (e.key === '/' && !inXr()) {
+    e.preventDefault();
+    ui.search.focus();
+    return;
+  }
   if (e.key === 'Escape' && !inXr()) {
     if (picked !== null) unpick();
     else close();

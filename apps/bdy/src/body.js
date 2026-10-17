@@ -293,14 +293,26 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
   // ---- showing and hiding: by system, or by node
   const hidden = new Set();     // node ids hidden by the visitor
   const systemOn = Object.fromEntries(systems.map((s) => [s.id, true]));
+  /** "Show only this": everything else hidden, whatever the layer; null shows the layer again. */
+  let only = null;
   function refreshVisibility() {
     for (const n of nodes) {
       const m = meshOf[n.id];
       if (!m) continue;
-      let on = systemOn[n.system] !== false;
-      for (let i = n.id; on && i !== null; i = parentOf(i)) if (hidden.has(i)) on = false;
+      let on, inside = false;
+      for (let i = n.id; i !== null; i = parentOf(i)) if (i === only) inside = true;
+      if (only !== null) {
+        on = inside;
+      } else {
+        on = systemOn[n.system] !== false;
+        for (let i = n.id; on && i !== null; i = parentOf(i)) if (hidden.has(i)) on = false;
+      }
       m.setEnabled(on);
     }
+  }
+  function isolate(id) {
+    only = id;
+    refreshVisibility();
   }
   function setSystem(id, on) {
     systemOn[id] = on;
@@ -362,6 +374,8 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
     hide,
     showAll,
     hiddenCount: () => hidden.size,
+    isolate,
+    isolated: () => only,
     highlight,
     count: nodes.filter((n) => n.el).length,
   };
