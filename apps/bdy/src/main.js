@@ -138,9 +138,10 @@ const partCount = (id) => [...body.below(id)].filter((i) => body.nodes[i].el).le
 
 /** What each layer shows: the body peeled from the outside in. */
 const LAYERS = {
-  // Fascia wraps the muscles like cling film: it's in Systems, off in every layer.
+  // Fascia wraps the muscles like cling film: it's in Systems, off in every layer. Each layer shows what it's about:
+  // the reproductive organs (BodyParts3D has them without their skin) are with the organs, not the muscles.
   skin: { label: 'Skin', off: ['fascia'] },
-  muscles: { label: 'Muscles', off: ['skin', 'fascia'] },
+  muscles: { label: 'Muscles', off: ['skin', 'fascia', 'repro'] },
   organs: { label: 'Organs', off: ['skin', 'muscles', 'fascia'] },
   skeleton: { label: 'Skeleton', off: ['skin', 'muscles', 'fascia', 'heart', 'nerves', 'lungs', 'gut', 'urinary', 'repro', 'glands', 'senses', 'lymph'] },
 };
