@@ -158,6 +158,236 @@
    ]
   ]
  ],
+ "cut": [
+  [
+   "Dorsal digital branches of left deep fibular nerve",
+   "ZB0239",
+   3168,
+   276
+  ],
+  [
+   "Dorsal digital branches of right deep fibular nerve",
+   "ZB0240",
+   3168,
+   276
+  ],
+  [
+   "Femoral branch of left genitofemoral nerve",
+   "ZB0277",
+   2592,
+   240
+  ],
+  [
+   "Femoral branch of right genitofemoral nerve",
+   "ZB0278",
+   2592,
+   240
+  ],
+  [
+   "Left buccal nerve",
+   "ZB0139",
+   2632,
+   242
+  ],
+  [
+   "Left dorsal scapular nerve",
+   "ZB0263",
+   2592,
+   239
+  ],
+  [
+   "Left intermediate dorsal cutaneous nerve of foot",
+   "ZB0359",
+   2592,
+   239
+  ],
+  [
+   "Left lingual nerve",
+   "ZB0436",
+   2612,
+   240
+  ],
+  [
+   "Left mental nerve",
+   "ZB0486",
+   2632,
+   244
+  ],
+  [
+   "Left nerve to mylohyoid",
+   "ZB0513",
+   3496,
+   296
+  ],
+  [
+   "Left obturator nerve, main part",
+   "ZB0551",
+   3456,
+   294
+  ],
+  [
+   "Left posterior antebrachial cutaneous nerve",
+   "ZB0625",
+   2592,
+   239
+  ],
+  [
+   "Left posterior femoral cutaneous nerve",
+   "ZB0692",
+   2592,
+   240
+  ],
+  [
+   "Left sensory root of trigeminal nerve",
+   "ZB0756",
+   2752,
+   250
+  ],
+  [
+   "Left superficial fibular nerve, main part",
+   "ZB0816",
+   3168,
+   275
+  ],
+  [
+   "Left superior gluteal nerve",
+   "ZB0839",
+   3456,
+   293
+  ],
+  [
+   "Left supra-orbital nerve",
+   "FJ1325",
+   2598,
+   240
+  ],
+  [
+   "Left tibial nerve",
+   "ZB0914",
+   2592,
+   240
+  ],
+  [
+   "Left trochlear nerve",
+   "FJ1330",
+   2720,
+   248
+  ],
+  [
+   "Left ulnar nerve, main part",
+   "ZB0957",
+   3168,
+   275
+  ],
+  [
+   "Muscular branches of left radial nerve",
+   "ZB0505",
+   2592,
+   239
+  ],
+  [
+   "Muscular branches of right radial nerve",
+   "ZB0506",
+   2592,
+   240
+  ],
+  [
+   "Right buccal nerve",
+   "ZB0140",
+   2632,
+   242
+  ],
+  [
+   "Right dorsal scapular nerve",
+   "ZB0264",
+   2592,
+   240
+  ],
+  [
+   "Right intermediate dorsal cutaneous nerve of foot",
+   "ZB0360",
+   2592,
+   240
+  ],
+  [
+   "Right lingual nerve",
+   "ZB0437",
+   2612,
+   240
+  ],
+  [
+   "Right mental nerve",
+   "ZB0487",
+   2632,
+   244
+  ],
+  [
+   "Right nerve to mylohyoid",
+   "ZB0514",
+   3496,
+   296
+  ],
+  [
+   "Right obturator nerve, main part",
+   "ZB0552",
+   3456,
+   294
+  ],
+  [
+   "Right posterior antebrachial cutaneous nerve",
+   "ZB0626",
+   2592,
+   239
+  ],
+  [
+   "Right posterior femoral cutaneous nerve",
+   "ZB0645",
+   2592,
+   239
+  ],
+  [
+   "Right sensory root of trigeminal nerve",
+   "ZB0757",
+   2752,
+   250
+  ],
+  [
+   "Right superficial fibular nerve, main part",
+   "ZB0817",
+   3168,
+   276
+  ],
+  [
+   "Right superior gluteal nerve",
+   "ZB0840",
+   3456,
+   294
+  ],
+  [
+   "Right supra-orbital nerve",
+   "FJ1376",
+   2598,
+   240
+  ],
+  [
+   "Right tibial nerve",
+   "ZB0915",
+   2592,
+   240
+  ],
+  [
+   "Right trochlear nerve",
+   "FJ1381",
+   2758,
+   250
+  ],
+  [
+   "Right ulnar nerve, main part",
+   "ZB0958",
+   3168,
+   275
+  ]
+ ],
  "pair": [
   [
    "Left adrenal gland",
@@ -293,6 +523,21 @@
     53.0
    ],
    37
+  ],
+  [
+   "Left colic nodes",
+   "Right colic nodes",
+   [
+    10.0,
+    10.0,
+    33.0
+   ],
+   [
+    33.0,
+    20.0,
+    11.0
+   ],
+   32
   ],
   [
    "Left common iliac artery, main part",
@@ -790,6 +1035,21 @@
    4
   ],
   [
+   "Left posterior sternoclavicular ligament",
+   "Right posterior sternoclavicular ligament",
+   [
+    7.0,
+    23.0,
+    20.0
+   ],
+   [
+    17.0,
+    12.0,
+    19.0
+   ],
+   1
+  ],
+  [
    "Left pubococcygeus",
    "Right pubococcygeus",
    [
@@ -863,6 +1123,21 @@
     12.0
    ],
    4
+  ],
+  [
+   "Left sacrospinous ligament",
+   "Right sacrospinous ligament",
+   [
+    35.0,
+    27.0,
+    42.0
+   ],
+   [
+    38.0,
+    20.0,
+    42.0
+   ],
+   0
   ],
   [
    "Left sclera",
@@ -998,7 +1273,21 @@
     31.0
    ],
    0
+  ],
+  [
+   "Left vagus nerve (X)",
+   "Right vagus nerve (X)",
+   [
+    28.0,
+    62.0,
+    233.0
+   ],
+   [
+    97.0,
+    85.0,
+    459.0
+   ],
+   113
   ]
- ],
- "cut": []
+ ]
 }

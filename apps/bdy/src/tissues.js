@@ -39,6 +39,12 @@ export const TISSUES = {
   hair:        { color: '#2c1e15', rough: 0.6, coat: 0.0, sheen: 0.4 },
   tooth:       { color: '#efe8d6', rough: 0.25, coat: 0.6 },
   lens:        { color: '#f4f2ea', rough: 0.05, coat: 1.0, alpha: 0.25 },
+  // Lymph nodes: small, firm, a dull pinkish tan.
+  node:        { color: '#cfa58c', rough: 0.5, coat: 0.5 },
+  // Joint capsules, fascia and bursae are thin silvery sheets over what they hold: seen through.
+  capsule:     { color: '#e6e0d2', rough: 0.35, coat: 0.6, alpha: 0.5 },
+  fascia:      { color: '#ebe5d8', rough: 0.4, coat: 0.5, alpha: 0.4 },
+  bursa:       { color: '#dce6ea', rough: 0.2, coat: 0.8, alpha: 0.45 },
   sclera:      { color: '#f0ebe0', rough: 0.25, coat: 0.9 },
   eyedark:     { color: '#2b1913', rough: 0.4, coat: 0.6 },
 };

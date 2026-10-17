@@ -19,7 +19,7 @@ OUT = os.path.join(HERE, 'out')
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 def arg(name, default):
     return type(default)(argv[argv.index(name) + 1]) if name in argv else default
-BUDGET = arg('--budget', 1350000)       # triangles, the whole body
+BUDGET = arg('--budget', 1700000)       # triangles, the whole body
 MIN_TRIS = arg('--min', 240)             # no part cut below this (or its own count, if smaller)
 ONLY = arg('--only', '')
 
@@ -61,10 +61,12 @@ print(f"[body] {len(parts)} parts, height {frame['height_mm']:.0f} mm")
 # Some tissues are looked at closer than others: the skin and the bones keep more of their shape, the
 # thousand-odd vessel branches (thin tubes, mostly seen in passing) less.
 DETAIL = {'skin': 5.0, 'bone': 2.0, 'tooth': 1.5, 'brain': 1.6, 'whitematter': 1.3, 'liver': 1.6, 'heart': 1.8, 'valve': 1.5,
-          'kidney': 1.5, 'lung': 1.3, 'gut': 1.3, 'stomach': 1.3, 'muscle': 1.0, 'artery': 0.6, 'vein': 0.6, 'bronchus': 0.7}
+          'kidney': 1.5, 'lung': 1.3, 'gut': 1.3, 'stomach': 1.3, 'muscle': 1.0, 'artery': 0.6, 'vein': 0.6, 'bronchus': 0.7,
+          # Z-Anatomy's nerves come as smooth tubes (1.2M triangles); fascia and bursae are off by default
+          'nerve': 0.35, 'fascia': 0.5, 'bursa': 0.5, 'node': 0.8, 'capsule': 0.8}
 counts = np.array([len(p['f']) for p in parts], dtype=np.float64)
 # Z-Anatomy's face muscles are thin sheets over the skull: they keep twice their share.
-weights = counts ** 0.7 * np.array([DETAIL.get(p['node']['tissue'], 1.0) * (2.0 if p['node'].get('src') == 'za' else 1.0) for p in parts])
+weights = counts ** 0.7 * np.array([DETAIL.get(p['node']['tissue'], 1.0) * (2.0 if p['node'].get('src') == 'za' and p['node']['tissue'] in ('muscle', 'ligament') and p['node']['system'] == 'muscles' else 1.0) for p in parts])
 # Every part keeps at least MIN_TRIS (or all it has), and a small part at least a fifth of its own: a long thin
 # vessel of 2,000 triangles cut to 250 had lost its shape.
 floor = np.minimum(counts, np.maximum(MIN_TRIS, np.where(counts < 2500, 0.2 * counts, 0)))
@@ -87,7 +89,7 @@ BASE = {
     'spleen': (0.35, 0.10, 0.18), 'kidney': (0.45, 0.14, 0.10), 'pancreas': (0.90, 0.72, 0.50), 'gland': (0.62, 0.30, 0.22),
     'tongue': (0.75, 0.38, 0.38), 'stomach': (0.82, 0.55, 0.50), 'gut': (0.85, 0.62, 0.55), 'bladder': (0.85, 0.70, 0.60),
     'repro': (0.80, 0.55, 0.50), 'skin': (0.80, 0.60, 0.48), 'hair': (0.12, 0.08, 0.06), 'tooth': (0.95, 0.93, 0.86),
-    'lens': (0.95, 0.95, 0.95), 'sclera': (0.95, 0.94, 0.90), 'eyedark': (0.20, 0.12, 0.10),
+    'lens': (0.95, 0.95, 0.95), 'node': (0.80, 0.66, 0.55), 'capsule': (0.88, 0.86, 0.80), 'fascia': (0.90, 0.88, 0.84), 'bursa': (0.85, 0.88, 0.90), 'sclera': (0.95, 0.94, 0.90), 'eyedark': (0.20, 0.12, 0.10),
 }
 mats = {}
 def material(tissue):

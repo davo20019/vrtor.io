@@ -38,6 +38,10 @@ for src_dir, src in SOURCES:
                     break
                 if line.startswith('# English name'):
                     e['name'] = line.split(':', 1)[1].strip()
+                elif line.startswith('# Kind'):
+                    e['kind'] = line.split(':', 1)[1].strip()
+                elif line.startswith('# Group'):
+                    e['zgroup'] = line.split(':', 1)[1].strip()
                 elif line.startswith('# Concept ID'):
                     e['fma'] = line.split(':', 1)[1].strip()
                 elif line.startswith('# Bounds(mm)'):
@@ -216,6 +220,9 @@ SYSTEMS = [
                             r'digitorum', r'pollicis', r'digiti minimi', r'intercostal', r'subcostal', r'cremaster', r'fascia', r'retinaculum',
                             r'interossei', r'interspinales', r'tendinous ring', r'raphe', r'linea alba', r'musculature',
                             r'corrugator', r'temporoparietalis', r'epicranial']),
+    # Z-Anatomy's additions placed by zplace.py carry their kind; these two systems are only theirs.
+    ('lymph', 'Lymph nodes', [r'\bnodes?\b', r'tonsil', r'lymph']),
+    ('fascia', 'Fascia and bursae', [r'fascia', r'bursa', r'tendon sheath', r'retinacul']),
     ('skeleton', 'Skeleton', [r'bone', r'skelet', r'vertebra', r'\brib\b', r'costal cartilage', r'sternum', r'manubrium', r'xiphoid', r'sacrum', r'coccyx',
                               r'skull', r'cranium', r'mandible', r'maxilla', r'clavicle', r'scapula', r'humerus', r'radius', r'ulna', r'carpal', r'scaphoid',
                               r'lunate', r'triquetr', r'pisiform', r'trapezi', r'capitate', r'hamate', r'metacarp', r'phalan', r'femur', r'patella',
@@ -235,7 +242,12 @@ def system_of_name(name):
     return None
 
 
+KIND_SYSTEM = {'joint': 'skeleton', 'nerve': 'nerves', 'lymph': 'lymph', 'fascia': 'fascia'}
+
+
 def system_of(e):
+    if e.get('kind') in KIND_SYSTEM:
+        return KIND_SYSTEM[e['kind']]
     # Its own name first (the "Septal papillary muscle of right ventricle" is the heart's), then what it is.
     own = e['name'].lower()
     for k, label, pats in SYSTEM_RE:
@@ -287,10 +299,14 @@ TISSUES = [
              r'omentum', r'peritone', r'mesentery']),
     ('bladder', [r'bladder', r'ureter', r'urethra']),
     ('repro', [r'deferent duct', r'penis', r'testis', r'scrot', r'prostat', r'seminal', r'ductus deferens', r'epididym', r'spermatic', r'glans', r'corpus (cavernosum|spongiosum)']),
+    ('capsule', [r'capsule', r'synovial']),
+    ('node', [r'\bnodes?\b', r'tonsil', r'lymph']),
+    ('bursa', [r'bursa', r'tendon sheath', r'sheath of', r'sheaths']),
+    ('fascia', [r'fascia', r'retinacul', r'septum', r'aponeuros', r'dura', r'fibrous sheath']),
     ('muscle', [r'muscle', r'sphincter', r'diaphragm', r'uvula', r'constrictor', r'pharyngeus', r'glossus']),
 ]
 TISSUE_RE = [(k, [re.compile(p) for p in pats]) for k, pats in TISSUES]
-DEFAULT_TISSUE = {'skin': 'skin', 'senses': 'sclera', 'heart': 'artery', 'nerves': 'brain', 'lungs': 'bronchus', 'gut': 'gut',
+DEFAULT_TISSUE = {'lymph': 'node', 'fascia': 'fascia', 'skin': 'skin', 'senses': 'sclera', 'heart': 'artery', 'nerves': 'brain', 'lungs': 'bronchus', 'gut': 'gut',
                   'urinary': 'bladder', 'repro': 'repro', 'glands': 'gland', 'muscles': 'muscle', 'skeleton': 'bone'}
 
 
@@ -300,19 +316,27 @@ SYSTEM_TISSUES = {
     'skin': ['hair', 'skin'],
     'senses': ['lens', 'sclera', 'eyedark', 'cartilage', 'skin', 'nerve', 'gland', 'bone', 'muscle'],
     'heart': ['blood', 'valve', 'heart', 'vein', 'artery'],
-    'nerves': ['nerve', 'whitematter', 'ventricle', 'brain'],
+    'nerves': ['fascia', 'nerve', 'whitematter', 'ventricle', 'brain'],
     'lungs': ['cartilage', 'ligament', 'lung', 'bronchus', 'muscle'],
     'gut': ['tooth', 'liver', 'bile', 'spleen', 'pancreas', 'gland', 'tongue', 'muscle', 'stomach', 'skin', 'ligament', 'bone', 'gut'],
     'urinary': ['kidney', 'gland', 'bladder'],
     'repro': ['repro'],
     'glands': ['gland'],
     'muscles': ['ligament', 'muscle'],
-    'skeleton': ['tooth', 'cartilage', 'ligament', 'bone'],
+    'skeleton': ['tooth', 'capsule', 'cartilage', 'ligament', 'bone'],
+    'lymph': ['node'],
+    'fascia': ['bursa', 'fascia'],
 }
 
 
 def tissue_of(e, system):
     own = e['name'].lower()
+    if e.get('kind') == 'joint':
+        if re.search(r'capsule|synovial', own):
+            return 'capsule'
+        return 'cartilage' if re.search(r'menisc|labrum|disc|cartilage', own) else 'ligament'
+    if e.get('kind') == 'nerve':
+        return 'fascia' if re.search(r'dura|arachnoid|pia|filum', own) else 'nerve'
     allowed = SYSTEM_TISSUES[system]
     for k, pats in TISSUE_RE:
         if k in allowed and any(p.search(own) for p in pats):
@@ -403,6 +427,13 @@ for mname, els in muscle_parts.items():
         cands.append((frozenset(els), mname, 0.25, mname))
 
 # Organs BodyParts3D has no single concept for, made from what's in them.
+CRANIAL = re.compile(r'\((?:[ivx]+)\)|trigeminal|vagus|facial nerve|oculomotor|olfactory|abducens|trochlear|glossopharyngeal|'
+                     r'hypoglossal|accessory nerve|ophthalmic|maxillary nerve|mandibular nerve|lingual nerve|alveolar|chorda tympani')
+def is_cranial(e):
+    """A cranial nerve or a branch of one: by its name, or the nerve Z-Anatomy files it under (the vagus's branches)."""
+    return bool(CRANIAL.search(e['name'].lower()) or CRANIAL.search(e.get('zgroup', '').lower()))
+
+
 SKULL = re.compile(r'neurocranium|maxilla|zygomatic bone|palatine bone|mandible|sphenoid bone|nasal bone|vomer|ethmoid|frontal bone|'
                    r'occipital bone|parietal bone|temporal bone|nasal concha|nasal cartilage|alar cartilage|septal nasal')
 FACIAL = re.compile(r'buccinator|corrugator|depressor (anguli oris|labii|septi)|epicranial|frontalis|levator (anguli oris|labii)|mentalis|'
@@ -413,7 +444,8 @@ SYNTH = [
     ('nerves', 'brain', lambda e: e['tissue'] in ('brain', 'whitematter', 'ventricle')),
     ('nerves', 'left cerebral hemisphere', lambda e: e['tissue'] in ('brain', 'whitematter') and side_of(e['name']) == 'left'),
     ('nerves', 'right cerebral hemisphere', lambda e: e['tissue'] in ('brain', 'whitematter') and side_of(e['name']) == 'right'),
-    ('nerves', 'cranial nerves', lambda e: e['tissue'] == 'nerve'),
+    ('nerves', 'cranial nerves', lambda e: e['tissue'] == 'nerve' and (e['src'] == 'bp' or is_cranial(e))),
+    ('nerves', 'peripheral nerves', lambda e: e.get('kind') == 'nerve' and e['tissue'] == 'nerve' and not is_cranial(e)),
     ('lungs', 'larynx', lambda e: LARYNX.search(e['name'].lower())),
     ('skeleton', 'skull', lambda e: SKULL.search(e['name'].lower())),
     # The face's muscles (Z-Anatomy's; BodyParts3D has none) and the jaw's.
@@ -423,6 +455,23 @@ SYNTH = [
     ('heart', 'arteries', lambda e: e['tissue'] == 'artery' and 'coronary' not in e['name'].lower()),
     ('heart', 'veins', lambda e: e['tissue'] == 'vein' and 'cardiac' not in e['name'].lower() and 'coronary' not in e['name'].lower()),
 ]
+# Z-Anatomy's own grouping of what zplace.py added ("Knee joint", "Sciatic nerve", "Superior trunk of brachial plexus").
+zg = collections.defaultdict(set)
+for e in elements.values():
+    if e.get('zgroup') and e['system']:
+        zg[(e['system'], e['zgroup'])].add(e['id'])
+for (system, gname), els in zg.items():
+    sides = collections.defaultdict(set)
+    for x in els:
+        sides[side_of(elements[x]['name']) or 'mid'].add(x)
+    if sides.get('left') and sides.get('right'):
+        # a joint or a nerve of both sides is two: "Left elbow joint", "Right elbow joint"
+        for sd in ('left', 'right'):
+            if len(sides[sd]) >= 2 or (len(sides[sd]) == 1 and len(els) > 2):
+                cands.append((frozenset(sides[sd]), f'{sd} {gname[0].lower()}{gname[1:]}', 0.15, gname))
+    elif len(els) >= 2:
+        cands.append((frozenset(els), gname, 0.15, gname))
+
 for system, gname, pred in SYNTH:
     els = {e['id'] for e in elements.values() if e['system'] == system and pred(e)}
     if len(els) >= 2:
@@ -446,7 +495,7 @@ CATCHALL = re.compile(r'\b(anatomical|entity|organ|organs|set|structure|region|s
                       r'system|human body|body proper|neuraxis|tree|cavitated|part|portion|layer|wall)\b$|^(left |right )?(organ|anatomical)')
 BODY_REGION = re.compile(r'part of head|head proper|^face$|mediastinum|^back of|abdomen|chest|^thorax|^neck|^posterior chest|'
                          r'^(anterior|posterior|lateral|medial) (part|region|side) of|subcortex|^respiratory tract$')
-GENERIC_GROUPS = {'nerve', 'artery', 'vein', 'muscle', 'bone', 'organ', 'human body', 'body proper', 'trunk', 'head', 'neck', 'thorax', 'abdomen', 'pelvis', 'back',
+GENERIC_GROUPS = {'nerve', 'nerves', 'joints', 'ligaments', 'artery', 'vein', 'muscle', 'bone', 'organ', 'human body', 'body proper', 'trunk', 'head', 'neck', 'thorax', 'abdomen', 'pelvis', 'back',
                   'vasculature of body', 'integument', 'musculoskeletal system', 'deep fascial system'}
 
 

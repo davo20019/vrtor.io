@@ -1,4 +1,4 @@
-// VRtor Body (/bdy): a whole human body, life size, made of 2,275 separate parts from BodyParts3D and Z-Anatomy (bones,
+// VRtor Body (/bdy): a whole human body, life size, made of 3,245 separate parts from BodyParts3D and Z-Anatomy (bones,
 // muscles, organs, vessels, nerves, the eyes and ears), every one of which can be taken out, and taken out
 // with everything that belongs to it.
 //
@@ -34,7 +34,7 @@ import { createRoom, PLINTH_TOP } from './room.js';
 import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
-const MODEL_V = '6';
+const MODEL_V = '7';
 const $ = (sel) => document.querySelector(sel);
 const canvas = $('#scene');
 const ui = {
@@ -138,10 +138,11 @@ const partCount = (id) => [...body.below(id)].filter((i) => body.nodes[i].el).le
 
 /** What each layer shows: the body peeled from the outside in. */
 const LAYERS = {
-  skin: { label: 'Skin', off: [] },
-  muscles: { label: 'Muscles', off: ['skin'] },
-  organs: { label: 'Organs', off: ['skin', 'muscles'] },
-  skeleton: { label: 'Skeleton', off: ['skin', 'muscles', 'heart', 'nerves', 'lungs', 'gut', 'urinary', 'repro', 'glands', 'senses'] },
+  // Fascia wraps the muscles like cling film: it's in Systems, off in every layer.
+  skin: { label: 'Skin', off: ['fascia'] },
+  muscles: { label: 'Muscles', off: ['skin', 'fascia'] },
+  organs: { label: 'Organs', off: ['skin', 'muscles', 'fascia'] },
+  skeleton: { label: 'Skeleton', off: ['skin', 'muscles', 'fascia', 'heart', 'nerves', 'lungs', 'gut', 'urinary', 'repro', 'glands', 'senses', 'lymph'] },
 };
 function setLayer(id) {
   layer = id;
@@ -301,7 +302,7 @@ function content() {
     return {
       kicker: `Human body · ${body.count.toLocaleString('en')} parts`,
       title: 'Take the body apart',
-      body: 'Every bone, muscle, organ, vessel and nerve here is its own part, in its place in an adult man’s body: the BodyParts3D atlas, built from a whole-body MRI and refined by medical illustrators, with the face’s muscles and the lungs from Z-Anatomy. Any part comes out, alone or with all that belongs to it.',
+      body: 'Every bone, muscle, organ, vessel and nerve here is its own part, in its place in an adult man’s body: the BodyParts3D atlas, built from a whole-body MRI and refined by medical illustrators, with the face’s muscles, the lungs, ligaments, nerves and lymph nodes from Z-Anatomy. Any part comes out, alone or with all that belongs to it.',
       fact: inXr() ? XR_HOWTO : FLAT_HOWTO,
       actions: rig && !inXr()
         ? [act('Explore', close), act('Enter VR', enterVr, true)]

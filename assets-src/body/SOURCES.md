@@ -34,6 +34,19 @@ the ribs and spine to 3.3 mm. Each lung's lobes are then fitted to that lung's o
 97 % of each lobe's airways lie inside it, the rest within a few millimetres of its fissures, where the two models
 draw the lobes' borders differently.
 
+### Ligaments, joint capsules, nerves, lymph nodes and fascia
+
+980 more parts from Z-Anatomy: 377 ligaments, joint capsules, menisci and labra, 241 peripheral and cranial nerves
+(Z-Anatomy's curves, as their tubes), 160 lymph nodes and tonsils, and 192 pieces of fascia, bursae and tendon
+sheaths (their own system, off by default). Their bones aren't placed alike from region to region, so each part rides
+on its own bones: each of Z-Anatomy's bones is fitted onto the same bone of ours surface to surface (`bonefit.py`,
+ICP with rotation and scale: 186 bones, 0.9 mm rms median; the leg bones, which Z-Anatomy remodelled, 3.5 to 4 mm),
+and every vertex of a part moves with its nearest bones, blended by distance (`zplace.py`). Every ligament and
+capsule touches bone (closest gap 0.4 mm median, 4 mm at most). Left out: what BodyParts3D already has (its discs,
+interosseous membranes, optic, ophthalmic and trochlear nerves; 48 parts by place or name), and the inner ear's
+nerves (Z-Anatomy adapted them from a NonCommercial model). Z-Anatomy's lateral temporomandibular ligaments are
+named for the wrong side: swapped.
+
 ## Corrections to BodyParts3D
 
 Found by `audit.py` (where each part lies against its name, parts stored twice, left and right twins) and checked by
@@ -60,8 +73,8 @@ The colours and surfaces are ours (`apps/bdy/src/tissues.js`): the data has none
 
 ## Known gaps
 
-- No fat, no fascia between muscles, few ligaments and joint capsules, no lymph nodes, few peripheral nerves.
-  (Z-Anatomy has many of these and could fill them the same way.)
+- No fat. No lymph vessels, only nodes.
+- The quadrangular membranes and cricopharyngeal ligaments were taken for parts we have and left out.
 - No real superior epigastric veins (see above).
 - One body (male); no female organs.
 
@@ -72,4 +85,6 @@ The colours and surfaces are ours (`apps/bdy/src/tissues.js`): the data has none
     python3 regfit.py
     blender -b --disable-autoexec raw/zanatomy/x/Z-Anatomy/Startup.blend -P zexport.py
     python3 tree.py && blender -b -P lungfit.py && python3 tree.py
+    blender -b --disable-autoexec raw/zanatomy/x/Z-Anatomy/Startup.blend -P zdump.py
+    python3 bonefit.py && python3 zplace.py && python3 tree.py
     blender -b -P build.py && python3 ship.py && python3 audit.py

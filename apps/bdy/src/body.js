@@ -1,10 +1,10 @@
-// The body: BodyParts3D's parts and Z-Anatomy's additions, 2,275 in all (assets-src/body), each its own mesh, hung in the anatomy's own tree
+// The body: BodyParts3D's parts and Z-Anatomy's additions, 3,245 in all (assets-src/body), each its own mesh, hung in the anatomy's own tree
 // (models/body.json): Human body > system > organ > part > ... > the meshes. Every node of the tree is a
 // TransformNode, so moving a node moves everything under it: take hold of the heart and its valves, walls and
 // coronary vessels come along; take hold of one valve and only it comes out.
 //
 // A node that has been moved remembers where it belongs: let go of it close to there and it goes back in.
-// Meshes and nodes that aren't moving have their world matrices frozen (2,275 meshes would otherwise be
+// Meshes and nodes that aren't moving have their world matrices frozen (3,245 meshes would otherwise be
 // recomputed every frame); taking hold of a node thaws it and everything under it until it settles.
 import { DracoDecoder, LoadAssetContainerAsync, Matrix, Quaternion, TransformNode, Vector3 } from '@babylonjs/core';
 import '@babylonjs/loaders/glTF';
