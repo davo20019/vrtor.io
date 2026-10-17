@@ -161,12 +161,17 @@ function refreshBar() {
 
 // ---------------------------------------------------------------- choosing and taking out
 
+/** A phone-sized screen: the card is a short strip, and the view brings what's chosen to the middle. */
+const phone = () => matchMedia('(max-width: 640px)').matches;
+
 function pick(id) {
   picked = id;
   page = 'part';
   note = '';
   cardOpen = true;
   body.highlight('picked', id, PICKED);
+  // On a phone the card covers the bottom of the screen: the chosen part comes to the middle, above it.
+  if (phone() && !inXr()) look(body.centreOf(id), camera.radius);
   render();
 }
 function climb() {
@@ -251,7 +256,7 @@ function hidePart(id) {
 // ---------------------------------------------------------------- the card
 
 const XR_HOWTO = 'Put your hand on a part and squeeze the grip to take it. While holding, pull the trigger to take the whole of what it belongs to. Let go anywhere and it stays; let go where it belongs and it goes back in. Left stick walks, right stick teleports and turns. A or X opens this card.';
-const FLAT_HOWTO = 'Click a part to name it. Drag what you chose to pull it out. Drag elsewhere to look around; scroll to zoom.';
+const FLAT_HOWTO = 'Tap or click a part to choose it; it lights up. Drag the chosen part to pull it out. Drag anywhere else to turn the body; pinch or scroll to zoom.';
 
 const act = (label, onClick, primary = false) => ({ label, onClick, primary });
 
@@ -301,7 +306,7 @@ function content() {
     body: [where, n.el ? '' : `${count} parts move together when you take it out.`].filter(Boolean).join(' '),
     fact: note || (inXr()
       ? 'Squeeze the grip on it to take it in your hand. Pull the trigger while holding to take the whole of what it belongs to.'
-      : 'Drag it to pull it out. “Whole …” chooses what it belongs to.'),
+      : 'Drag it to pull it out; drag anywhere else to turn the view. “Whole …” chooses what it belongs to.'),
     actions,
   };
 }
@@ -352,6 +357,8 @@ function render() {
   card.hide();
   ui.card.hidden = !cardOpen;
   if (!cardOpen) return;
+  // A part chosen on a phone: its name and buttons only, so the part stays in view and in reach of a drag.
+  ui.card.classList.toggle('compact', phone() && page === 'part' && picked !== null);
   ui.kicker.textContent = data.kicker;
   ui.title.textContent = data.title;
   ui.body.textContent = data.body;
@@ -372,11 +379,35 @@ function rotateY(v, angle) {
   return new Vector3(v.x * c + v.z * s, 0, -v.x * s + v.z * c);
 }
 
-// ---------------------------------------------------------------- flat screen: hover, click, drag
+// ---------------------------------------------------------------- flat screen: hover, tap, drag
+//
+// One rule, mouse or finger: a drag moves the part you have chosen (it's lit) and turns the view anywhere else,
+// on other parts too; a tap chooses the part under it. On a phone the body fills the screen, so a drag on any part
+// pulling that part out left nowhere to turn the view. A second finger (a pinch) always goes to the camera.
 
-let drag = null;            // { down: {x,y}, id, hold, plane, started }
-const DRAG_PX = 5;
+let drag = null;            // { mode: 'part' | 'tap', down: {x,y}, id, point, hold, plane, started, moved }
+/** How far a press may wander and still be a tap (px): a fingertip wobbles more than a mouse. */
+const tapSlop = (e) => (e.pointerType === 'touch' ? 12 : 5);
 const translation = (p) => Matrix.Translation(p.x, p.y, p.z);
+const fingers = new Set();
+
+canvas.addEventListener('pointerdown', (e) => {
+  fingers.add(e.pointerId);
+  if (fingers.size > 1) cancelDrag();
+});
+for (const type of ['pointerup', 'pointercancel', 'pointerleave']) canvas.addEventListener(type, (e) => fingers.delete(e.pointerId));
+
+/** A pinch begins, or the press is lost: a part being pulled stays where it got to, and the camera has the view. */
+function cancelDrag() {
+  if (!drag) return;
+  const d = drag;
+  drag = null;
+  if (d.mode !== 'part') return;
+  if (d.started) body.drop(d.hold);
+  camera.attachControl(canvas, true);
+  refreshBar();
+  render();
+}
 
 scene.onPointerObservable.add((info) => {
   if (!body) return;
@@ -386,38 +417,88 @@ scene.onPointerObservable.add((info) => {
   const id = pickedMesh ? body.nodeOfMesh(pickedMesh) : null;
   if (type === PointerEventTypes.POINTERMOVE) {
     if (drag) return dragMove(event);
-    body.highlight('hover', id, HOVER);
-    canvas.style.cursor = id !== null ? 'pointer' : '';
+    if (event.pointerType === 'mouse') {
+      body.highlight('hover', id, HOVER);
+      canvas.style.cursor = id === null ? '' : picked !== null && isUnder(id, picked) ? 'grab' : 'pointer';
+    }
     return;
   }
-  if (type === PointerEventTypes.POINTERDOWN && event.button === 0 && id !== null) {
-    // Drag what's chosen if the press is on it; otherwise the part pressed on.
-    const target = picked !== null && [...body.below(picked)].includes(id) ? picked : id;
-    drag = { down: { x: event.clientX, y: event.clientY }, id: target, point: info.pickInfo.pickedPoint.clone(), started: false };
+  if (type === PointerEventTypes.POINTERDOWN && event.button === 0 && event.isPrimary !== false && fingers.size <= 1) {
+    const down = { x: event.clientX, y: event.clientY };
+    const onChosen = picked !== null && (id !== null && isUnder(id, picked) ? info.pickInfo.pickedPoint.clone() : nearChosen(event));
+    if (onChosen) {
+      // On the chosen part (or close enough for a fingertip): it moves, the view doesn't.
+      camera.detachControl();
+      drag = { mode: 'part', down, id: picked, point: onChosen, started: false };
+    } else if (id !== null) {
+      // Anywhere else the camera turns as usual; if the press comes up where it went down, it was a tap.
+      drag = { mode: 'tap', down, id, moved: false };
+    }
     return;
   }
   if (type === PointerEventTypes.POINTERUP && drag) {
     const d = drag;
     drag = null;
-    if (d.started) {
+    if (d.mode === 'part') {
       camera.attachControl(canvas, true);
-      const where = body.drop(d.hold);
-      note = where === 'home' ? 'Back in its place.' : '';
-      refreshBar();
-      render();
-    } else {
-      pick(d.id === picked ? d.id : body.nodeOfMesh(pickedMesh) ?? d.id);
+      if (d.started) {
+        const where = body.drop(d.hold);
+        note = where === 'home' ? 'Back in its place.' : '';
+        refreshBar();
+        render();
+      } else {
+        // A tap on the chosen part: the part under the finger, which may be a smaller one inside it.
+        pick(id ?? d.id);
+      }
+    } else if (!d.moved) {
+      pick(d.id);
     }
   }
 });
 
+/**
+ * A press beside a thin chosen part (a nerve, a tendon, the linea alba) is still on it: within its outline on
+ * screen, padded for a fingertip. Returns where on it the press lands (in the plane through its centre), or null.
+ */
+function nearChosen(event) {
+  const pad = event.pointerType === 'touch' ? 16 : 6;
+  const { lo, hi } = body.boxOf(picked);
+  if (!Number.isFinite(lo.x)) return null;
+  const engine = scene.getEngine();
+  const vp = camera.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight());
+  const k = canvas.clientWidth / engine.getRenderWidth();
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (let i = 0; i < 8; i++) {
+    const c = new Vector3(i & 1 ? hi.x : lo.x, i & 2 ? hi.y : lo.y, i & 4 ? hi.z : lo.z);
+    const p = Vector3.Project(c, Matrix.Identity(), scene.getTransformMatrix(), vp);
+    x0 = Math.min(x0, p.x * k); x1 = Math.max(x1, p.x * k);
+    y0 = Math.min(y0, p.y * k); y1 = Math.max(y1, p.y * k);
+  }
+  const r = canvas.getBoundingClientRect();
+  const x = event.clientX - r.left, y = event.clientY - r.top;
+  if (x < x0 - pad || x > x1 + pad || y < y0 - pad || y > y1 + pad) return null;
+  const centre = lo.add(hi).scale(0.5);
+  const plane = Plane.FromPositionAndNormal(centre, camera.getForwardRay().direction.scale(-1));
+  const ray = scene.createPickingRay(scene.pointerX, scene.pointerY, Matrix.Identity(), camera);
+  const t = ray.intersectsPlane(plane);
+  return t === null ? null : ray.origin.add(ray.direction.scale(t));
+}
+
+const isUnder = (id, group) => {
+  for (let i = id; i !== null; i = body.parentOf(i)) if (i === group) return true;
+  return false;
+};
+
 function dragMove(event) {
   const d = drag;
+  const far = Math.hypot(event.clientX - d.down.x, event.clientY - d.down.y) >= tapSlop(event);
+  if (d.mode === 'tap') {
+    if (far) d.moved = true;
+    return;
+  }
   if (!d.started) {
-    if (Math.hypot(event.clientX - d.down.x, event.clientY - d.down.y) < DRAG_PX) return;
+    if (!far) return;
     d.started = true;
-    camera.detachControl();
-    if (picked !== d.id) pick(d.id);
     // The part slides in the plane through where it was grabbed, facing the camera.
     const normal = camera.getForwardRay().direction.scale(-1);
     d.plane = Plane.FromPositionAndNormal(d.point, normal);

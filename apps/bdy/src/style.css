@@ -88,3 +88,14 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); c
 
 /* The layer in view. */
 .bar .btn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+
+/* Phone, a part chosen: a short strip of its name and buttons above the bar, so the body stays in view. */
+@media (max-width: 640px) {
+  .card.compact { padding: 10px 14px 0; }
+  .card.compact .card-body, .card.compact .card-fact { display: none; }
+  .card.compact .card-title { font-size: 18px; margin: 0 0 2px; }
+  .card.compact .card-kicker { font-size: 11px; }
+  .card.compact .card-close { width: 32px; height: 32px; margin: -2px -6px 0 8px; font-size: 22px; }
+  .card.compact .card-actions { flex-wrap: nowrap; overflow-x: auto; margin: 8px -14px 0; padding: 0 14px 10px; background: none; position: static; }
+  .card.compact .card-actions .btn, .card.compact .card-actions .btn-primary { flex: 0 0 auto; }
+}
