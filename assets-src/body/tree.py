@@ -184,7 +184,8 @@ for tree in ('partof', 'isa'):
 
 # ---- systems, by what each element is. Order matters: the first rule an element matches wins.
 SYSTEMS = [
-    ('skin', 'Skin and hair', [r'\bskin\b', r'integument', r'\bhair\b', r'eyebrow', r'eyelash', r'\bnail\b']),
+    # The outer ear and the lips are skin-covered surfaces: they peel away with the skin.
+    ('skin', 'Skin and hair', [r'\bskin\b', r'integument', r'\bhair\b', r'eyebrow', r'eyelash', r'\bnail\b', r'^external ear$', r'^lip$']),
     ('senses', 'Eyes and ears', [r'eyeball', r'\blens\b', r'vitreous', r'cornea', r'sclera', r'^(left |right )?choroid$', r'\bretina\b', r'\biris\b',
                                  r'ciliary body', r'anterior chamber', r'posterior chamber', r'tarsal plate', r'external ear',
                                  r'\bauricle', r'ossicle', r'cochlea', r'labyrinth', r'tympanic', r'suspensory ligament of .*lens', r'lacrimal']),
@@ -313,7 +314,7 @@ DEFAULT_TISSUE = {'lymph': 'node', 'fascia': 'fascia', 'skin': 'skin', 'senses':
 # Which tissues each system can hold, so a vessel named for a bone ("ulnar artery") stays a vessel and the
 # trapezius stays a muscle, not the trapezium.
 SYSTEM_TISSUES = {
-    'skin': ['hair', 'skin'],
+    'skin': ['hair', 'skin'],  # the ear and lips look like skin too
     'senses': ['lens', 'sclera', 'eyedark', 'cartilage', 'skin', 'nerve', 'gland', 'bone', 'muscle'],
     'heart': ['blood', 'valve', 'heart', 'vein', 'artery'],
     'nerves': ['fascia', 'nerve', 'whitematter', 'ventricle', 'brain'],

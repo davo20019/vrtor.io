@@ -34,7 +34,7 @@ import { createRoom, PLINTH_TOP } from './room.js';
 import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
-const MODEL_V = '7';
+const MODEL_V = '8';
 const $ = (sel) => document.querySelector(sel);
 const canvas = $('#scene');
 const ui = {
