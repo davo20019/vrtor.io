@@ -80,6 +80,12 @@ camera.upperBetaLimit = 1.66;
 camera.lowerRadiusLimit = 0.15;
 camera.upperRadiusLimit = 8;
 camera.attachControl(canvas, true);
+// Up and down the body: panning (right-drag or Ctrl-drag with a mouse, two fingers on a phone) only slides the view
+// vertically, and the height slider does the same. Between the soles and just over the head.
+camera.panningAxis = new Vector3(0, 1, 0);
+camera.inputs.attached.pointers.multiTouchPanning = true;
+const VIEW_LOW = 0.05;
+const VIEW_HIGH = 1.85;
 
 const room = createRoom(scene);
 const hemi = new HemisphericLight('hemi', new Vector3(0, 1, 0.2), scene);
@@ -215,6 +221,22 @@ const size = (id) => {
   return Number.isFinite(lo.x) ? hi.subtract(lo).length() : 0.5;
 };
 
+// The height slider and the view's height follow each other.
+const heightSlider = document.querySelector('[data-height]');
+heightSlider.min = String(VIEW_LOW);
+heightSlider.max = String(VIEW_HIGH);
+heightSlider.addEventListener('input', () => {
+  flight = null;
+  camera.target.y = Number(heightSlider.value);
+});
+scene.onBeforeRenderObservable.add(() => {
+  if (inXr()) return;
+  const t = camera.target;
+  if (t.y < VIEW_LOW) t.y = VIEW_LOW;
+  if (t.y > VIEW_HIGH) t.y = VIEW_HIGH;
+  if (document.activeElement !== heightSlider && Math.abs(Number(heightSlider.value) - t.y) > 0.005) heightSlider.value = t.y.toFixed(3);
+});
+
 // Flat screens: glide the camera's target (and distance) to something.
 let flight = null;
 function look(target, radius) {
@@ -256,7 +278,7 @@ function hidePart(id) {
 // ---------------------------------------------------------------- the card
 
 const XR_HOWTO = 'Put your hand on a part and squeeze the grip to take it. While holding, pull the trigger to take the whole of what it belongs to. Let go anywhere and it stays; let go where it belongs and it goes back in. Left stick walks, right stick teleports and turns. A or X opens this card.';
-const FLAT_HOWTO = 'Tap or click a part to choose it; it lights up. Drag the chosen part to pull it out. Drag anywhere else to turn the body; pinch or scroll to zoom.';
+const FLAT_HOWTO = 'Tap or click a part to choose it; it lights up. Drag the chosen part to pull it out. Drag anywhere else to turn the body; pinch or scroll to zoom. To go up to the head or down to the feet: the slider on the right, two fingers on a phone, or right-drag with a mouse.';
 
 const act = (label, onClick, primary = false) => ({ label, onClick, primary });
 
@@ -667,6 +689,7 @@ async function start() {
   continueInVr(rig, ui.vr);
   ui.loading.hidden = true;
   ui.hint.hidden = false;
+  document.querySelector('.height').hidden = false;
   for (const b of [...ui.layers, ui.systems, ui.back]) b.disabled = false;
   refreshBar();
   render();

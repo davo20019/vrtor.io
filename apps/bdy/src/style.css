@@ -99,3 +99,14 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); c
   .card.compact .card-actions { flex-wrap: nowrap; overflow-x: auto; margin: 8px -14px 0; padding: 0 14px 10px; background: none; position: static; }
   .card.compact .card-actions .btn, .card.compact .card-actions .btn-primary { flex: 0 0 auto; }
 }
+
+/* Up and down the body: a vertical slider on the right edge, the head at the top. */
+.height { position: fixed; right: 12px; top: 50%; transform: translateY(-60%); display: grid; justify-items: center; gap: 6px; padding: 10px 6px; background: var(--panel); border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; z-index: 1; }
+.height[hidden] { display: none; }
+.height-end { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.height input { writing-mode: vertical-lr; direction: rtl; width: 28px; height: min(38vh, 300px); margin: 0; accent-color: var(--accent); cursor: ns-resize; touch-action: none; }
+.in-xr .height { display: none; }
+@media (max-width: 640px) {
+  .height { right: 8px; top: 40%; padding: 8px 4px; }
+  .height input { height: 30vh; }
+}

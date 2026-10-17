@@ -49,6 +49,12 @@
     <span class="vr-cta-text"><strong>Enter VR</strong><small>Take it apart with your hands</small></span>
   </button>
 
+  <label class="height" hidden>
+    <span class="height-end" aria-hidden="true">Head</span>
+    <input type="range" data-height step="0.01" value="1.05" aria-label="View height, from the feet to the head" />
+    <span class="height-end" aria-hidden="true">Feet</span>
+  </label>
+
   <nav class="bar" aria-label="Controls">
     <button class="btn" type="button" data-layer="skin" aria-pressed="false" disabled>Skin</button>
     <button class="btn" type="button" data-layer="muscles" aria-pressed="false" disabled>Muscles</button>
@@ -57,7 +63,7 @@
     <button class="btn" type="button" data-systems disabled>Systems</button>
     <button class="btn" type="button" data-back disabled>Put everything back</button>
     <div class="presence-controls"></div>
-    <p class="hint" hidden>Click a part to choose it · drag the chosen part out · drag elsewhere to turn</p>
+    <p class="hint" hidden>Click a part to choose it · drag the chosen part out · drag elsewhere to turn · right-drag or the slider to go up and down</p>
   </nav>
 
   <script type="module" src="/src/main.js"></script>
