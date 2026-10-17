@@ -85,11 +85,12 @@ export async function loadLearning(body, version) {
     };
   }
 
-  // ---- search: every part and group by its name, its Latin, and its name in the visitor's language
+  // ---- search: every part and group by its name, its Latin, and its names in TA2's other languages
   const index = nodes.map((n) => {
     const p = plainName(n.name);
     const nm = data.names[p];
-    return { id: n.id, key: [n.name, nm?.la, lang && nm?.[lang]].filter(Boolean).join(' | ').toLowerCase(), group: !n.el };
+    // Every language TA2 has, whatever the visitor's: "corazón" and "coeur" find the heart.
+    return { id: n.id, key: [n.name, nm?.la, nm?.es, nm?.fr, nm?.pt, nm?.it].filter(Boolean).join(' | ').toLowerCase(), group: !n.el };
   });
   const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   for (const e of index) e.key = fold(e.key);
