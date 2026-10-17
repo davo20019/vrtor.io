@@ -1,0 +1,6 @@
+{"points": {
+ "nose_corner": {"front": [1399, 601], "front_q34": [1123, 1228], "side": [1343, 625], "top:r": [1282, 1100]},
+ "hood_corner_ws": {"front": [1319, 461], "front_q34": [1268, 1047], "top:r": [1460, 1137]},
+ "a_pillar_base": {"front": [1482, 437], "front_q34": [1500, 1017], "side": [1765, 494], "top:r": [1527, 1037]},
+ "leg_bottom_front": {"front": [1418, 688], "front_q34": [1150, 1340], "side": [1362, 725]}
+}}

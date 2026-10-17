@@ -47,14 +47,17 @@ M = {
     'black': material('black_trim', srgb(22, 24, 26), 0.55),
     'carbon': material('carbon', srgb(28, 30, 33), 0.35, coat=0.6),
     'tyre': material('tyre', srgb(21, 21, 22), 0.85),
-    'disc': material('wheel_disc', srgb(160, 162, 165), 0.38, coat=0.3),
-    'spoke': material('wheel_spoke', srgb(38, 39, 42), 0.28, metallic=0.6),
+    'disc': material('wheel_disc', srgb(196, 198, 200), 0.4, coat=0.3),             # the aero discs: light satin grey
+    'spoke': material('wheel_spoke', srgb(78, 80, 84), 0.32, metallic=0.75),        # satin gunmetal (Roadster_70)
     'light_front': material('light_front', srgb(235, 238, 240), 0.2, emit=(1, 1, 1), strength=6),
     'light_rear': material('light_rear', srgb(200, 20, 25), 0.25, emit=(1, 0.05, 0.05), strength=8),
     'band': material('light_band', srgb(18, 18, 20), 0.15, coat=0.8),
     'bronze': material('nozzle_bronze', srgb(176, 136, 88), 0.25, metallic=1.0),
     'fan': material('fan_dark', srgb(40, 41, 44), 0.45, metallic=0.3),
     'plate': material('plate', srgb(205, 207, 206), 0.5),
+    'seat': material('seat_grey', srgb(206, 206, 203), 0.85),                  # the seats' light grey (Roadster_63 to 69)
+    'alcantara': material('alcantara', srgb(28, 28, 30), 0.92),
+    'screen': material('screen', srgb(8, 10, 12), 0.1, emit=(0.15, 0.2, 0.3), strength=0.6),
     'amber': material('marker_amber', srgb(210, 95, 25), 0.3, emit=(1, 0.4, 0.05), strength=2),
 }
 
@@ -82,10 +85,12 @@ def empty(name, loc=(0, 0, 0), parent=None):
 root = empty('roadster')
 
 FIXED = [('body', 'paint'), ('glass_ws', 'glass'), ('glass_roof', 'glass'), ('glass_side', 'glass'),
-         ('glass_rear', 'glass'), ('sill', 'carbon'), ('black_rear_corner', 'black'), ('splitter', 'black'),
+         ('glass_rear', 'glass'), ('sill', 'carbon'), ('black_rear_corner', 'carbon'), ('splitter', 'black'),
          ('rear_lower', 'black'), ('plate', 'plate'), ('nozzles', 'bronze'), ('fans', 'fan'),
          ('light_front', 'light_front'), ('light_rear', 'light_rear'), ('light_rear_band', 'band'),
-         ('markers', 'amber'), ('headlights', 'light_front')]
+         ('markers', 'amber'), ('headlights', 'light_front'), ('nose_face', 'carbon'), ('side_trim', 'black'), ('tail_trim', 'paint'), ('reflectors', 'light_rear'),
+         ('tub', 'alcantara'), ('seats', 'seat'), ('seat_shells', 'carbon'), ('dash', 'alcantara'), ('yoke', 'seat'),
+         ('screen', 'screen'), ('console', 'seat')]
 for name, mat in FIXED:
     if (PARTS / f'{name}.stl').exists():
         stl(name, M[mat], smooth_angle=8 if name == 'body' else 28).parent = root
@@ -96,12 +101,18 @@ for k in ('l', 'r'):
     d = empty(f'door_{k}', loc=to_blender(h['point']), parent=root)
     stl(f'door_{k}', M['paint'], smooth_angle=8, origin=h['point']).parent = d
     stl(f'door_glass_{k}', M['glass'], origin=h['point']).parent = d
+    stl(f'door_card_{k}', M['alcantara'], origin=h['point']).parent = d
+
+# The active wing: an empty at its (guessed) pivot, the stowed panel under it.
+wg = GEO['wing']
+wnode = empty('wing', loc=to_blender(wg['point']), parent=root)
+stl('wing', M['paint'], smooth_angle=8, origin=wg['point']).parent = wnode
 
 # Wheels: steer_* at the wheel centre (turns about its +y), wheel_* under it (spins about +x). The right side's
 # rim and spokes are mirror images (their face looks out to -x); tyres are symmetric and shared.
 SRC = {}
 for ax in ('f', 'r'):
-    for part, mat in (('tyre', 'tyre'), ('rim', 'disc'), ('spokes', 'spoke')):
+    for part, mat in (('tyre', 'tyre'), ('rim', 'disc'), ('spokes', 'spoke'), ('inserts', 'bronze')):
         o = stl(f'{part}_{ax}', M[mat], smooth_angle=35)
         SRC[(part, ax, 1)] = o.data
         if part != 'tyre':
@@ -116,7 +127,7 @@ for key, c in GEO['wheels'].items():
     ax, side = key[0], (1 if key[1] == 'l' else -1)
     steer = empty(f'steer_{key}', loc=to_blender(c), parent=root)
     wheel = empty(f'wheel_{key}', parent=steer)
-    for part in ('tyre', 'rim', 'spokes'):
+    for part in ('tyre', 'rim', 'spokes', 'inserts'):
         data = SRC[(part, ax, 1 if part == 'tyre' else side)]
         o = bpy.data.objects.new(f'{part}_{key}', data)
         bpy.context.scene.collection.objects.link(o)
@@ -138,6 +149,8 @@ info = {
     'doors': {f'door_{k}': {'pivot': [v * 0.001 for v in h['point']], 'axis': h['axis'], 'openDeg': h['openDeg'],
                             'note': 'quaternion from axis-angle: angle 0 shut, openDeg open. The hinge is not published (spec.md, "Doors").'}
               for k, h in GEO['hinges'].items()},
+    'wing': {'node': 'wing', 'pivot': [v * 0.001 for v in wg['point']], 'axis': wg['axis'], 'openDeg': wg['openDeg'],
+             'note': 'quaternion from axis-angle: 0 stowed (road mode), openDeg raised. The struts\' path is not published: one turn standing in for it (spec.md, "Wing").'},
     'triangles': tris,
 }
 (OUT / 'roadster.json').write_text(json.dumps(info, indent=2))

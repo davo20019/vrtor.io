@@ -83,6 +83,130 @@ def scales(p):
     sy = p['roof_h'] / 1227.0
     return sx, sy
 
+# Features measured in mm (tools/bundle.py on measure/ba.json: marked in two to six photos, the photos' cameras refined
+# with them, anchored by the plate corners and the wheel hubs; errors in px are in measure/ba.md). They were measured
+# with the sizes in REF and scale with P's sizes from there, so a refit of the overall sizes carries them along.
+REF = dict(half_w=994.84, roof_h=1185.41, nose_z=2334.26, tail_z=-2246.58)
+MEAS = {
+    'nose_corner': (606.0, 481.0, 2281.0),     # the front light bar's end: the hood's front corner (front, front_q34, side, top
+                                               # on both sides)
+    'nose_centre': (0.0, 481.0, None),         # the light bar at the centre: level with its ends (front photo: straight), at
+                                               # the body's front (side: nothing ahead of the corners by more than ~25 mm)
+    'ws_corner': (472.0, 754.0, 1582.0),       # the hood's rear corner, where the windshield's base meets the fender facet
+    'ws_wrap': (827.0, 797.0, 1342.0),         # the windshield's lower front corner on the fender ridge (the facet's apex)
+    'leg_front': (633.0, 289.0, 2242.0),       # the white front leg's lower front corner (front, front_q34)
+    'tail_corner': (848.0, 873.0, -2221.0),    # the tail panel's top outer corner (q34, rear_high, top)
+    'rearbar_end': (834.0, 829.0, -2210.0),    # the rear light bar's end (q34, rear_high)
+    'rear_glass_corner': (259.0, 947.0, -1920.0),   # the rear glass's lower outer corner, at the stowed wing's seam
+    'side_glass_tip': (545.0, 1073.0, -1137.0),     # the side window's rear point (side, q34, top)
+}
+
+def meas(name, p=P):
+    """A measured feature (MEAS) scaled from REF to p's sizes."""
+    x, y, z = MEAS[name]
+    if z is None:                                  # at the body's front
+        return np.array([x * p['half_w'] / REF['half_w'], y * p['roof_h'] / REF['roof_h'], p['nose_z']])
+    return np.array([x * p['half_w'] / REF['half_w'], y * p['roof_h'] / REF['roof_h'],
+                     z * (p['nose_z'] / REF['nose_z'] if z > 0 else p['tail_z'] / REF['tail_z'])])
+
+NOSE_RAKE = 0.0                  # the nose face is flat under the bar (front photos: a straight band); the 39 mm lean of the
+                                 # corner over 168 mm is the legs' outer edge (leg_front), which the sections behind carry
+
+def bar_x(z, p=P):
+    """Half width of the front light bar at z: it curves back in plan from the centre to the corners (z = zc - dz (x/xn)^2)."""
+    c, n = meas('nose_centre', p), meas('nose_corner', p)
+    t = (c[2] - z) / (c[2] - n[2])
+    return float(n[0] * math.sqrt(min(max(t, 0.0), 1.0)))
+
+FIN_X = 424.0                    # the fins' crest, each side of the rear glass (rear_high: 1,560 and 2,256 px; plate scale)
+REAR_GLASS_X = 372.0             # the rear glass's straight sides, before they taper to its lower corners
+FIN_H = 30.0                     # how far the fins stand over the glass edge (rear_high: the wing seam steps up 12 px at them)
+
+def rear_section(d, p):
+    """The rear deck (spec.md, "Rear"; rear_high, q34, top, side): the rear glass a shield between two narrow fins; the
+    side window's tail runs back between each fin and the haunch, to its point (measured); outboard the haunch slopes
+    straight down from the fin to the widest point (rear_high: one evenly lit plane); behind the glass the stowed wing,
+    from the seam at the glass's lower corners to the tail's top edge, flat across, the fins fading out on it."""
+    T, G, C = meas('side_glass_tip', p), meas('rear_glass_corner', p), meas('tail_corner', p)
+    C[2] = p['tail_z']                             # the deck reaches the corner's height at the body's end
+    sx = p['half_w'] / REF['half_w']
+    rz = lambda z: z * p['tail_z'] / REF['tail_z']
+    z = d['z']
+    Z0, Z_TAPER, Z_SAG = rz(-600.0), rz(-1500.0), rz(-1400.0)
+    if z > Z0:
+        return d
+    fin, gx = FIN_X * sx, REAR_GLASS_X * sx
+    if z >= T[2]:                                   # ahead of the side window's point: the beltline runs in to it
+        u = (Z0 - z) / (Z0 - T[2])
+        d['xe'] += u * (T[0] - d['xe'])
+        d['ye'] += u * (T[1] - d['ye'])
+        d['xr'] = min(d['xr'], d['xe'] - 40)
+    elif z >= G[2]:                                 # the rear glass between the fins
+        u = min(1.0, (T[2] - z) / 280.0)            # behind the window's point the beltline turns into the fin
+        t = max(0.0, min(1.0, (Z_TAPER - z) / (Z_TAPER - G[2])))
+        d['xr'] = gx + t * (G[0] - gx)
+        if z < Z_SAG:                               # the glass runs down to its lower corners' height at the seam
+            v = (Z_SAG - z) / (Z_SAG - G[2])
+            d['yc'] += v * (G[1] + 3 - d['yc'])
+        d['yr'] = d['yc'] - 6
+        d['xe'] = T[0] + u * (fin - T[0])
+        d['ye'] = T[1] + u * (d['yr'] + FIN_H - T[1])
+    else:                                           # the stowed wing, from the seam to the tail's top edge
+        v = (G[2] - z) / (G[2] - C[2])
+        d['yc'] = (G[1] + 3) + v * (C[1] + 2 - (G[1] + 3))
+        d['yr'] = d['yc'] - 6 * (1 - v)
+        d['xr'] = G[0] + v * (fin - G[0])
+        d['xe'] = fin + v * (C[0] - 6 - fin)
+        d['ye'] = d['yr'] + FIN_H * (1 - v) + v * (C[1] - d['yr'])
+    d['xs'] = max(d['xs'], d['xe'] + 10)
+    w = min(1.0, (Z0 - z) / (Z0 - T[2]))            # the haunch: one plane from the fin down to the widest point, a little
+    xsh, ysh = d['xe'] + 0.8 * (d['xs'] - d['xe']), d['ye'] + 0.8 * (d['ymid'] - d['ye']) + 15    # full; eased in
+    d['xsh'] += w * (xsh - d['xsh'])                # from the cabin's shoulder over the same stretch as the beltline
+    d['ysh'] += w * (ysh - d['ysh'])
+    return d
+
+def front_section(d, p):
+    """The front of a station (spec.md, "Front"): the flat hood between its two side seams, each running from the light
+    bar's end to the windshield's base corner; outboard of the seam a flat facet up to the fender ridge, which runs from
+    the same corner to the windshield's wrap corner (the facet is the plane through the three: front photo, front
+    three-quarter and top views all see it as a triangle); outboard of the ridge the fender rolls over to its widest point.
+    Ahead of the light bar's corners the section is the nose cap, the bar's plan curve at the top."""
+    N, W, A, C = meas('nose_corner', p), meas('ws_corner', p), meas('ws_wrap', p), meas('nose_centre', p)
+    z = d['z']
+    BLEND = 250.0                                   # behind the wrap corner the ridge runs on into the cabin's beltline crest
+    if A[2] - BLEND < z < A[2]:
+        u = (A[2] - z) / BLEND
+        for kx, ky in (('xe', 'ye'), ('xr', 'yr')):
+            d[kx] = A[0] + u * (d[kx] - A[0]) if kx == 'xe' else min(d[kx], A[0] + u * (d[kx] - A[0]))
+            d[ky] = A[1] + u * (d[ky] - A[1])
+        return d
+    if z < A[2]:
+        return d
+    if z > N[2]:                                    # the nose cap, ahead of the corners
+        xb = max(bar_x(z, p), 2.0)
+        lo = lambda y: max(bar_x(z + (N[1] - y) * NOSE_RAKE, p), 1.0)
+        d.update(xe=xb, ye=N[1], xr=xb * 0.98, yr=N[1], yc=C[1])
+        d['xsh'], d['ysh'] = xb, N[1] - 5
+        d['xs'], d['ymid'] = lo(380.0), 380.0
+        d['yb'] = 230.0 * p['roof_h'] / REF['roof_h']    # down to the splitter's top
+        return d
+    t = (N[2] - z) / (N[2] - A[2])
+    ridge = N + t * (A - N)
+    if z >= W[2]:
+        s = (N[2] - z) / (N[2] - W[2])
+        edge = N + s * (W - N)
+        yc = edge[1]
+    else:                                           # the windshield's base, from its corner out to the wrap corner
+        s = (W[2] - z) / (W[2] - A[2])
+        edge = W + s * (A - W)
+        yc = max(d['yc'], edge[1])
+    d.update(xe=ridge[0], ye=ridge[1], xr=min(edge[0], ridge[0] - 1), yr=edge[1], yc=yc)
+    d['xs'] = max(d['xs'], ridge[0] + 5 + 55 * min(1.0, (N[2] - z) / 200))
+    d['xsh'], d['ysh'] = ridge[0] + 0.72 * (d['xs'] - ridge[0]), ridge[1] - 0.3 * (ridge[1] - d['ymid'])
+    if z > N[2] - 60:                               # the white leg under the corner: its foot 300 up
+        d['yb'] = max(d['yb'], 230.0 * p['roof_h'] / REF['roof_h'])
+    return d
+
 def st(p=P, step=120.0):
     """The stations as dicts, resampled every `step` mm or less (linear between the read stations: a ruled loft
     between far-apart sections has twisted faces that tessellate differently for the body and the glass 5 mm on
@@ -95,6 +219,13 @@ def st(p=P, step=120.0):
         n = max(1, int(math.ceil((a - b) / step)))
         zs += list(np.linspace(a, b, n + 1)[:-1])
     zs.append(raw[-1, 0])
+    # extra sections where the front's creases turn (the nose cap, the windshield's corners), in first-read z
+    k = 2370.0 / p['nose_z']
+    extra = [meas('nose_centre', p)[2] - 1] + list(np.linspace(meas('nose_centre', p)[2] - 6, meas('nose_corner', p)[2], 5)) + \
+        [meas('ws_corner', p)[2], meas('ws_wrap', p)[2], meas('side_glass_tip', p)[2], meas('rear_glass_corner', p)[2]]
+    kr = -2222.0 / p['tail_z']
+    zs = sorted(set(round(z, 3) for z in zs) | {round(z * (k if z > 0 else kr), 3) for z in extra}, reverse=True)
+    zs = [z for z in zs if z <= raw[0, 0]]
     sx, sy = scales(p)
     out = []
     for z in zs:
@@ -120,7 +251,7 @@ def st(p=P, step=120.0):
                 d[k] = y * sy
             else:
                 d[k] = v * sx
-        out.append(d)
+        out.append(rear_section(front_section(d, p), p))
     return out
 
 def zf(z, p):
@@ -148,7 +279,7 @@ def at(z, key, p=P):
     return float(np.interp(z, zs, [s[key] for s in S][::-1]))
 
 def half_section(s):
-    return [(s['xs'] - TUCK, s['yb']), (s['xs'], s['ymid']), (s['xsh'], s['ysh']), (s['xe'], s['ye']),
+    return [(s['xs'] - min(TUCK, 0.3 * s['xs']), s['yb']), (s['xs'], s['ymid']), (s['xsh'], s['ysh']), (s['xe'], s['ye']),
             (s['xr'], s['yr'])]
 
 def full_poly(s):
@@ -239,11 +370,11 @@ def arch_cuts(p=P):
 
 CABIN = (1450.0, -1150.0)        # z range hollowed for the cabin (doors and seats)
 
-def cavity(p=P):
+def cavity(p=P, t=SHELL_T):
     S = [s for s in st(p) if zf(CABIN[1], p) - 1 <= s['z'] <= zf(CABIN[0], p) + 1]
     polys = []
     for s in S:
-        pl = inset(full_poly(s), SHELL_T)
+        pl = inset(full_poly(s), t)
         floor = s['yb'] + 60
         pl = [(x, max(y, floor)) for x, y in pl]
         polys.append((pl, s['z']))
@@ -255,18 +386,17 @@ def greenhouse(p=P):
     return loft_polys([(top_poly(s), s['z']) for s in S])
 
 # Regions (spec.md, "Glass and doors"), in z (front +) and y, at the first scale; scaled with the body.
-WS_BASE = [(0, 1725), (400, 1705), (740, 1615)]           # windshield's lower edge, top view (x, z)
 SPINE = 114.0                                             # half width of the fixed roof spine between the doors (top view)
 ROOF_FRONT, ROOF_REAR = 560.0, -700.0                     # the doors' roof glass, top view
-REAR_GLASS_TIP = -1760.0
 SIDE_GLASS = [(803, 826), (-358, 907), (-1076, 1112), (-1000, 1320), (349, 1320), (349, 1157)]
 # side window (z, y): traced on the side photo and back-projected through its solved camera onto the glass (x = 820 at
 # the beltline, 600 at the top); generous above the roof edge, where the greenhouse cuts it
 SILL_TOP = [(1150, 270), (1031, 272), (-144, 309), (-955, 437), (-1150, 445)]     # white body's lower edge, side view (back-projected)
 DOOR = [(834, 282), (889, 761), (889, 836), (349, 1157), (560, 1250), (560, 1500), (-700, 1500), (-700, 1150), (-340, 910),
         (-192, 321)]
-# door shut lines (z, y): back-projected from the side photo (x = 950 on the body, 820 on the glass), the front edge
-# held 14 mm further back than the photo's line so the door clears the A-pillar as it swings; the roof glass's
+# door shut lines (z, y): back-projected from the side photo (x = 950 on the body, 820 on the glass); the door is cut
+# behind the A-pillar line (build()), so its visible front edge is the line's foot; measured in round 6 the photo's shut
+# line leans forward from 846 at the sill to 947 at the shoulder crease, not reachable with the guessed hinge; the roof glass's
 # front and rear edges (560, -700) from the top view
 
 def zy(poly, p):
@@ -291,18 +421,20 @@ def glass_regions(p=P):
     behind_roof_front = prism_xz([(-1500, zf(ROOF_FRONT, p)), (1500, zf(ROOF_FRONT, p)), (1500, -3000), (-1500, -3000)], 500, 1600)
     inside_rail = prism_xz([(-rr(z), z) for z in np.linspace(zf(1800, p), zf(ROOF_FRONT, p), 8)] +
                            [(rr(z), z) for z in np.linspace(zf(ROOF_FRONT, p), zf(1800, p), 8)], 500, 1600)
-    base = xz(WS_BASE, p)                                  # the windshield's lower edge across the hood (top view)
+    W, A = meas('ws_corner', p), meas('ws_wrap', p)       # the windshield's base: straight across the hood (front three-
+    base = [(0.0, W[2]), (W[0], W[2]), (A[0], A[2])]       # quarter: the hood's rear edge is one line), then out to the wrap
     behind_base = prism_xz([(-1500.0, base[-1][1])] + [(-x, z) for x, z in reversed(base[1:])] + base +
                            [(1500.0, base[-1][1]), (1500.0, -3000.0), (-1500.0, -3000.0)], 300, 1600)
     windshield = (ahead + (inside_rail - behind_roof_front)) & behind_base
-    zs_rear = np.linspace(zf(ROOF_REAR - 8, p), zf(REAR_GLASS_TIP + 20, p), 8)
+    zg = meas('rear_glass_corner', p)[2]                 # the rear glass ends square at the stowed wing's seam
+    zs_rear = np.linspace(zf(ROOF_REAR - 8, p), zg, 14)
     side = [(rr(z), z) for z in zs_rear]
-    rear = prism_xz(side + [(0.0, zf(REAR_GLASS_TIP, p))] + [(-x, z) for x, z in reversed(side)], 500, 1600)
+    rear = prism_xz(side + [(-x, z) for x, z in reversed(side)], 500, 1600)
     zs_out = np.linspace(zf(1700, p), zf(-1150, p), 14)
     outer_l = prism_xz([(rr(z, 50), z) for z in zs_out] + [(1400, zs_out[-1]), (1400, zs_out[0])], 500, 1600)
     return windshield, roof_l, rear, outer_l
 
-DOOR_DRAFT = 45.0                # the door's edges lean in by this much from its outer skin to the cabin side
+DOOR_DRAFT = 20.0                # the door's edges lean in by this much from its outer skin to the cabin side
 
 def door_region(p, grow=0.0, side=1):
     """The left door's region, grown or shrunk by `grow` mm: the side-view outline (DOOR) at the outside, shrunk by
@@ -319,37 +451,64 @@ def door_region(p, grow=0.0, side=1):
     return reg if side > 0 else reg.mirror(Plane.YZ)
 
 def hinge(p=P):
-    """Each door is dihedral: it turns about an axis through the A-pillar's foot, at the top of the front fender
-    (pivot), leaning in and back so the door rises with its rear end first and swings out. No photo shows the hinge.
-    The axis was chosen among 225 tried (tools/hinge_search.py) as one that swings the door clear of every fixed part
-    from shut to 80 degrees, with the door at 65 degrees standing as in Roadster_96 and 99 (its rear end over the
-    middle of the cabin, about 2.3 m up). spec.md, "Doors"."""
+    """Each door is a scissor door (the reveal, 18:55 to 19:10: the rear edge rises first, the door ends nearly
+    vertical, leaning out a little). No photo shows the hinge. Round 6 chose one among 162 tried near the A-pillar's
+    foot (tools/hinge_search.py, extended): the pivot on the skin at the foot of the A-pillar (950 out, 1,050 up,
+    1,300 ahead), the axis leaning in, back and up a little, which swings the door with the measured shut line clear of
+    every fixed part from 6 to 80 degrees and stands it at 80 as in the reveal. spec.md, "Doors"."""
     sx, sy = scales(p)
     pt = [900.0 * sx, yat(800.0, zf(1100.0, p), p), zf(1100.0, p)]
     ax = np.array([0.93, -0.37, 0.0]); ax /= np.linalg.norm(ax)
-    return {'l': {'point': pt, 'axis': ax.tolist(), 'openDeg': 65},
-            'r': {'point': [-pt[0], pt[1], pt[2]], 'axis': [ax[0], -ax[1], -ax[2]], 'openDeg': 65}}
+    return {'l': {'point': pt, 'axis': ax.tolist(), 'openDeg': 80},
+            'r': {'point': [-pt[0], pt[1], pt[2]], 'axis': [ax[0], -ax[1], -ax[2]], 'openDeg': 80}}
 
 # ------------------------------------------------------------------ black and lit parts
 
 def splitter(p=P):
-    """Front lower: the black intake under the nose face, as wide as the face (front photo: between the white lower
-    corners), widening under the fenders, and the splitter under it (side view: flush with the nose face)."""
-    polys = []
-    for z, xh, top in ((2368, 190, 300), (2330, 390, 285), (2290, 520, 265), (2250, 560, 250), (2050, 650, 240), (1880, 650, 240)):
-        z, xh = zf(z, p), xh * scales(p)[0]
-        polys.append(([(-xh, 105 * scales(p)[1]), (xh, 105 * scales(p)[1]), (xh, yat(top, z, p)), (-xh, yat(top, z, p))], z))
-    return loft_polys(polys)
+    """The splitter: a carbon lip 160 to 230 up (side photo), its front edge under the light bar's plan curve (nothing
+    stands ahead of the nose: side photo), running the full width (front close-up, 19:51) and back under the car."""
+    sy = p['roof_h'] / REF['roof_h']
+    N, C = meas('nose_corner', p), meas('nose_centre', p)
+    xs = np.linspace(0.0, N[0] + 20, 9)
+    front = [(x, C[2] - (C[2] - N[2]) * min(1.0, x / N[0]) ** 2) for x in xs]
+    back = zf(1880, p)
+    poly = [(-x, z) for x, z in reversed(front[1:])] + front + [(N[0] + 20, back), (-(N[0] + 20), back)]
+    return prism_xz(poly, 160 * sy, 230 * sy)
+
+def nose_face(shell, p=P):
+    """Below the light bar, between the legs, the nose is carbon and black (front photos): the body's skin there, from
+    the bar down, inside the bar's ends, back to the end of the intake."""
+    N = meas('nose_corner', p)
+    z0, z1 = zf(1980, p), N[2] + 160               # back to where the intake ends under the hood (the face is all one
+    y0 = 225 * p['roof_h'] / REF['roof_h']        # dark recess between the legs, down to the splitter: front close-up, 19:51)
+    box = Box(2 * (N[0] - 6), N[1] - 9 - y0, z1 - z0).moved(Location((0, (N[1] - 9 + y0) / 2, (z0 + z1) / 2)))
+    return shell & box, box
+
+DIFF_X = 570.0                   # the diffuser's half width (rear_high: 990 px at the plate's 1.15 mm/px)
+DIFF_BACK = -2000.0              # its fan bays' back wall (q34, reveal 19:40: the fans sit well inside)
 
 def rear_lower(p=P):
-    """The black rear lower: the fan box between the wheels under the plate panel (Roadster_91: 1,370 px wide, top 578
-    mm up at the plate's 0.917 mm/px), its face 60 mm ahead of the tail's top edge (side view), back to the axle."""
-    polys = []
-    for z, xh in ((-2162, 630), (-2000, 630), (-1880, 630), (-1750, 600)):
-        z, xh = zf(z, p), xh * scales(p)[0]
-        top = yat(578, z, p)
-        polys.append(([(-xh, 115 * scales(p)[1]), (xh, 115 * scales(p)[1]), (xh, top), (-xh, top)], z))
-    return loft_polys(polys)
+    """The diffuser under the tail (reveal 19:40 close-up, rear_high, q34): a top shelf under the pale face; the nozzle
+    panel below it; four open fan bays split by three vertical strakes between two end plates, the fans on the bays'
+    back wall (fans()); a floor that ramps up from under the car to the tail."""
+    sx, sy = p['half_w'] / REF['half_w'], p['roof_h'] / REF['roof_h']
+    rz = lambda z: z * p['tail_z'] / REF['tail_z']
+    X = DIFF_X * sx
+    zt, zb = rz(-2195.0), rz(DIFF_BACK)
+    box = lambda x0, x1, y0, y1, z0, z1: Box(x1 - x0, (y1 - y0) * sy, z1 - z0).moved(
+        Location(((x0 + x1) / 2, (y0 + y1) / 2 * sy, (z0 + z1) / 2)))
+    parts = [box(-X, X, 520, 565, zt, rz(-1780.0)),                       # shelf, under the pale face's black band
+             box(-X, X, 440, 520, zt, zt + 25),                           # nozzle panel
+             box(-X, X, 180, 440, zb - 20, zb),                           # back wall of the fan bays
+             box(-X, X, 160, 180, rz(-2010.0), rz(-1700.0))]              # floor (rear_high: the diffuser ends
+                                                                          # well clear of the ground)
+    for x in (-X, -231 * sx, 0.0, 231 * sx, X):                           # end plates and strakes
+        t = 14.0 if abs(x) == X else 8.0
+        parts.append(box(x - t / 2, x + t / 2, 200, 520, rz(-2205.0), zb))
+    out = parts[0]
+    for b in parts[1:]:
+        out = out + b
+    return out
 
 def plate(p=P):
     """The licence plate, 12 x 6 in (US), the scale reference (rear view: centred, 662 mm up at the first scale)."""
@@ -366,26 +525,26 @@ def nozzles(p=P):
     return out
 
 def fans(p=P):
-    """Four fan housings below the nozzles (rear view: dark, ~270 across, 300 up), recessed in the diffuser."""
+    """Four fans on the diffuser bays' back wall, one per bay under each nozzle (reveal 19:40: dark, ~270 across)."""
+    sy = p['roof_h'] / REF['roof_h']
+    z = DIFF_BACK * p['tail_z'] / REF['tail_z'] - 22
     out = []
     for x in (-346.5, -115.5, 115.5, 346.5):
-        c = Plane(origin=(x * scales(p)[0], yat(300, zf(-2162, p), p), zf(-2162, p) - 3), z_dir=(0, 0, 1))
-        out.append(Solid.make_cylinder(105, 5, c))
+        c = Plane(origin=(x * scales(p)[0], 290 * sy, z), z_dir=(0, 0, -1))
+        out.append(Solid.make_cylinder(105, 18, c) + Solid.make_cylinder(40, 40, c))
     return out
 
-LIGHT_BAR_F = [(0, 2372), (180, 2369), (360, 2331), (500, 2291)]    # (x, z) along the nose's top edge, first read
-
 def light_front(p=P):
-    """The front light bar along the nose's top edge, which curves back to the corners in plan (top view; front
-    three-quarter photo: it runs from corner to corner)."""
-    sx = scales(p)[0]
-    pts = [(-x * sx, zf(z, p)) for x, z in reversed(LIGHT_BAR_F)] + [(x * sx, zf(z, p)) for x, z in LIGHT_BAR_F[1:]]
+    """The front light bar: a 10 mm strip along the hood's front edge, from corner to corner along its plan curve
+    (measured: level, 468 up, its ends at the nose's corners)."""
+    N, C = meas('nose_corner', p), meas('nose_centre', p)
+    xs = np.linspace(-N[0], N[0], 15)
+    pts = [(x, C[2] - (C[2] - N[2]) * (x / N[0]) ** 2) for x in xs]
     segs = []
     for (x0, z0), (x1, z1) in zip(pts[:-1], pts[1:]):
         L = math.hypot(x1 - x0, z1 - z0)
         a = math.degrees(math.atan2(z1 - z0, x1 - x0))
-        y = yat(493, (z0 + z1) / 2, p)
-        b = Box(L + 4, 12, 6).rotate(Axis.Y, -a).moved(Location(((x0 + x1) / 2, y, (z0 + z1) / 2 + 2)))
+        b = Box(L + 2, 10, 6).rotate(Axis.Y, -a).moved(Location(((x0 + x1) / 2, N[1] - 8, (z0 + z1) / 2 + 1)))
         segs.append(b)
     out = segs[0]
     for b in segs[1:]:
@@ -393,34 +552,46 @@ def light_front(p=P):
     return out
 
 def light_rear(p=P):
-    """The rear light bar across the tail (rear view: 834 mm up, nearly the full width), and its dark band below."""
-    z = zf(-2222, p) - 2
-    w = 2 * 0.98 * at(z + 2, 'xs', p)        # rear view: the red bar is 0.98 of the tail's width at its height
-    bar = Box(w, 22, 6).moved(Location((0, yat(834, z, p), z)))
-    band = Box(w, 45, 4).moved(Location((0, yat(795, z, p), z + 1)))
-    return bar, band
+    """The rear light housing across the tail (rear_high, q34, reveal 19:40): gloss black from the tail's top edge down
+    to 770, a red bar 845 up running to 825 out (measured: rearbar_end), and a white trim line along its lower edge."""
+    sy = p['roof_h'] / REF['roof_h']
+    e = meas('rearbar_end', p)
+    tc = meas('tail_corner', p)
+    z = p['tail_z']                                # at the body's end (the measured corner is 25 mm inside it, within the
+                                                   # fit's error)
+    housing = Box(2 * tc[0] - 10, (tc[1] - 4 - 770 * sy), 8).moved(Location((0, (tc[1] - 4 + 770 * sy) / 2, z - 2)))
+    bar = Box(2 * e[0], 14, 6).moved(Location((0, e[1], z - 6)))
+    trim = Box(2 * tc[0] - 30, 6, 6).moved(Location((0, 773 * sy, z - 4)))
+    return bar, housing, trim
 
-def markers(p=P):
-    """Side markers just ahead of the doors (side view: amber, 120 long, at 650 high)."""
-    out = []
-    for sg in (1, -1):
-        z = zf(1000, p)
-        x = sg * (at(z, 'xs', p) - 8)
-        out.append(Box(14, 22, 120).moved(Location((x, yat(650, z, p), z))))
-    return out
+SIDE_TRIM = [(1280, 635), (1113, 652), (944, 671), (944, 606), (1067, 601), (1201, 598)]   # (z, y) mm at REF
+MARKER = [(1202, 636), (1068, 637), (1090, 603), (1157, 603)]
+# the black strip under the shoulder crease from the front arch to the door, and the amber marker set in its front
+# half as a wedge (side photo, through its camera onto the fender: round 6)
+
+def side_trim(paint, p=P):
+    """The side trim and marker, cut from the fender's skin (a 35 mm patch of shell, black or amber through)."""
+    trim = prism_zy(mm_zy(SIDE_TRIM, p), -1400, 1400)
+    mark = prism_zy(mm_zy(MARKER, p), -1400, 1400)
+    return paint & (trim - mark), paint & mark, trim
+
+HEADLIGHT = 0.47                 # the lens is the facet's lower part: its top edge 0.47 of the way up (front photo: 526 to 537 px)
 
 def headlights(body, p=P):
-    """The headlights: an inverted triangle of lens on each front corner facet, its point at the light bar's end
-    (front photo: 68 px wide at the top, 65 px tall, over 580 px of light bar). Cut from the body's own surface:
-    the body inside the triangle seen from the front, less the body moved 4 mm back, leaves a 4 mm skin."""
-    sx = scales(p)[0]
-    z0, z1 = zf(1900, p), zf(2450, p)
+    """The headlights: the lower point of each fender facet (the triangle nose corner, windshield corner, wrap corner),
+    a lens 3 mm proud of it, cut by a line across the facet 0.47 of the way up (front photo, lit; hidden behind the
+    facet's skin when off, the front three-quarter photo shows only its seams)."""
+    N, W, A = meas('nose_corner', p), meas('ws_corner', p), meas('ws_wrap', p)
+    nrm = np.cross(W - N, A - N); nrm /= np.linalg.norm(nrm)
+    if nrm[1] < 0:
+        nrm = -nrm
     out = []
     for sg in (1, -1):
-        tri = [(sg * 500 * sx, yat(493, z1, p)), (sg * 545 * sx, yat(552, z1, p)), (sg * 455 * sx, yat(552, z1, p))]
-        w = Wire.make_polygon([Vector(x, y, z0) for x, y in tri], close=True)
-        prism = Solid.extrude(Face(w), Vector(0, 0, z1 - z0))
-        out.append((body & prism) - body.moved(Location((0, 0, -4))))
+        m = np.array([sg, 1, 1])
+        tri = [N * m, (N + HEADLIGHT * (W - N)) * m, (N + HEADLIGHT * (A - N)) * m]
+        n = nrm * m
+        w = Wire.make_polygon([Vector(*(q + n * 0.5)) for q in tri], close=True)
+        out.append(Solid.extrude(Face(w), Vector(*(n * 3))))
     return out
 
 # ------------------------------------------------------------------ wheels (built at the origin, axis +x outward)
@@ -445,18 +616,34 @@ def rim(r, w, rim_r):
     return disc + barrel
 
 def rim_spokes(r, w, rim_r):
-    """Six dark double spokes standing proud of the disc, and the centre cap."""
+    """Six spokes, each an open frame of two gunmetal arms (Roadster_70, the wheel close-up): 26 mm apart at the hub,
+    widening to 76 at the rim, faceted, standing 16 proud of the disc; a six-lobed hub joins them under a round cap
+    (the T badge left out)."""
+    face_x = w / 2 - 18
+    res = Solid.make_cylinder(92, 26, Plane(origin=(face_x - 20, 0, 0), z_dir=(1, 0, 0)))
+    res = res + Solid.make_cylinder(62, 12, Plane(origin=(face_x + 4, 0, 0), z_dir=(1, 0, 0)))
+    r0, r1 = 70.0, rim_r - 14
+    for i in range(SPOKES):
+        a = 2 * math.pi * i / SPOKES
+        for sg in (-1, 1):
+            p0, p1 = (r0, sg * 16.0), (r1, sg * 42.0)          # (radius, sideways) along the arm's centre line
+            L = math.hypot(p1[0] - p0[0], p1[1] - p0[1])
+            tilt = math.degrees(math.atan2(p1[1] - p0[1], p1[0] - p0[0]))
+            arm = Box(18, L, 24).rotate(Axis.X, -tilt).moved(Location((face_x - 4, (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2)))
+            res = res + arm.rotate(Axis.X, math.degrees(a))
+    return res
+
+def rim_inserts(r, w, rim_r):
+    """The bronze blade inside each spoke's frame, set 14 mm back (Roadster_70: from 0.35 to 0.9 of the rim's radius)."""
     face_x = w / 2 - 18
     out = []
     for i in range(SPOKES):
         a = 2 * math.pi * i / SPOKES
-        for off in (-22.0, 22.0):
-            L = rim_r - 60
-            bar = Box(14, L, 16).moved(Location((face_x - 6, L / 2 + 50, off)))
-            out.append(bar.rotate(Axis.X, math.degrees(a)))
-    cap = Solid.make_cylinder(75, 20, Plane(origin=(face_x - 14, 0, 0), z_dir=(1, 0, 0)))
-    res = cap
-    for b in out:
+        r0, r1 = 0.35 * rim_r, 0.9 * rim_r
+        b = Box(14, r1 - r0, 14).moved(Location((face_x - 18, (r0 + r1) / 2, 0)))
+        out.append(b.rotate(Axis.X, math.degrees(a)))
+    res = out[0]
+    for b in out[1:]:
         res = res + b
     return res
 
@@ -470,10 +657,135 @@ VIEW_DARK = {
     'all': [],
 }
 
+def mm_zy(poly, p):
+    """A side-view polygon (z, y) given in mm at REF's sizes, scaled to p's."""
+    return [(z * (p['nose_z'] / REF['nose_z'] if z > 0 else p['tail_z'] / REF['tail_z']), y * p['roof_h'] / REF['roof_h'])
+            for z, y in poly]
+
+REAR_FACE_X = 780.0              # the pale rear face's outer edges (rear_high: 37 px inside the light housing's ends; q34)
+REAR_FACE_LOW = 670.0            # its lower edge (rear_high, by the plate: 7 mm over the plate's centre); black below
+CORNER_TOP = [(-1880, 560), (-2090, 668), (-2300, 770)]   # the carbon rear corner's top edge, from behind the rear arch up
+                                                          # to the light housing (side photo; reveal frame 19:40)
+
 def black_rear_corner(p=P):
-    """Below the tail light line behind the rear wheels, the body is black (side and rear views)."""
-    pl = zy([(-1700, 120), (-1700, 600), (-2240, 640), (-2240, 120)], p)
-    return prism_zy(pl, -1300, 1300)
+    """Black below the tail's pale face: the carbon corners behind the rear wheels (outboard of the pale face, up to a
+    line rising from the arch to the light housing) and the band under the pale face across the whole tail (rear_high,
+    q34, reveal 19:40). The pale face itself, with the plate on its lower edge, is paint."""
+    corner = prism_zy(mm_zy([(CORNER_TOP[0][0], 0)] + CORNER_TOP + [(CORNER_TOP[-1][0], 0)], p), -1400, 1400)
+    sx = p['half_w'] / REF['half_w']
+    outside = Box(1400, 2000, 3000).moved(Location((REAR_FACE_X * sx + 700, 1000, -1500)))
+    outside = outside + outside.mirror(Plane.YZ)
+    low = prism_zy(mm_zy([(-1950, 0), (-1950, REAR_FACE_LOW), (-2300, REAR_FACE_LOW), (-2300, 0)], p), -1400, 1400)
+    return (corner & outside) + low
+
+def reflectors(p=P):
+    """Red reflector strips along the carbon corners' top edge, behind the rear arches (q34: 2,470 to 2,575 px)."""
+    sx = p['half_w'] / REF['half_w']
+    (z0, y0), (z1, y1) = mm_zy(CORNER_TOP[:2], p)
+    out = []
+    for sg in (1, -1):
+        x = sg * (at(0.5 * (z0 + z1), 'xs', p) - 6)
+        L = math.hypot(z1 - z0, y1 - y0) * 0.75
+        a = math.degrees(math.atan2(y1 - y0, z0 - z1))
+        b = Box(10, 16, L).rotate(Axis.X, a).moved(Location((x, 0.5 * (y0 + y1) + 10, 0.5 * (z0 + z1))))
+        out.append(b)
+    return out
+
+# ------------------------------------------------------------------ cabin
+# No interior size is published. The layout is read from Tesla's interior photos (Roadster_63 to 69) and the reveal's
+# open-door frames (19:00 to 19:10); the sizes are a two-seat sports car's (SAE J1100 ranges: hip point ~ 250 above the
+# floor, back angle ~ 30 degrees), so every size below is an estimate (spec.md, "Cabin").
+BELT = 820.0                     # the tub's black lining runs up to here (the side glass's lower edge is higher)
+SEAT_X = 340.0                   # seat centre lines (left-hand drive: the driver on the car's left, +x)
+
+def tub(p=P):
+    """The cabin's black lining (alcantara and carbon in the photos): an 8 mm skin 1 mm inside the body's inner surface,
+    up to the beltline (above it is glass, and the black roof spine)."""
+    lining = cavity(p, SHELL_T + 1) - cavity(p, SHELL_T + 9)
+    return lining & Box(3000, BELT, 6000).moved(Location((0, BELT / 2, 0)))
+
+def interior(p=P):
+    """Seats, dash, yoke, screen and console (Roadster_63 to 69): one-piece buckets with integrated headrests, light
+    grey, on dark shells; a long low dash; the yoke on a column ahead of the driver; the touchscreen on a stalk to its
+    right; a light console between the seats."""
+    sy = p['roof_h'] / REF['roof_h']
+    fl = 185.0 * sy                                          # the floor's top (the tub's lining over the body's floor)
+    out = {'seats': [], 'seat_shells': [], 'dash': [], 'yoke': [], 'screen': [], 'console': []}
+    def plate(pts, x0, x1):
+        w = Wire.make_polygon([Vector(x0, y, z) for z, y in pts], close=True)
+        return Solid.extrude(Face(w), Vector(x1 - x0, 0, 0))
+    for sg in (1, -1):
+        x = sg * SEAT_X
+        cushion = plate([(400, fl + 60), (380, fl + 150), (-180, fl + 120), (-240, fl + 40)], x - 250, x + 250)
+        back = plate([(-180, fl + 120), (-240, fl + 40), (-500, fl + 520), (-360, fl + 560)], x - 245, x + 245) + \
+            plate([(-360, fl + 560), (-500, fl + 520), (-640, fl + 860), (-560, fl + 900)], x - 150, x + 150)   # the
+        # headrest is the back's narrow top (Roadster_64): the cabin narrows overhead
+        bolsters = plate([(350, fl + 140), (330, fl + 230), (-200, fl + 200), (-200, fl + 120)], x - 265, x - 195) + \
+            plate([(350, fl + 140), (330, fl + 230), (-200, fl + 200), (-200, fl + 120)], x + 195, x + 265) + \
+            plate([(-260, fl + 120), (-470, fl + 520), (-400, fl + 560), (-200, fl + 200)], x - 265, x - 200) + \
+            plate([(-260, fl + 120), (-470, fl + 520), (-400, fl + 560), (-200, fl + 200)], x + 200, x + 265)
+        out['seats'] += [cushion + back + bolsters]
+        out['seat_shells'] += [plate([(-250, fl + 30), (-520, fl + 540), (-570, fl + 530), (-300, fl + 10)], x - 230, x + 230) +
+                               plate([(-520, fl + 540), (-650, fl + 870), (-700, fl + 860), (-570, fl + 530)], x - 140, x + 140)]
+    dash = plate([(1300, 520 * sy), (1300, 760 * sy), (1010, 760 * sy), (880, 690 * sy), (880, 560 * sy), (1100, 380 * sy)], -760, 760)
+    out['dash'] = [dash]
+    col = Solid.make_cylinder(32, 300, Plane(origin=(SEAT_X, 600 * sy, 1000), z_dir=(0, -0.25, -1)))
+    yz = 1000 - 290
+    rim = Box(300, 150, 30) - Box(220, 70, 40)
+    rim = rim.moved(Location((SEAT_X, 600 * sy - 70, yz)))
+    out['yoke'] = [col + rim]
+    scr = Box(320, 200, 18).rotate(Axis.X, 20).moved(Location((40, 790 * sy, 930)))
+    out['screen'] = [scr + Box(30, 120, 30).moved(Location((40, 700 * sy, 960)))]
+    out['console'] = [plate([(620, fl), (620, fl + 160), (300, fl + 260), (-380, fl + 300), (-420, fl), ], -110, 110)]
+    return {k: Compound(v) if len(v) > 1 else v[0] for k, v in out.items()}
+
+FRUNK_SEAM = 1803.0              # the frunk lid's rear seam, straight across the hood (top view: 1,405 px; front photo)
+
+def seams(p=P):
+    """Panel gaps cut into the paint, 4 mm wide and 6 deep: the hood's two side seams (top view: dark lines from the
+    light bar's ends to the windshield's corners) and the frunk lid's seam across the hood."""
+    N, W = meas('nose_corner', p), meas('ws_corner', p)
+    zs = FRUNK_SEAM * p['nose_z'] / REF['nose_z']
+    t = (N[2] - zs) / (N[2] - W[2])
+    E = N + t * (W - N)
+    cuts = []
+    def groove(a, b):
+        a, b = np.asarray(a, float), np.asarray(b, float)
+        L = float(np.linalg.norm(b - a))
+        d = (b - a) / L
+        up = np.array([0.0, 1.0, 0.0]); side = np.cross(d, up); side /= np.linalg.norm(side); up = np.cross(side, d)
+        loc = Location(Plane(origin=tuple((a + b) / 2), x_dir=tuple(side), z_dir=tuple(d)))
+        return Box(4, 12, L).moved(loc)
+    for sg in (1, -1):
+        m = np.array([sg, 1, 1])
+        cuts.append(groove(N * m + [0, 0, -4], W * m + [0, 0, 8]))
+    cuts.append(groove([-E[0] + 4, E[1], zs], [E[0] - 4, E[1], zs]))
+    out = cuts[0]
+    for c in cuts[1:]:
+        out = out + c
+    return out
+
+WING_T = 40.0                    # the stowed wing's skin: the deck panel from the seam to the tail's top edge
+
+def wing_region(p, grow=0.0):
+    """The stowed wing (top view: a seam straight across at the rear glass's lower corners, the panel back to the tail's
+    top edge; rear_high: the seam runs out to the body's edges, stepping up over the fins), as a region of the deck."""
+    G, C = meas('rear_glass_corner', p), meas('tail_corner', p)
+    C[2] = p['tail_z']                             # the wing ends at the body's end
+    z0, z1 = G[2] - grow, C[2] - 30
+    zs = np.linspace(z0, C[2] + 5, 6)
+    lo = [(z, at(z, 'yc', p) - WING_T + grow) for z in zs]
+    poly = [(z0, 1600.0)] + [(z1, 1600.0)] + [(z1, lo[-1][1])] + lo[::-1]
+    reg = prism_zy(poly, -(C[0] + 20), C[0] + 20)
+    return reg
+
+def wing_hinge(p=P):
+    """The wing rises on two swan-neck struts and tilts (reveal 19:38 to 19:40, Roadster_76, 91, 94, 99). The struts'
+    path is not published; one turn stands in for it: about a cross axis at the deck's height 550 mm ahead of the seam,
+    30 degrees, which lifts the panel's front edge 0.28 m and its trailing edge 0.43 m, as the raised photos stand
+    (clear of the deck, trailing edge highest). A guess (spec.md, "Wing")."""
+    G = meas('rear_glass_corner', p)
+    return {'point': [0.0, G[1] + 10.0, G[2] + 550.0], 'axis': [1.0, 0.0, 0.0], 'openDeg': 30}
 
 def build(p=P, doors=True):
     body = body_solid(p)
@@ -493,9 +805,18 @@ def build(p=P, doors=True):
     paint = shell - prism_zy(zy(SILL_TOP + [(-1150, 0), (1150, 0)], p), -1300, 1300) - black_rear_corner(p)
     parts['sill'] = sill
     parts['black_rear_corner'] = brc
+    lining = tub(p)
     if doors:
+        # Ahead of the A-pillar line (and below its foot, ahead of the foot) stays fender and windshield, with the door's
+        # 3 mm gap each side. The photo's shut line runs further forward below the shoulder crease (847 at the sill, 947
+        # at the crease: round 6), but with the guessed hinge any door there lifts into the fender over it; the real
+        # hinge must swing the door's front out first, which no photo shows (spec.md, "Doors").
+        g = GAP / 2
+        keep_door, keep_body = ws.moved(Location((0, 0, -g))), ws.moved(Location((0, 0, g)))
         for sg, k in ((1, 'l'), (-1, 'r')):
-            reg_in, reg_out = door_region(p, -GAP / 2, sg) - ws, door_region(p, GAP / 2, sg)
+            reg_in, reg_out = door_region(p, -GAP / 2, sg) - keep_door, door_region(p, GAP / 2, sg) - keep_body
+            parts[f'door_card_{k}'] = lining & reg_in          # the door's inside: black, with its red light strip
+            lining = lining - reg_out
             parts[f'door_{k}'] = paint & reg_in
             parts[f'door_glass_{k}'] = (parts['glass_side'] + roof) & reg_in
             paint = paint - reg_out
@@ -504,15 +825,24 @@ def build(p=P, doors=True):
         parts['glass_roof'] = roof - door_region(p, GAP / 2, 1) - door_region(p, GAP / 2, -1)
     else:
         parts['glass_roof'] = roof
-    parts['body'] = paint
+    wing = wing_region(p, -GAP / 2)
+    parts['wing'] = paint & wing
+    paint = paint - wing_region(p, GAP / 2)
+    face, face_region = nose_face(paint, p)
+    parts['nose_face'] = face
+    parts['body'] = paint - face_region - seams(p)
+    parts['tub'] = lining
+    parts.update(interior(p))
     parts['splitter'] = splitter(p)
     parts['rear_lower'] = rear_lower(p)
     parts['plate'] = plate(p)
     parts['nozzles'] = Compound(nozzles(p))
     parts['fans'] = Compound(fans(p))
     parts['light_front'] = light_front(p)
-    parts['light_rear'], parts['light_rear_band'] = light_rear(p)
-    parts['markers'] = Compound(markers(p))
+    parts['light_rear'], parts['light_rear_band'], parts['tail_trim'] = light_rear(p)
+    parts['reflectors'] = Compound(reflectors(p))
+    parts['side_trim'], parts['markers'], trim_region = side_trim(parts['body'], p)
+    parts['body'] = parts['body'] - trim_region
     parts['headlights'] = Compound([h for h in headlights(body, p) if h])
     return parts
 
@@ -547,10 +877,11 @@ def landmarks(p=P):
     z = zf(-2222, p) - 8
     for nm, sx_, sy_ in (('plate_Lt', 1, 1), ('plate_Rt', -1, 1), ('plate_Lb', 1, -1), ('plate_Rb', -1, -1)):
         L[nm] = [sx_ * 152.4, yat(662, z, p) + sy_ * 76.2, z]     # L: the car's left (+x): on the left of a rear view (seen from behind)
-    L['nose_top'] = [0.0, p['nose_h'], zf(2370, p)]
-    zl = zf(2291, p)
-    for nm, sg in (('lightbar_f_L', 1), ('lightbar_f_R', -1)):
-        L[nm] = [sg * 500 * scales(p)[0], yat(493, zl, p), zl]   # the front light bar's ends, at the nose's corners
+    for nm in MEAS:                                           # the measured features (MEAS), for the fit and the review,
+        L[nm] = meas(nm, p).tolist()                          # and their twins on the car's right
+        L[nm + '_R'] = (meas(nm, p) * [-1, 1, 1]).tolist()
+    L['lightbar_f_L'] = meas('nose_corner', p).tolist()
+    L['lightbar_f_R'] = (meas('nose_corner', p) * [-1, 1, 1]).tolist()
     return L
 
 if __name__ == '__main__':
@@ -565,12 +896,13 @@ if __name__ == '__main__':
         fine = name in ('body',) or name.startswith(('glass', 'door'))
         save(shape, name, tolerance=0.08 if fine else 0.3, angular=0.08 if fine else 0.25)
     # wheels, one per axle size, at the origin
-    geo = {'wheels': wheel_centres(), 'hinges': hinge(), 'P': P}
+    geo = {'wheels': wheel_centres(), 'hinges': hinge(), 'wing': wing_hinge(), 'P': P}
     for ax in ('f', 'r'):
         r, w = P[f'r_{ax}'], P[f'w_{ax}']
         rr = P['rim_ratio'] * r
         save(tyre(r, w, rr), f'tyre_{ax}', tolerance=0.6, angular=0.3)
         save(rim(r, w, rr), f'rim_{ax}', tolerance=0.5, angular=0.3)
         save(rim_spokes(r, w, rr), f'spokes_{ax}', tolerance=0.5, angular=0.3)
+        save(rim_inserts(r, w, rr), f'inserts_{ax}', tolerance=0.5, angular=0.3)
     (OUT / 'geometry.json').write_text(json.dumps(geo, indent=1))
     print(f'cad: {len(parts)} parts -> {OUT} in {time.time() - t0:.0f} s')

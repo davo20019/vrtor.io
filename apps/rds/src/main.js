@@ -1,6 +1,6 @@
 // VRtor Roadster (/rds): a full-size model of the second-generation Roadster revealed on 15 October 2026,
 // built in assets-src/roadster with the building-3d-replicas skill, on a turntable in a dark studio
-// (studio.js). Walk round it and open its dihedral doors.
+// (studio.js). Walk round it, open its scissor doors and raise its wing.
 // Flat screens: an orbit camera, set views, and an HTML card (About brings it back). Headset: walk and
 // teleport round the studio; A, X or the menu button opens and closes the card. Other visitors show up as
 // avatars and can talk (presence, from xr-shell).
@@ -42,7 +42,7 @@ import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
 /** The model's version: its files are cached for an hour at a stable path, so the app asks for this one. */
-const MODEL_V = '20261016a';
+const MODEL_V = '20261016c';
 /** Seconds for a door to open or shut. */
 const DOOR_SECONDS = 1.4;
 /** The turntable's speed, rad/s: once round in about 50 s. */
@@ -63,6 +63,7 @@ const ui = {
   vr: $('[data-enter-vr]'),
   bar: $('.bar'),
   doors: $('[data-doors]'),
+  wing: $('[data-wing]'),
   turn: $('[data-turn]'),
   menu: $('[data-menu]'),
   views: [...document.querySelectorAll('[data-view]')],
@@ -139,6 +140,8 @@ scene.environmentIntensity = 1.0;
 const pose = studio.table;
 /** Doors by node name (door_l, door_r): node, axis, how far it opens, and how far open it is now (0..1). */
 const doors = {};
+/** The active rear wing: the same kind of mover as a door (node, axis, angle, 0..1); null until the model loads. */
+let wing = null;
 let turning = false;
 
 async function loadCar() {
@@ -169,6 +172,13 @@ async function loadCar() {
     const meshes = new Set(node.getChildMeshes());
     doors[name] = { node, axis: Vector3.FromArray(d.axis).normalize(), open: (d.openDeg * Math.PI) / 180, t: 0, target: 0, meshes };
   }
+  if (info.wing) {
+    const node = container.transformNodes.find((n) => n.name === info.wing.node);
+    if (node) {
+      node.rotationQuaternion ??= Quaternion.Identity();
+      wing = { node, axis: Vector3.FromArray(info.wing.axis).normalize(), open: (info.wing.openDeg * Math.PI) / 180, t: 0, target: 0, meshes: new Set(node.getChildMeshes()) };
+    }
+  }
   shadows.getShadowMap().refreshRate = RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
   return { root, info, meshes: container.meshes.filter((m) => m.getTotalVertices() > 0) };
 }
@@ -178,7 +188,13 @@ function setDoors(open) {
   for (const d of Object.values(doors)) d.target = open ? 1 : 0;
   render();
 }
+const wingUp = () => !!wing && wing.target > 0.5;
+function setWing(up) {
+  if (wing) wing.target = up ? 1 : 0;
+  render();
+}
 function toggleDoor(name) {
+  if (name === 'wing') return setWing(!wingUp());
   const d = doors[name];
   if (!d) return;
   d.target = d.target > 0.5 ? 0 : 1;
@@ -187,7 +203,7 @@ function toggleDoor(name) {
 const ease = (t) => t * t * (3 - 2 * t);
 function moveDoors(dt) {
   let moving = false;
-  for (const d of Object.values(doors)) {
+  for (const d of [...Object.values(doors), ...(wing ? [wing] : [])]) {
     if (d.t === d.target) continue;
     const step = dt / DOOR_SECONDS;
     d.t = d.target > d.t ? Math.min(d.target, d.t + step) : Math.max(d.target, d.t - step);
@@ -199,6 +215,7 @@ function moveDoors(dt) {
 /** Which door a picked mesh belongs to, if any. */
 function doorOf(mesh) {
   for (const [name, d] of Object.entries(doors)) if (d.meshes.has(mesh)) return name;
+  if (wing?.meshes.has(mesh)) return 'wing';
   return null;
 }
 
@@ -261,8 +278,9 @@ let page = 'intro';
 const inXr = () => !!rig?.inXr();
 const action = (label, onClick, primary = false) => ({ label, onClick: () => { if (!busy) onClick(); }, primary });
 const doorAction = (primary = true) => action(doorsOpen() ? 'Close doors' : 'Open doors', () => setDoors(!doorsOpen()), primary);
-const CONTROLS_XR = 'Left stick: walk. Right stick: forward to teleport, left or right to turn. Point at a door and pull the trigger to open it. A or X opens and closes this card; B or Y joins other visitors.';
-const CONTROLS_FLAT = 'Drag to look around, scroll to zoom. Click a door to open it.';
+const wingAction = () => action(wingUp() ? 'Stow wing' : 'Raise wing', () => setWing(!wingUp()));
+const CONTROLS_XR = 'Left stick: walk. Right stick: forward to teleport, left or right to turn. Point at a door or the wing and pull the trigger to move it. A or X opens and closes this card; B or Y joins other visitors.';
+const CONTROLS_FLAT = 'Drag to look around, scroll to zoom. Click a door or the rear wing to move it.';
 
 function content() {
   if (busy) return { kicker: 'Roadster', title: 'Rolling it out…', body: 'Loading the model.', fact: '', actions: [] };
@@ -271,18 +289,18 @@ function content() {
   if (page === 'sizes') {
     return {
       kicker: 'Measured from photos',
-      title: 'About 4.58 m long',
-      body: 'No dimensions have been published, so these come from six reveal photos, scaled by the US licence plate on the tail (12 by 6 in): 4.58 m long, 1.98 m wide, 1.19 m high, 2.97 m between the axles. Good to a few percent, not to the millimetre.',
-      fact: 'Not modelled yet: the cabin, the active rear wing, and the fins and vents on the rear deck. The door hinge is a guess: no photo shows it.',
-      actions: [action('Back', () => { page = 'intro'; render(); }), doorAction()],
+      title: 'About 4.59 m long',
+      body: 'No dimensions have been published, so these come from six reveal photos and the reveal stream, scaled by the US licence plate on the tail (12 by 6 in): 4.59 m long, 2.01 m wide, 1.18 m high, 2.92 m between the axles. Good to about one percent, not to the millimetre.',
+      fact: 'Guessed, not measured: the cabin\'s sizes, the door hinge (the doors open as in the reveal, but no photo shows the hinge) and the path of the wing\'s struts.',
+      actions: [action('Back', () => { page = 'intro'; render(); }), doorAction(), wingAction()],
     };
   }
   return {
     kicker: 'Revealed 15 October 2026',
     title: 'Roadster',
-    body: 'A full-size model of the new two-seat Roadster, built from the reveal photos. Walk round it, open the dihedral doors, and stand beside it: the roof comes up to about your chest.',
+    body: 'A full-size model of the new two-seat Roadster, built from the reveal photos. Walk round it, open the scissor doors, raise the rear wing, and stand beside it: the roof comes up to about your chest.',
     fact: inXr() ? CONTROLS_XR : CONTROLS_FLAT,
-    actions: [action('Sizes', () => { page = 'sizes'; render(); }), ...peopleAction(), doorAction()],
+    actions: [action('Sizes', () => { page = 'sizes'; render(); }), ...peopleAction(), doorAction(), wingAction()],
   };
 }
 // In the headset the bar isn't visible, so visitors are a page of the card.
@@ -305,8 +323,9 @@ function tools() {
 function render() {
   const data = content();
   ui.doors.textContent = doorsOpen() ? 'Close doors' : 'Open doors';
+  if (ui.wing) ui.wing.textContent = wingUp() ? 'Stow wing' : 'Raise wing';
   ui.turn.textContent = turning ? 'Stop turning' : 'Turntable';
-  for (const b of [ui.doors, ui.turn, ui.menu, ...ui.views]) b.disabled = busy;
+  for (const b of [ui.doors, ui.wing, ui.turn, ui.menu, ...ui.views].filter(Boolean)) b.disabled = busy;
   if (inXr()) {
     ui.card.hidden = true;
     if (!cardOpen) {
@@ -440,6 +459,7 @@ async function start() {
 }
 
 ui.doors.addEventListener('click', () => setDoors(!doorsOpen()));
+ui.wing?.addEventListener('click', () => setWing(!wingUp()));
 ui.turn.addEventListener('click', toggleTurn);
 ui.menu.addEventListener('click', () => { cardOpen = !cardOpen || page !== 'intro'; page = 'intro'; render(); });
 for (const b of ui.views) b.addEventListener('click', () => fly(b.dataset.view));
@@ -460,6 +480,7 @@ window.addEventListener('keydown', (e) => {
   if (e.target.matches?.('input,textarea,select') || e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.key === 'm' || e.key === 'M') { cardOpen = !cardOpen; page = 'intro'; render(); }
   if (e.key === 'd' || e.key === 'D') setDoors(!doorsOpen());
+  if (e.key === 'w' || e.key === 'W') setWing(!wingUp());
 });
 window.addEventListener('resize', () => {
   engine.resize();
@@ -467,7 +488,7 @@ window.addEventListener('resize', () => {
 });
 engine.runRenderLoop(() => scene.render());
 // `?xrdebug`: the scene in the console, for poking at it.
-if (new URLSearchParams(location.search).has('xrdebug')) window.rds = { scene, camera, doors };
+if (new URLSearchParams(location.search).has('xrdebug')) window.rds = { scene, camera, doors, wing: () => wing };
 render();
 start().catch((e) => {
   console.error('[rds]', e);

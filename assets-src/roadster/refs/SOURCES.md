@@ -62,3 +62,32 @@ full-length taillight, thin-spoke wheels, a centre touchscreen with two small fo
 and that its figures are for the Thrust version. Its images are Roadster-01 … 08 on digitalassets.tesla.com
 (Roadster-02-Pilot and -03-Carousel-Slide-1 are the side and front photos used here; 05 is a downforce graph without
 numbers).
+
+## news2/ — added 16 October, the day after the reveal
+
+Reveal coverage collected on 16 October; still no dimensions, wheel or tyre sizes published anywhere (Wikipedia's
+second-generation page, Electrek, paultan.org, Motor Illustrated, The Autopian, TechCrunch). Comparison only.
+
+| File | Source | View |
+|---|---|---|
+| ap-Tesla_Roadster_Top.jpg | theautopian.com (livestream frame with a caption) | car in the air, Rocket thrusters firing |
+| ap-tesla-roadster-suspension.jpg | theautopian.com (tesla.com "Mass Control") | rear inboard suspension, tyre |
+| ap-tesla-roadster-interior.jpg | theautopian.com (tesla.com) | cabin |
+| ap-Screenshot-…-7.18.21_PM.png | theautopian.com, livestream frame | the diffuser close: four nozzles on a shelf, four fans in bays split by three strakes |
+| ap-Screenshot-…, ap-tesla_roadster-… | theautopian.com, livestream frames | stage, telemetry, details |
+| pt-*.jpg | paultan.org (Tesla images) | front, rear thrusters, side with Starman, COPV tank |
+
+## video/ — frames of the reveal livestream
+
+Tesla's reveal stream, 15 October 2026 (x.com/i/broadcasts/1yKAPwNggRaxb, 1920 x 1080, 31 min), fetched with yt-dlp
+on 16 October; only these frames are kept. Times are stream time (mm-ss). Comparison only, © Tesla.
+
+| File | What |
+|---|---|
+| reveal-18-21.jpg | both doors standing open, rear left three-quarter (scissor doors, near vertical) |
+| reveal-18-55-door-opening-sheet.jpg | a door opening, four frames a second, 18:55 to 19:00: the rear edge rises first, pivoting near the door's front |
+| reveal-18-20-walkaround-sheet.jpg, reveal-19-00-walkaround-sheet.jpg | the on-stage walkaround, one frame a second |
+| reveal-19-14.jpg, reveal-19-18.jpg | a door open, from behind it |
+| reveal-19-40.jpg | rear close, wing raised: light housing, white trim, pale rear face, carbon corners, diffuser, reflector |
+| reveal-19-51.jpg, reveal-19-53.jpg | front close, square on: hood, facets, lit headlights, carbon band, intake, splitter, legs' carbon feet |
+| reveal-18-50.jpg, reveal-19-10.jpg, reveal-19-48.jpg | other angles |

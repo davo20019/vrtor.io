@@ -2,10 +2,10 @@
 
 | | IoU | Outline error (mm) | Landmark error (mm) |
 |---|---|---|---|
-| Before | 0.8766 | 52.480 | 0.075 |
-| After | 0.9199 | 32.182 | 0.082 |
+| Before | 0.9145 | 34.142 | 13.566 |
+| After | 0.9542 | 17.305 | 14.998 |
 
-Dark parts IoU: before 0.6067, after 0.6018.
+Dark parts IoU: before 0.5440, after 0.5662.
 
-Camera (pitch, yaw, roll deg): [3.61, 0.84, -0.08], distance 11077 mm.
+Camera (pitch, yaw, roll deg): [2.26, 0.12, 0.61], distance 10882 mm.
 overlay.png: magenta = model only, cyan = photo only; green dot = measured landmark, red = the model's.

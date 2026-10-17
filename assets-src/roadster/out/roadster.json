@@ -4,29 +4,29 @@
     "fl": {
       "centre": [
         0.8250000000000001,
-        0.33811,
-        1.48241
+        0.32755,
+        1.462345
       ]
     },
     "rl": {
       "centre": [
         0.8215,
-        0.37568,
-        -1.48241
+        0.36089,
+        -1.462345
       ]
     },
     "fr": {
       "centre": [
         -0.8250000000000001,
-        0.33811,
-        1.48241
+        0.32755,
+        1.462345
       ]
     },
     "rr": {
       "centre": [
         -0.8215,
-        0.37568,
-        -1.48241
+        0.36089,
+        -1.462345
       ]
     }
   },
@@ -42,7 +42,7 @@
       0,
       0
     ],
-    "note": "wheel_*.rotation.x += distance_m / radius_m (front 0.338 m, rear 0.376 m)"
+    "note": "wheel_*.rotation.x += distance_m / radius_m (front 0.328 m, rear 0.361 m)"
   },
   "steer": {
     "nodes": [
@@ -59,32 +59,47 @@
   "doors": {
     "door_l": {
       "pivot": [
-        0.892899,
-        0.7732290138549308,
-        1.0830776371308017
+        0.9021150000000001,
+        0.772198859005705,
+        1.0887772151898736
       ],
       "axis": [
         0.9291641282577402,
         -0.36966744887673536,
         0.0
       ],
-      "openDeg": 65,
+      "openDeg": 80,
       "note": "quaternion from axis-angle: angle 0 shut, openDeg open. The hinge is not published (spec.md, \"Doors\")."
     },
     "door_r": {
       "pivot": [
-        -0.892899,
-        0.7732290138549308,
-        1.0830776371308017
+        -0.9021150000000001,
+        0.772198859005705,
+        1.0887772151898736
       ],
       "axis": [
         0.9291641282577402,
         0.36966744887673536,
         -0.0
       ],
-      "openDeg": 65,
+      "openDeg": 80,
       "note": "quaternion from axis-angle: angle 0 shut, openDeg open. The hinge is not published (spec.md, \"Doors\")."
     }
   },
-  "triangles": 18152
+  "wing": {
+    "node": "wing",
+    "pivot": [
+      0.0,
+      0.9561611763018701,
+      -1.3667353043292474
+    ],
+    "axis": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "openDeg": 30,
+    "note": "quaternion from axis-angle: 0 stowed (road mode), openDeg raised. The struts' path is not published: one turn standing in for it (spec.md, \"Wing\")."
+  },
+  "triangles": 25752
 }

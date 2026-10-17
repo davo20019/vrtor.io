@@ -10,9 +10,9 @@
  "environment": "sky",
  "expectMm": {
   "body": [
-   1984.2,
+   2004.7,
    null,
-   4580.0
+   4588.6
   ]
  },
  "toleranceMm": 10,
@@ -55,17 +55,9 @@
     1150,
     1300
    ],
-   "nose_h": [
-    430,
-    600
-   ],
    "tail_h": [
     860,
     1020
-   ],
-   "hood_drop": [
-    -60,
-    120
    ],
    "wheelbase": [
     2850,
@@ -129,12 +121,29 @@
      "contact_rl": [
       2963,
       845
+     ],
+     "nose_corner": [
+      1343,
+      625
+     ],
+     "ws_wrap": [
+      1765,
+      494
+     ],
+     "side_glass_tip": [
+      2788,
+      372
      ]
     },
     "parts": "side",
     "dark": {
      "valueMax": 45
-    }
+    },
+    "cameraHeightMm": [
+     500,
+     850
+    ],
+    "_cameraHeightMm": "the lit hood is seen edge-on (none of its top shows over the fender ridge), so the camera is at about the hood plane's height, 0.77 m (measure/README.md)"
    },
    {
     "name": "front",
@@ -184,6 +193,18 @@
      "lightbar_f_R": [
       818,
       609
+     ],
+     "ws_corner": [
+      1319,
+      461
+     ],
+     "ws_wrap": [
+      1482,
+      437
+     ],
+     "leg_front": [
+      1418,
+      688
      ]
     },
     "parts": "front",
@@ -221,7 +242,56 @@
      ],
      "refine": false
     },
-    "landmarks": {},
+    "landmarks": {
+     "nose_corner_R": [
+      1282,
+      1100
+     ],
+     "ws_corner_R": [
+      1460,
+      1137
+     ],
+     "ws_wrap_R": [
+      1527,
+      1037
+     ],
+     "side_glass_tip_R": [
+      2217,
+      1114
+     ],
+     "rear_glass_corner_R": [
+      2442,
+      1198
+     ],
+     "tail_corner_R": [
+      2522,
+      1030
+     ],
+     "nose_corner": [
+      1281.5,
+      1448.7
+     ],
+     "ws_corner": [
+      1461,
+      1412.6
+     ],
+     "ws_wrap": [
+      1525,
+      1506
+     ],
+     "rear_glass_corner": [
+      2442,
+      1348.7
+     ],
+     "tail_corner": [
+      2526,
+      1515
+     ],
+     "side_glass_tip": [
+      2218.6,
+      1432
+     ]
+    },
     "parts": "top",
     "dark": {
      "valueMax": 110
@@ -312,6 +382,18 @@
      "plate_Lb": [
       2940,
       960
+     ],
+     "side_glass_tip": [
+      2347,
+      732
+     ],
+     "tail_corner": [
+      2640,
+      785
+     ],
+     "rearbar_end": [
+      2640,
+      815
      ]
     },
     "parts": "side",
@@ -359,6 +441,30 @@
      "plate_Rb": [
       2045,
       1743
+     ],
+     "rear_glass_corner": [
+      1691,
+      1305
+     ],
+     "rear_glass_corner_R": [
+      2138,
+      1305
+     ],
+     "tail_corner": [
+      1137,
+      1484
+     ],
+     "tail_corner_R": [
+      2677,
+      1478
+     ],
+     "rearbar_end": [
+      1153,
+      1515
+     ],
+     "rearbar_end_R": [
+      2660,
+      1507
      ]
     },
     "parts": "rear",
@@ -402,6 +508,18 @@
      "lightbar_f_R": [
       536,
       1216
+     ],
+     "ws_corner": [
+      1268,
+      1047
+     ],
+     "ws_wrap": [
+      1500,
+      1017
+     ],
+     "leg_front": [
+      1150,
+      1340
      ]
     },
     "parts": "side",

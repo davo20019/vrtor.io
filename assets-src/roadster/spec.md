@@ -51,42 +51,75 @@ differently for the body and the glass on it).
 
 ## Structure
 
-- **Body:** one shell, Ano White. Hood: a flat centre panel (the frunk lid, with a transverse seam), fender tops
-  as flat facets rising to a crest above the hood, a small triangular facet at each front corner over the
-  headlight (Roadster_74, 79). Nose: a short face that curves back to its corners in plan (top view), the light bar along its top edge from
-  corner to corner (front three-quarter, Roadster-08-End).
-- **Glass (gold):** windshield running into a glass roof; a fixed spine down the middle of the roof (Roadster_78,
-  98: what stays when the doors are open); the doors' roof glass either side of it; side glass from the A-pillar
-  to a point over the rear wheel; rear glass recessed between two buttresses (Roadster_77).
-- **Doors:** dihedral doors that carry the side panel, the side glass and the roof glass on their side; they
-  rise rear end first and swing out (Roadster_96, 98, 99). Shut lines traced on the side photo and back-projected
-  through its solved camera. The hinge is not seen in any photo: cad.py hinge() is chosen to swing clear (REPORT.md).
-- **Black:** carbon rocker under the doors (rising from 260 mm behind the front wheel to 420 before the rear one),
-  the black lower nose and splitter, the rear corners below the tail light line, the diffuser with four
-  thruster nozzles (bronze rings, 231 mm apart, 83 mm across) and four fan housings under them.
-- **Lights:** front light bar along the nose; rear light bar across nearly the whole tail with a dark band under
-  it; amber side markers ahead of the doors.
-- **Wheels:** light grey aero disc with six dark double spokes standing proud, centre cap (badge left out);
-  tyres with rounded shoulders.
-- **Moving parts:** wheels (spin, front steer), doors (hinge). The active wing is not modelled yet.
+Round 6 (16 October): the features the outline can't see are measured (measure/README.md, cad.py MEAS), from the press
+photos and frames of the reveal stream (refs/video/).
+
+- **Front** (cad.py front_section): the hood is one flat panel between two straight side seams, each from the light
+  bar's end (the nose corner, 606 out, 481 up, 2,281 ahead of the axles' midpoint) to the windshield's base corner
+  (472, 754, 1,582); the windshield's base runs straight across between those corners. Outboard of each seam a flat
+  facet up to the fender ridge, which runs from the nose corner to the windshield's wrap corner (827, 797, 1,342): the
+  facet is the plane through the three (front photo, front three-quarter and top views each see it as a triangle). Its
+  lower point, below a line 0.47 of the way up, is the headlight (lit in the front photos, hidden in the others). Outboard
+  of the ridge the fender rolls over to its widest point. The light bar is level and curves back in plan from the body's front
+  at the centre to its ends; nothing stands ahead of the nose (side photo). Below the bar, between the white legs, the
+  face is flat, carbon and black back to the end of the intake; the splitter is a lip 160 to 230 up under the bar's
+  curve (side photo).
+- **Rear deck** (cad.py rear_section): the rear glass is a shield between two narrow fins (crest 424 out, 30 over the
+  glass edge): straight sides 372 out, tapering to its lower corners (259, 947, -1,920) at the stowed wing's seam.
+  The side window's tail runs back between each fin and the haunch, to its point (545, 1,073, -1,137). Outboard the
+  haunch is one plane from the fin down to the widest point (rear_high: evenly lit); the model's first build had a
+  high deck out to 714 there, 130 mm too high.
+- **Tail**: the gloss black light housing from the tail's top edge (the corner 848 out, 873 up) down to 770, the red
+  bar 829 up to 834 out, a white trim line under it; the pale rear face below, inside 780, down to 670, the plate on
+  its lower edge; black below that, and carbon on the corners behind the rear wheels, up to a line rising from the arch
+  (560) to the housing, with a red reflector along it. The diffuser: a shelf, the nozzle panel (four, bronze rings),
+  four open bays with a fan each, split by three strakes between end plates.
+- **Doors**: scissor doors (the reveal, 18:55 to 19:10: the rear edge rises first about a pivot near the door's
+  front, ending nearly vertical, leaning out a little), carrying the side panel, the side glass and their half of the
+  roof glass. Open 80 degrees about cad.py hinge()'s axis; the hinge itself is not seen. The photo's front shut line
+  leans forward from 846 at the sill to 947 at the shoulder crease (round 6, side photo); the model's runs straight up
+  from the A-pillar's foot, 55 to 150 mm behind it, because with any hinge that stands the door as in the reveal the
+  door's front below the crease lifts into the fender over it (tried in round 6: 160 hinges near the A-pillar's foot
+  swing clear only with the door floating above the roof when open). The real hinge must swing the door's front out
+  first; a video of the door from the front would show how.
+- **Side trim**: a black strip under the shoulder crease from the front arch to the door, the amber marker a wedge
+  in its front half (side photo, measured through its camera).
+- **Active wing**: the deck panel from the seam to the tail's top edge is the wing (top view: one seam straight across;
+  rear_high: it runs out to the body's edges). Raised on two swan-neck struts in the reveal (19:38 to 19:40); the
+  struts' path is not published, so one turn stands in for it (cad.py wing_hinge(): 30 degrees about a cross axis at
+  the deck's height 550 ahead of the seam, the trailing edge highest).
+- **Wheels**: six spokes, each an open frame of two satin gunmetal arms widening from the hub to the rim with a bronze
+  blade inside, light satin grey aero discs between, a six-lobed hub under a round cap (Roadster_70; the T badge left
+  out). Pirelli P Zero Trofeo RS "Elect"; no size is legible or published.
+- **Cabin** (cad.py interior, tub): a black lining up to the beltline, two one-piece light grey buckets with
+  integrated headrests on dark shells, a long low black dash, the yoke on its column ahead of the driver (left-hand
+  drive), the touchscreen on a stalk to its right, a light console between the seats (Roadster_63 to 69, reveal 19:00
+  to 19:10). No interior size is published: every size there is an estimate.
+- **Black**: carbon rocker under the doors, the carbon nose face and splitter, the carbon rear corners, the diffuser.
+- **Lights**: front light bar along the hood's front edge; headlights in the facets; rear light housing; amber side
+  markers ahead of the doors; red reflectors on the rear corners.
 
 ## Glass and doors
 
-Read from the top view (Roadster_92): windshield's lower edge 1,725 at the centre, 1,615 at the corners
-(half width 740); at the sides it wraps down to the crest ahead of the A-pillar line, (z, h) = (803, 826) to
-(349, 1,157), traced on the side photo and back-projected through its camera; the doors' roof glass from 560
-back to -700, between the spine (half width 114, the two seams 65 px apart) and the roof edge; the rear glass
-from -700 to its tip at -1,760; a 50 mm white rail outside the roof edge, then the side glass. Door shut lines
-(side photo, back-projected): front 834 at the sill, 889 at the beltline, then up the A-pillar line to the roof;
-rear -192 at the sill, -340 at the beltline, -700 at the roof. Sill top: 272 at 1,031 rising to 437 at -955.
+The windshield's base: straight across the hood at its rear corners (measured, 1,582 ahead of the axles' midpoint,
+472 out), then out along the facet's top edge to the wrap corner (1,342, 827 out); round 5 had it 1,725 at the
+centre and 1,615 at the corners, read from the top view alone. At the sides the windshield wraps down to the
+crest ahead of the A-pillar line, (z, h) = (803, 826) to (349, 1,157), traced on the side photo; the doors' roof
+glass from 560 back to -700, between the spine (half width 114) and the roof edge; the rear glass from -700 back to
+the wing's seam at -1,920, ending square (round 5: a point at -1,760); a 50 mm white rail outside the roof edge,
+then the side glass. Door shut lines (side photo, back-projected): front 834 at the sill, 889 at the beltline, then
+up the A-pillar line to the roof; rear -192 at the sill, -340 at the beltline, -700 at the roof. Sill top: 272 at
+1,031 rising to 437 at -955.
 
 ## Unknowns (guessed, not sourced)
 
 - Every size depends on the plate being a standard 12 x 6 in US plate.
-- The door hinge's position and axis (no photo shows it; chosen so the door swings clear, REPORT.md).
+- The door hinge's position and axis (the doors' motion is from the reveal; the hinge is never seen).
+- The wing's struts and their path (one turn stands in for them).
 - The tyre sizes (fitted from outlines the arches half hide), the rims' offset, the track (set flush with the body).
-- The underside, the wheel wells, the interior (no photo shows the underside; the interior is not modelled).
-- The active wing's shape and pivots.
+- The underside and the wheel wells (no photo shows them).
+- Every size in the cabin (its layout is from the photos).
+- The paint, glass and trim colours are sampled from the photos, not calibrated.
 
 ## Budget
 

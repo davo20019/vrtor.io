@@ -1,4 +1,59 @@
-# Roadster: first build report (2026-10-16, the night after the reveal)
+# Roadster: build report
+
+## Round 6 (16 October): every detail against the reveal
+
+Asked to make every detail match what is published. Still no dimension, wheel or tyre size anywhere (searched 16
+October: Wikipedia, Electrek, paultan.org, Motor Illustrated, The Autopian, TechCrunch, Top Gear); new evidence was
+the reveal's livestream (refs/video/: the walkaround with both doors open, a door opening, the wing raised, front and
+rear close-ups) and more coverage photos (refs/news2/: the diffuser close). Measurements: measure/README.md.
+
+What changed, each against its evidence:
+
+- **Measured instead of fitted.** Nine features the outline can't see (the nose corners, the windshield's corners,
+  the side window's point, the rear glass's corners, the tail's corners, the rear light bar's ends) marked in two to
+  six photos and solved with the photos' cameras (tools/bundle.py, 11.5 px rms). They are cad.py MEAS and landmarks
+  for the fit. Two mistakes caught on the way: a misread coarse grid (300 px), and one-sided marks in the top view,
+  which made the front 75 to 105 mm too narrow.
+- **Front**: a flat hood between two straight seams, flat facets from the seams up to the fender ridges, the
+  headlights in the facets' lower points, a flat carbon face under a level light bar, a thin splitter lip, the frunk
+  and hood seams cut. Round 5 had a rounded front with its crest 140 mm too wide and 70 mm too high.
+- **Rear deck**: the rear glass a shield between narrow fins, the side windows' tails between fins and haunches, the
+  haunches one plane down from the fins (round 5: a high deck, 130 mm too high outboard), the glass ending square at
+  the stowed wing's seam.
+- **Tail**: the gloss light housing, white trim, pale rear face with the plate (round 5: all black below the bar),
+  carbon corners with red reflectors, and an open diffuser: shelf, nozzles, four fan bays, strakes, end plates.
+- **Side**: the black trim with the amber marker set in it; the doors' shut gaps no longer open a slot.
+- **Wheels**: six open spokes of two gunmetal arms with bronze blades, light satin discs, a six-lobed hub.
+- **Moving parts**: scissor doors opening 80 degrees as in the reveal (round 5: 65); the active wing as its own part
+  on a guessed path; a cabin (seats, dash, yoke, screen, console, lining), its sizes estimated.
+- **The side photo's camera height**: the fit had it 1.7 m up; the photo shows it at the hood's height (measure/
+  README.md). fit_silhouette.py now takes a per-photo `cameraHeightMm`.
+
+| Photo | Round 5 IoU / outline (mm) | Round 6 IoU / outline (mm) | Landmarks (mm) |
+|---|---|---|---|
+| side | 0.926 / 32 | 0.933 / 27 | 12 |
+| front | 0.920 / 32 | 0.954 / 17 | 15 |
+| top | 0.974 / 17 | 0.980 / 14 | 12 |
+| q34 | 0.909 / 35 | 0.922 / 34 | 21 |
+| rear_high | 0.906 / 55 | 0.880 / 65 | 9 |
+| front_q34 | 0.864 / 59 | 0.940 / 24 | 29 |
+
+Sizes (fit, round 6): length 4,589, width 2,005, height 1,184, wheelbase 2,925, tyres 655 front and 722 rear across.
+Across the round-6 fits the width moved between 1,990 and 2,010 and the wheelbase between 2,909 and 2,944: good to
+about 1 percent. 25,752 triangles; out/roadster.glb 223 KB.
+
+Open after round 6:
+- **The door's front shut line**: the photo's leans forward from 846 at the sill to 947 at the shoulder crease; the
+  model's stands at the A-pillar's foot, 55 to 150 mm behind it, because with any hinge that stands the door as in the
+  reveal the door's front below the crease lifts into the fender (spec.md, "Doors"). A video of a door opening seen
+  from the front would show the real hinge's path.
+- **The front wheel in the front three-quarter photo**: 60 px from where the other photos put it. Either that photo's
+  lens distorts, or the front track or wheelbase differs from the fit's; unresolved.
+- **The high rear view's outline** fits less well than in round 5 (0.880): its landmarks fit (9 mm), and the haunches
+  and fins inside the outline now match it; the camera search there finds a worse optimum than round 5's.
+- **The wing's path** and **the cabin's sizes** are guesses; the paint and glass colours are not calibrated.
+
+## Round 5: the first build (2026-10-16, the night after the reveal)
 
 A test of the building-3d-replicas skill on an object with no published dimensions, built from Tesla's press photos
 of the car revealed on 15 October 2026. Evidence and structure are in spec.md; sources in refs/SOURCES.md; the last
