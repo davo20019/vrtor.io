@@ -79,6 +79,11 @@ for _ in range(8):                         # parts that can't use their share gi
         break
     target[free] += spare * weights[free] / weights[free].sum()
 target = np.minimum(target, counts)
+# Vessels that simplifying would part from the one they join (vcheck_built.py found them): kept whole.
+KEEP = set(json.load(open(os.path.join(OUT, 'keep_whole.json')))) if os.path.exists(os.path.join(OUT, 'keep_whole.json')) else set()
+for i, p in enumerate(parts):
+    if p['node']['el'] in KEEP:
+        target[i] = counts[i]
 
 # ---- materials, one per tissue (stand-ins: the app sets the real look)
 BASE = {

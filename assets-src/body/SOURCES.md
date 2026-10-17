@@ -66,6 +66,23 @@ pyramidalis, and only the left longus colli. These 17 parts (with the inguinal l
 come from Z-Anatomy the same way (`zplace.py`). Of its 489 muscles, the rest were left out as ones we have: by
 surface (most of it within 3 mm of one of ours) or by name (the same words, or one name a part of the other's).
 
+### Vessels joined where BodyParts3D leaves them apart
+
+`vessels.py` checks that every vein and artery is connected to the rest (touching within 2 mm, the heart's walls
+and chambers counting as vessels, since the venae cavae, the lungs' veins and the aorta meet it there). BodyParts3D's
+veins all connected but one; its arteries came in 8 networks: the brain's 151 arteries were cut off from the heart,
+because it has the internal carotid and vertebral arteries only inside the skull, and the dorsal arteries of the
+penis had no internal pudendal artery to come from.
+
+`vjoin.py` joins them: from one of our vessels' ends to the other's, along Z-Anatomy's path for that vessel carried
+onto our skeleton and bent to land exactly on both ends (the carotids' neck part, 175 mm each, including the top of
+the common carotid, which BodyParts3D stops 45 mm short of the fork; the vertebral arteries' 200 to 216 mm from the
+subclavians; the internal pudendal arteries), as a tube as wide as the vessel it continues (a branch as wide as its
+own end, not the big vessel it leaves). Five breaks of 2 to 6 mm (the right suprarenal vein at the inferior vena
+cava, the left common carotid at the aortic arch, both inferior epigastric arteries, a renal branch) are closed by a
+short tube to the vessel's real parent. Now all 416 veins make one network and all 666 arteries another, also after
+simplifying (`vcheck_built.py`, `vkeep.py`: 22 vessels that simplifying parted are kept whole).
+
 ## Corrections to BodyParts3D
 
 Found by `audit.py` (where each part lies against its name, parts stored twice, left and right twins) and checked by
@@ -106,5 +123,8 @@ The colours and surfaces are ours (`apps/bdy/src/tissues.js`): the data has none
     python3 tree.py && blender -b -P lungfit.py && python3 tree.py
     blender -b --disable-autoexec raw/zanatomy/x/Z-Anatomy/Startup.blend -P zdump.py
     python3 bonefit.py && python3 zplace.py && python3 tree.py
+    blender -b --disable-autoexec raw/zanatomy/x/Z-Anatomy/Startup.blend -P zpaths.py
+    python3 vjoin.py && python3 tree.py && python3 vessels.py
     python3 learn_names.py && python3 learn_wiki.py
-    blender -b -P build.py && python3 ship.py && python3 audit.py
+    blender -b -P build.py && blender -b -P vcheck_built.py && python3 vkeep.py   # repeat build if vkeep added any
+    python3 ship.py && python3 audit.py

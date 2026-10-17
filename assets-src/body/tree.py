@@ -243,7 +243,7 @@ def system_of_name(name):
     return None
 
 
-KIND_SYSTEM = {'joint': 'skeleton', 'nerve': 'nerves', 'lymph': 'lymph', 'fascia': 'fascia', 'muscle': 'muscles'}
+KIND_SYSTEM = {'joint': 'skeleton', 'nerve': 'nerves', 'lymph': 'lymph', 'fascia': 'fascia', 'muscle': 'muscles', 'vessel': 'heart'}
 
 
 def system_of(e):
