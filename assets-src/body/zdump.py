@@ -24,6 +24,8 @@ def kind(o):
         return 'nerve'
     if top == '4: Muscular system' and o.type == 'MESH' and SOFT.search(o.name) and not o.name.startswith('Epicranial'):
         return 'fascia'
+    if top == '4: Muscular system' and o.type == 'MESH':
+        return 'muscle'
     return None
 
 

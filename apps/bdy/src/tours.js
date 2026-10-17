@@ -160,7 +160,7 @@ export const QUIZ = [
   { name: 'sacrum', parts: ['Sacrum'], layer: 'skeleton', kind: 'bone' },
   { name: 'mandible', parts: ['Mandible'], layer: 'skeleton', kind: 'bone' },
   ...['biceps brachii', 'triceps brachii', 'deltoid', 'pectoralis major', 'trapezius', 'sternocleidomastoid', 'gluteus maximus',
-    'sartorius', 'gastrocnemius', 'tibialis anterior', 'masseter', 'temporalis', 'frontalis', 'rectus femoris']
+    'sartorius', 'gastrocnemius', 'tibialis anterior', 'masseter', 'temporalis', 'frontalis', 'rectus femoris', 'latissimus dorsi', 'rectus abdominis']
     .map((n) => ({ name: n, parts: [`Left ${n}`, `Right ${n}`], layer: 'muscles', kind: 'muscle' })),
   ...['heart', 'liver', 'stomach', 'spleen', 'pancreas', 'gallbladder', 'trachea', 'esophagus', 'appendix', 'transverse colon']
     .map((n) => ({ name: n, parts: [n[0].toUpperCase() + n.slice(1)], layer: 'organs', kind: 'organ' })),

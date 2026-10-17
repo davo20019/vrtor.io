@@ -71,7 +71,7 @@ def carry(v):
 
 # What BodyParts3D has of the same kinds, to leave out what it already shows.
 SAME_KIND = {'joint': {'skeleton', 'muscles', 'lungs'}, 'nerve': {'nerves', 'senses'}, 'lymph': {'gut', 'glands'},
-             'fascia': {'muscles', 'skeleton'}}
+             'fascia': {'muscles', 'skeleton'}, 'muscle': {'muscles', 'gut', 'lungs', 'senses'}}
 ours = []
 for n in tree:
     if 'el' in n and n.get('src') != 'za':
@@ -88,7 +88,50 @@ def plain(n):
 ours_by_name = {plain(n['name']): n['name'] for n in tree if 'el' in n and n.get('src') != 'za'}
 
 
-def already(kind, v):
+# Every muscle we have (BodyParts3D's and the face's from zexport.py), as one cloud: a Z-Anatomy muscle mostly lying
+# on it is one we have, however the two atlases split it (one deltoid or three parts of one).
+_mv = [o[2] for o in ours if o[1] in ('muscles',)]
+for f in os.listdir(OUT):
+    if f.startswith('ZA'):
+        _mv.append(np.array([[float(x) for x in l.split()[1:4]] for l in open(os.path.join(OUT, f)) if l.startswith('v ')]))
+muscle_cloud = cKDTree(np.concatenate(_mv))
+
+
+# Our muscles' names as sets of word stems, by side, for "the same muscle named otherwise".
+MUSCLE_WORDS = re.compile(r'[a-z]+')
+SKIPW = {'of', 'the', 'muscle', 'muscles', 'abdominal', 'left', 'right', 'part', 'parts', 'set', 'and', 'proper'}
+def stems(name):
+    return frozenset(w[:5] for w in MUSCLE_WORDS.findall(name.lower()) if w not in SKIPW)
+def side(name):
+    n = name.lower()
+    return 'left' if re.search(r'\bleft\b', n) else 'right' if re.search(r'\bright\b', n) else ''
+our_muscles = [(stems(n['name']), side(n['name'])) for n in tree if n.get('system') in ('muscles', 'lungs', 'gut')]
+for f in os.listdir(OUT):
+    if f.startswith('ZA'):
+        nm = next((l.split(':', 1)[1].strip() for l in open(os.path.join(OUT, f)) if l.startswith('# English name')), '')
+        our_muscles.append((stems(nm), side(nm)))
+
+
+def named_like_ours(name):
+    """The same muscle by name: the same words ("external abdominal oblique" and "external oblique"), or one name a
+    part of the other's ("External part of left thyro-arytenoid" in "Left thyro-arytenoid"), on the same side."""
+    s, sd = stems(name), side(name)
+    if len(s) < 1:
+        return False
+    for o, osd in our_muscles:
+        if (osd and osd != sd) or not o:            # a name with no side covers both
+            continue
+        if s == o or (len(o) >= 2 and o <= s) or (len(s) >= 2 and s <= o):
+            return True
+    return False
+
+
+def already(kind, v, name=''):
+    if kind == 'muscle' and named_like_ours(name):
+        return 'a muscle we have, by name'
+    if kind == 'muscle':
+        d = muscle_cloud.query(v[:: max(1, len(v) // 600)])[0]
+        return 'a muscle we have' if np.median(d) < 3.0 else None
     lo, hi = v.min(0), v.max(0)
     kv = cKDTree(v)
     for name, system, w, wlo, whi, kw in ours:
@@ -131,7 +174,7 @@ for name, kind, colls, v, f in objs:
         continue
     name = SWAP_SIDE.get(name, name)
     w = carry(v)
-    same = ours_by_name.get(plain(our_name(name))) or already(kind, w)
+    same = ours_by_name.get(plain(our_name(name))) or already(kind, w, our_name(name))
     if same:
         report['already'].append((name, same))
         continue

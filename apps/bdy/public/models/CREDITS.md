@@ -59,6 +59,13 @@ named for the wrong side: swapped.
   left out (read through by hand; lists in `ship.py`). A part with no article of its own shares what it is part of
   ("Part of the tricuspid valve"), or, last, what kind of thing it is ("About lymph nodes").
 
+### Muscles BodyParts3D lacks
+
+BodyParts3D has no latissimus dorsi, rectus abdominis, internal oblique, transversus abdominis, quadratus lumborum or
+pyramidalis, and only the left longus colli. These 17 parts (with the inguinal ligaments and iliopectineal arches)
+come from Z-Anatomy the same way (`zplace.py`). Of its 489 muscles, the rest were left out as ones we have: by
+surface (most of it within 3 mm of one of ours) or by name (the same words, or one name a part of the other's).
+
 ## Corrections to BodyParts3D
 
 Found by `audit.py` (where each part lies against its name, parts stored twice, left and right twins) and checked by

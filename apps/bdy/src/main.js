@@ -1,4 +1,4 @@
-// VRtor Body (/bdy): a whole human body, life size, made of 3,245 separate parts from BodyParts3D and Z-Anatomy (bones,
+// VRtor Body (/bdy): a whole human body, life size, made of 3,262 separate parts from BodyParts3D and Z-Anatomy (bones,
 // muscles, organs, vessels, nerves, the eyes and ears), every one of which can be taken out, and taken out
 // with everything that belongs to it.
 //
@@ -36,7 +36,7 @@ import { createRoom, PLINTH_TOP } from './room.js';
 import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
-const MODEL_V = '8';
+const MODEL_V = '9';
 const $ = (sel) => document.querySelector(sel);
 const canvas = $('#scene');
 const ui = {
