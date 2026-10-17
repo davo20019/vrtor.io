@@ -46,6 +46,13 @@ capsule touches bone (closest gap 0.4 mm median, 4 mm at most). Left out: what B
 interosseous membranes, optic, ophthalmic and trochlear nerves; 48 parts by place or name), and the inner ear's
 nerves (Z-Anatomy adapted them from a NonCommercial model). Z-Anatomy's lateral temporomandibular ligaments are
 named for the wrong side: swapped.
+Nerves, lymph nodes and fascia are then laid on what's under them: the bones bring a cutaneous nerve to where
+Z-Anatomy has it, in its fat, and BodyParts3D has no fat, so with the skin off the posterior and lateral femoral
+cutaneous nerves hung two to three centimetres off the thigh. Each is lowered to 1 mm above the nearest muscle, bone
+or organ, as a dissection leaves them once the fat is gone: the course over the body is Z-Anatomy's, the depth isn't
+(79 of 605 parts moved more than 3 mm, the thigh's cutaneous nerves up to 29 mm). The vessels and nerves that only
+reach the penis and testes, and the urethra, go off with the reproductive organs (`with` in the tree), so the
+Muscles layer, which hides those organs, doesn't show them ending in the air.
 
 ## Names and descriptions on the cards
 

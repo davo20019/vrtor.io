@@ -305,7 +305,8 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
       if (only !== null) {
         on = inside;
       } else {
-        on = systemOn[n.system] !== false;
+        // A part that only reaches an organ of another system (the penis's vessels) goes off with that organ.
+        on = systemOn[n.system] !== false && (!n.with || systemOn[n.with] !== false);
         for (let i = n.id; on && i !== null; i = parentOf(i)) if (hidden.has(i)) on = false;
       }
       m.setEnabled(on);

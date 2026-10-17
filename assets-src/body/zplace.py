@@ -166,6 +166,63 @@ EXTRA_BONES = {'Coccyx'}
 SWAP_SIDE = {'Lateral temporomandibular ligament.l': 'Lateral temporomandibular ligament.r',
              'Lateral temporomandibular ligament.r': 'Lateral temporomandibular ligament.l'}
 
+
+# Laid on what's under them. BodyParts3D has no fat, and the bones carry a cutaneous nerve to where Z-Anatomy has it,
+# in its own fat: two or three centimetres off our muscles, in the air once the skin is off (the posterior femoral
+# cutaneous nerve, the lateral femoral cutaneous). As a dissection takes the fat away and the nerves settle onto the
+# deep fascia, each nerve, lymph node and fascia is lowered to 1 mm above the nearest muscle, bone or organ: its
+# course over the body is kept, only its depth goes. What they can lie on: every part of ours but the skin and the
+# nerves, Z-Anatomy's face muscles and lungs (regfit.py), and its muscles as this script carries them.
+def normals(v, f):
+    a, b, c = v[f[:, 0]], v[f[:, 1]], v[f[:, 2]]
+    n = np.cross(b - a, c - a)
+    N = np.zeros_like(v)
+    for k in range(3):
+        np.add.at(N, f[:, k], n)
+    return N / (np.linalg.norm(N, axis=1, keepdims=True) + 1e-12)
+
+
+def read_obj(path):
+    vs, fs = [], []
+    for l in open(path, encoding='utf-8', errors='ignore'):
+        if l.startswith('v '):
+            vs.append(l.split()[1:4])
+        elif l.startswith('f '):
+            fs.append([p.split('/')[0] for p in l.split()[1:4]])
+    return np.array(vs, dtype=np.float64), np.array(fs, dtype=np.int64) - 1
+
+
+SETTLE = {'nerve', 'lymph', 'fascia'}
+GAP = 1.0
+under = []
+for n in tree:
+    if 'el' in n and n.get('src') != 'za' and n.get('tissue') not in ('nerve', 'skin', 'hair'):
+        v, f = read_obj(os.path.join(OBJ, n['el'] + '.obj'))
+        under.append((v[::2], normals(v, f)[::2]))
+for fn in os.listdir(OUT):
+    if fn.startswith('ZA'):
+        v, f = read_obj(os.path.join(OUT, fn))
+        under.append((v, normals(v, f)))
+for name, kind, colls, v, f in objs:
+    if kind == 'muscle' and len(f):
+        w = carry(v)
+        under.append((w, normals(w, f)))
+UP = np.concatenate([p for p, _ in under])
+UN = np.concatenate([n for _, n in under])
+ukd = cKDTree(UP)
+
+
+def settle(w):
+    """Each vertex's depth above the nearest surface under it (the median over its 8 nearest points, along their
+    normals); the lowest within 4 mm is the bottom of the part there, and anything above 1 mm comes down by that
+    much, along the surface's normal, smoothed over 10 mm so a nerve keeps its round section and doesn't kink."""
+    _, i = ukd.query(w, k=8)
+    s = np.median(np.einsum('nkj,nkj->nk', w[:, None] - UP[i], UN[i]), 1)
+    own = cKDTree(w)
+    low = np.array([s[j].min() for j in own.query_ball_point(w, 4.0)])
+    D = np.where(low > GAP, GAP - low, 0)[:, None] * UN[i[:, 0]]
+    return w + np.array([D[j].mean(0) for j in own.query_ball_point(w, 10.0)])
+
 os.makedirs(OUT, exist_ok=True)
 for f in os.listdir(OUT):
     if f.startswith('ZB'):
@@ -184,6 +241,8 @@ for name, kind, colls, v, f in objs:
     if same:
         report['already'].append((name, same))
         continue
+    if kind in SETTLE:
+        w = settle(w)
     i += 1
     el = f'ZB{i:04d}'
     group = next((c for c in reversed(colls) if not PLACE.search(c)), '')

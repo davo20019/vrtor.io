@@ -181,7 +181,7 @@
    "Femoral branch of right genitofemoral nerve",
    "ZB0279",
    2592,
-   238
+   239
   ],
   [
    "Left buccal nerve",
@@ -205,7 +205,7 @@
    "Left intermediate dorsal cutaneous nerve of foot",
    "ZB0364",
    2592,
-   239
+   238
   ],
   [
    "Left lingual nerve",
@@ -241,13 +241,13 @@
    "Left posterior femoral cutaneous nerve",
    "ZB0706",
    2592,
-   238
+   239
   ],
   [
    "Left pudendal nerve",
    "ZB0747",
    3744,
-   297
+   298
   ],
   [
    "Left sensory root of trigeminal nerve",
@@ -265,7 +265,7 @@
    "Left superior gluteal nerve",
    "ZB0855",
    3456,
-   281
+   282
   ],
   [
    "Left supra-orbital nerve",
@@ -277,7 +277,7 @@
    "Left tibial nerve",
    "ZB0930",
    2592,
-   238
+   239
   ],
   [
    "Left trochlear nerve",
@@ -295,13 +295,13 @@
    "Muscular branches of left radial nerve",
    "ZB0515",
    2592,
-   239
+   238
   ],
   [
    "Muscular branches of right radial nerve",
    "ZB0516",
    2592,
-   238
+   239
   ],
   [
    "Right buccal nerve",
@@ -361,13 +361,13 @@
    "Right posterior femoral cutaneous nerve",
    "ZB0655",
    2592,
-   239
+   238
   ],
   [
    "Right pudendal nerve",
    "ZB0748",
    3744,
-   297
+   298
   ],
   [
    "Right sensory root of trigeminal nerve",
@@ -385,7 +385,7 @@
    "Right superior gluteal nerve",
    "ZB0856",
    3456,
-   282
+   281
   ],
   [
    "Right supra-orbital nerve",
@@ -552,16 +552,16 @@
    "Left colic nodes",
    "Right colic nodes",
    [
-    10.0,
-    10.0,
-    33.0
+    11.0,
+    11.0,
+    32.0
    ],
    [
-    33.0,
-    20.0,
+    34.0,
+    18.0,
     11.0
    ],
-   32
+   33
   ],
   [
    "Left common iliac artery, main part",
@@ -954,6 +954,21 @@
    10
   ],
   [
+   "Left obturator nodes",
+   "Right obturator nodes",
+   [
+    11.0,
+    27.0,
+    28.0
+   ],
+   [
+    17.0,
+    34.0,
+    25.0
+   ],
+   2
+  ],
+  [
    "Left portal vein, 1 of 2",
    "Right portal vein, 1 of 2",
    [
@@ -1303,12 +1318,12 @@
    "Right vagus nerve (X)",
    [
     28.0,
-    62.0,
+    63.0,
     233.0
    ],
    [
     97.0,
-    85.0,
+    86.0,
     459.0
    ],
    113

@@ -635,6 +635,10 @@ def collapse():
                 changed = True
 collapse()
 
+# The vessels and nerves that only reach the reproductive organs go off with them (the app hides a part whose
+# 'with' system is off): with the organs hidden they'd end in the air, the urethra out of where the penis was.
+WITH_REPRO = re.compile(r'\bpenis\b|testicular|scrot|genital branch|^urethra$', re.I)
+
 # Renumber without the collapsed ones, children by name.
 alive = [n for n in nodes if not n.get('gone')]
 new = {n['id']: i for i, n in enumerate(alive)}
@@ -648,6 +652,8 @@ for n in alive:
         m['tissue'] = n['tissue']
         if elements[n['el']]['src'] != 'bp':
             m['src'] = elements[n['el']]['src']
+        if n['system'] != 'repro' and WITH_REPRO.search(n['name']):
+            m['with'] = 'repro'
     m['kids'] = sorted((new[k] for k in n['kids']), key=lambda k: alive[k]['name'])
     out.append(m)
 # Parts that share a name with each other or with their group ("Set of perforating veins" in "Set of perforating
