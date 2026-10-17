@@ -21,6 +21,8 @@ const JUMP = { name: 'Parachute', code: 'jump', service: 'JUMP' };
 const CYB = { name: 'Cybertruck', code: 'cyb', service: 'CYB' };
 // The second-generation Roadster revealed on 15 October 2026, built the same way from the reveal photos (apps/rds).
 const RDS = { name: 'Roadster', code: 'rds', service: 'RDS' };
+// The human body from BodyParts3D's 2,234 parts, each of which comes out (apps/bdy).
+const BODY = { name: 'Body', code: 'bdy', service: 'BDY' };
 const SOUND_LAB = { name: 'Sound Lab', code: 'snd', service: 'SND' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
@@ -83,6 +85,11 @@ export const SUBJECTS = {
   rds: RDS,
   roadster: RDS,
   'tesla-roadster': RDS,
+
+  bdy: BODY,
+  body: BODY,
+  'human-body': BODY,
+  anatomy: BODY,
 
   mec: MECHANICS,
   mechanics: MECHANICS,

@@ -1,0 +1,6 @@
+# BodyParts3D's downloads (about 600 MB unpacked): fetch with fetch.sh
+raw/
+out/build.log
+out/*.glb
+out/test.log
+out/build-*.json

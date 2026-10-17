@@ -1,0 +1,34 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "rds-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "preview",
+        "--config",
+        "apps/rds/vite.config.js",
+        "--outDir",
+        "apps/rds/dist/rds",
+        "--port",
+        "4321",
+        "--strictPort"
+      ],
+      "port": 4321
+    },
+    {
+      "name": "bdy-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "apps/bdy",
+        "--port",
+        "4331",
+        "--strictPort"
+      ],
+      "port": 4331,
+      "url": "http://localhost:4331"
+    }
+  ]
+}
