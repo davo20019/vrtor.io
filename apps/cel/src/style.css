@@ -149,3 +149,10 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); c
   .bar { gap: 6px; }
   .bar .btn { font-size: 14px; padding: 7px 12px; }
 }
+
+/* Phone, a part chosen: every button in view, wrapped onto short rows, rather than a strip scrolled sideways
+   with buttons cut off at its edges. */
+@media (max-width: 640px) {
+  .card.compact .card-actions { flex-wrap: wrap; overflow: visible; justify-content: flex-start; gap: 6px; margin: 8px 0 0; padding: 0 0 12px; }
+  .card.compact .card-actions .btn, .card.compact .card-actions .btn-primary { flex: 0 0 auto; font-size: 14px; padding: 6px 12px; }
+}
