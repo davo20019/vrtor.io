@@ -23,6 +23,8 @@ const CYB = { name: 'Cybertruck', code: 'cyb', service: 'CYB' };
 const RDS = { name: 'Roadster', code: 'rds', service: 'RDS' };
 // The human body from BodyParts3D's 2,234 parts, each of which comes out (apps/bdy).
 const BODY = { name: 'Body', code: 'bdy', service: 'BDY' };
+// The foundations of AI, hands-on: data, a neuron, error, gradient descent and a network (apps/aif).
+const AIF = { name: 'AI foundations', code: 'aif', service: 'AIF' };
 const SOUND_LAB = { name: 'Sound Lab', code: 'snd', service: 'SND' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
@@ -90,6 +92,12 @@ export const SUBJECTS = {
   body: BODY,
   'human-body': BODY,
   anatomy: BODY,
+
+  aif: AIF,
+  ai: AIF,
+  'ai-foundations': AIF,
+  'machine-learning': AIF,
+  ml: AIF,
 
   mec: MECHANICS,
   mechanics: MECHANICS,

@@ -1,0 +1,19 @@
+{
+  "name": "@vrtor/aif",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "watch": "vite build --watch --mode development",
+    "deploy": "vite build && wrangler deploy",
+    "test": "node test/model.test.mjs"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^9.29.0",
+    "@babylonjs/gui": "^9.29.0",
+    "@vrtor/xr-shell": "*"
+  },
+  "devDependencies": {
+    "vite": "^8.3.2"
+  }
+}
