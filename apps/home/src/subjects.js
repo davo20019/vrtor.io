@@ -25,6 +25,8 @@ const RDS = { name: 'Roadster', code: 'rds', service: 'RDS' };
 const BODY = { name: 'Body', code: 'bdy', service: 'BDY' };
 // The foundations of AI, hands-on: data, a neuron, error, gradient descent and a network (apps/aif).
 const AIF = { name: 'AI foundations', code: 'aif', service: 'AIF' };
+// An animal cell and a plant cell 150,000 times life size, every part to scale and able to come out (apps/cel).
+const CELL = { name: 'The cell', code: 'cel', service: 'CEL' };
 const SOUND_LAB = { name: 'Sound Lab', code: 'snd', service: 'SND' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
@@ -98,6 +100,14 @@ export const SUBJECTS = {
   'ai-foundations': AIF,
   'machine-learning': AIF,
   ml: AIF,
+
+  cel: CELL,
+  cell: CELL,
+  cells: CELL,
+  'the-cell': CELL,
+  'plant-cell': CELL,
+  'animal-cell': CELL,
+  celula: CELL,
 
   mec: MECHANICS,
   mechanics: MECHANICS,

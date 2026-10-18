@@ -48,6 +48,11 @@
     <image:image><image:loc>https://vrtor.io/assets/cards/body.jpg</image:loc></image:image>
   </url>
   <url>
+    <loc>https://vrtor.io/cel/</loc>
+    <lastmod>2026-10-18</lastmod>
+    <image:image><image:loc>https://vrtor.io/assets/cards/cell.jpg</image:loc></image:image>
+  </url>
+  <url>
     <loc>https://vrtor.io/aif/</loc>
     <lastmod>2026-10-18</lastmod>
     <image:image><image:loc>https://vrtor.io/assets/cards/ai-foundations.jpg</image:loc></image:image>

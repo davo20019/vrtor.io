@@ -13,6 +13,7 @@ export const ROOMS = [
   { code: 'fly', name: 'Wright Flyer' },
   { code: 'orca', name: 'Orca' },
   { code: 'bdy', name: 'Human body' },
+  { code: 'cel', name: 'The cell' },
   { code: 'aif', name: 'AI foundations' },
   { code: 'spc', name: 'Space' },
 ];
