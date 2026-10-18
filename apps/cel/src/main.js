@@ -85,7 +85,7 @@ const room = createRoom(scene, [{ x: AT.animal.x, z: AT.animal.z, r: 1.75 }, { x
 
 const camera = new ArcRotateCamera('orbit', Math.PI / 2 - 0.2, 1.32, 14.5, new Vector3(-0.2, 1.9, 0), scene);
 camera.minZ = 0.01;
-camera.maxZ = 80;
+camera.maxZ = 140;
 camera.wheelDeltaPercentage = 0.01;
 camera.pinchDeltaPercentage = 0.004;
 camera.panningSensibility = 900;
@@ -95,6 +95,13 @@ camera.lowerRadiusLimit = 0.08;
 camera.upperRadiusLimit = 32;
 camera.inputs.attached.pointers.multiTouchPanning = true;
 camera.attachControl(canvas, true);
+// Panning keeps what you orbit within 10 m of the middle: with the 32 m zoom limit the camera stays inside the room.
+scene.onBeforeRenderObservable.add(() => {
+  const t = camera.target;
+  const d = Math.hypot(t.x, t.z);
+  if (d > 10) { t.x *= 10 / d; t.z *= 10 / d; }
+  t.y = Math.min(6, Math.max(0, t.y));
+});
 
 const hemi = new HemisphericLight('hemi', new Vector3(0, 1, 0.3), scene);
 hemi.diffuse = Color3.FromHexString('#eef3f6');
@@ -1209,7 +1216,7 @@ async function start() {
   }
   if (rig) {
     rig.camera.minZ = 0.01;
-    rig.camera.maxZ = 80;
+    rig.camera.maxZ = 140;
     ui.vr.hidden = false;
     document.body.classList.add('xr-ready');
     for (const panel of card.panels) rig.mirrorPanel(panel, { interactive: true });

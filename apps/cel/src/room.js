@@ -4,7 +4,8 @@
 // Frame: metres, up +y, the viewer starting at +z looking at -z, the floor at y = 0.
 import { Color3, Mesh, MeshBuilder, StandardMaterial, Vector3, VertexBuffer } from '@babylonjs/core';
 
-const ROOM_R = 16;
+// Bigger than the furthest the orbit camera goes (main.js upperRadiusLimit), so it never ends up outside the room.
+const ROOM_R = 45;
 
 function matte(scene, name, color, specular = 0.03) {
   const mat = new StandardMaterial(name, scene);
