@@ -166,8 +166,8 @@ and microphone permission behavior still require a headset check.
 ## AI foundations (`vrtor.io/aif/`)
 
 The building blocks of AI, learned hands-on with one running example: sorting apples and oranges.
-`vrtor.io/ai`, `/ml`, `/machine-learning` and `/ai-foundations` redirect here. Not listed on the
-homepage yet (no catalog card or image). Five steps, one room:
+`vrtor.io/ai`, `/ml`, `/machine-learning` and `/ai-foundations` redirect here. Its catalog card
+(`apps/home/public/assets/cards/ai-foundations.jpg`) is a headless render of step 5. Five steps, one room:
 
 1. **Data**: sort 16 real-size fruit into two baskets (grip to grab, or point and trigger, or click).
    Each sorted fruit becomes a dot on the wall board: size across, colour (hue) up. Wrong labels are
