@@ -27,7 +27,7 @@ import {
   TransformNode,
   Vector3,
 } from '@babylonjs/core';
-import { continueInVr, createCard, createMenuControls, createPresence, createXr, mountPresenceControls, orbitPose, presenceCard, roomsCard, xrPose, xrSupported } from '@vrtor/xr-shell';
+import { continueInVr, createCard, createMenuControls, createPresence, createXr, headsetNote, mountPresenceControls, orbitPose, presenceCard, roomsCard, startHeadsetLog, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { loadBody } from './body.js';
 import { canSpeak, loadLearning, speak } from './learn.js';
 import { QUIZ, TOURS } from './tours.js';
@@ -939,15 +939,27 @@ function setUpHands() {
 // ---------------------------------------------------------------- start
 
 async function start() {
-  body = await loadBody(scene, stand, { version: MODEL_V, onProgress: (p) => (ui.pct.textContent = `${Math.round(p * 100)}%`) });
+  startHeadsetLog(() => ({ fps: Math.round(engine.getFps()), xr: inXr(), loaded: !!body, meshes: scene.meshes.length }));
+  const t0 = performance.now();
+  const stage = (name) => headsetNote(name, { ms: Math.round(performance.now() - t0) });
+  body = await loadBody(scene, stand, {
+    version: MODEL_V,
+    onProgress: (p) => (ui.pct.textContent = `Downloading ${Math.round(p * 100)}%`),
+    onStage: (name, p, data) => {
+      headsetNote(name, data);
+      if (name === 'build') ui.pct.textContent = `Building ${Math.round(p * 100)}%`;
+    },
+  });
   for (const mat of Object.values(scene.materials)) {
     if (mat.realTimeFiltering === undefined) continue;
     mat.realTimeFiltering = true;
     mat.realTimeFilteringQuality = Constants.TEXTURE_FILTERING_QUALITY_LOW;
   }
   setLayer(layer);
+  stage('layer');
   learn = await loadLearning(body, MODEL_V);
   setUpSearch();
+  stage('learning');
 
   let refreshPresence = () => {};
   presence = createPresence(scene, {
@@ -972,6 +984,7 @@ async function start() {
   } catch (err) {
     console.warn('[bdy] VR unavailable', err);
   }
+  stage('xr');
   if (rig) {
     rig.camera.minZ = 0.01;
     rig.camera.maxZ = 60;
@@ -1004,6 +1017,8 @@ async function start() {
   for (const b of [...ui.layers, ui.systems, ui.learn, ui.back]) b.disabled = false;
   refreshBar();
   render();
+  stage('ready');
+  engine.onEndFrameObservable.addOnce(() => stage('first frame'));
 }
 
 // ---------------------------------------------------------------- search

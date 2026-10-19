@@ -29,7 +29,9 @@ const smooth = (t) => t * t * (3 - 2 * t);
  * Loads the body under `parent`. Returns the body's API (see the end). `onProgress(0..1)`; `lite` for the headset's
  * cheaper materials; `systems` to load first (the rest follow).
  */
-export async function loadBody(scene, parent, { version = '1', lite = false, onProgress = () => {} } = {}) {
+export async function loadBody(scene, parent, { version = '1', lite = false, onProgress = () => {}, onStage = () => {} } = {}) {
+  const t0 = performance.now();
+  const ms = () => Math.round(performance.now() - t0);
   const info = await (await fetch(`${BASE}models/body.json?v=${version}`)).json();
   const nodes = info.nodes;
   const mats = createTissues(scene, { lite });
@@ -62,6 +64,8 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
   const sizes = info.sizes ?? {};
   const total = files.reduce((a, f) => a + (sizes[f] ?? 1), 0);
   const report = () => onProgress(files.reduce((a, f) => a + progress[f] * (sizes[f] ?? 1), 0) / total);
+  // Downloading is quick; decoding and building 3,273 meshes is what takes long on a headset, so it is counted too.
+  let built = 0;
 
   async function loadFile(file) {
     const container = await LoadAssetContainerAsync(`${BASE}models/body-${file}.glb?v=${version}`, scene, {
@@ -88,8 +92,10 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
     for (const mat of container.materials) mat.dispose();
     progress[file] = 1;
     report();
+    onStage('build', ++built / files.length, { file, ms: ms() });
   }
   await Promise.all(files.map(loadFile));
+  onStage('built', 1, { ms: ms() });
 
   // ---- the tree's helpers
   const kids = (id) => nodes[id].kids;
@@ -157,6 +163,7 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
   }
   frame.computeWorldMatrix(true);
   freezeAll();
+  onStage('frozen', 1, { ms: ms() });
 
   // ---- moving a node about with a hand (or a mouse): it keeps the offset it had from the hand when taken
   const tmp = { m: new Matrix(), inv: new Matrix(), s: new Vector3(), q: new Quaternion(), p: new Vector3() };
