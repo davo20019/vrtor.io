@@ -67,6 +67,10 @@ FIXES = {
     'FJ1319': 'Left short ciliary nerve', 'FJ1370': 'Right short ciliary nerve', 'ZB0981': 'Right ulnopisiform ligament',
     'ZB0709': 'Common plantar digital branches of right medial plantar nerve',
     'ZB0141': 'Left buccinator node', 'ZB0142': 'Right buccinator node',
+    # The right liver's segments by where they lie (Couinaud: VI below VII at the back, VIII above V at the front).
+    # BodyParts3D's "VIII, 1 of 2" is the upper back block, segment VII (its "VII" is a copy of VI, dropped below);
+    # its "VIII, 2 of 2" is the upper front block, the whole of VIII.
+    'FJ2823': 'Hepatovenous segment VII', 'FJ2824': 'Hepatovenous segment VIII',
 }
 for el, name in FIXES.items():
     elements[el]['name'] = name
@@ -79,6 +83,13 @@ DROP = {'FJ3615', 'FJ3530'}
 # the C2-C3 and C3-C4 discs with their nuclei, which sit half a vertebra too low, inside the bodies of C3 and C4
 # (BodyParts3D's discs lie between the bodies, as Z-Anatomy's own C4-C5 and below do).
 DROP |= {'ZB0375', 'ZB0390', 'ZB0391', 'ZB0532', 'ZB0533'}
+# Copies of other meshes under another name, each lying within about 1 mm of the one kept over the same box: the
+# liver's "segment VII" (FJ2409) of segment VI, and its "segment IX" (FJ1858) of segment VII (FJ2823). Together
+# they counted the back of the right liver twice (1,950 cm3 of liver; without them 1,440, an adult's). The "left
+# superficial dorsal vein of the penis" (FJ3426) runs within 0.9 mm of the deep dorsal vein and like it under the
+# pubic arch, where no superficial vein goes; the "right" one (FJ3637) lies 4 mm from the unsided superficial dorsal
+# vein (FJ2208) along the midline, both x within 1 mm of it: one vein, kept once.
+DROP |= {'FJ2409', 'FJ1858', 'FJ3426', 'FJ3637'}
 for el in DROP:
     del elements[el]
 # Z-Anatomy's grouping, where it's wrong: the medial menisci filed as the lateral meniscus; the spinal nerve roots and
@@ -110,6 +121,12 @@ for tree in ('partof', 'isa'):
 for c in sets['partof']:
     if re.search(r'brachiocephalic|subclavian|vertebral artery', cname[c], re.I):
         sets['partof'][c].discard('FJ1656')
+# Segment VII (FJ2823, named VIII by BodyParts3D) is in the right liver's posterior sector, not its anterior one.
+for c in sets['partof']:
+    if cname[c].lower() in ('anterior sector of right liver', 'hepatovenous segment viii'):
+        sets['partof'][c].discard('FJ2823')
+    if cname[c].lower() == 'posterior sector of right liver':
+        sets['partof'][c].add('FJ2823')
 isa_up = collections.defaultdict(set)
 for p, pn, c, cn in table('isa_inclusion_relation_list.txt'):
     isa_up[c].add(p)
@@ -351,7 +368,7 @@ TISSUE_RE = [(k, [re.compile(p) for p in pats]) for k, pats in TISSUES]
 TISSUE_FIRST = [(re.compile(p), k) for p, k in [
     (r'crico-arytenoid|(oblique|transverse) arytenoid|thyro-arytenoid|vocalis|aryepiglotticus|part of (left |right )?cricothyroid|'
      r'constrictor|pharyngeus|tensor fasciae latae', 'muscle'),
-    (r'ligament', 'ligament'), (r'hepatic duct|biliary', 'bile'), (r'tentorium', 'fascia'), (r'central canal', 'ventricle')]]
+    (r'ligament', 'ligament'), (r'hepatic duct|biliary|duct of caudate', 'bile'), (r'tentorium', 'fascia'), (r'central canal', 'ventricle')]]
 DEFAULT_TISSUE = {'lymph': 'node', 'fascia': 'fascia', 'skin': 'skin', 'senses': 'sclera', 'heart': 'artery', 'nerves': 'brain', 'lungs': 'bronchus', 'gut': 'gut',
                   'urinary': 'bladder', 'repro': 'repro', 'glands': 'gland', 'muscles': 'muscle', 'skeleton': 'bone'}
 
@@ -725,7 +742,9 @@ RENAME = [
     ('Middle lobe of lung', 'Tissue of middle lobe of right lung', 'Middle lobe of right lung'),
     ('{S} phalanx of toe', 'toe', 'Phalanges of {s} toes'),
     ('{S} phalanx of little finger', 'phalanx', 'Phalanges of {s} little finger'),
-    ('Right lobe of liver', 'right hepatic biliary tree', 'Bile ducts of right lobe of liver'),
+    # BodyParts3D's lobes of the liver hold the bile ducts in them (and the left, the caudate lobe), not the liver
+    ('Right lobe of liver', 'right hepatic biliary tree', 'Right hepatic duct and its tributaries'),
+    ('Left lobe of liver', 'left hepatic biliary tree', 'Left hepatic duct and its tributaries'),
 ]
 for pat, must, new in RENAME:
     for S in (('Left', 'Right') if '{S}' in pat or '{s}' in pat else ('',)):
@@ -733,6 +752,15 @@ for pat, must, new in RENAME:
         for n in alive(f(pat)):
             if f(must).lower() in kidnames(n).lower():
                 n['name'] = f(new)
+# The mitral valve's two leaflets, filed with the left ventricle's outflow and wall, as one valve beside the others.
+NEW_GROUPS = [('Mitral valve', 'Left side of heart', ['Anterior leaflet of mitral valve', 'Posterior leaflet of mitral valve'])]
+for gname, where, parts in NEW_GROUPS:
+    to = [g for g in alive(where) if 'el' not in g]
+    found = [n for p in parts for n in alive(p)]
+    if to and len(found) == len(parts) and not alive(gname):
+        g = nodes[add(gname, to[0]['id'], to[0]['system'], group=True)]
+        for n in found:
+            move(n, g)
 MOVES = [
     # the circle is fed by both internal carotids and the basilar, not part of the left carotid
     ('Cerebral arterial circle', 'Heart and vessels'),
@@ -742,6 +770,8 @@ MOVES = [
     ('Left descending genicular artery', 'Left femoral artery'), ('Right descending genicular artery', 'Right femoral artery'),
     # drains to the portal vein, not the superior mesenteric
     ('Right gastric vein', 'Heart and vessels'),
+    # segment I, the liver's own lobe, not part of the left lobe's ducts
+    ('Caudate lobe of liver', 'Liver'),
     # "Common iliac artery" held only the thigh's distal perforating arteries and the foot's plantar metatarsals
     ('Distal perforating artery', 'Heart and vessels'), ('Plantar metatarsal artery', 'Heart and vessels'),
 ]

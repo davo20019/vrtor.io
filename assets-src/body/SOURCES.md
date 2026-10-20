@@ -123,6 +123,18 @@ hand; listed in `tree.py`:
     bones are in the skull. The thyrohyoid membrane and ligaments are in the larynx. The larynx's and pharynx's muscles
     and the tensor fasciae latae are coloured as muscle. The bile ducts in the liver are coloured as bile ducts, and
     the tentorium as dura.
+  - The liver's right half was there twice. "Segment VII" (FJ2409) is a copy of segment VI (within about 1 mm over
+    the same box), and "segment IX" (FJ1858) is a copy of "segment VIII, 1 of 2", which is the upper back block,
+    segment VII by Couinaud. Without the copies the liver is 1,440 cm3, an adult's (1,950 with them). "Segment VIII,
+    2 of 2" is the whole of VIII. BodyParts3D's "left/right lobe of liver" held the bile ducts (and the caudate lobe),
+    so they are named for their hepatic ducts, and the caudate lobe is its own part.
+  - The penis's dorsal veins: the "left superficial" one runs within 0.9 mm of the deep dorsal vein, under the pubic
+    arch, and the "right superficial" one lies 4 mm from the unsided superficial vein on the midline. Both copies are
+    dropped: one deep and one superficial dorsal vein remain.
+  - The mitral valve's two leaflets are one group, beside the other three valves.
+  - Not changed: the platysma stays with the neck's muscles, where TA2 puts it (many texts list it with the face's).
+    The right vagus runs on to the back of the stomach as the posterior vagal trunk, which is correct; Z-Anatomy draws
+    the left vagus only as far as the root of the lung, so the anterior vagal trunk is missing (see Known gaps).
 - From Z-Anatomy, where its own grouping or placement is wrong. The medial menisci were filed as the lateral meniscus.
   The spinal nerve roots and the nerve to quadratus femoris were filed as the spinal dura. The superior gluteal nerve
   and the nerve to piriformis were filed as the sciatic nerve. Dropped: its second left interosseous membrane of the
@@ -153,6 +165,7 @@ The colours and surfaces are ours (`apps/bdy/src/tissues.js`): the data has none
   BodyParts3D's: the big ridges and processes, not the small foramina or the sutures.
 - The quadrangular membranes and cricopharyngeal ligaments were taken for parts we have and left out.
 - No real superior epigastric veins (see above).
+- The left vagus nerve ends at the root of the lung: no oesophageal plexus or anterior vagal trunk.
 - One body (male); no female organs.
 
 ## Rebuild

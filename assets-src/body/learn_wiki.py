@@ -20,7 +20,7 @@ from learn_names import base, sided  # noqa: E402  (same normalisation)
 ALIAS = {'lateral ligament of ankle': 'Lateral collateral ligament of ankle joint', 'deltoid ligament': 'Deltoid ligament',
          'ulnar collateral ligament': 'Ulnar collateral ligament of elbow joint', 'celiac trunk and its branches': 'Celiac artery',
          'popliteal vein and its tributaries': 'Popliteal vein', 'half of cerebral arterial circle': 'Circle of Willis',
-         'colliculi': 'Tectum', 'linea alba': 'Linea alba (abdomen)', 'nucleus pulposus': 'Nucleus pulposus'}
+         'colliculi': 'Tectum', 'hepatic duct and its tributaries': 'Common hepatic duct', 'linea alba': 'Linea alba (abdomen)', 'nucleus pulposus': 'Nucleus pulposus'}
 ALIAS_RE = [(r'^nucleus pulposus\b', 'Nucleus pulposus'), (r'^intervertebral dis[ck]\b', 'Intervertebral disc'),
             (r'tendon sheath|sheaths? of tendons?|synovial sheath', 'Tendon sheath')]
 
