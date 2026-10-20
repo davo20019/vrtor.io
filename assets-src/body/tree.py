@@ -57,6 +57,16 @@ FIXES = {
     # "Right fibular vein": in the left thigh (x +64..+91 mm, 540..718 mm up), the mirror image of the right
     # thigh's "Set of perforating veins" (FJ2192)
     'FJ2190': 'Set of perforating veins',
+    # unnamed in BodyParts3D, so it took a concept it's listed under (the brachiocephalic artery, 200 mm lower): it is
+    # the mirror image of FJ1656M on the pons, x -36..0 at 1,502..1,512 mm up
+    'FJ1656': 'Right anterior inferior cerebellar artery', 'FJ1656M': 'Left anterior inferior cerebellar artery',
+    # on the other side of the midline from their names (the inferior constrictors, beside them, are named right)
+    'FJ1735': 'Brachium of right superior colliculus', 'FJ1736': 'Brachium of left superior colliculus',
+    'FJ2754': 'Right middle pharyngeal constrictor', 'FJ2742': 'Left middle pharyngeal constrictor',
+    # unsided, each on one side: x +23..+32, x -34..-24, x -236, x -119..-79
+    'FJ1319': 'Left short ciliary nerve', 'FJ1370': 'Right short ciliary nerve', 'ZB0981': 'Right ulnopisiform ligament',
+    'ZB0709': 'Common plantar digital branches of right medial plantar nerve',
+    'ZB0141': 'Left buccinator node', 'ZB0142': 'Right buccinator node',
 }
 for el, name in FIXES.items():
     elements[el]['name'] = name
@@ -65,8 +75,27 @@ for el, name in FIXES.items():
 # (same surface within 0.3 mm, 805..933 mm up at the groin), while the superior epigastric vessels run 1,008..1,175 mm
 # up beside the rectus. BodyParts3D has no mesh of the real ones.
 DROP = {'FJ3615', 'FJ3530'}
+# Z-Anatomy's own copies of what BodyParts3D has: the left leg's interosseous membrane (BodyParts3D has both legs'), and
+# the C2-C3 and C3-C4 discs with their nuclei, which sit half a vertebra too low, inside the bodies of C3 and C4
+# (BodyParts3D's discs lie between the bodies, as Z-Anatomy's own C4-C5 and below do).
+DROP |= {'ZB0375', 'ZB0390', 'ZB0391', 'ZB0532', 'ZB0533'}
 for el in DROP:
     del elements[el]
+# Z-Anatomy's grouping, where it's wrong: the medial menisci filed as the lateral meniscus; the spinal nerve roots and
+# the nerve to quadratus femoris as the spinal dura; the superior gluteal nerve and the nerve to piriformis, which leave
+# the sacral plexus on their own, as the sciatic nerve. The tibial nerve is the sciatic's, as its plantar branches are.
+ZGROUP = {'ZB0475': 'Medial meniscus', 'ZB0476': 'Medial meniscus', 'ZB0527': None, 'ZB0528': None, 'ZB0525': None, 'ZB0526': None,
+          'ZB0855': None, 'ZB0856': None}
+for e in elements.values():
+    if e.get('zgroup') == 'Spinal dura' and 'root of spinal nerve' in e['name'].lower():
+        e['zgroup'] = 'Spinal nerve roots'
+    if re.match(r'^(left|right) tibial nerve$', e['name'].lower()):
+        e['zgroup'] = 'Sciatic nerve'
+for el, g in ZGROUP.items():
+    if el in elements:
+        elements[el]['zgroup'] = g
+        if g is None:
+            del elements[el]['zgroup']
 
 # ---- concepts: sets of elements, and the IS-A ancestry of each concept
 sets = {'partof': collections.defaultdict(set), 'isa': collections.defaultdict(set)}
@@ -76,6 +105,11 @@ for tree in ('partof', 'isa'):
         if el in elements:
             sets[tree][c].add(el)
             cname[c] = n
+# BodyParts3D lists the right anterior inferior cerebellar artery (FJ1656) as part of the brachiocephalic, both
+# subclavian and both vertebral arteries' PART-OF sets, which hung the whole basilar artery under the right vertebral.
+for c in sets['partof']:
+    if re.search(r'brachiocephalic|subclavian|vertebral artery', cname[c], re.I):
+        sets['partof'][c].discard('FJ1656')
 isa_up = collections.defaultdict(set)
 for p, pn, c, cn in table('isa_inclusion_relation_list.txt'):
     isa_up[c].add(p)
@@ -188,7 +222,7 @@ SYSTEMS = [
     ('skin', 'Skin and hair', [r'\bskin\b', r'integument', r'\bhair\b', r'eyebrow', r'eyelash', r'\bnail\b', r'^external ear$', r'^lip$']),
     ('senses', 'Eyes and ears', [r'eyeball', r'\blens\b', r'vitreous', r'cornea', r'sclera', r'^(left |right )?choroid$', r'\bretina\b', r'\biris\b',
                                  r'ciliary body', r'anterior chamber', r'posterior chamber', r'tarsal plate', r'external ear',
-                                 r'\bauricle', r'ossicle', r'cochlea', r'labyrinth', r'tympanic', r'suspensory ligament of .*lens', r'lacrimal']),
+                                 r'\bauricle', r'ossicle', r'cochlea', r'labyrinth', r'tympanic', r'suspensory ligament of .*lens', r'lacrimal(?! bone)']),
     ('heart', 'Heart and vessels', [r'\bheart\b', r'cardiac', r'coronary', r'\bartery\b', r'arterial', r'\bvein\b', r'(?<!hepato)venous',
                                      r'vena cava', r'\baorta', r'atrium', r'ventricle of heart', r'tricuspid', r'mitral', r'papillary muscle',
                                      r'pulmonary trunk', r'\barteria\b', r'arteries', r'veins', r'vasculature', r'cardiovascular', r'vascular', r'\bsinus of', r'valve']),
@@ -204,7 +238,7 @@ SYSTEMS = [
                                  r'rectum', r'\banal\b', r'\banus', r'oesophag', r'esophag', r'\bliver\b', r'hepat', r'biliary', r'gallbladder',
                                  r'pancrea', r'tongue', r'\btooth', r'teeth', r'salivary', r'parotid', r'submandibular gland', r'sublingual gland',
                                  r'pharyn', r'hepatovenous', r'\blip\b', r'mesocolon', r'taenia', r'appendix', r'peritone', r'omentum', r'\bpalate\b', r'palato', r'glossus', r'uvula', r'spleen', r'splenic']),
-    ('urinary', 'Kidneys and bladder', [r'urinary', r'kidney', r'renal', r'ureter', r'bladder', r'urethra']),
+    ('urinary', 'Kidneys and bladder', [r'urinary', r'kidney', r'(?<!ad)(?<!supra)renal', r'ureter', r'bladder', r'urethra']),
     ('repro', 'Reproductive organs', [r'genital', r'deferent duct', r'penis', r'testis', r'scrot', r'prostat', r'seminal', r'ductus deferens', r'epididym', r'spermatic']),
     ('glands', 'Glands', [r'endocrine', r'thyroid gland', r'parathyroid', r'suprarenal gland', r'adrenal', r'pituitary', r'hypophysis', r'thymus']),
     ('muscles', 'Muscles', [r'muscle', r'\bhead of .*(biceps|triceps|gastrocnemius|quadriceps|flexor|extensor|pronator)', r'deltoid', r'pectoralis',
@@ -246,7 +280,14 @@ def system_of_name(name):
 KIND_SYSTEM = {'bone': 'skeleton', 'joint': 'skeleton', 'nerve': 'nerves', 'lymph': 'lymph', 'fascia': 'fascia', 'muscle': 'muscles', 'vessel': 'heart'}
 
 
+# Named like a muscle and not one: the larynx's thyrohyoid membrane and ligaments, the stylohyoid ligament.
+SYSTEM_OF_NAME = [(re.compile(r'thyrohyoid (ligament|membrane)'), 'lungs'), (re.compile(r'stylohyoid ligament'), 'skeleton')]
+
+
 def system_of(e):
+    for rx, k in SYSTEM_OF_NAME:
+        if rx.search(e['name'].lower()):
+            return k
     if e.get('kind') in KIND_SYSTEM:
         return KIND_SYSTEM[e['kind']]
     # Its own name first (the "Septal papillary muscle of right ventricle" is the heart's), then what it is.
@@ -307,6 +348,10 @@ TISSUES = [
     ('muscle', [r'muscle', r'sphincter', r'diaphragm', r'uvula', r'constrictor', r'pharyngeus', r'glossus']),
 ]
 TISSUE_RE = [(k, [re.compile(p) for p in pats]) for k, pats in TISSUES]
+TISSUE_FIRST = [(re.compile(p), k) for p, k in [
+    (r'crico-arytenoid|(oblique|transverse) arytenoid|thyro-arytenoid|vocalis|aryepiglotticus|part of (left |right )?cricothyroid|'
+     r'constrictor|pharyngeus|tensor fasciae latae', 'muscle'),
+    (r'ligament', 'ligament'), (r'hepatic duct|biliary', 'bile'), (r'tentorium', 'fascia'), (r'central canal', 'ventricle')]]
 DEFAULT_TISSUE = {'lymph': 'node', 'fascia': 'fascia', 'skin': 'skin', 'senses': 'sclera', 'heart': 'artery', 'nerves': 'brain', 'lungs': 'bronchus', 'gut': 'gut',
                   'urinary': 'bladder', 'repro': 'repro', 'glands': 'gland', 'muscles': 'muscle', 'skeleton': 'bone'}
 
@@ -339,6 +384,12 @@ def tissue_of(e, system):
     if e.get('kind') == 'nerve':
         return 'fascia' if re.search(r'dura|arachnoid|pia|filum', own) else 'nerve'
     allowed = SYSTEM_TISSUES[system]
+    # Named for what they're on, these are muscles: the larynx's (on the arytenoids and cricoid), the pharynx's
+    # constrictors, the tensor fasciae latae; a ligament named for the epiglottis is a ligament; the bile ducts in the liver
+    # are bile ducts; the tentorium is dura; the spinal cord's central canal holds fluid, as the ventricles do.
+    for rx, k in TISSUE_FIRST:
+        if k in allowed and rx.search(own):
+            return k
     for k, pats in TISSUE_RE:
         if k in allowed and any(p.search(own) for p in pats):
             return k
@@ -435,17 +486,18 @@ def is_cranial(e):
     return bool(CRANIAL.search(e['name'].lower()) or CRANIAL.search(e.get('zgroup', '').lower()))
 
 
-SKULL = re.compile(r'neurocranium|maxilla|zygomatic bone|palatine bone|mandible|sphenoid bone|nasal bone|vomer|ethmoid|frontal bone|'
+SKULL = re.compile(r'neurocranium|lacrimal bone|maxilla|zygomatic bone|palatine bone|mandible|sphenoid bone|nasal bone|vomer|ethmoid|frontal bone|'
                    r'occipital bone|parietal bone|temporal bone|nasal concha|nasal cartilage|alar cartilage|septal nasal')
 FACIAL = re.compile(r'buccinator|corrugator|depressor (anguli oris|labii|septi)|epicranial|frontalis|levator (anguli oris|labii)|mentalis|'
                     r'nasalis|occipitalis|orbicularis|procerus|risorius|temporoparietalis|zygomaticus')
 CHEWING = re.compile(r'masseter|temporalis$|pterygoid')
-LARYNX = re.compile(r'arytenoid|cricoid|crico-|thyroid cartilage|epiglott|vocal|conus elasticus|thyro-|corniculate|aryepiglottic')
+LARYNX = re.compile(r'arytenoid|cricoid|crico-|thyroid cartilage|epiglott|vocal|conus elasticus|thyro-|corniculate|aryepiglottic|'
+                    r'cuneiform cartilage|thyrohyoid (ligament|membrane)')
 SYNTH = [
-    ('nerves', 'brain', lambda e: e['tissue'] in ('brain', 'whitematter', 'ventricle')),
+    ('nerves', 'brain', lambda e: e['tissue'] in ('brain', 'whitematter', 'ventricle') and 'spinal cord' not in e['name'].lower()),
     ('nerves', 'left cerebral hemisphere', lambda e: e['tissue'] in ('brain', 'whitematter') and side_of(e['name']) == 'left'),
     ('nerves', 'right cerebral hemisphere', lambda e: e['tissue'] in ('brain', 'whitematter') and side_of(e['name']) == 'right'),
-    ('nerves', 'cranial nerves', lambda e: e['tissue'] == 'nerve' and (e['src'] == 'bp' or is_cranial(e))),
+    ('nerves', 'cranial nerves', lambda e: e['tissue'] == 'nerve' and (e['src'] == 'bp' or is_cranial(e)) and 'spinal cord' not in e['name'].lower()),
     ('nerves', 'peripheral nerves', lambda e: e.get('kind') == 'nerve' and e['tissue'] == 'nerve' and not is_cranial(e)),
     ('lungs', 'larynx', lambda e: LARYNX.search(e['name'].lower())),
     ('skeleton', 'skull', lambda e: SKULL.search(e['name'].lower())),
@@ -584,9 +636,9 @@ for els, name, rank in taken:
 ADOPT = [
     (r'^wall of ventricle$', 'Heart'),
     (r'thalamus|putamen|caudate nucleus|globus pallidus|insula$|amygdala|corpus callosum|fornix|geniculate body|optic tract|'
-     r'stria medullaris|septum of telencephalon|commissure|tentorium|central canal|brachium of', 'Brain'),
+     r'stria medullaris|septum of telencephalon|commissure|tentorium|brachium of', 'Brain'),
     (r'arytenoid|cricothyroid|crico-arytenoid|vocal|conus elasticus|corniculate|thyro-epiglottic|thyrohyoid', 'Larynx'),
-    (r'eyeball|retina|corona ciliaris|lacrimal', '{side} eye'),
+    (r'eyeball|retina|corona ciliaris|lacrimal(?! bone)', '{side} eye'),
     # A lobe's tissue (Z-Anatomy's) goes in with that lobe's airways (BodyParts3D's): taking the lobe takes both.
     (r'^tissue of upper lobe of left lung', 'Upper lobe of left lung'),
     (r'^tissue of lower lobe of left lung', 'Lower lobe of left lung'),
@@ -633,6 +685,73 @@ def collapse():
                 n['gone'] = True
                 n['kids'] = []
                 changed = True
+collapse()
+
+# Groups whose names or places the anatomy contradicts, from the sets they were made of (checked part by part):
+# a name for what the group really holds, or a move to where it belongs. Each says what must be in it, so a change
+# upstream that makes it another group leaves it alone.
+def alive(name):
+    return [n for n in nodes if n['name'] == name and not n.get('gone')]
+
+
+def kidnames(n):
+    return ' | '.join(nodes[k]['name'] for k in n['kids'])
+
+
+def move(n, parent):
+    old = nodes[n['parent']]
+    old['kids'].remove(n['id'])
+    n['parent'] = parent['id']
+    parent['kids'].append(n['id'])
+
+
+RENAME = [
+    # the ankle's, not the knee's (whose medial one is the tibial collateral ligament)
+    ('{S} medial collateral ligament', 'tibiocalcaneal', '{S} deltoid ligament'),
+    ('{S} lateral collateral ligament', 'talofibular', 'Lateral ligament of {s} ankle'),
+    # the celiac trunk is one artery; what BodyParts3D split into its left and right are the vessels it gives each side
+    ('Celiac artery', 'Celiac trunk', 'Celiac trunk and its branches'),
+    ('Left celiac artery', 'Left gastric artery', 'Left gastric and left hepatic arteries'),
+    ('Right celiac artery', 'Right gastric artery', 'Right gastric and right hepatic arteries'),
+    ('Left common hepatic artery', 'Trunk of left hepatic artery', 'Left hepatic artery'),
+    ('Right hepatic artery proper', 'Trunk of right hepatic artery', 'Right hepatic artery'),
+    ('{S} cerebral arterial circle', 'posterior communicating', '{S} half of cerebral arterial circle'),
+    ('{S} midbrain', 'colliculus', '{S} colliculi'),
+    ('{S} neurocranium', 'parietal bone', '{S} parietal and temporal bones'),
+    ('{S} vertebral column', 'intertransverse', '{S} costovertebral and intertransverse ligaments'),
+    # the popliteal vein becomes the femoral vein; it doesn't drain into the deep femoral
+    ('Tributaries of {s} deep femoral vein', 'popliteal vein', '{S} popliteal vein and its tributaries'),
+    ('Tributaries of right superior mesenteric vein', 'Right colic vein', 'Right tributaries of superior mesenteric vein'),
+    ('Middle lobe of lung', 'Tissue of middle lobe of right lung', 'Middle lobe of right lung'),
+    ('{S} phalanx of toe', 'toe', 'Phalanges of {s} toes'),
+    ('{S} phalanx of little finger', 'phalanx', 'Phalanges of {s} little finger'),
+    ('Right lobe of liver', 'right hepatic biliary tree', 'Bile ducts of right lobe of liver'),
+]
+for pat, must, new in RENAME:
+    for S in (('Left', 'Right') if '{S}' in pat or '{s}' in pat else ('',)):
+        f = lambda t: t.replace('{S}', S).replace('{s}', S.lower())
+        for n in alive(f(pat)):
+            if f(must).lower() in kidnames(n).lower():
+                n['name'] = f(new)
+MOVES = [
+    # the circle is fed by both internal carotids and the basilar, not part of the left carotid
+    ('Cerebral arterial circle', 'Heart and vessels'),
+    # the tectum and the peduncles are the midbrain's
+    ('Midbrain tectum', 'Midbrain'), ('Peduncle of midbrain', 'Midbrain'),
+    # off the femoral artery itself, in the adductor canal
+    ('Left descending genicular artery', 'Left femoral artery'), ('Right descending genicular artery', 'Right femoral artery'),
+    # drains to the portal vein, not the superior mesenteric
+    ('Right gastric vein', 'Heart and vessels'),
+    # "Common iliac artery" held only the thigh's distal perforating arteries and the foot's plantar metatarsals
+    ('Distal perforating artery', 'Heart and vessels'), ('Plantar metatarsal artery', 'Heart and vessels'),
+]
+for what, where in MOVES:
+    found = alive(what)
+    groups_ = [n for n in found if 'el' not in n]     # a group, not its own parts of the same name
+    for n in groups_ or found:
+        to = [g for g in alive(where) if 'el' not in g]
+        if to and n['parent'] != to[0]['id']:
+            move(n, to[0])
 collapse()
 
 # The vessels and nerves that only reach the reproductive organs go off with them (the app hides a part whose

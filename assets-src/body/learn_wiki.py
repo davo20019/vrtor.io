@@ -15,7 +15,14 @@ UA = 'vrtor.io anatomy atlas builder (https://vrtor.io)'
 ANATOMY = re.compile(r'\b(anatom|muscle|bone|nerve|arter|vein|venous|organ|ligament|tendon|cartilage|joint|gland|tissue|brain|'
                      r'lobe|vertebra|skull|cranial|spinal|lymph|duct|valve|ventricle|atrium|cortex|gyrus|sulcus|vessel|fascia|'
                      r'membrane|tract|bursa|human body|thorax|abdom|pelvi|limb|skeleton)', re.I)
-from learn_names import base  # noqa: E402  (same normalisation)
+from learn_names import base, sided  # noqa: E402  (same normalisation)
+# Names with an article under another title, or none where the plain name would find the wrong one.
+ALIAS = {'lateral ligament of ankle': 'Lateral collateral ligament of ankle joint', 'deltoid ligament': 'Deltoid ligament',
+         'ulnar collateral ligament': 'Ulnar collateral ligament of elbow joint', 'celiac trunk and its branches': 'Celiac artery',
+         'popliteal vein and its tributaries': 'Popliteal vein', 'half of cerebral arterial circle': 'Circle of Willis',
+         'colliculi': 'Tectum', 'linea alba': 'Linea alba (abdomen)', 'nucleus pulposus': 'Nucleus pulposus'}
+ALIAS_RE = [(r'^nucleus pulposus\b', 'Nucleus pulposus'), (r'^intervertebral dis[ck]\b', 'Intervertebral disc'),
+            (r'tendon sheath|sheaths? of tendons?|synovial sheath', 'Tendon sheath')]
 
 
 def summary(title):
@@ -54,7 +61,8 @@ def titles(b):
 
 
 def find(b):
-    for t in titles(b):
+    alias = ALIAS.get(b) or next((t for rx, t in ALIAS_RE if re.search(rx, b)), None)
+    for t in ([alias] if alias else []) + titles(b):
         s = summary(t)
         if s.get('type') == 'standard' and s.get('text') and ANATOMY.search(s['text']):
             return {'title': s['title'], 'url': s['url'], 'text': s['text']}
@@ -69,6 +77,19 @@ KINDS = {'node': 'Lymph node', 'artery': 'Artery', 'vein': 'Vein', 'nerve': 'Ner
          'gut': 'Gastrointestinal tract', 'liver': 'Liver', 'tooth': 'Tooth', 'gland': 'Gland'}
 with ThreadPoolExecutor(4) as ex:
     found = dict(zip(bases, ex.map(find, bases)))
+# A side that is part of the name ("Left gastric artery", "Right lymphatic duct"): an article titled so, side and all.
+def find_sided(full):
+    t = full[:1].upper() + full[1:]
+    s_ = summary(t)
+    side = re.search(r'\b(left|right)\b', full).group(1)
+    if s_.get('type') == 'standard' and s_.get('text') and ANATOMY.search(s_['text']) and side in (s_.get('title') or '').lower():
+        return {'title': s_['title'], 'url': s_['url'], 'text': s_['text']}
+    return None
+
+
+fulls = sorted({sided(n['name']) for n in N if re.match(r'^(left|right) ', n['name'], re.I)})
+with ThreadPoolExecutor(4) as ex:
+    found.update({f: w for f, w in zip(fulls, ex.map(find_sided, fulls)) if w})
 for tissue, title in KINDS.items():
     s_ = summary(title)
     if s_.get('type') == 'standard':

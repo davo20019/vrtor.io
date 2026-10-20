@@ -106,6 +106,32 @@ hand; listed in `tree.py`:
   lies within 0.75 mm of Z-Anatomy's (median). Not taken: Z-Anatomy's ear ossicles (malleus, incus,
   stapes), which BodyParts3D lacks too, since the NonCommercial Dundee inner-ear model it adapted has them.
 - Both "superior epigastric vein" meshes are copies of the superficial epigastric veins at the groin: dropped.
+- An anatomy review (2026-10-20), each point checked against where the meshes lie:
+  - FJ1656 has no name, and took "Brachiocephalic artery" from a set it is wrongly listed in. It lies on the pons, as
+    the mirror image of the anterior inferior cerebellar artery (FJ1656M), so it is the right AICA. That same listing
+    had hung the whole basilar artery under the right vertebral artery.
+  - Named for the wrong side: the brachia of the superior colliculi and the middle pharyngeal constrictors. Each lies
+    within 3 mm of the midline, inside what audit.py's side check can see. Given a side: the short ciliary nerves,
+    one ulnopisiform ligament, one set of plantar digital nerves.
+  - Groups named for what they hold. The ankle's "medial/lateral collateral ligament" (the knee's names) is now the
+    deltoid ligament and the lateral ligament of the ankle. "Left/right celiac artery", "midbrain", "neurocranium" and
+    "vertebral column" are split halves of single things, and are named for the vessels, colliculi, bones or
+    ligaments they hold. "Tributaries of deep femoral vein" holds the popliteal vein. Moved: the cerebral arterial
+    circle out of the left carotid, the tectum and peduncles into the midbrain, the descending genicular artery to
+    the femoral artery, the right gastric vein out of the superior mesenteric's tributaries.
+  - Systems and colours: the adrenal glands are glands, not urinary organs ("renal" matched "adrenal"). The lacrimal
+    bones are in the skull. The thyrohyoid membrane and ligaments are in the larynx. The larynx's and pharynx's muscles
+    and the tensor fasciae latae are coloured as muscle. The bile ducts in the liver are coloured as bile ducts, and
+    the tentorium as dura.
+- From Z-Anatomy, where its own grouping or placement is wrong. The medial menisci were filed as the lateral meniscus.
+  The spinal nerve roots and the nerve to quadratus femoris were filed as the spinal dura. The superior gluteal nerve
+  and the nerve to piriformis were filed as the sciatic nerve. Dropped: its second left interosseous membrane of the
+  leg, and its C2-C3 and C3-C4 discs and nuclei, which sit inside the bodies of C3 and C4 (BodyParts3D's discs are
+  between the bodies).
+- Card text: TA2.csv's wrong Latin is corrected in `learn_names.py` (the arm's superior lateral cutaneous nerve had
+  the thigh's Latin, the metatarsophalangeal capsules had the shoulder's, plus typos). A side that is part of a
+  vessel's name (the left and right gastric arteries are two vessels, not a pair) looks up that full name first.
+  Disambiguation pages are left out, and so are sentences after the first about other animals.
 
 ## What we changed
 

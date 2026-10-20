@@ -16,6 +16,9 @@ export function plainName(name) {
     .toLowerCase();
 }
 
+/** The name without its numbering, side kept: the left and right gastric arteries are two vessels, not a pair. */
+const fullName = (name) => name.replace(/, (\d+ of \d+|main part)$/, '').replace(/\s+/g, ' ').trim().toLowerCase();
+
 /** How the last-resort article is introduced, by tissue. */
 const KIND_LABEL = {
   node: 'lymph nodes', artery: 'arteries', vein: 'veins', nerve: 'nerves', muscle: 'skeletal muscle', ligament: 'ligaments', bone: 'bone',
@@ -30,11 +33,12 @@ const lang = (navigator.languages ?? [navigator.language]).map((l) => l.slice(0,
 
 /** The first sentences of an article's lead, up to about `max` characters. */
 function lead(text, max = 330) {
-  const sentences = text.match(/[^.!?]+[.!?]+(\s|$)/g) ?? [text];
+  // ship.py has already put a space between every two sentences; "a.k.a." and "i.e.," aren't sentence ends.
+  const sentences = text.split(/(?<=[.!?])\s+(?=[A-Z(])/);
   let out = '';
   for (const s of sentences) {
-    if (out && out.length + s.length > max) break;
-    out += s;
+    if (out && out.length + s.length + 1 > max) break;
+    out += s + ' ';
   }
   return out.trim();
 }
@@ -51,8 +55,9 @@ export async function loadLearning(body, version) {
   /** What the card says about node `id`: names, a description, its source. */
   function about(id) {
     const own = plainName(nodes[id].name);
-    const names = data.names[own] ?? null;
-    let wiki = data.wiki[own] ?? null;
+    const full = fullName(nodes[id].name);
+    const names = data.names[full] ?? data.names[own] ?? null;
+    let wiki = data.wiki[full] ?? data.wiki[own] ?? null;
     let from = null;
     // An article on something related, not this very part (a rib's is the rib cage's): said so, by its title.
     let article = wiki?.about ? wiki.title.replace(/ \((anatomy|vertebrate anatomy)\)$/, '') : null;
@@ -60,7 +65,7 @@ export async function loadLearning(body, version) {
     if (!wiki) {
       for (let i = body.parentOf(id); i !== null && i > 0; i = body.parentOf(i)) {
         if (nodes[i].system && body.parentOf(i) === 0) break;          // not the whole system
-        const w = data.wiki[plainName(nodes[i].name)];
+        const w = data.wiki[fullName(nodes[i].name)] ?? data.wiki[plainName(nodes[i].name)];
         if (w) {
           wiki = w;
           from = nodes[i].name;
@@ -87,8 +92,7 @@ export async function loadLearning(body, version) {
 
   // ---- search: every part and group by its name, its Latin, and its names in TA2's other languages
   const index = nodes.map((n) => {
-    const p = plainName(n.name);
-    const nm = data.names[p];
+    const nm = data.names[fullName(n.name)] ?? data.names[plainName(n.name)];
     // Every language TA2 has, whatever the visitor's: "corazón" and "coeur" find the heart.
     return { id: n.id, key: [n.name, nm?.la, nm?.es, nm?.fr, nm?.pt, nm?.it].filter(Boolean).join(' | ').toLowerCase(), group: !n.el };
   });

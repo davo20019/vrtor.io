@@ -45,23 +45,44 @@ if os.path.exists(names_p) and os.path.exists(wiki_p):
                'muscles of eye', 'muscles of hand', 'free upper limb', 'lower limb', 'ilio-inguinal nerve', 'muscles', 'intervertebral disk',
                'arteria princeps pollicis', 'arteria radialis indicis', 'ulnar collateral ligament of wrist joint', 'superior trunk of brachial plexus',
                'ganglia of sympathetic trunk', 'peripheral nerves', 'reproductive organs', 'inferior extensor retinaculum of ankle'}
+    # calcaneonavicular ligament: the bifurcate ligament's limb on top of the foot, not the plantar (spring) ligament
+    # Wikipedia gives; it shows its parent's text instead.
     WRONG = {'popliteofibular ligament', 'tibiofibular syndesmosis', 'deltoid fascia', 'muscles of foot', 'muscles of neck',
              'inferior pancreatic artery', 'musculophrenic artery', 'thalamoperforating artery', 'lateral intermuscular septum of arm',
-             'medial intermuscular septum of arm', 'transverse intermuscular septum of leg'}
+             'medial intermuscular septum of arm', 'transverse intermuscular septum of leg', 'calcaneonavicular ligament',
+             'hepatic artery'}   # the left and right hepatic arteries: Wikipedia's is the common hepatic artery
+    # Wikipedia's leads are often about every animal with the part; the cards are about this man's body. A sentence
+    # after the first that is about other animals is left out (the first, which says what the part is, stays as it is).
+    ANIMALS = re.compile(r'tetrapod|sauropsid|dinosaur|\bbirds?\b|reptile|\bfish|amphibian|lizard|amniote|herbivore|\bhorses?\b|'
+                         r'\bmice\b|\bcats?\b|\bdogs?\b|panda|raccoon|species|\banimals?\b', re.I)
+
+    def sentences(text):
+        """A lead in sentences. Wikipedia's extracts run some together ("surfaces.The") and put lists on lines."""
+        t = re.sub(r'([a-z]{2}[)\]]?)\.([A-Z])', r'\1. \2', text)
+        t = re.sub(r':(?=[A-Za-z])', ': ', t)
+        t = re.sub(r'(?<![.!?:])\n+', '; ', t).replace('\n', ' ')
+        return [s for s in re.split(r'(?<=[.!?])\s+(?=[A-Z(])', t.strip()) if s]
+
+    def human(ss):
+        return ss[:1] + [x for x in ss[1:] if not ANIMALS.search(x)]
+
     STOP = {'of', 'the', 'muscle', 'muscles', 'bone', 'nerve', 'anatomy', 'part', 'left', 'right', 'human', 'and', 'to', 'in', 'set', 'a'}
     stems = lambda t: {x[:5] for x in re.findall(r'[a-z]+', re.sub(r'\((anatomy|[ivx]+)\)', '', t.lower())) if x not in STOP}
+
     for k, w in json.load(open(wiki_p)).items():
+        if re.search(r'\bmay (also )?refer to\b', w['text']):
+            continue                                    # a disambiguation page, not an article
+        ss = human(sentences(w['text']))
         if k.startswith('#'):
-            wiki[k] = {'title': w['title'], 'url': w['url'], 'text': w['text']}
+            wiki[k] = {'title': w['title'], 'url': w['url'], 'text': ' '.join(ss)}
             continue
         if k in WRONG or re.search(r'\bveins?\b', k) and re.search(r'\barter', w['title'], re.I):
             continue
-        sentences = re.findall(r'[^.!?]+[.!?]+(?:\s|$)', w['text']) or [w['text']]
         text = ''
-        for x in sentences:
+        for x in ss:
             if text and len(text) + len(x) > 600:
                 break
-            text += x
+            text += x + ' '
         same = k in SYNONYM or stems(k) == stems(w['title'])
         wiki[k] = {'title': w['title'], 'url': w['url'], 'text': text.strip(), **({} if same else {'about': True})}
     names = {k: {f: v[f] for f in ('la', 'es', 'fr', 'pt', 'it') if v.get(f)} for k, v in json.load(open(names_p)).items()}
