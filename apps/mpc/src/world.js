@@ -12,6 +12,7 @@ import { buildTerrain } from './terrain.js';
 import { createGraniteGrain, GraniteMaterial, loadCitadelOcclusion, loadSiteSurfaces } from './granite.js';
 import { AREAS, SITE } from './areas.js';
 import { addWallFrames } from './masonry.js';
+import { clearFootprints, inside, loadScans, scanCells } from './scans.js';
 const BASE = import.meta.env.BASE_URL;
 DracoDecoder.DefaultConfiguration = {
   wasmUrl: `${BASE}draco/draco_wasm_wrapper_gltf.js`,
@@ -35,6 +36,9 @@ export async function buildWorld(engine, onProgress) {
   const masonryResponse=await fetch(`${BASE}models/citadel-masonry.json`);
   if(!masonryResponse.ok)throw new Error('The citadel information could not load.');
   const masonry=await masonryResponse.json();
+  const scansResponse=await fetch(`${BASE}models/citadel-scans.json`);
+  if(!scansResponse.ok)throw new Error('The citadel information could not load.');
+  const scans=(await scansResponse.json()).scans;
   const scene = new Scene(engine);
   scene.fogMode = Scene.FOGMODE_EXP2;
   scene.fogDensity = .00005;
@@ -90,8 +94,18 @@ export async function buildWorld(engine, onProgress) {
     const triangles=meshes.reduce((n,m)=>n+m.getTotalIndices()/3,0);
     if (triangles!==meta.triangles) {container.dispose();throw new Error('Survey geometry did not load completely.');}
     // Lay the citadel's stones along each wall, ashlar where the building is (citadel-masonry.json).
-    if(i===SITE)addWallFrames(meshes,masonry.zones);
-    for (const m of container.materials) if (m instanceof PBRMaterial) {
+    // Where a scanned building stands, the model's schematic one goes (scans.js).
+    if(i===SITE){
+      clearFootprints(meshes,scans);addWallFrames(meshes,masonry.zones);
+      const placed=await loadScans(scene,scans,grain,siteSurfaces);
+      for(const {container:c,meshes:m} of placed){
+        container.meshes.push(...c.meshes);container.materials.push(...c.materials);container.textures.push(...c.textures);container.transformNodes.push(...c.transformNodes);
+        meshes.push(...m);
+      }
+      meta.nav=scanCells(scene,scans,placed,meta.nav,meta.step);
+    }
+    // The scans' materials are set up in scans.js.
+    for (const m of container.materials) if (m instanceof PBRMaterial&&!m.name.endsWith('-scan')) {
       // Open survey surfaces have no modeled thickness; preserve both visible sides.
       m.backFaceCulling=false;m.twoSidedLighting=true;m.metallic=0;
       // The scans' grey values stay; a granite photo scan adds the stone's colour and grain.
@@ -112,7 +126,7 @@ export async function buildWorld(engine, onProgress) {
     prepared.container.addAllToScene();
     for (const m of prepared.meshes) {
       // Overlapping ground faces in the architectural source must not self-shadow.
-      if(prepared.i!==SITE||m.material?.name.includes('stone'))shadows.addShadowCaster(m,false);
+      if(prepared.i!==SITE||/stone|scan/.test(m.material?.name??''))shadows.addShadowCaster(m,false);
       m.freezeWorldMatrix();
     }
     const groups=new Map();
@@ -149,7 +163,7 @@ export async function buildWorld(engine, onProgress) {
   }
   const walk=createSurfaceWalker(scene,()=>current);
   activate(await prepare(SITE));
-  await createGrass(scene,()=>active===SITE);
+  await createGrass(scene,()=>active===SITE,(x,z)=>scans.some(s=>inside(s.footprint,x,z)));
   return {scene,floors,prepare,activate,daylight,stop,walk,
     get active(){return active;},get triangleCount(){return current.triangles;},
     get monument(){return current.meshes;},

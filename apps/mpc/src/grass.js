@@ -2,7 +2,7 @@ import { Color3, Mesh, PBRMaterial, VertexData } from '@babylonjs/core';
 
 // Small opaque blades preserve stereo depth without alpha sorting or photo cards.
 // Only nearby cells are drawn; roots were checked against actual model grass faces.
-export async function createGrass(scene,enabled){
+export async function createGrass(scene,enabled,excluded=()=>false){
   const response=await fetch(`${import.meta.env.BASE_URL}models/citadel-grass.bin`);
   if(!response.ok)throw new Error('The ground detail could not load.');
   const buffer=await response.arrayBuffer();
@@ -10,6 +10,7 @@ export async function createGrass(scene,enabled){
   const roots=new Float32Array(buffer),tiles=new Map(),cache=new Map();
   for(let i=0;i<roots.length;i+=3){
     const x=roots[i],z=roots[i+2],key=`${Math.floor(x/20)},${Math.floor(z/20)}`;
+    if(excluded(x,z))continue;
     if(!tiles.has(key))tiles.set(key,[]);tiles.get(key).push([x,roots[i+1],z]);
   }
   const material=new PBRMaterial('short-illustrative-grass',scene);

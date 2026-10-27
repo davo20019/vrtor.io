@@ -19,7 +19,7 @@ export function createGraniteGrain(scene) {
 export const SITE_SURFACES={lawn:1.4,earth:2.07,rock:1.8};
 // Linear gains that bring the rendered surfaces, under this scene's sun and sky, to the mean colour of the same
 // surfaces in the photographs (measured by sampling rendered pixels the way photo_textures.py samples the photos).
-const SITE_GAIN={lawn:[1.3,1.22,.47],earth:[1.65,1.45,1.7],rock:[2.95,2.65,2.7],wall:[3.85,3.55,3.55]};
+const SITE_GAIN={lawn:[1.3,1.22,.47],earth:[1.65,1.45,1.7],rock:[2.95,2.65,2.7],wall:[3.85,3.55,3.55],scan:[2.92,2.65,2.69]};
 const vec=a=>`vec3(${a.map(v=>v.toFixed(3)).join(',')})`;
 export function loadSiteSurfaces(scene) {
   const load=(name,gamma)=>{
@@ -83,14 +83,15 @@ export function loadCitadelOcclusion(scene) {
 export class GraniteMaterial extends MaterialPluginBase {
   // kind: the citadel surface ('stone', 'lawn' or 'earth'), 'rock' for the survey closeups, or null for grain only.
   constructor(material,texture,site=null,occlusion=null,kind=null){
-    super(material,'GraniteGrain',200,{SITE_LAWN:false,SITE_EARTH:false},true,true);this.texture=texture;this.site=site;this.occlusion=occlusion;this.kind=kind;
+    super(material,'GraniteGrain',200,{SITE_LAWN:false,SITE_EARTH:false,SITE_SCAN:false},true,true);this.texture=texture;this.site=site;this.occlusion=occlusion;this.kind=kind;
     // The ambient slot declares the second UV set; occlusion is applied below, to all light.
     if(occlusion){material.ambientTexture=occlusion;material.ambientTextureStrength=0;}
   }
   getClassName(){return 'GraniteMaterial';}
   // Compiled shaders are shared by define set, so variations must be defines, not code.
-  prepareDefines(defines){defines.SITE_LAWN=this.kind==='lawn';defines.SITE_EARTH=this.kind==='earth';}
-  get rock(){return this.kind==='rock';}
+  prepareDefines(defines){defines.SITE_LAWN=this.kind==='lawn';defines.SITE_EARTH=this.kind==='earth';defines.SITE_SCAN=this.kind==='scan';}
+  // 'scan': a CAST scan placed in the citadel (scans.js), shaded as the closeups with its own gain.
+  get rock(){return this.kind==='rock'||this.kind==='scan';}
   get citadel(){return this.site&&!this.rock;}
   // Walls are granite stones in mud; the ground is lawn, earth, or granite on wall tops.
   get ground(){return this.site[this.kind==='stone'?'rock':this.kind];}
@@ -217,8 +218,13 @@ export class GraniteMaterial extends MaterialPluginBase {
         vec2 rockX=vPositionW.zy*${tile('rock')},rockY=vPositionW.xz*${tile('rock')},rockZ=vPositionW.xy*${tile('rock')};
         vec3 rockColor=texture2D(rockAlbedoSampler,rockX).rgb*rockWeights.x+texture2D(rockAlbedoSampler,rockY).rgb*rockWeights.y+texture2D(rockAlbedoSampler,rockZ).rgb*rockWeights.z;
         vec2 bumpX=texture2D(rockNormalSampler,rockX).rg*2.0-1.0,bumpY=texture2D(rockNormalSampler,rockY).rg*2.0-1.0,bumpZ=texture2D(rockNormalSampler,rockZ).rg*2.0-1.0;
-        normalW=normalize(normalW+(vec3(0.0,bumpX.y,bumpX.x)*rockWeights.x+vec3(bumpY.x,0.0,bumpY.y)*rockWeights.y+vec3(bumpZ.x,bumpZ.y,0.0)*rockWeights.z)*.8);
-        surfaceAlbedo*=${vec(SITE_GAIN.rock)}*siteLinear(rockColor);
+        normalW=normalize(normalW+(vec3(0.0,bumpX.y,bumpX.x)*rockWeights.x+vec3(bumpY.x,0.0,bumpY.y)*rockWeights.y+vec3(bumpZ.x,bumpZ.y,0.0)*rockWeights.z)*${this.kind==='scan'?'.25':'.8'});
+        ${this.kind==='scan'?`
+        // A placed scan carries its stones in its baked relief and grey values: the granite photo adds only its
+        // colour and fine grain, its broad mottling evened out, so the joints read.
+        rockColor=mix(texture2D(rockAlbedoSampler,rockY,8.0).rgb,rockColor,.4);
+        `:''}
+        surfaceAlbedo*=${vec(SITE_GAIN[this.kind])}*siteLinear(rockColor);
       `:`
         vec3 graniteWeights=pow(abs(normalW),vec3(4.0));
         graniteWeights/=max(dot(graniteWeights,vec3(1.0)),0.0001);

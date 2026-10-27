@@ -13,7 +13,7 @@ let destination=null;
 let lesson=-1,phase='observe',feedback='',score=0,answered=new Set(),cardOpen=true,busy=true,walkView=true,people=false,rooms=false;
 const inXr=()=>!!rig?.inXr();
 const action=(label,onClick,primary=false)=>({label,onClick:()=>{if(!busy)onClick();},primary});
-const siteCredit='Model: Ministerio de Cultura Perú, CC BY 4.0. Surfaces: Poly Haven and ambientCG photo scans (CC0), graded to photographs of the site; masonry sizes from the CAST scans; building identification © OpenStreetMap contributors. Adapted by VRtor; layout and scale approximate.';
+const siteCredit='Model: Ministerio de Cultura Perú, CC BY 4.0. Surfaces: Poly Haven and ambientCG photo scans (CC0), graded to photographs of the site; masonry sizes from the CAST scans; building identification © OpenStreetMap contributors. Torreón, Principal Temple and Water Mirrors: CAST laser scans (INC Peru, CAST University of Arkansas, Cotsen Institute UCLA), CC BY-NC 3.0. Adapted by VRtor; layout and scale approximate.';
 const controls='Left stick: walk. Right stick: forward to teleport, left or right to turn. Trigger selects. A or X opens and closes this card; B or Y joins other visitors, then turns your mic on and off.';
 const credit='Survey: INC Peru, CAST (University of Arkansas) and Cotsen Institute (UCLA). CC BY-NC 3.0; adapted by VRtor.';
 function content(){

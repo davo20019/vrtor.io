@@ -29,6 +29,7 @@ All **4,064,071 triangles** in the published OBJ meshes are retained. These arch
 - Preserved every published triangle; smooth normals and Draco compression (16-bit positions, 12-bit normals), without additional decimation.
 - Preserved and normalized the original 8-bit grayscale vertex values; repaired reversed face winding in the Condor archive.
 - The source OBJ meshes contain no photographic textures. Their grey values are multiplied by a CC0 photo scan of weathered granite, graded to the stone colour measured on photographs of the site ([Photographed surfaces](./SITE-CREDITS.md#photographed-surfaces)). Lighting, sky and local outdoor ground are illustrative.
+- For the connected walk, the Torreón, Principal Temple and Water Mirrors scans are also reduced to light meshes with their full relief and grey values baked to maps, and placed in the citadel in place of the model's versions ([how](./SITE-CREDITS.md#scanned-buildings-in-the-walk)).
 - Derived restricted teleport surfaces from supported, relatively level scan surfaces. Gaps, walls and steep surfaces remain excluded.
 - The catalog image is a rendering of this adapted noncommercial educational experience and carries the same source attribution and noncommercial restriction.
 
