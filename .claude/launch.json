@@ -42,6 +42,19 @@
       ],
       "port": 4341,
       "url": "http://localhost:4341"
+    },
+    {
+      "name": "hrt-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "apps/hrt",
+        "--port",
+        "4351",
+        "--strictPort"
+      ],
+      "port": 4351,
+      "url": "http://localhost:4351"
     }
   ]
 }

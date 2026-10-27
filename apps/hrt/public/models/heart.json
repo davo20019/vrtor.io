@@ -1,0 +1,1324 @@
+{
+ "centre_mm": [
+  -4.233425140380859,
+  -2.381509780883789,
+  8.708168029785156
+ ],
+ "parts": {
+  "lv": {
+   "name": "Left ventricle",
+   "tissue": "ventricle",
+   "group": "walls",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "rv": {
+   "name": "Right ventricle",
+   "tissue": "ventricle",
+   "group": "walls",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "la": {
+   "name": "Left atrium",
+   "tissue": "atrium",
+   "group": "walls",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ra": {
+   "name": "Right atrium",
+   "tissue": "atrium",
+   "group": "walls",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "aorta": {
+   "name": "Aortic root",
+   "tissue": "artery_wall",
+   "group": "walls",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "pa": {
+   "name": "Pulmonary trunk",
+   "tissue": "artery_wall",
+   "group": "walls",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "mv_anterior": {
+   "name": "Anterior leaflet of the mitral valve",
+   "tissue": "valve",
+   "group": "mv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_mv"
+   ]
+  },
+  "mv_posterior": {
+   "name": "Posterior leaflet of the mitral valve",
+   "tissue": "valve",
+   "group": "mv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_mv"
+   ]
+  },
+  "tv_septal": {
+   "name": "Septal leaflet of the tricuspid valve",
+   "tissue": "valve",
+   "group": "tv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_tv"
+   ]
+  },
+  "tv_anterior": {
+   "name": "Anterior leaflet of the tricuspid valve",
+   "tissue": "valve",
+   "group": "tv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_tv"
+   ]
+  },
+  "tv_posterior": {
+   "name": "Posterior leaflet of the tricuspid valve",
+   "tissue": "valve",
+   "group": "tv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_tv"
+   ]
+  },
+  "av_left_coronary": {
+   "name": "Left coronary cusp of the aortic valve",
+   "tissue": "valve",
+   "group": "av",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_av"
+   ]
+  },
+  "av_non_coronary": {
+   "name": "Non-coronary cusp of the aortic valve",
+   "tissue": "valve",
+   "group": "av",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_av"
+   ]
+  },
+  "av_right_coronary": {
+   "name": "Right coronary cusp of the aortic valve",
+   "tissue": "valve",
+   "group": "av",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_av"
+   ]
+  },
+  "pv_right": {
+   "name": "Right cusp of the pulmonary valve",
+   "tissue": "valve",
+   "group": "pv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_pv"
+   ]
+  },
+  "pv_anterior": {
+   "name": "Anterior cusp of the pulmonary valve",
+   "tissue": "valve",
+   "group": "pv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_pv"
+   ]
+  },
+  "pv_left": {
+   "name": "Left cusp of the pulmonary valve",
+   "tissue": "valve",
+   "group": "pv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_pv"
+   ]
+  },
+  "cor_FJ2631": {
+   "name": "Trunk of anterior interventricular branch of left coronary artery",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2631",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2632": {
+   "name": "First right anterior branch of anterior interventricular branch of left coronary artery, 1 of 2",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Anterior branch of anterior interventricular branch of left coronary artery",
+    "First right anterior branch of anterior interventricular branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2632",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2633": {
+   "name": "Diagonal branch of anterior descending branch of left coronary artery, 1 of 10",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Diagonal branch of anterior descending branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2633",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2634": {
+   "name": "Diagonal branch of anterior descending branch of left coronary artery, 2 of 10",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Diagonal branch of anterior descending branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2634",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2635": {
+   "name": "Diagonal branch of anterior descending branch of left coronary artery, 3 of 10",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Diagonal branch of anterior descending branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2635",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2636": {
+   "name": "Diagonal branch of anterior descending branch of left coronary artery, 4 of 10",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Diagonal branch of anterior descending branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2636",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2637": {
+   "name": "Diagonal branch of anterior descending branch of left coronary artery, 5 of 10",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Diagonal branch of anterior descending branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2637",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2638": {
+   "name": "Diagonal branch of anterior descending branch of left coronary artery, 6 of 10",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Diagonal branch of anterior descending branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2638",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2639": {
+   "name": "Diagonal branch of anterior descending branch of left coronary artery, 7 of 10",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Diagonal branch of anterior descending branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2639",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2640": {
+   "name": "Diagonal branch of anterior descending branch of left coronary artery, 8 of 10",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Diagonal branch of anterior descending branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2640",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2641": {
+   "name": "Third right anterior branch of anterior interventricular branch of left coronary artery, 1 of 2",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Anterior branch of anterior interventricular branch of left coronary artery",
+    "Third right anterior branch of anterior interventricular branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2641",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2642": {
+   "name": "Diagonal branch of anterior descending branch of left coronary artery, 9 of 10",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Diagonal branch of anterior descending branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2642",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2643": {
+   "name": "Conus branch of anterior interventricular branch of left coronary artery, 1 of 2",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Conus branch of anterior interventricular branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2643",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2644": {
+   "name": "Conus branch of anterior interventricular branch of left coronary artery, 2 of 2",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Conus branch of anterior interventricular branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2644",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2645": {
+   "name": "First right anterior branch of anterior interventricular branch of left coronary artery, 2 of 2",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Anterior branch of anterior interventricular branch of left coronary artery",
+    "First right anterior branch of anterior interventricular branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2645",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2646": {
+   "name": "Second right anterior branch of anterior interventricular branch of left coronary artery",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Anterior branch of anterior interventricular branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2646",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2647": {
+   "name": "Third right anterior branch of anterior interventricular branch of left coronary artery, 2 of 2",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Anterior branch of anterior interventricular branch of left coronary artery",
+    "Third right anterior branch of anterior interventricular branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2647",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2648": {
+   "name": "Diagonal branch of anterior descending branch of left coronary artery, 10 of 10",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Anterior interventricular branch of left coronary artery",
+    "Diagonal branch of anterior descending branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2648",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2649": {
+   "name": "Circumflex branch of left coronary artery, 1 of 6",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Circumflex branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2649",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2650": {
+   "name": "Circumflex branch of left coronary artery, 2 of 6",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Circumflex branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2650",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2651": {
+   "name": "Circumflex branch of left coronary artery, 3 of 6",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Circumflex branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2651",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2652": {
+   "name": "Circumflex branch of left coronary artery, 4 of 6",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Circumflex branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2652",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2653": {
+   "name": "Circumflex branch of left coronary artery, 5 of 6",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Circumflex branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2653",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2654": {
+   "name": "Circumflex branch of left coronary artery, 6 of 6",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery",
+    "Circumflex branch of left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2654",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2655": {
+   "name": "Coronary sinus",
+   "tissue": "vein",
+   "group": "coronary_veins",
+   "path": [
+    "Heart"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2655",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2656": {
+   "name": "Great cardiac vein",
+   "tissue": "vein",
+   "group": "coronary_veins",
+   "path": [
+    "Heart",
+    "Left side of heart"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2656",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2667": {
+   "name": "Marginal branch of right coronary artery, 1 of 5",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Marginal branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2667",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2668": {
+   "name": "Marginal branch of right coronary artery, 2 of 5",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Marginal branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2668",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2670": {
+   "name": "Right conus artery, 1 of 2",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Right conus artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2670",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2671": {
+   "name": "First anterior ventricular branch of right coronary artery, 1 of 3",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First anterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2671",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2672": {
+   "name": "Marginal branch of right coronary artery, 3 of 5",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Marginal branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2672",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2673": {
+   "name": "First anterior ventricular branch of right coronary artery, 2 of 3",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First anterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2673",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2674": {
+   "name": "Marginal branch of right coronary artery, 4 of 5",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Marginal branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2674",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2675": {
+   "name": "Marginal branch of right coronary artery, 5 of 5",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Marginal branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2675",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2676": {
+   "name": "Right conus artery, 2 of 2",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Right conus artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2676",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2677": {
+   "name": "First anterior ventricular branch of right coronary artery, 3 of 3",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First anterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2677",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2692": {
+   "name": "Posterior interventricular branch of right coronary artery, 1 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Posterior interventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2692",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2693": {
+   "name": "Posterior interventricular branch of right coronary artery, 2 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Posterior interventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2693",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2694": {
+   "name": "Posterior interventricular branch of right coronary artery, 3 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Posterior interventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2694",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2695": {
+   "name": "Posterior interventricular branch of right coronary artery, 4 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Posterior interventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2695",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2696": {
+   "name": "Posterior interventricular branch of right coronary artery, 5 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Posterior interventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2696",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2697": {
+   "name": "Posterior interventricular branch of right coronary artery, 6 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Posterior interventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2697",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2698": {
+   "name": "Posterior interventricular branch of right coronary artery, 7 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Posterior interventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2698",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2699": {
+   "name": "Posterior interventricular branch of right coronary artery, 8 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Posterior interventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2699",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2700": {
+   "name": "Posterior interventricular branch of right coronary artery, 9 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "Posterior interventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2700",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2714": {
+   "name": "First posterior ventricular branch of right coronary artery, 1 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First posterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2714",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2715": {
+   "name": "First posterior ventricular branch of right coronary artery, 2 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First posterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2715",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2716": {
+   "name": "First posterior ventricular branch of right coronary artery, 3 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First posterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2716",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2717": {
+   "name": "First posterior ventricular branch of right coronary artery, 4 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First posterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2717",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2718": {
+   "name": "First posterior ventricular branch of right coronary artery, 5 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First posterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2718",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2719": {
+   "name": "First posterior ventricular branch of right coronary artery, 6 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First posterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2719",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2720": {
+   "name": "First posterior ventricular branch of right coronary artery, 7 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First posterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2720",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2721": {
+   "name": "First posterior ventricular branch of right coronary artery, 8 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First posterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2721",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2722": {
+   "name": "First posterior ventricular branch of right coronary artery, 9 of 9",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery",
+    "First posterior ventricular branch of right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2722",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2723": {
+   "name": "Trunk of right coronary artery",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2723",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2724": {
+   "name": "Small cardiac vein, 1 of 2",
+   "tissue": "vein",
+   "group": "coronary_veins",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Small cardiac vein"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2724",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2727": {
+   "name": "Right marginal vein, 1 of 3",
+   "tissue": "vein",
+   "group": "coronary_veins",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right marginal vein"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2727",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2728": {
+   "name": "Right marginal vein, 2 of 3",
+   "tissue": "vein",
+   "group": "coronary_veins",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right marginal vein"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2728",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2729": {
+   "name": "Right marginal vein, 3 of 3",
+   "tissue": "vein",
+   "group": "coronary_veins",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Right marginal vein"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2729",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2731": {
+   "name": "Small cardiac vein, 2 of 2",
+   "tissue": "vein",
+   "group": "coronary_veins",
+   "path": [
+    "Heart",
+    "Right side of heart",
+    "Small cardiac vein"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2731",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "cor_FJ2737": {
+   "name": "Trunk of left coronary artery",
+   "tissue": "artery",
+   "group": "coronary_arteries",
+   "path": [
+    "Heart",
+    "Left side of heart",
+    "Left coronary artery"
+   ],
+   "mount": "heart",
+   "bp3d": "FJ2737",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "lv_chordae_al": {
+   "name": "Chordae tendineae of the anterolateral papillary muscle",
+   "tissue": "chordae",
+   "group": "mv_chordae",
+   "mount": "lv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_mv"
+   ]
+  },
+  "lv_chordae_pm": {
+   "name": "Chordae tendineae of the posteromedial papillary muscle",
+   "tissue": "chordae",
+   "group": "mv_chordae",
+   "mount": "lv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_mv"
+   ]
+  },
+  "lv_pm_al": {
+   "name": "Anterolateral papillary muscle",
+   "tissue": "heart",
+   "group": "lv_papillary",
+   "mount": "lv",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "lv_pm_pm": {
+   "name": "Posteromedial papillary muscle",
+   "tissue": "heart",
+   "group": "lv_papillary",
+   "mount": "lv",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "rv_chordae_ant": {
+   "name": "Chordae tendineae of the anterior papillary muscle",
+   "tissue": "chordae",
+   "group": "tv_chordae",
+   "mount": "rv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_tv"
+   ]
+  },
+  "rv_chordae_post": {
+   "name": "Chordae tendineae of the posterior papillary muscle",
+   "tissue": "chordae",
+   "group": "tv_chordae",
+   "mount": "rv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_tv"
+   ]
+  },
+  "rv_chordae_sept": {
+   "name": "Chordae tendineae of the septal papillary muscle",
+   "tissue": "chordae",
+   "group": "tv_chordae",
+   "mount": "rv",
+   "targets": [
+    "vsys",
+    "afill",
+    "open_tv"
+   ]
+  },
+  "rv_pm_ant": {
+   "name": "Anterior papillary muscle",
+   "tissue": "heart",
+   "group": "rv_papillary",
+   "mount": "rv",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "rv_pm_post": {
+   "name": "Posterior papillary muscle",
+   "tissue": "heart",
+   "group": "rv_papillary",
+   "mount": "rv",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "rv_pm_sept": {
+   "name": "Septal papillary muscle",
+   "tissue": "heart",
+   "group": "rv_papillary",
+   "mount": "rv",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  }
+ }
+}

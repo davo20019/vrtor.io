@@ -5,3 +5,4 @@ work/
 review/
 .venv/
 __pycache__/
+out/

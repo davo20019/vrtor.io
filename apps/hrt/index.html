@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XH9FQG8X8F"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XH9FQG8X8F');
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>The heart, beating · VRtor</title>
+  <meta name="description" content="A human heart that beats as a real one does: four chambers, four valves that open and shut, the papillary muscles and chordae that hold them, and the coronary arteries. Built from the average of 19 adults' CT scans. Take it apart in a VR headset's browser or any web browser." />
+  <link rel="canonical" href="https://vrtor.io/hrt/" />
+  <meta name="theme-color" content="#120d10" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:title" content="The heart, beating · VRtor" />
+  <meta property="og:description" content="A real human heart's shape, beating: watch the valves open and shut, cut it open, take its parts out. In VR, right in your browser." />
+  <meta property="og:url" content="https://vrtor.io/hrt/" />
+</head>
+<body>
+  <canvas id="scene" tabindex="0" aria-label="3D scene: a beating human heart"></canvas>
+
+  <header class="top">
+    <a class="brand" href="/">VRtor<span>Heart</span></a>
+    <div class="ecg" aria-hidden="true"><canvas width="280" height="64"></canvas><button class="ecg-phase" type="button" data-cycle></button></div>
+  </header>
+
+  <div class="loading" role="status">
+    <p>Building the heart…</p>
+    <p class="loading-pct"></p>
+    <button class="btn" type="button" data-retry hidden>Try again</button>
+  </div>
+
+  <section class="card" aria-live="polite" hidden>
+    <button class="card-close" type="button" aria-label="Close card">×</button>
+    <p class="card-kicker"></p>
+    <h1 class="card-title"></h1>
+    <p class="card-body"></p>
+    <p class="card-fact"></p>
+    <p class="card-source" hidden></p>
+    <div class="card-actions"></div>
+  </section>
+
+  <button class="vr-cta" type="button" data-enter-vr hidden>
+    <svg viewBox="0 0 32 20" width="40" height="25" aria-hidden="true"><path fill="currentColor" d="M4 0h24a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4h-6.2a3 3 0 0 1-2.6-1.6l-1.5-2.7a2 2 0 0 0-3.4 0l-1.5 2.7A3 3 0 0 1 10.2 18H4a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4Zm5 5.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm14 0a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/></svg>
+    <span class="vr-cta-text"><strong>Enter VR</strong><small>Hold a beating heart</small></span>
+  </button>
+
+  <nav class="bar" aria-label="Controls">
+    <button class="btn" type="button" data-play disabled>Pause</button>
+    <button class="btn" type="button" data-speed disabled>Slow it down</button>
+    <button class="btn" type="button" data-cut aria-pressed="false" disabled>Cut it open</button>
+    <button class="btn" type="button" data-size disabled>Life size</button>
+    <button class="btn" type="button" data-back disabled>Put everything back</button>
+    <p class="hint" hidden>Click a part to name it · drag to turn · scroll to zoom · space to pause</p>
+  </nav>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

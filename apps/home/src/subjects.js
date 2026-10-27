@@ -27,6 +27,8 @@ const BODY = { name: 'Body', code: 'bdy', service: 'BDY' };
 const AIF = { name: 'AI foundations', code: 'aif', service: 'AIF' };
 // An animal cell and a plant cell 150,000 times life size, every part to scale and able to come out (apps/cel).
 const CELL = { name: 'The cell', code: 'cel', service: 'CEL' };
+// A normal adult heart from the average of 19 adults' CT, beating, its valves opening and shutting (apps/hrt).
+const HEART = { name: 'The heart', code: 'hrt', service: 'HRT' };
 const SOUND_LAB = { name: 'Sound Lab', code: 'snd', service: 'SND' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
@@ -108,6 +110,15 @@ export const SUBJECTS = {
   'plant-cell': CELL,
   'animal-cell': CELL,
   celula: CELL,
+
+  hrt: HEART,
+  heart: HEART,
+  'the-heart': HEART,
+  'human-heart': HEART,
+  corazon: HEART,
+  coeur: HEART,
+  cuore: HEART,
+  coracao: HEART,
 
   mec: MECHANICS,
   mechanics: MECHANICS,

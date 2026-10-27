@@ -8,8 +8,8 @@
   ],
   "scripts": {
     "dev": "node scripts/dev.js",
-    "build": "npm run build -w @vrtor/spc && npm run build -w @vrtor/taj && npm run build -w @vrtor/mpc && npm run build -w @vrtor/apo && npm run build -w @vrtor/fly && npm run build -w @vrtor/orca && npm run build -w @vrtor/geo && npm run build -w @vrtor/jump && npm run build -w @vrtor/cyb && npm run build -w @vrtor/snd && npm run build -w @vrtor/rds && npm run build -w @vrtor/bdy && npm run build -w @vrtor/aif && npm run build -w @vrtor/cel",
-    "deploy": "npm run deploy -w @vrtor/spc && npm run deploy -w @vrtor/taj && npm run deploy -w @vrtor/mpc && npm run deploy -w @vrtor/apo && npm run deploy -w @vrtor/fly && npm run deploy -w @vrtor/orca && npm run deploy -w @vrtor/geo && npm run deploy -w @vrtor/jump && npm run deploy -w @vrtor/cyb && npm run deploy -w @vrtor/snd && npm run deploy -w @vrtor/rds && npm run deploy -w @vrtor/bdy && npm run deploy -w @vrtor/aif && npm run deploy -w @vrtor/cel && npm run deploy -w @vrtor/home",
+    "build": "npm run build -w @vrtor/spc && npm run build -w @vrtor/taj && npm run build -w @vrtor/mpc && npm run build -w @vrtor/apo && npm run build -w @vrtor/fly && npm run build -w @vrtor/orca && npm run build -w @vrtor/geo && npm run build -w @vrtor/jump && npm run build -w @vrtor/cyb && npm run build -w @vrtor/snd && npm run build -w @vrtor/rds && npm run build -w @vrtor/bdy && npm run build -w @vrtor/aif && npm run build -w @vrtor/cel && npm run build -w @vrtor/hrt",
+    "deploy": "npm run deploy -w @vrtor/spc && npm run deploy -w @vrtor/taj && npm run deploy -w @vrtor/mpc && npm run deploy -w @vrtor/apo && npm run deploy -w @vrtor/fly && npm run deploy -w @vrtor/orca && npm run deploy -w @vrtor/geo && npm run deploy -w @vrtor/jump && npm run deploy -w @vrtor/cyb && npm run deploy -w @vrtor/snd && npm run deploy -w @vrtor/rds && npm run deploy -w @vrtor/bdy && npm run deploy -w @vrtor/aif && npm run deploy -w @vrtor/cel && npm run deploy -w @vrtor/hrt && npm run deploy -w @vrtor/home",
     "test:snd": "npm run test -w @vrtor/snd"
   },
   "devDependencies": {
