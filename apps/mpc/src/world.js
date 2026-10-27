@@ -82,7 +82,17 @@ export async function buildWorld(engine, onProgress) {
   // The elevation backdrop supplies the local ground too, avoiding overlapping planes.
   const grain=createGraniteGrain(scene),siteSurfaces=loadSiteSurfaces(scene),occlusion=loadCitadelOcclusion(scene);
   const [terrain]=await buildTerrain(scene,grain);terrain.receiveShadows=true;
-  let current=null, active=-1, light=0;
+  let current=null, active=-1, light=0, scanViews=[];
+  // A placed scan in full within NEAR metres of you, its 12,000-triangle version beyond.
+  const NEAR=40,eye=new Vector3();
+  scene.onBeforeRenderObservable.add(()=>{
+    const camera=scene.activeCamera;if(!camera||active!==SITE)return;eye.copyFrom(camera.globalPosition);
+    for(const v of scanViews){
+      const c=v.meshes[0]?.getBoundingInfo().boundingSphere.centerWorld;if(!c)continue;
+      const near=Vector3.Distance(eye,c)<NEAR;
+      if(v.meshes[0].isEnabled()!==near){for(const m of v.meshes)m.setEnabled(near);for(const m of v.far)m.setEnabled(!near);}
+    }
+  });
   const floors=[];
   async function prepare(i, progress=onProgress) {
     if (!AREAS[i]) throw new Error('Unknown survey area.');
@@ -98,10 +108,11 @@ export async function buildWorld(engine, onProgress) {
     if(i===SITE){
       clearFootprints(meshes,scans);addWallFrames(meshes,masonry.zones);
       const placed=await loadScans(scene,scans,grain,siteSurfaces);
-      for(const {container:c,meshes:m} of placed){
+      for(const {container:c,pick} of placed){
         container.meshes.push(...c.meshes);container.materials.push(...c.materials);container.textures.push(...c.textures);container.transformNodes.push(...c.transformNodes);
-        meshes.push(...m);
+        meshes.push(...pick);
       }
+      scanViews=placed;
       meta.nav=scanCells(scene,scans,placed,meta.nav,meta.step);
     }
     // The scans' materials are set up in scans.js.
@@ -126,9 +137,12 @@ export async function buildWorld(engine, onProgress) {
     prepared.container.addAllToScene();
     for (const m of prepared.meshes) {
       // Overlapping ground faces in the architectural source must not self-shadow.
-      if(prepared.i!==SITE||/stone|scan/.test(m.material?.name??''))shadows.addShadowCaster(m,false);
+      if(prepared.i!==SITE||(!m.metadata?.scan&&m.material?.name.includes('stone')))shadows.addShadowCaster(m,false);
       m.freezeWorldMatrix();
     }
+    // The placed scans cast shadows on desktops only: on headsets and phones their 265,000 triangles would be
+    // drawn again into every shadow cascade, every frame.
+    if(prepared.i===SITE&&!compact)for(const v of scanViews)for(const m of v.meshes)shadows.addShadowCaster(m,false);
     const groups=new Map();
     for(const cell of prepared.meta.nav){
       const key=prepared.i===SITE?`${Math.floor(cell[0]/20)},${Math.floor(cell[2]/20)}`:'scan';
@@ -137,7 +151,8 @@ export async function buildWorld(engine, onProgress) {
     for(const [key,cells] of groups){
     const positions=[],indices=[],normals=[];
     for (const [x,y,z,a,b,c,d] of cells) {
-      const h=prepared.meta.step*(prepared.i===SITE?.42:.46), base=positions.length/3;
+      // The citadel's tiles meet edge to edge: headset walking (xr-shell walk.js) stops wherever there is no floor.
+      const h=prepared.meta.step*(prepared.i===SITE?.5:.46), base=positions.length/3;
       positions.push(x-h,a,z-h,x+h,b,z-h,x+h,c,z+h,x-h,d,z+h);
       normals.push(0,1,0,0,1,0,0,1,0,0,1,0);
       indices.push(base,base+2,base+1,base,base+3,base+2);

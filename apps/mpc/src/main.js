@@ -180,7 +180,9 @@ async function start(){
         const f=walker.getForwardRay().direction;f.y=0;f.normalize();
         const direction=f.scale(forward).add(V(f.z,0,-f.x).scale(side)).normalize();
         const distance=1.7*Math.min(.08,engine.getDeltaTime()/1000);
-        const p=world.walk(walker.position,direction.scale(distance));
+        const step=direction.scale(distance);
+        // Blocked straight on (a wall, a ledge): slide along it on whichever axis still goes.
+        const p=world.walk(walker.position,step)??world.walk(walker.position,V(step.x,0,0))??world.walk(walker.position,V(0,0,step.z));
         if(p)walker.position.copyFrom(p);
       }
     }

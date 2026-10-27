@@ -2,7 +2,7 @@
 Run: blender --factory-startup -b --python scripts/bake-machu-scan.py -- SOURCE.obj NAME UNIT FACES SIZE
   SOURCE.obj  CAST's published OBJ (apps/mpc/public/models/CREDITS.md); UNIT 1 (metres) or .001 (millimetres)
   FACES       triangles to keep; SIZE texture size in pixels
-Writes apps/mpc/public/models/<NAME>-walk.glb, and the maps <NAME>-walk-normal.png and -gray.png to
+Writes apps/mpc/public/models/<NAME>-walk.glb and a 12,000-triangle <NAME>-walk-far.glb, and the maps <NAME>-walk-normal.png and -gray.png to
 assets-src/machu/.cache/maps for scripts/encode-machu-ktx2.py, which ships them as KTX2.
 The full mesh's relief (block joints, arrises) is baked to a tangent-space normal map and its laser grey values to a
 greyscale map, on one atlas; the light mesh keeps the shapes. Centred as scripts/prepare-machu.py centres the
@@ -235,3 +235,21 @@ bpy.ops.export_scene.gltf(filepath=str(glb), export_format='GLB', use_selection=
                           export_draco_position_quantization=16, export_draco_normal_quantization=12,
                           export_draco_texcoord_quantization=14, export_materials='PLACEHOLDER')
 print('SCAN', name, 'full', full, 'walk', len(low.data.polygons), 'bytes', glb.stat().st_size, flush=True)
+
+# A far version for beyond about 40 m (apps/mpc/src/scans.js): the same atlas, 12,000 triangles.
+far = low.copy()
+far.data = low.data.copy()
+far.name = name + '-walk-far'
+bpy.context.collection.objects.link(far)
+mod = far.modifiers.new('decimate', 'DECIMATE')
+mod.ratio = min(1.0, 12000 / len(low.data.polygons))
+bpy.ops.object.select_all(action='DESELECT')
+far.select_set(True)
+bpy.context.view_layer.objects.active = far
+bpy.ops.object.modifier_apply(modifier='decimate')
+glb_far = root / 'models' / f'{name}-walk-far.glb'
+bpy.ops.export_scene.gltf(filepath=str(glb_far), export_format='GLB', use_selection=True, export_tangents=True,
+                          export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=7,
+                          export_draco_position_quantization=16, export_draco_normal_quantization=12,
+                          export_draco_texcoord_quantization=14, export_materials='PLACEHOLDER')
+print('FAR', name, len(far.data.polygons), 'bytes', glb_far.stat().st_size, flush=True)

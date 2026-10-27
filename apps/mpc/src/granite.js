@@ -167,7 +167,7 @@ export class GraniteMaterial extends MaterialPluginBase {
         vec2 bevel=nearest*slope*(rustic?.7:.5);
         // Every stone shows a different patch of the granite scan, and its own tone.
         vec2 stoneUV=wallAt*${tile('rock')}+masonryHash2(stoneId)*5.0;
-        float tone=mix(1.0,mix(rustic?.8:.9,rustic?1.15:1.08,masonryHash(stoneId+41.0)),smoothstep(stoneSize*.25,stoneSize*.08,pixel));
+        float tone=mix(1.0,mix(rustic?.8:.9,rustic?1.15:1.08,masonryHash(stoneId+41.0)),1.0-smoothstep(stoneSize*.08,stoneSize*.25,pixel));
         vec3 stoneColor=${vec(SITE_GAIN.wall)}*siteLinear(texture2D(rockAlbedoSampler,stoneUV).rgb)*tone;
         vec3 stoneBump=texture2D(rockNormalSampler,stoneUV).rgb*2.0-1.0;
         // Mud mortar, recessed into shadow.

@@ -63,11 +63,19 @@ export function enableWalking(scene, xr, { floorMeshes = [], inXr }) {
     const move = f.scale(-y / tilt).add(right.scale(x / tilt)).scale(speed * dt);
     const pos = camera.position;
     const here = groundAt(pos.x, pos.z, pos.y);
-    const there = groundAt(pos.x + move.x, pos.z + move.z, pos.y);
-    // Off the floor, or a step too tall: stay put.
-    if (there === null || (here !== null && Math.abs(there - here) > STEP)) return;
-    pos.x += move.x;
-    pos.z += move.z;
-    if (here !== null) pos.y += there - here;
+    const fits = (dx, dz) => {
+      const there = groundAt(pos.x + dx, pos.z + dz, pos.y);
+      return there !== null && (here === null || Math.abs(there - here) <= STEP) ? there : null;
+    };
+    // Straight on if the floor goes on; otherwise slide along the edge (a wall, a ledge) on whichever axis
+    // still has floor, instead of stopping dead. Off the floor, or a step too tall, both ways: stay put.
+    for (const [dx, dz] of [[move.x, move.z], [move.x, 0], [0, move.z]]) {
+      const there = fits(dx, dz);
+      if (there === null) continue;
+      pos.x += dx;
+      pos.z += dz;
+      if (here !== null) pos.y += there - here;
+      return;
+    }
   });
 }

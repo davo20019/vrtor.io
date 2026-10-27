@@ -23,7 +23,9 @@ export function unindex(mesh){if(mesh.getTotalIndices()!==mesh.getTotalVertices(
 // The model's own building goes from under each scan: its walls and anything raised. Its ground stays, a little
 // lower, so the scan's floor shows where both exist and the model's covers any gap in the scan.
 export function clearFootprints(meshes,scans){
-  const areas=scans.map(s=>({polygon:grow(s.footprint,.3),floor:s.floor}));
+  // Wider than the scan's outline by its trimmed floor's margin (0.5 m) and some: no model ground at the same
+  // height under the scan's floor edge, where the two would fight.
+  const areas=scans.map(s=>({polygon:grow(s.footprint,.8),floor:s.floor}));
   for(const mesh of meshes){
     unindex(mesh);
     const p=mesh.getVerticesData('position'),world=mesh.computeWorldMatrix(true),back=world.clone().invert();
@@ -62,8 +64,17 @@ export async function loadScans(scene,scans,grain,surfaces){
     new GraniteMaterial(material,grain,surfaces,null,'scan');
     container.materials.push(material);container.textures.push(material.albedoTexture,material.bumpTexture);
     const meshes=container.meshes.filter(m=>m.getTotalVertices()>0);
-    for(const m of meshes){m.material=material;m.isPickable=false;m.receiveShadows=true;}
-    out.push({scan:s,container,meshes,node});
+    for(const m of meshes){m.material=material;m.isPickable=false;m.receiveShadows=true;m.metadata={scan:'near'};}
+    // The 12,000-triangle version: drawn beyond NEAR, and (invisible) what walking tests against, so a step's
+    // rays don't each cross the full mesh.
+    const farContainer=await LoadAssetContainerAsync(`${BASE}models/${s.mesh.replace('.glb','-far.glb')}`,scene);
+    for(const root of farContainer.rootNodes)root.parent=node;
+    const far=farContainer.meshes.filter(m=>m.getTotalVertices()>0);
+    for(const m of far){m.material=material;m.isPickable=false;m.receiveShadows=true;m.metadata={scan:'far'};m.setEnabled(false);}
+    const pick=far.map(m=>{const p=m.clone(`${m.name}-walk`,m.parent);p.setEnabled(true);p.visibility=0;p.metadata={scan:'pick'};return p;});
+    for(const key of ['meshes','materials','textures','transformNodes'])container[key].push(...farContainer[key].filter(x=>!container[key].includes(x)));
+    container.meshes.push(...pick);
+    out.push({scan:s,container,meshes,far,pick,node});
   }
   return out;
 }
@@ -71,7 +82,7 @@ export async function loadScans(scene,scans,grain,surfaces){
 // Teleport cells on the scans' floors, on the model's grid (walk.js keys cells by it), replacing the model's
 // cells inside each footprint.
 export function scanCells(scene,scans,loaded,nav,step){
-  const origin=nav[0],kept=nav.filter(c=>!scans.some(s=>inside(grow(s.footprint,.3),c[0],c[2])));
+  const origin=nav[0],kept=nav.filter(c=>!scans.some(s=>inside(grow(s.footprint,.8),c[0],c[2])));
   const meshes=loaded.flatMap(l=>l.meshes);
   for(const m of meshes)m.computeWorldMatrix(true);
   const h=step*.42,down=new Vector3(0,-1,0);
