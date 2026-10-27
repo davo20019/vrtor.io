@@ -27,7 +27,7 @@ import {
   TransformNode,
   Vector3,
 } from '@babylonjs/core';
-import { continueInVr, createCard, createMenuControls, createPresence, createXr, headsetNote, mountPresenceControls, orbitPose, presenceCard, roomsCard, startHeadsetLog, xrPose, xrSupported } from '@vrtor/xr-shell';
+import { continueInVr, createCard, createMenuControls, createPresence, createXr, headsetLogging, headsetNote, mountPresenceControls, orbitPose, presenceCard, roomsCard, startHeadsetLog, xrPose, xrSupported } from '@vrtor/xr-shell';
 import { loadBody } from './body.js';
 import { canSpeak, loadLearning, speak } from './learn.js';
 import { QUIZ, TOURS } from './tours.js';
@@ -133,7 +133,8 @@ let body = null;
 let learn = null;
 let rig = null;
 let presence = null;
-const card = createCard(scene, { name: 'body-card', width: 0.8, height: 0.6 });
+// As short as a page allows: the card grows to fit what it says.
+const card = createCard(scene, { name: 'body-card', width: 0.8, height: 0.4 });
 let cardOpen = true;
 /** The node the card is about (null: the welcome). */
 let picked = null;
@@ -327,6 +328,16 @@ function openLearn() {
 }
 
 function learnPage() {
+  // The headset: the tours as a grid of big buttons, each with its one-line blurb left to the flat card.
+  if (inXr()) {
+    return {
+      kicker: 'Learn',
+      title: 'Tours and quiz',
+      body: 'A tour shows and explains a few parts, one stop at a time. The quiz asks you to find parts and to name them.',
+      choices: TOURS.map((t) => act(t.title, () => startTour(t))),
+      actions: [act('Back', () => { page = 'part'; render(); }), act(`Quiz: ${QUESTIONS} questions`, startQuiz, true)],
+    };
+  }
   return {
     kicker: 'Learn',
     title: 'Tours and quiz',
@@ -396,7 +407,7 @@ function tourPage() {
     kicker: `Tour · ${t.title} · ${i + 1} of ${stops.length}`,
     title: s.title,
     names: info.latin ? `${name(pid)} · Latin: ${info.latin}` : name(pid),
-    body: s.text,
+    body: inXr() ? `${info.latin ? `${name(pid)} · Latin: ${info.latin}` : name(pid)}\n${s.text}` : s.text,
     fact: inXr() ? 'Squeeze the grip on a part to take it in your hand.' : 'Drag the lit part to pull it out; drag elsewhere to turn the view.',
     actions: [
       ...(i > 0 ? [act('Back', () => { tour.i--; showStop(); })] : []),
@@ -524,7 +535,9 @@ function quizPage() {
       kicker,
       title: 'What is this?',
       body: q.kind === 'bone' ? 'The lit part is a bone. Which one?' : `This is ${article(q.kind)} ${q.kind}, shown on its own. Which one? Turn it around to see its shape.`,
-      actions: [...q.choices.map((c) => act(c[0].toUpperCase() + c.slice(1), () => answerName(c))), act('End quiz', endQuiz)],
+      ...(inXr()
+        ? { choices: q.choices.map((c) => act(c[0].toUpperCase() + c.slice(1), () => answerName(c))), actions: [act('End quiz', endQuiz)] }
+        : { actions: [...q.choices.map((c) => act(c[0].toUpperCase() + c.slice(1), () => answerName(c))), act('End quiz', endQuiz)] }),
     };
   }
   return {
@@ -548,7 +561,7 @@ function endQuiz() {
 
 // ---------------------------------------------------------------- the card
 
-const XR_HOWTO = 'Put your hand on a part and squeeze the grip to take it. While holding, pull the trigger to take the whole of what it belongs to. Let go anywhere and it stays; let go where it belongs and it goes back in. Left stick walks, right stick teleports and turns. A or X opens this card.';
+const XR_HOWTO = 'Put your hand on a part and squeeze the grip to take it. While holding, pull the trigger to take the whole of what it belongs to. Let go anywhere and it stays; let go where it belongs and it goes back in. Left stick walks, right stick teleports and turns. Point at this card and squeeze the grip to move it; A or X brings it back in front of you.';
 const FLAT_HOWTO = 'Tap or click a part to choose it; it lights up. Drag the chosen part to pull it out. Drag anywhere else to turn the body; pinch or scroll to zoom. To go up to the head or down to the feet: the slider on the right, two fingers on a phone, or right-drag with a mouse.';
 
 const act = (label, onClick, primary = false) => ({ label, onClick, primary });
@@ -560,6 +573,16 @@ function content() {
   if (page === 'tour' && tour) return tourPage();
   if (page === 'quiz' && quiz) return quizPage();
   if (page === 'systems') {
+    // The headset: a grid of big switches, one per system, lit when it's showing.
+    if (inXr()) {
+      return {
+        kicker: 'Body systems',
+        title: 'What to show',
+        body: 'Each system goes on or off on its own. The layers under the card peel the body from the outside in.',
+        choices: body.systems.map((s) => act(`${body.systemOn(s.id) ? '●' : '○'}  ${s.name}`, () => toggleSystem(s.id), body.systemOn(s.id))),
+        actions: [act('Done', () => { page = 'part'; render(); }, true)],
+      };
+    }
     return {
       kicker: 'Body systems',
       title: 'What to show',
@@ -579,7 +602,8 @@ function content() {
       fact: inXr() ? XR_HOWTO : FLAT_HOWTO,
       actions: rig && !inXr()
         ? [act('Explore', close), act('Tours and quiz', openLearn), act('Enter VR', enterVr, true)]
-        : [act(inXr() ? 'Close' : 'Explore', close, true), act('Tours and quiz', openLearn), ...peopleAction()],
+        : inXr() ? [act('Tours and quiz', openLearn, true), ...peopleAction()]
+        : [act('Explore', close, true), act('Tours and quiz', openLearn), ...peopleAction()],
     };
   }
   const id = picked;
@@ -596,8 +620,7 @@ function content() {
   const alone = body.isolated() === id;
   actions.push(act(alone ? 'Show everything' : 'Show only this', () => showOnly(alone ? null : id)));
   if (canSpeak()) actions.push(act('Hear it', () => speak(n.name.replace(/, (\d+ of \d+|main part)$/, ''))));
-  if (inXr()) actions.push(act('Close', close));
-  else actions.push(act('Hide', () => hidePart(id)));
+  if (!inXr()) actions.push(act('Hide', () => hidePart(id)));
   // Looked at a part mid-tour or mid-quiz: the way back first.
   if (tour) actions.unshift(act('Back to tour', () => { page = 'tour'; render(); }));
   else if (quiz) actions.unshift(act('Back to quiz', () => { page = 'quiz'; render(); }));
@@ -609,8 +632,9 @@ function content() {
     : info.from ? `Part of the ${info.from.toLowerCase()}. ${info.text}`
     : info.article ? `From the article on the ${info.article.toLowerCase()}: ${info.text}`
     : info.text;
+  const whole = up !== null && up !== 0 ? (up === sys?.node ? `all the ${sys.name.toLowerCase()}` : `the whole ${name(up).toLowerCase()}`) : null;
   const howto = inXr()
-    ? 'Squeeze the grip on it to take it in your hand; pull the trigger while holding to take the whole of what it belongs to.'
+    ? `Squeeze the grip on it to take it in your hand${whole ? `; pull the trigger while holding to take ${whole}` : ''}.`
     : 'Drag it to pull it out; drag anywhere else to turn the view.';
   return {
     kicker: sys ? `${sys.name}${n.el ? '' : ` · ${count} parts`}` : 'Human body',
@@ -620,7 +644,7 @@ function content() {
     body: inXr() ? [names, about || where].filter(Boolean).join('\n') : about || [where, n.el ? '' : `${count} parts move together when you take it out.`].filter(Boolean).join(' '),
     trail: body.path(id).slice(1, -1),
     source: info.source,
-    fact: note || (inXr() && info.source ? `${howto} Text: Wikipedia, CC BY-SA.` : howto),
+    fact: note || (inXr() && info.source ? `${howto}\nText: Wikipedia, CC BY-SA 4.0.` : howto),
     actions,
   };
 }
@@ -632,8 +656,8 @@ function tools() {
     ...Object.entries(LAYERS).map(([id, l]) => act(l.label, () => setLayer(id), layer === id)),
     act('Systems', () => { page = 'systems'; cardOpen = true; render(); }),
     act('Learn', openLearn),
-    act('Put everything back', putAllBack),
-    act('Change room', () => { page = 'rooms'; cardOpen = true; render(); }),
+    act('Put all back', putAllBack),
+    act('Rooms', () => { page = 'rooms'; cardOpen = true; render(); }),
   ];
 }
 
@@ -657,7 +681,7 @@ function render() {
   if (inXr()) {
     ui.card.hidden = true;
     if (!cardOpen) return card.hide();
-    card.setContent({ ...data, tools: tools() });
+    card.setContent({ onClose: close, ...data, tools: tools() });
     const head = rig.headPosition();
     let forward = rig.headForward();
     const target = picked !== null ? body.centreOf(picked) : null;
@@ -864,6 +888,8 @@ const buzz = (mc, v, ms) => { try { mc?.pulse(v, ms); } catch {} };
 
 function setUpHands() {
   const grab = (source, mc) => {
+    // A grip with the ray on the card moves the card (xr-shell menu.js), not a part.
+    if (card.isCard(rig.xr.pointerSelection?.getMeshUnderPointer(source.uniqueId))) return;
     if (holds.has(source.uniqueId)) return;
     const hand = handMatrix(source);
     const at = hand.getTranslation();
@@ -938,8 +964,45 @@ function setUpHands() {
 
 // ---------------------------------------------------------------- start
 
+// Dev only (the headset log): where each frame's time goes, averaged over the log's 2 s between posts.
+const costs = { frames: 0, render: 0, xr: 0, picks: 0, pick: 0, worst: 0, last: 0 };
+function measureFrames() {
+  const render = scene.render.bind(scene);
+  scene.render = (...a) => {
+    const t = performance.now();
+    render(...a);
+    costs.render += performance.now() - t;
+    costs.frames++;
+    if (costs.last) costs.worst = Math.max(costs.worst, t - costs.last);
+    costs.last = t;
+  };
+  const pickWithRay = scene.pickWithRay;
+  scene.pickWithRay = (...a) => {
+    const t = performance.now();
+    const hit = pickWithRay(...a);
+    costs.pick += performance.now() - t;
+    costs.picks++;
+    return hit;
+  };
+  // The headset's frame work before the render: controllers, their rays, near interaction, walking.
+  const frames = rig?.xr.baseExperience.sessionManager.onXRFrameObservable;
+  if (!frames) return;
+  let t0 = 0;
+  frames.add(() => (t0 = performance.now()), undefined, true);
+  scene.onBeforeRenderObservable.add(() => {
+    if (t0) costs.xr += performance.now() - t0;
+    t0 = 0;
+  }, undefined, true);
+}
+function frameCosts() {
+  const n = costs.frames || 1;
+  const out = { renderMs: +(costs.render / n).toFixed(1), xrMs: +(costs.xr / n).toFixed(1), picks: +(costs.picks / n).toFixed(1), pickMs: +(costs.pick / n).toFixed(1), worstMs: Math.round(costs.worst) };
+  Object.assign(costs, { frames: 0, render: 0, xr: 0, picks: 0, pick: 0, worst: 0 });
+  return out;
+}
+
 async function start() {
-  startHeadsetLog(() => ({ fps: Math.round(engine.getFps()), xr: inXr(), loaded: !!body, meshes: scene.meshes.length }));
+  startHeadsetLog(() => ({ fps: Math.round(engine.getFps()), xr: inXr(), loaded: !!body, meshes: scene.meshes.length, ...frameCosts() }));
   const t0 = performance.now();
   const stage = (name) => headsetNote(name, { ms: Math.round(performance.now() - t0) });
   body = await loadBody(scene, stand, {
@@ -985,6 +1048,7 @@ async function start() {
     console.warn('[bdy] VR unavailable', err);
   }
   stage('xr');
+  if (headsetLogging) measureFrames();
   if (rig) {
     rig.camera.minZ = 0.01;
     rig.camera.maxZ = 60;
@@ -1106,7 +1170,11 @@ addEventListener('keydown', (e) => {
   }
 });
 
-engine.runRenderLoop(() => scene.render());
+// Nothing is drawn until the body is put together: drawing the parts as they arrived, thousands of them
+// unbatched, took the frame time the loading needed (22 fps and a minute and a half on a Quest).
+engine.runRenderLoop(() => {
+  if (body) scene.render();
+});
 addEventListener('resize', () => engine.resize());
 
 start().catch((err) => {

@@ -6,8 +6,9 @@
 // A node that has been moved remembers where it belongs: let go of it close to there and it goes back in.
 // Meshes and nodes that aren't moving have their world matrices frozen (3,273 meshes would otherwise be
 // recomputed every frame); taking hold of a node thaws it and everything under it until it settles.
-import { DracoDecoder, LoadAssetContainerAsync, Matrix, Quaternion, TransformNode, Vector3 } from '@babylonjs/core';
+import { DracoDecoder, LoadAssetContainerAsync, Matrix, Quaternion, Ray, TransformNode, Vector3 } from '@babylonjs/core';
 import '@babylonjs/loaders/glTF';
+import { createBatches } from './batch.js';
 import { createTissues } from './tissues.js';
 
 const BASE = import.meta.env.BASE_URL;
@@ -24,6 +25,24 @@ const HOME_DEG = 25;
 const GLIDE_S = 0.6;
 
 const smooth = (t) => t * t * (3 - 2 * t);
+
+/** How far along `ray` it enters the box lo..hi (0 if it starts inside), or null if it misses within its length. */
+function boxEntry(ray, lo, hi) {
+  let near = 0, far = ray.length;
+  for (const k of ['x', 'y', 'z']) {
+    const o = ray.origin[k], dir = ray.direction[k];
+    if (Math.abs(dir) < 1e-12) {
+      if (o < lo[k] || o > hi[k]) return null;
+      continue;
+    }
+    let t1 = (lo[k] - o) / dir, t2 = (hi[k] - o) / dir;
+    if (t1 > t2) [t1, t2] = [t2, t1];
+    if (t1 > near) near = t1;
+    if (t2 < far) far = t2;
+    if (near > far) return null;
+  }
+  return near;
+}
 
 /**
  * Loads the body under `parent`. Returns the body's API (see the end). `onProgress(0..1)`; `lite` for the headset's
@@ -134,6 +153,7 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
       const o = objOf(i);
       if (o.unfreezeWorldMatrix) o.unfreezeWorldMatrix();
     }
+    batching.sync();
   }
   function settle(id) {
     const c = (thawed.get(id) ?? 1) - 1;
@@ -145,6 +165,7 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
       o.computeWorldMatrix(true);
       if (!heldAbove(i)) o.freezeWorldMatrix?.();
     }
+    batching.sync();
   }
   const heldAbove = (id) => {
     for (let i = parentOf(id); i !== null; i = parentOf(i)) if (thawed.has(i)) return true;
@@ -164,6 +185,8 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
   frame.computeWorldMatrix(true);
   freezeAll();
   onStage('frozen', 1, { ms: ms() });
+  const batching = createBatches(scene, frame, meshOf.filter(Boolean));
+  onStage('batched', 1, { ms: ms() });
 
   // ---- moving a node about with a hand (or a mouse): it keeps the offset it had from the hand when taken
   const tmp = { m: new Matrix(), inv: new Matrix(), s: new Vector3(), q: new Quaternion(), p: new Vector3() };
@@ -297,6 +320,41 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
     return best ? nodeOfMesh.get(best) : null;
   }
 
+  // ---- picking along a ray (the headset's controllers do it every frame, each): Babylon tests the triangles of
+  // every part whose box the ray crosses, which through a whole body is hundreds of thousands of triangles, about
+  // 25 ms a ray on a Quest. Parts are tried nearest box first instead, and the search stops once the next box
+  // starts beyond the nearest hit: usually one or two parts.
+  const pickAll = scene.pickWithRay.bind(scene);
+  const candidates = [];
+  const pickTmp = { inv: new Matrix(), ray: new Ray(Vector3.Zero(), Vector3.Forward()) };
+  scene.pickWithRay = (ray, predicate, fastCheck, trianglePredicate) => {
+    const eligible = (m) => (predicate ? predicate(m, -1) : m.isEnabled() && m.isVisible && m.isPickable);
+    let best = pickAll(ray, (m, i) => !nodeOfMesh.has(m) && (predicate ? predicate(m, i) : m.isEnabled() && m.isVisible && m.isPickable), fastCheck, trianglePredicate);
+    if (fastCheck && best?.hit) return best;
+    candidates.length = 0;
+    for (const m of meshOf) {
+      if (!m || !eligible(m)) continue;
+      const b = m.getBoundingInfo().boundingBox;
+      const d = boxEntry(ray, b.minimumWorld, b.maximumWorld);
+      if (d !== null) candidates.push({ d, m });
+    }
+    candidates.sort((a, b) => a.d - b.d);
+    for (const { d, m } of candidates) {
+      if (best?.hit && d > best.distance) break;
+      // As Babylon's own pick does it, one mesh: the ray in the mesh's space, the hit back in the world's.
+      const world = m.getWorldMatrix();
+      world.invertToRef(pickTmp.inv);
+      Ray.TransformToRef(ray, pickTmp.inv, pickTmp.ray);
+      const hit = m.intersects(pickTmp.ray, fastCheck, trianglePredicate, false, world);
+      if (hit?.hit && (!best?.hit || hit.distance < best.distance)) {
+        hit.ray = ray;
+        best = hit;
+        if (fastCheck) break;
+      }
+    }
+    return best;
+  };
+
   // ---- showing and hiding: by system, or by node
   const hidden = new Set();     // node ids hidden by the visitor
   const systemOn = Object.fromEntries(systems.map((s) => [s.id, true]));
@@ -318,6 +376,7 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
       }
       m.setEnabled(on);
     }
+    batching.sync();
   }
   function isolate(id) {
     only = id;
@@ -357,6 +416,7 @@ export async function loadBody(scene, parent, { version = '1', lite = false, onP
         m.overlayAlpha = 0.28;
       }
     }
+    batching.sync();
   }
 
   return {

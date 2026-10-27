@@ -394,6 +394,8 @@ function setUpGrab(rig) {
         if (!c.changes.pressed) return;
         if (!c.pressed) return letGo(source);
         if (!takingApart || ride.world !== 'showroom' || !parts || heldBy.has(source.uniqueId)) return;
+        // A grip with the ray on the card moves the card (xr-shell menu.js), not a part.
+        if (card.isCard(rig.xr.pointerSelection?.getMeshUnderPointer(source.uniqueId))) return;
         const hand = pose(source);
         const mesh = parts.nearest(hand.position, HAND_REACH) ?? rig.xr.pointerSelection?.getMeshUnderPointer(source.uniqueId);
         const r = mesh && parts.grab(mesh, hand);

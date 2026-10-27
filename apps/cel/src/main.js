@@ -1034,6 +1034,8 @@ const buzz = (mc, v, ms) => { try { mc?.pulse(v, ms); } catch {} };
 
 function setUpHands() {
   const grab = (source, mc) => {
+    // A grip with the ray on the card moves the card (xr-shell menu.js), not a part.
+    if (card.isCard(rig.xr.pointerSelection?.getMeshUnderPointer(source.uniqueId))) return;
     if (holds.has(source.uniqueId)) return;
     const hand = handMatrix(source);
     const id = parts.partAt(hand.getTranslation(), HAND_REACH);
