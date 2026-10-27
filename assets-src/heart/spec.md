@@ -43,15 +43,24 @@ onto the CT) -> walls.py (triangle budget, coordinates kept) -> valves.py (valve
 - The beat is two displacement fields over the CT points (ventricular systole, atrial filling), calibrated on
   chamber volumes with muscle volume kept; every other part takes its motion from the wall it is mounted on.
 
+## Built since
+
+- Great vessels (vessels.py): BodyParts3D's vessels as voxel skeletons (centreline and radius), splined, joined
+  to the CT stubs on square cuts 22 mm above the valve rings; radii scaled to the CT stub where they meet (one
+  adult to another: clamped to 0.8-2.2x), branches no wider than 0.9x their parent.
+- Look (surface.py, apps/hrt/src/tissue.js): colours of fresh tissue per vertex; epicardial fat as geometry
+  (up to 1.3 mm) along the main coronary vessels; creases darker; a clear coat, fine relief on rest positions.
+- Inside the walls (endo.py): trabeculae as columns with cross links, moderator band 20.3 mm (published
+  16.2 +- 2.3, 11.3-24.3), crista terminalis 6.2-4.2 mm, pectinate muscles, fossa ovalis rim.
+- Electricity (conduction.py): eikonal activation; atrial muscle 0.88 m/s for a 105 ms P wave, ventricular
+  0.39 m/s for a 95 ms QRS (both within textbook ranges); last activated: the LV's anterior base (Durrer:
+  posterior base). Contraction follows it: vsys and afill in four bands by activation time (cycle_bands.py).
+- Checks: check_inside.py (nothing inside the heart comes out through its walls), motion volumes.
+
 ## Known differences and open work
 
 - The pulmonary ring is oval (36 x 22 mm) in the averaged CT; a real one is round. Built as measured.
-- The CT's great vessels stop just past the valves: extend them along BodyParts3D's paths (arch, pulmonary
-  bifurcation, venae cavae, pulmonary veins).
-- RV motion: its outflow tract barely contracts (the fade at the pulmonary trunk holds it), so the RV reaches
-  67 mL, not the 62.9 mL a 58% ejection fraction needs; it needs its own late, peristaltic contraction. A
-  fringe remains along the LV/RV seam at end-systole.
-- Still to build: papillary muscles, chordae, coronary vessels laid on the surface, inner-wall detail
-  (trabeculae, pectinate muscles, moderator band, crista terminalis, fossa ovalis, Eustachian and Thebesian
-  valves), conduction system and activation times, timing curves, Blender assembly to GLB with morph
-  targets, the /hrt app.
+- Trabecular and pectinate sizes, the fossa's size and vessel wall thicknesses are guesses (not found).
+- The LV's last activated region comes out anterobasal; Durrer reports posterobasal.
+- A faint seam where the aortic tube meets the trimmed CT root.
+- Not yet tested on a headset (budget: 300k triangles, 4.4 MB GLB).

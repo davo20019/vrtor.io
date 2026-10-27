@@ -10,8 +10,14 @@
    "tissue": "ventricle",
    "group": "walls",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "rv": {
@@ -19,8 +25,14 @@
    "tissue": "ventricle",
    "group": "walls",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "la": {
@@ -28,8 +40,14 @@
    "tissue": "atrium",
    "group": "walls",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ra": {
@@ -37,8 +55,14 @@
    "tissue": "atrium",
    "group": "walls",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "aorta": {
@@ -46,8 +70,14 @@
    "tissue": "artery_wall",
    "group": "walls",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "pa": {
@@ -55,8 +85,11 @@
    "tissue": "artery_wall",
    "group": "walls",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "mv_anterior": {
@@ -169,6 +202,103 @@
     "open_pv"
    ]
   },
+  "cond_av_node": {
+   "name": "Atrioventricular node",
+   "tissue": "conduction",
+   "group": "conduction",
+   "mount": "heart",
+   "targets": [
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
+   ]
+  },
+  "cond_bachmann": {
+   "name": "Bachmann's bundle",
+   "tissue": "conduction",
+   "group": "conduction",
+   "mount": "heart",
+   "targets": [
+    "vsys",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
+   ]
+  },
+  "cond_his": {
+   "name": "Bundle of His",
+   "tissue": "conduction",
+   "group": "conduction",
+   "mount": "heart",
+   "targets": [
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
+   ]
+  },
+  "cond_left_bundle": {
+   "name": "Left bundle branch (anterior, septal and posterior fascicles)",
+   "tissue": "conduction",
+   "group": "conduction",
+   "mount": "heart",
+   "targets": [
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
+   ]
+  },
+  "cond_purkinje": {
+   "name": "Purkinje fibres",
+   "tissue": "conduction",
+   "group": "conduction",
+   "mount": "heart",
+   "targets": [
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
+   ]
+  },
+  "cond_right_bundle": {
+   "name": "Right bundle branch",
+   "tissue": "conduction",
+   "group": "conduction",
+   "mount": "heart",
+   "targets": [
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
+   ]
+  },
+  "cond_sa_node": {
+   "name": "Sinoatrial node",
+   "tissue": "conduction",
+   "group": "conduction",
+   "mount": "heart",
+   "targets": [
+    "vsys",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
+   ]
+  },
   "cor_FJ2631": {
    "name": "Trunk of anterior interventricular branch of left coronary artery",
    "tissue": "artery",
@@ -182,8 +312,14 @@
    "mount": "heart",
    "bp3d": "FJ2631",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "cor_FJ2632": {
@@ -201,8 +337,11 @@
    "mount": "heart",
    "bp3d": "FJ2632",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2633": {
@@ -219,8 +358,11 @@
    "mount": "heart",
    "bp3d": "FJ2633",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2634": {
@@ -237,8 +379,11 @@
    "mount": "heart",
    "bp3d": "FJ2634",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2635": {
@@ -255,8 +400,11 @@
    "mount": "heart",
    "bp3d": "FJ2635",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2636": {
@@ -273,8 +421,11 @@
    "mount": "heart",
    "bp3d": "FJ2636",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2637": {
@@ -291,8 +442,11 @@
    "mount": "heart",
    "bp3d": "FJ2637",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2638": {
@@ -309,8 +463,11 @@
    "mount": "heart",
    "bp3d": "FJ2638",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2639": {
@@ -327,8 +484,11 @@
    "mount": "heart",
    "bp3d": "FJ2639",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2640": {
@@ -345,8 +505,11 @@
    "mount": "heart",
    "bp3d": "FJ2640",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2641": {
@@ -364,8 +527,11 @@
    "mount": "heart",
    "bp3d": "FJ2641",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2642": {
@@ -382,8 +548,11 @@
    "mount": "heart",
    "bp3d": "FJ2642",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2643": {
@@ -400,8 +569,11 @@
    "mount": "heart",
    "bp3d": "FJ2643",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2644": {
@@ -418,8 +590,11 @@
    "mount": "heart",
    "bp3d": "FJ2644",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2645": {
@@ -437,8 +612,11 @@
    "mount": "heart",
    "bp3d": "FJ2645",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2646": {
@@ -455,8 +633,11 @@
    "mount": "heart",
    "bp3d": "FJ2646",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2647": {
@@ -474,8 +655,11 @@
    "mount": "heart",
    "bp3d": "FJ2647",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2648": {
@@ -492,8 +676,11 @@
    "mount": "heart",
    "bp3d": "FJ2648",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2649": {
@@ -509,8 +696,14 @@
    "mount": "heart",
    "bp3d": "FJ2649",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "cor_FJ2650": {
@@ -526,8 +719,11 @@
    "mount": "heart",
    "bp3d": "FJ2650",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2651": {
@@ -543,8 +739,11 @@
    "mount": "heart",
    "bp3d": "FJ2651",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2652": {
@@ -560,8 +759,11 @@
    "mount": "heart",
    "bp3d": "FJ2652",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2653": {
@@ -577,8 +779,11 @@
    "mount": "heart",
    "bp3d": "FJ2653",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2654": {
@@ -594,8 +799,11 @@
    "mount": "heart",
    "bp3d": "FJ2654",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2655": {
@@ -608,8 +816,14 @@
    "mount": "heart",
    "bp3d": "FJ2655",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "cor_FJ2656": {
@@ -623,8 +837,14 @@
    "mount": "heart",
    "bp3d": "FJ2656",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "cor_FJ2667": {
@@ -640,8 +860,11 @@
    "mount": "heart",
    "bp3d": "FJ2667",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2668": {
@@ -657,8 +880,11 @@
    "mount": "heart",
    "bp3d": "FJ2668",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2670": {
@@ -674,8 +900,11 @@
    "mount": "heart",
    "bp3d": "FJ2670",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2671": {
@@ -691,8 +920,11 @@
    "mount": "heart",
    "bp3d": "FJ2671",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2672": {
@@ -708,8 +940,11 @@
    "mount": "heart",
    "bp3d": "FJ2672",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2673": {
@@ -725,8 +960,11 @@
    "mount": "heart",
    "bp3d": "FJ2673",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2674": {
@@ -742,8 +980,11 @@
    "mount": "heart",
    "bp3d": "FJ2674",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2675": {
@@ -759,8 +1000,11 @@
    "mount": "heart",
    "bp3d": "FJ2675",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2676": {
@@ -776,8 +1020,11 @@
    "mount": "heart",
    "bp3d": "FJ2676",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2677": {
@@ -793,8 +1040,11 @@
    "mount": "heart",
    "bp3d": "FJ2677",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2692": {
@@ -810,8 +1060,11 @@
    "mount": "heart",
    "bp3d": "FJ2692",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2693": {
@@ -827,8 +1080,11 @@
    "mount": "heart",
    "bp3d": "FJ2693",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2694": {
@@ -844,8 +1100,11 @@
    "mount": "heart",
    "bp3d": "FJ2694",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2695": {
@@ -861,8 +1120,11 @@
    "mount": "heart",
    "bp3d": "FJ2695",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2696": {
@@ -878,8 +1140,11 @@
    "mount": "heart",
    "bp3d": "FJ2696",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2697": {
@@ -895,8 +1160,11 @@
    "mount": "heart",
    "bp3d": "FJ2697",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2698": {
@@ -912,8 +1180,11 @@
    "mount": "heart",
    "bp3d": "FJ2698",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2699": {
@@ -929,8 +1200,11 @@
    "mount": "heart",
    "bp3d": "FJ2699",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2700": {
@@ -946,8 +1220,11 @@
    "mount": "heart",
    "bp3d": "FJ2700",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2714": {
@@ -963,8 +1240,11 @@
    "mount": "heart",
    "bp3d": "FJ2714",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2715": {
@@ -980,8 +1260,11 @@
    "mount": "heart",
    "bp3d": "FJ2715",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2716": {
@@ -997,8 +1280,11 @@
    "mount": "heart",
    "bp3d": "FJ2716",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2717": {
@@ -1014,8 +1300,11 @@
    "mount": "heart",
    "bp3d": "FJ2717",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2718": {
@@ -1031,8 +1320,11 @@
    "mount": "heart",
    "bp3d": "FJ2718",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2719": {
@@ -1048,8 +1340,11 @@
    "mount": "heart",
    "bp3d": "FJ2719",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2720": {
@@ -1065,8 +1360,11 @@
    "mount": "heart",
    "bp3d": "FJ2720",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2721": {
@@ -1082,8 +1380,11 @@
    "mount": "heart",
    "bp3d": "FJ2721",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2722": {
@@ -1099,8 +1400,11 @@
    "mount": "heart",
    "bp3d": "FJ2722",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2723": {
@@ -1115,8 +1419,14 @@
    "mount": "heart",
    "bp3d": "FJ2723",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "cor_FJ2724": {
@@ -1131,8 +1441,11 @@
    "mount": "heart",
    "bp3d": "FJ2724",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2727": {
@@ -1147,8 +1460,11 @@
    "mount": "heart",
    "bp3d": "FJ2727",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2728": {
@@ -1163,8 +1479,11 @@
    "mount": "heart",
    "bp3d": "FJ2728",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2729": {
@@ -1179,8 +1498,11 @@
    "mount": "heart",
    "bp3d": "FJ2729",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2731": {
@@ -1195,8 +1517,11 @@
    "mount": "heart",
    "bp3d": "FJ2731",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cor_FJ2737": {
@@ -1211,8 +1536,105 @@
    "mount": "heart",
    "bp3d": "FJ2737",
    "targets": [
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
+   ]
+  },
+  "endo_crista_terminalis": {
+   "name": "Crista terminalis",
+   "tissue": "heart",
+   "group": "crista_terminalis",
+   "mount": "ra",
+   "targets": [
     "vsys",
-    "afill"
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
+   ]
+  },
+  "endo_fossa_ovalis": {
+   "name": "Limbus of the fossa ovalis",
+   "tissue": "heart",
+   "group": "fossa_ovalis",
+   "mount": "ra",
+   "targets": [
+    "vsys",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
+   ]
+  },
+  "endo_laa_pectinate": {
+   "name": "Pectinate muscles of the left atrial appendage",
+   "tissue": "heart",
+   "group": "pectinate_muscles",
+   "mount": "la",
+   "targets": [
+    "vsys",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
+   ]
+  },
+  "endo_lv_trabeculae": {
+   "name": "Trabeculae carneae of the left ventricle",
+   "tissue": "heart",
+   "group": "lv_trabeculae",
+   "mount": "lv",
+   "targets": [
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
+   ]
+  },
+  "endo_moderator_band": {
+   "name": "Moderator band (septomarginal trabecula)",
+   "tissue": "heart",
+   "group": "moderator_band",
+   "mount": "rv",
+   "targets": [
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
+   ]
+  },
+  "endo_ra_pectinate": {
+   "name": "Pectinate muscles of the right atrium",
+   "tissue": "heart",
+   "group": "pectinate_muscles",
+   "mount": "ra",
+   "targets": [
+    "vsys",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
+   ]
+  },
+  "endo_rv_trabeculae": {
+   "name": "Trabeculae carneae of the right ventricle",
+   "tissue": "heart",
+   "group": "rv_trabeculae",
+   "mount": "rv",
+   "targets": [
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "lv_chordae_al": {
@@ -1243,8 +1665,11 @@
    "group": "lv_papillary",
    "mount": "lv",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "lv_pm_pm": {
@@ -1253,8 +1678,11 @@
    "group": "lv_papillary",
    "mount": "lv",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "rv_chordae_ant": {
@@ -1296,8 +1724,11 @@
    "group": "rv_papillary",
    "mount": "rv",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "rv_pm_post": {
@@ -1306,8 +1737,11 @@
    "group": "rv_papillary",
    "mount": "rv",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "rv_pm_sept": {
@@ -1316,8 +1750,11 @@
    "group": "rv_papillary",
    "mount": "rv",
    "targets": [
-    "vsys",
-    "afill"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "ves_aorta": {
@@ -1326,8 +1763,14 @@
    "group": "great_arteries",
    "mount": "body",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_brachiocephalic": {
@@ -1346,8 +1789,14 @@
    "group": "great_veins",
    "mount": "body",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_lbcv": {
@@ -1376,8 +1825,14 @@
    "group": "great_veins",
    "mount": "body",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_lpa": {
@@ -1387,7 +1842,10 @@
    "mount": "body",
    "targets": [
     "vsys",
-    "afill"
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_lsa": {
@@ -1397,7 +1855,10 @@
    "mount": "body",
    "targets": [
     "vsys",
-    "afill"
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_lspv": {
@@ -1407,7 +1868,10 @@
    "mount": "body",
    "targets": [
     "vsys",
-    "afill"
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_pt": {
@@ -1416,8 +1880,14 @@
    "group": "great_arteries",
    "mount": "body",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_rbcv": {
@@ -1437,7 +1907,10 @@
    "mount": "body",
    "targets": [
     "vsys",
-    "afill"
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_rpa": {
@@ -1447,7 +1920,10 @@
    "mount": "body",
    "targets": [
     "vsys",
-    "afill"
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_rspv": {
@@ -1457,7 +1933,10 @@
    "mount": "body",
    "targets": [
     "vsys",
-    "afill"
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_svc": {
@@ -1467,7 +1946,10 @@
    "mount": "body",
    "targets": [
     "vsys",
-    "afill"
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   }
  }

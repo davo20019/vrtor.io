@@ -1,0 +1,88 @@
+{
+ "trabeculae": {
+  "lv": {
+   "count": 55,
+   "z": [
+    0.03,
+    0.62
+   ],
+   "length": [
+    10,
+    28
+   ],
+   "radius": [
+    0.7,
+    1.3
+   ],
+   "drift": 0.35,
+   "r": 22,
+   "L": 85,
+   "smooth_septum": 0.9,
+   "spacing": 4.5,
+   "across_cost": 1.2,
+   "cross_share": 0.35,
+   "flatness": 0.55
+  },
+  "rv": {
+   "count": 65,
+   "z": [
+    0.05,
+    0.8
+   ],
+   "length": [
+    12,
+    30
+   ],
+   "radius": [
+    1.2,
+    2.2
+   ],
+   "drift": 0.5,
+   "r": 28,
+   "L": 80,
+   "smooth_septum": 0,
+   "spacing": 6.5,
+   "across_cost": 0.8,
+   "cross_share": 0.5,
+   "flatness": 0.6
+  }
+ },
+ "moderator_band": {
+  "thickness": 4.5,
+  "published_length": "16.2 +- 2.3 mm (11.3-24.3)"
+ },
+ "right_atrium": {
+  "crista_thickness": [
+   6.2,
+   5.6,
+   4.2
+  ],
+  "crista_bow": 6.0,
+  "pectinate_count": 14,
+  "pectinate_length": [
+   14,
+   32
+  ],
+  "pectinate_radius": [
+   0.7,
+   1.2
+  ],
+  "vestibule": 9.0,
+  "fossa": [
+   16,
+   12
+  ],
+  "limbus": 2.5
+ },
+ "left_appendage": {
+  "laa_count": 8,
+  "laa_reach": 22
+ },
+ "_sources": {
+  "trabeculae": "a meshwork over the LV apical two thirds (upper septum smooth) and the RV; spacing and thickness GUESS (not found in the literature search), RV coarser",
+  "moderator_band": "Loukas 2010: thickness 4.5 +- 1.8 mm, length 16.23 +- 2.3 mm",
+  "crista_thickness": "Sanchez-Quintana 2005: head 6.2, body 5.6, tail 4.2 mm",
+  "pectinate": "GUESS: thickness not found; spacing from the comb-like pattern in anatomy texts; the smooth vestibule round the tricuspid valve",
+  "fossa": "GUESS: size of the fossa ovalis and limbus thickness taken as typical (literature.md has the fossa as 'found', check it)"
+ }
+}

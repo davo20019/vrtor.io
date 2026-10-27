@@ -21,7 +21,7 @@ TISSUE = {
     'muscle_out': srgb('#6e1f1b'), 'muscle_in': srgb('#8c3b36'), 'atrium_out': srgb('#6a2226'),
     'fat': srgb('#c9973f'), 'fat_light': srgb('#ddb663'),
     'artery_wall': srgb('#c09079'), 'vein_wall': srgb('#4e2639'), 'valve': srgb('#e6d6b4'),
-    'chordae': srgb('#efe9dc'), 'heart': srgb('#7a2722'), 'artery': srgb('#b9665a'), 'vein': srgb('#4a2445'),
+    'chordae': srgb('#efe9dc'), 'conduction': srgb('#e3cf9a'), 'heart': srgb('#7a2722'), 'artery': srgb('#b9665a'), 'vein': srgb('#4a2445'),
 }
 
 def _hash(i, j, k, seed):
@@ -87,6 +87,7 @@ def paint(parts, outer_surface):
         elif t in ('artery_wall', 'vein_wall'): col = vary(TISSUE[t], X, 0.12, 12, 4)
         elif t == 'valve': col = vary(TISSUE['valve'], X, 0.08, 5, 5)
         elif t == 'chordae': col = vary(TISSUE['chordae'], X, 0.05, 4, 6)
+        elif t == 'conduction': col = vary(TISSUE['conduction'], X, 0.06, 4, 9)
         else: col = vary(TISSUE['muscle_in'] * 0.9, X, 0.12, 6, 8)
         out[pid] = (col, X)
     # creases darker (the light reaches less into them): concave mean curvature on each mesh

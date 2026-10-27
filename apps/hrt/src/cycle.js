@@ -61,11 +61,21 @@ export const PHASES = [
   { until: RR, name: 'Atrial contraction', text: 'The atria squeeze (just after the ECG\'s P wave) and top up the ventricles with the last fifth of their blood. Then the ventricles start to contract and the cycle begins again.' },
 ];
 
+// Contraction follows the electrical activation: the model's ventricles and atria are split into four bands each
+// by when their muscle is activated (assets-src/heart/cycle_bands.py: bands 24 and 30 ms apart in activation,
+// contraction spreading over 60% of that), each band playing the same curve with its own delay.
+const VENT_DELAYS = [0, 14.4, 28.8, 43.2];
+const ATR_DELAYS = [0, 18, 36, 54];
+const wrap = (t) => ((t % RR) + RR) % RR;
+
 /** Everything for time t (ms, any value: it wraps). */
 export function at(time) {
-  const t = ((time % RR) + RR) % RR;
+  const t = wrap(time);
   const phase = PHASES.find((p) => t < p.until) ?? PHASES[PHASES.length - 1];
-  return { t, phase, weights: { vsys: curve(VENT, t), afill: curve(ATRIA, t), ...valves(t) }, ecg: ecg(t) };
+  const weights = { vsys: curve(VENT, t), afill: curve(ATRIA, t), ...valves(t) };
+  VENT_DELAYS.forEach((d, k) => { weights[`vsys_${k}`] = curve(VENT, wrap(t - d)); });
+  ATR_DELAYS.forEach((d, k) => { weights[`afill_${k}`] = curve(ATRIA, wrap(t - d)); });
+  return { t, phase, weights, ecg: ecg(t) };
 }
 
 export { ecg };

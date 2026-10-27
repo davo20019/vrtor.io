@@ -14,6 +14,9 @@ float tNoise(vec3 x) {
 float tFbm(vec3 p) { return 0.55 * tNoise(p) + 0.3 * tNoise(p * 2.13) + 0.15 * tNoise(p * 4.37); }
 `;
 
+/** The activation wave's clock and strengths, set by main.js every frame. */
+export const ELEC = { clock: 0, muscle: 0, conduction: 0.9 };
+
 class TissueDefines extends MaterialDefines {
   TISSUE = false;
 }
@@ -22,7 +25,7 @@ class TissueDefines extends MaterialDefines {
 const LOOK = {
   ventricle: [0.9, 0.22, 0.12], atrium: [0.9, 0.2, 0.12], heart: [0.8, 0.22, 0.12],
   artery_wall: [1.4, 0.12, 0.06], vein_wall: [1.2, 0.1, 0.06], valve: [0.7, 0.08, 0.05],
-  chordae: [0.5, 0.05, 0.04], artery: [0.8, 0.1, 0.06], vein: [0.8, 0.1, 0.06],
+  chordae: [0.5, 0.05, 0.04], artery: [0.8, 0.1, 0.06], vein: [0.8, 0.1, 0.06], conduction: [0.6, 0.05, 0.05],
 };
 
 class TissuePlugin extends MaterialPluginBase {
@@ -33,19 +36,42 @@ class TissuePlugin extends MaterialPluginBase {
   }
   prepareDefines(defines) { defines.TISSUE = true; }
   getClassName() { return 'TissuePlugin'; }
-  getUniforms() {
-    return { ubo: [{ name: 'tissueLook', size: 3, type: 'vec3' }], fragment: 'uniform vec3 tissueLook;' };
+  // Each vertex's activation time is in the first UV channel; Babylon only declares UVs for textured materials,
+  // so the plugin asks for the attribute itself.
+  getAttributes(attributes, scene, mesh) {
+    if (mesh.isVerticesDataPresent('uv') && !attributes.includes('uv')) attributes.push('uv');
   }
-  bindForSubMesh(ubo) { ubo.updateFloat3('tissueLook', this.look[0], this.look[1], this.look[2]); }
+  getUniforms() {
+    return {
+      ubo: [{ name: 'tissueLook', size: 3, type: 'vec3' }, { name: 'tissueElec', size: 3, type: 'vec3' }],
+      fragment: 'uniform vec3 tissueLook; uniform vec3 tissueElec;',
+    };
+  }
+  bindForSubMesh(ubo) {
+    ubo.updateFloat3('tissueLook', this.look[0], this.look[1], this.look[2]);
+    // x: the cycle's clock (ms), y: how strongly the activation wave shows on this tissue, z: unused
+    ubo.updateFloat3('tissueElec', ELEC.clock, this.conduction ? ELEC.conduction : ELEC.muscle, 0);
+  }
   getCustomCode(type) {
     if (type === 'vertex') {
       return {
-        CUSTOM_VERTEX_DEFINITIONS: 'varying vec3 vRestPos; varying vec3 vWX; varying vec3 vWY; varying vec3 vWZ;',
-        CUSTOM_VERTEX_MAIN_END: 'vRestPos = position; mat3 tw = mat3(finalWorld); vWX = normalize(tw[0]); vWY = normalize(tw[1]); vWZ = normalize(tw[2]);',
+        CUSTOM_VERTEX_DEFINITIONS: `varying vec3 vRestPos; varying vec3 vWX; varying vec3 vWY; varying vec3 vWZ; varying float vAct;
+          #ifndef UV1
+            attribute vec2 uv;
+          #endif`,
+        CUSTOM_VERTEX_MAIN_END: `vRestPos = position; mat3 tw = mat3(finalWorld); vWX = normalize(tw[0]); vWY = normalize(tw[1]); vWZ = normalize(tw[2]);
+          vAct = uv.x * 1000.0;`,
       };
     }
     return {
-      CUSTOM_FRAGMENT_DEFINITIONS: `varying vec3 vRestPos; varying vec3 vWX; varying vec3 vWY; varying vec3 vWZ;\n${NOISE}`,
+      CUSTOM_FRAGMENT_DEFINITIONS: `varying vec3 vRestPos; varying vec3 vWX; varying vec3 vWY; varying vec3 vWZ; varying float vAct;\n${NOISE}`,
+      // The activation wave: a vertex lights up as it is activated, then fades over about 60 ms.
+      CUSTOM_FRAGMENT_BEFORE_FRAGCOLOR: `
+        if (vAct >= 0.0 && tissueElec.y > 0.0) {
+          float since = mod(tissueElec.x - vAct + 800.0, 800.0);
+          float glow = exp(-since / 28.0) * smoothstep(0.0, 4.0, since);
+          finalColor.rgb += vec3(1.0, 0.82, 0.45) * glow * tissueElec.y;
+        }`,
       // Relief: the noise's gradient tilts the normal (finite differences, in mm, turned into the world frame).
       CUSTOM_FRAGMENT_BEFORE_LIGHTS: `
         {
@@ -67,7 +93,8 @@ export function applyTissue(materials) {
     if (!(mat instanceof PBRMaterial)) continue;
     const t = mat.name;
     const look = LOOK[t] ?? LOOK.heart;
-    new TissuePlugin(mat, look);
+    const plugin = new TissuePlugin(mat, look);
+    plugin.conduction = t === 'conduction';
     // Wet: a thin, sharp clear coat over a softer tissue.
     mat.clearCoat.isEnabled = true;
     mat.clearCoat.intensity = t === 'valve' || t === 'chordae' ? 0.5 : 0.85;

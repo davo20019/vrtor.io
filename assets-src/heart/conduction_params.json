@@ -1,0 +1,19 @@
+{
+ "p_wave": 105,
+ "pr": 150,
+ "qrs": 95,
+ "bachmann_speed": 1.7,
+ "purkinje_speed": 2.5,
+ "purkinje_depth": 0.08,
+ "purkinje_top": 0.85,
+ "rv_delay": 5,
+ "sa_length": 13.5,
+ "purkinje_generations": 4,
+ "_sources": {
+  "p_wave, pr, qrs": "Rijnbeek 2014 (adults 20-49: P 104-110, PR 144-152, QRS 90-100 ms)",
+  "sa_length": "Sanchez-Quintana 2005, 13.5 +- 2.5 mm",
+  "purkinje_speed, bachmann_speed": "UNVERIFIED textbook values (Guyton & Hall): Purkinje 1.5-4 m/s, internodal ~1 m/s; Bachmann's bundle speed not found",
+  "earliest sites": "Durrer 1970: central left septal, high anterior paraseptal, posterior paraseptal at one third from the apex, within 0-5 ms",
+  "atrial and ventricular muscle speeds": "solved here so the atria finish in the P wave and the ventricles in the QRS"
+ }
+}

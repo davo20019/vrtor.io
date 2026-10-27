@@ -33,11 +33,12 @@ import { continueInVr, createCard, createMenuControls, createXr, headsetNote, st
 import { PHASES, RR, at, ecg } from './cycle.js';
 import { ABOUT, GROUP_NAME, SOURCES } from './content.js';
 import { createRoom } from './room.js';
-import { applyTissue } from './tissue.js';
+import { ELEC, applyTissue } from './tissue.js';
+window.__ELEC = ELEC;
 import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
-const MODEL_V = '7';
+const MODEL_V = '9';
 MeshoptCompression.Configuration = { decoder: { url: `${location.origin}${BASE}vendor/meshopt_decoder.js` } };
 
 const $ = (sel) => document.querySelector(sel);
@@ -46,7 +47,7 @@ const ui = {
   loading: $('.loading'), pct: $('.loading-pct'), retry: $('[data-retry]'),
   card: $('.card'), kicker: $('.card-kicker'), title: $('.card-title'), body: $('.card-body'), fact: $('.card-fact'),
   actions: $('.card-actions'), vr: $('[data-enter-vr]'), play: $('[data-play]'), speed: $('[data-speed]'),
-  cut: $('[data-cut]'), size: $('[data-size]'), back: $('[data-back]'), hint: $('.hint'),
+  cut: $('[data-cut]'), elec: $('[data-elec]'), size: $('[data-size]'), back: $('[data-back]'), hint: $('.hint'),
   ecg: $('.ecg canvas'), phase: $('.ecg-phase'),
 };
 const PICKED = Color3.FromHexString('#ffb020');
@@ -162,6 +163,7 @@ function setSize(s) {
 function beat(dt) {
   if (playing) clock += dt * speed;
   const s = at(clock);
+  ELEC.clock = s.t;
   for (const p of parts.values()) {
     const mtm = p.mesh.morphTargetManager;
     if (!mtm) continue;
@@ -323,6 +325,7 @@ function tools() {
     act(playing ? 'Pause' : 'Play', togglePlay),
     act(speed === 1 ? 'Slow it down' : speed === 0.25 ? 'Slower' : 'Real speed', cycleSpeed),
     act(cut ? 'Close it' : 'Cut it open', () => { setCut(!cut); render(); }),
+    act(electricity ? 'Hide the electricity' : 'Show the electricity', toggleElectricity),
     act(size === 'big' ? 'Life size' : 'Make it big', () => { setSize(size === 'big' ? 'life' : 'big'); render(); }),
     act('Put back', () => putBack([...parts.values()])),
   ];
@@ -367,6 +370,15 @@ function render() {
 }
 
 function togglePlay() { playing = !playing; render(); }
+let electricity = false;
+function toggleElectricity() {
+  electricity = !electricity;
+  ELEC.muscle = electricity ? 0.75 : 0;
+  ELEC.conduction = electricity ? 1.4 : 0.9;
+  if (electricity && speed === 1) speed = 0.25;   // the wave crosses the heart in a tenth of a second
+  ui.elec.setAttribute('aria-pressed', electricity ? 'true' : 'false');
+  render();
+}
 function cycleSpeed() { speed = speed === 1 ? 0.25 : speed === 0.25 ? 0.1 : 1; render(); }
 
 // ---------------------------------------------------------------- pointer (flat screens)
@@ -525,7 +537,7 @@ async function start() {
   await Promise.race([scene.whenReadyAsync(), new Promise((r) => setTimeout(r, 6000))]);
   ui.loading.hidden = true;
   ui.hint.hidden = false;
-  for (const b of [ui.play, ui.speed, ui.cut, ui.size, ui.back]) b.disabled = false;
+  for (const b of [ui.play, ui.speed, ui.cut, ui.elec, ui.size, ui.back]) b.disabled = false;
   render();
 }
 
@@ -540,6 +552,7 @@ $('.card-close').addEventListener('click', close);
 ui.play.addEventListener('click', togglePlay);
 ui.speed.addEventListener('click', cycleSpeed);
 ui.cut.addEventListener('click', () => { setCut(!cut); render(); });
+ui.elec.addEventListener('click', toggleElectricity);
 ui.size.addEventListener('click', () => { setSize(size === 'big' ? 'life' : 'big'); render(); });
 ui.back.addEventListener('click', () => putBack([...parts.values()]));
 ui.retry.addEventListener('click', () => location.reload());
@@ -567,4 +580,4 @@ start().catch((err) => {
 });
 
 // For automated checks in a browser.
-window.__hrt = { scene, camera, parts, setCut, setSize, pick: (id) => pickMesh(parts.get(id)?.mesh), content: () => content(), at, get clock() { return clock; }, set clock(v) { clock = v; }, pause: () => { playing = false; } };
+window.__hrt = { ELEC: null, scene, camera, parts, setCut, setSize, pick: (id) => pickMesh(parts.get(id)?.mesh), content: () => content(), at, get clock() { return clock; }, set clock(v) { clock = v; }, pause: () => { playing = false; } };
