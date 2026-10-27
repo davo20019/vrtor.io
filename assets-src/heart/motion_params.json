@@ -27,5 +27,7 @@
   "rv_esv": "EDV 149.8 x (1 - RVEF 0.58), Kawel-Boehm 2020",
   "la_max": "CT ED + (78 - 32) mL, Kawel-Boehm 2020 Simpson with LAA, men",
   "ra_max": "CT ED + (108 - 50) mL, Kawel-Boehm 2020 with RAA, men"
- }
+ },
+ "outflow_reach": 25.0,
+ "surface_smooth": 20
 }

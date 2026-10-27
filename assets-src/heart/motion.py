@@ -72,7 +72,15 @@ _to /= np.linalg.norm(_to, axis=1, keepdims=True) + 1e-9
 # where the RV wall joins the LV (its insertions), the pulmonary trunk or the atrium, it moves as they do: its
 # own inward motion fades in over a few millimetres from those joins
 _in = lambda t: np.unique(cells[tag == t].ravel())
-_join = np.intersect1d(_in(2), np.concatenate([_in(1), _in(6), _in(4), _in(23), _in(24)]))
+_join = np.intersect1d(_in(2), np.concatenate([_in(1), _in(4), _in(23), _in(24)]))
+# the outflow tract (infundibulum) squeezes towards its own axis, the line through the pulmonary valve, not
+# towards the septum; the weight passes from one to the other with distance from the pulmonary ring
+_pvp = P[_in(10)]; _pvc = _pvp.mean(0); _pvn = np.linalg.svd(_pvp - _pvc)[2][2]
+_q = P - _pvc; _rad = _q - np.outer(_q @ _pvn, _pvn); _dax = np.linalg.norm(_rad, axis=1)
+_wo = np.zeros(n); _wo[_rvp] = np.exp(-(np.linalg.norm(_q[_rvp], axis=1) / M['outflow_reach']) ** 2)
+_dir = (1 - _wo)[:, None] * (-_to) + _wo[:, None] * (_rad / (_dax[:, None] + 1e-9))
+_to = -_dir / (np.linalg.norm(_dir, axis=1, keepdims=True) + 1e-9); _to[~_rvp] = 0
+_dsept = (1 - _wo) * _dsept + _wo * _dax
 _fade = np.ones(n); _fade[_rvp] = 1 - np.exp(-(_T(P[_join]).query(P[_rvp])[0] / M['rv_join_fade']) ** 2)
 
 def ventricles(d_endo_lv, d_epi_lv, d_endo_rv, d_epi_rv):
@@ -91,22 +99,40 @@ def ventricles(d_endo_lv, d_epi_lv, d_endo_rv, d_epi_rv):
     D[VENT] = long[:, None] * ax - inward[:, None] * rhat + (rotate(X, -ax, twist) - X)
     return D
 
+# atria, aorta and pulmonary trunk are continuous tissue: their motion is the smooth (harmonic) interpolation
+# between the ventricles, wherever they touch, and the vessels' far ends, held where the body holds them
+from scipy.sparse.linalg import splu
+_ends = CAPS.copy()
+for _part, _ring in [(AO, 9), (PA, 10)]:      # the cut end of each artery: its points furthest from its valve
+    _rc = P[np.unique(cells[tag == _ring].ravel())].mean(0); _d = np.linalg.norm(P - _rc, axis=1)
+    _ends |= _part & (_d > np.percentile(_d[_part], 97))
+# the ventricles' surfaces (inside and outside of the walls, and their rims): the rules set the motion there
+_vs = m.extract_cells(np.isin(tag, [1, 2])).extract_surface(algorithm='dataset_surface').triangulate()
+_vsub = m.extract_cells(np.isin(tag, [1, 2]))
+_vid = _vsub.point_data['vtkOriginalPointIds'][_vs.point_data['vtkOriginalPointIds']]
+_vf = _vid[_vs.faces.reshape(-1, 4)[:, 1:]]
+_SURF = np.zeros(n, bool); _SURF[_vf.ravel()] = True
+_se = np.vstack([_vf[:, [0, 1]], _vf[:, [1, 2]], _vf[:, [2, 0]]])
+_SA = sparse.coo_matrix((np.ones(len(_se)), (_se[:, 0], _se[:, 1])), (n, n)); _SA = ((_SA + _SA.T) > 0).astype(float).tocsr()
+_sdeg = np.maximum(np.asarray(_SA.sum(1)).ravel(), 1)
+
+def surface_smooth(D, it):
+    """Smooth along the ventricles' surfaces only (the inside and outside of a wall are separate surfaces)."""
+    for _ in range(it): D = np.where(_SURF[:, None], 0.5 * D + 0.5 * (_SA @ D) / _sdeg[:, None], D)
+    return D
+
+_known = _SURF | _ends
+_Lap = (sparse.diags(deg) - A).tocsr()
+_U = np.where(~_known)[0]; _K = np.where(_known)[0]
+_solve = splu(_Lap[_U][:, _U].tocsc())
+_LUK = _Lap[_U][:, _K]
+
 def follow_rings(D):
-    """Atria, aorta and pulmonary trunk follow the ventricles' motion at their valve rings, fading away."""
-    from scipy.spatial import cKDTree
-    out = D.copy()
-    for part, ring_tags in [(LA, [7]), (RA, [8]), (AO, [9]), (PA, [10])]:
-        ringpts = np.unique(cells[np.isin(tag, ring_tags)].ravel()); ringpts = ringpts[VENT[ringpts]]
-        if not len(ringpts): continue
-        t = cKDTree(P[ringpts]); d, i = t.query(P[part])
-        lam = M['follow_falloff_vessel'] if part is AO or part is PA else M['follow_falloff_atrium']
-        out[part] = D[ringpts[i]] * np.exp(-(d / lam) ** 2)[:, None]
-    # smooth what was carried over, over the non-ventricular points only
-    nv = (~VENT).astype(float); Wn = sparse.diags(nv) @ A @ sparse.diags(nv); dn = np.maximum(np.asarray(Wn.sum(1)).ravel(), 1)
-    for _ in range(15):
-        out = np.where(VENT[:, None], out, 0.5 * out + 0.5 * (Wn @ out) / dn[:, None])
-    # the valve planes themselves move with the ring
-    planes = np.isin(label, [7, 8, 9, 10]); t = cKDTree(P[VENT]); d, i = t.query(P[planes]); out[planes] = D[np.where(VENT)[0][i]]
+    """Everything off the ventricles' surfaces (inside the walls, atria, valve planes, vessels): harmonic
+    between the surfaces' motion and the vessels' ends."""
+    out = surface_smooth(D, M['surface_smooth']); out[_ends] = 0
+    rhs = -(_LUK @ out[_K])
+    out[_U] = np.stack([_solve.solve(rhs[:, j]) for j in range(3)], 1)
     return out
 
 def atria(amp_la, amp_ra):
@@ -143,12 +169,12 @@ if __name__ == '__main__':
     # LV: inner surface for the end-systolic volume, outer for constant muscle volume (two passes)
     de, dp, re, rp = M['guess']['lv_endo'], M['guess']['lv_epi'], M['guess']['rv_endo'], M['guess']['rv_epi']
     for it in range(4):
-        de = solve(lambda x: vol(follow_rings(smooth(ventricles(x, dp, re, rp), SM)))['LV'], M['lv_esv'], 0, 20, 10)
-        dp = solve(lambda x: myo(smooth(ventricles(de, x, re, rp), SM), 1), myo0['LV'], -10, 20, 12)
-        re = solve(lambda x: vol(follow_rings(smooth(ventricles(de, dp, x, rp), SM)))['RV'], M['rv_esv'], 0, 0.9, 12)
-        rp = solve(lambda x: myo(smooth(ventricles(de, dp, re, x), SM), 2), myo0['RV'], -0.5, 0.9, 12)
+        de = solve(lambda x: vol(follow_rings(ventricles(x, dp, re, rp)))['LV'], M['lv_esv'], 0, 20, 10)
+        dp = solve(lambda x: myo(follow_rings(ventricles(de, x, re, rp)), 1), myo0['LV'], -10, 20, 12)
+        re = solve(lambda x: vol(follow_rings(ventricles(de, dp, x, rp)))['RV'], M['rv_esv'], 0, 0.9, 12)
+        rp = solve(lambda x: myo(follow_rings(ventricles(de, dp, re, x)), 2), myo0['RV'], -0.5, 0.9, 12)
         print(f'pass {it}: LV endo {de:.2f} epi {dp:.2f} mm, RV endo {re:.2f} epi {rp:.2f} mm')
-    Dv = follow_rings(smooth(ventricles(de, dp, re, rp), SM))
+    Dv = follow_rings(ventricles(de, dp, re, rp))
     Ves = vol(Dv); print('end-systole, ventricles only', {k: round(v, 1) for k, v in Ves.items()})
     al = solve(lambda x: vol(Dv + atria(x, 0))['LA'], M['la_max'], -5, 20, 10)
     ar = solve(lambda x: vol(Dv + atria(al, x))['RA'], M['ra_max'], -5, 20, 10)
