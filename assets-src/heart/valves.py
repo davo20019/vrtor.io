@@ -35,15 +35,22 @@ def sector_angles(v, frame):
     if v == 'mv':   # the anterior leaflet faces the aortic valve (aortomitral continuity), a third of the ring
         a0 = ang(H.valve_frame('av')[0]); half = np.pi * P['mv']['anterior_share']
         return [('anterior', a0 - half, a0 + half), ('posterior', a0 + half, a0 - half + 2 * np.pi)]
-    if v == 'tv':   # the septal leaflet lies on the septum (towards the LV's septal wall)
-        w = H.walls(); uvc = w['lv_uvc']; sel = (np.abs(uvc[:, 1]) < 0.3) & (uvc[:, 0] < 0.1) & (uvc[:, 2] > 0.7)
-        s0 = ang(w['lv_v'][sel].mean(0)); sh = P['tv']['share']; ss = np.pi * sh['septal']
-        front = ang(c + np.array([0, -30.0, 0]))           # towards the front of the body (-y)
-        e = s0 + ss                                          # septal leaflet's end, going round one way
-        ant_first = np.cos(e + np.pi * sh['anterior'] - front) > np.cos(e + np.pi * sh['posterior'] - front)
-        first, second = ('anterior', 'posterior') if ant_first else ('posterior', 'anterior')
-        m = e + 2 * np.pi * sh[first]
-        return [('septal', s0 - ss, e), (first, e, m), (second, m, s0 - ss + 2 * np.pi)]
+    if v == 'tv':   # leaflet centres where BodyParts3D's leaflets are (its papillary muscles stand under them);
+                    # commissures split the gaps between centres in proportion to the published attachment lengths
+        w, info = H.bp3d_warped(); sh = P['tv']['share']
+        cen = {nm: ang(w[el + '_v'].mean(0)) for nm, el in [('anterior', 'FJ2421'), ('posterior', 'FJ2433'), ('septal', 'FJ2436')]}
+        order = sorted(cen, key=lambda k: cen[k])                     # ring order by angle
+        un = lambda x: x % (2 * np.pi)
+        com = []
+        for i, nm in enumerate(order):
+            nx = order[(i + 1) % 3]; gap = un(cen[nx] - cen[nm])
+            com.append(cen[nm] + gap * sh[nm] / (sh[nm] + sh[nx]))   # commissure after leaflet nm
+        out = []
+        for i, nm in enumerate(order):
+            a0 = com[i - 1]; a1 = com[i]
+            while a1 <= a0: a1 += 2 * np.pi
+            out.append((nm, a0, a1))
+        return out
     if v == 'av':   # left and right coronary cusps centred on their coronary ostia
         L = ang(ostium('FJ2737')); R = ang(ostium('FJ2723'))
         clr = np.angle(np.exp(1j * L) + np.exp(1j * R))       # commissure between left and right cusps

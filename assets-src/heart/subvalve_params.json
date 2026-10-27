@@ -1,0 +1,78 @@
+{
+ "lv": [
+  {
+   "id": "al",
+   "name": "Anterolateral papillary muscle",
+   "phi": 160,
+   "length": 16.4,
+   "width": 8.0,
+   "heads": 2,
+   "tip_to_anterior_ring": 28.1
+  },
+  {
+   "id": "pm",
+   "name": "Posteromedial papillary muscle",
+   "phi": -60,
+   "length": 14.6,
+   "width": 8.4,
+   "heads": 3,
+   "tip_to_anterior_ring": 28.5
+  }
+ ],
+ "rv": [
+  {
+   "id": "ant",
+   "name": "Anterior papillary muscle",
+   "bp3d": "FJ2419",
+   "length": 12.7,
+   "width": 6.9,
+   "heads": 2,
+   "leaflets": [
+    "anterior",
+    "posterior"
+   ]
+  },
+  {
+   "id": "post",
+   "name": "Posterior papillary muscle",
+   "bp3d": "FJ2430",
+   "length": 12.4,
+   "width": 7.5,
+   "heads": 2,
+   "leaflets": [
+    "posterior",
+    "septal"
+   ]
+  },
+  {
+   "id": "sept",
+   "name": "Septal papillary muscle",
+   "bp3d": "FJ2437",
+   "length": 3.0,
+   "width": 2.0,
+   "heads": 1,
+   "leaflets": [
+    "septal",
+    "anterior"
+   ]
+  }
+ ],
+ "marginal_per_leaflet": 22,
+ "rough_per_leaflet": 10,
+ "branches_per_trunk": 4,
+ "marginal_d": 0.57,
+ "rough_d": 0.78,
+ "strut_d": 1.27,
+ "_sources": {
+  "lv sizes": "Bhadoria 2022",
+  "tip_to_anterior_ring": "Oliveira 2020 (end-systole)",
+  "rv sizes": "Bhadoria 2022",
+  "counts": "Gunnal 2015 (mitral, per leaflet); used for the tricuspid too: its counts were not found",
+  "diameters": "Zuo 2016",
+  "phi": "GUESS from Rajiah 2019's description (AL between anterolateral and inferolateral walls; PM near the inferior wall-septum junction)",
+  "septal PM": "Bhadoria 2022 gives 1.7 x 1.1 mm; drawn at 3 x 2 so its chordae have somewhere to start",
+  "lv_tip_distance": "Oliveira 2020: inner 14.4, outer 31.1 mm between the muscles; centre to centre taken as their mean",
+  "rv leaflets served": "standard anatomy: anterior PM to anterior and posterior leaflets, posterior PM to posterior and septal, septal PM to septal and anterior"
+ },
+ "lv_tip_distance": 22.8
+}
