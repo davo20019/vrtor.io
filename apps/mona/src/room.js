@@ -24,11 +24,15 @@ export function createRoom(scene) {
   const W = 9, H = 6, T = 0.8;
   const cx0 = -CASE.width / 2, cx1 = CASE.width / 2;
   const cy0 = CASE.bottom, cy1 = CASE.bottom + CASE.height;
+  // The opening fits the case's outside (its 2 cm steel sides and lid), so the steel lines it. Cut to the case's
+  // inside, the wall's faces lay in the same planes as the steel's and flickered in the headset.
+  const STEEL = 0.02;
+  const ox = cx1 + STEEL, oy1 = cy1 + STEEL;
   const pieces = [
-    ['wall-left', (cx0 - -W / 2), H, -W / 2 + (cx0 + W / 2) / 2, H / 2],
-    ['wall-right', (W / 2 - cx1), H, cx1 + (W / 2 - cx1) / 2, H / 2],
-    ['wall-top', CASE.width, H - cy1, 0, cy1 + (H - cy1) / 2],
-    ['wall-bottom', CASE.width, cy0, 0, cy0 / 2],
+    ['wall-left', W / 2 - ox, H, -(W / 2 + ox) / 2, H / 2],
+    ['wall-right', W / 2 - ox, H, (W / 2 + ox) / 2, H / 2],
+    ['wall-top', 2 * ox, H - oy1, 0, oy1 + (H - oy1) / 2],
+    ['wall-bottom', 2 * ox, cy0, 0, cy0 / 2],
   ];
   const walls = pieces.map(([name, w, h, x, y]) => {
     const p = MeshBuilder.CreateBox(name, { width: w, height: h, depth: T }, scene);
@@ -53,23 +57,26 @@ export function createRoom(scene) {
   back.material = wallMat;
   back.receiveShadows = true;
   const sides = [
-    ['case-left', 0.02, CASE.height, CASE.depth, cx0 - 0.01, cy0 + CASE.height / 2],
-    ['case-right', 0.02, CASE.height, CASE.depth, cx1 + 0.01, cy0 + CASE.height / 2],
+    ['case-left', STEEL, CASE.height, CASE.depth, cx0 - STEEL / 2, cy0 + CASE.height / 2],
+    ['case-right', STEEL, CASE.height, CASE.depth, cx1 + STEEL / 2, cy0 + CASE.height / 2],
   ].map(([n, w, h, d, x, y]) => {
     const s = MeshBuilder.CreateBox(n, { width: w, height: h, depth: d }, scene);
     s.position.set(x, y, CASE.out - CASE.depth / 2);
     s.material = steel;
     return s;
   });
-  const lid = MeshBuilder.CreateBox('case-top', { width: CASE.width + 0.04, height: 0.02, depth: CASE.depth }, scene);
-  lid.position.set(0, cy1 + 0.01, CASE.out - CASE.depth / 2);
+  const lid = MeshBuilder.CreateBox('case-top', { width: 2 * ox, height: STEEL, depth: CASE.depth }, scene);
+  lid.position.set(0, cy1 + STEEL / 2, CASE.out - CASE.depth / 2);
   lid.material = steel;
-  // The front: a narrow steel surround round the glass.
+  // The front: a narrow steel surround round the glass, from the shelf up. The pieces meet without overlapping:
+  // where two overlap, their faces share a plane and flicker.
   const rim = 0.06;
+  const shelfH = 0.9, shelfOut = 0.32;
+  const rimH = CASE.height - shelfH;
   const surround = [
-    ['case-rim-l', rim, CASE.height, -CASE.width / 2 + rim / 2, cy0 + CASE.height / 2],
-    ['case-rim-r', rim, CASE.height, CASE.width / 2 - rim / 2, cy0 + CASE.height / 2],
-    ['case-rim-t', CASE.width, rim, 0, cy1 - rim / 2],
+    ['case-rim-l', rim, rimH, -CASE.width / 2 + rim / 2, cy0 + shelfH + rimH / 2],
+    ['case-rim-r', rim, rimH, CASE.width / 2 - rim / 2, cy0 + shelfH + rimH / 2],
+    ['case-rim-t', CASE.width - 2 * rim, rim, 0, cy1 - rim / 2],
   ].map(([n, w, h, x, y]) => {
     const b = MeshBuilder.CreateBox(n, { width: w, height: h, depth: 0.03 }, scene);
     b.position.set(x, y, CASE.out - 0.015);
@@ -77,7 +84,6 @@ export function createRoom(scene) {
     return b;
   });
   // The front shelf: the case's conservation units and lights, a dark ledge across its foot.
-  const shelfH = 0.9, shelfOut = 0.32;
   const shelf = MeshBuilder.CreateBox('case-shelf', { width: CASE.width, height: shelfH, depth: CASE.depth + shelfOut }, scene);
   shelf.position.set(0, cy0 + shelfH / 2, CASE.out + shelfOut - (CASE.depth + shelfOut) / 2);
   shelf.material = steel;
@@ -159,7 +165,7 @@ export function createRoom(scene) {
     }
   }
   // Across the front of the lane, the line nobody may cross.
-  const front = MeshBuilder.CreateBox('belt-front', { width: 3.2, height: 0.05, depth: 0.004 }, scene);
+  const front = MeshBuilder.CreateBox('belt-front', { width: 3.2 - 0.05, height: 0.05, depth: 0.004 }, scene); // post to post
   front.position.set(0, 0.9, 2.6);
   front.material = belt;
   posts.push(front);
