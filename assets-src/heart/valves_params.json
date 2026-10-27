@@ -1,0 +1,166 @@
+{
+ "mv": {
+  "anterior_share": 0.333,
+  "thickness": 1.4,
+  "tenting": 4.0,
+  "coaptation": 5.0,
+  "min_coaptation": 2.0,
+  "billow": 1.0,
+  "open_lean": 0.25,
+  "open_bow": 1.5,
+  "open_area": 4.5,
+  "height": {
+   "anterior": [
+    [
+     0,
+     9
+    ],
+    [
+     0.15,
+     17
+    ],
+    [
+     0.5,
+     27
+    ],
+    [
+     0.85,
+     17
+    ],
+    [
+     1,
+     9
+    ]
+   ],
+   "posterior": [
+    [
+     0,
+     9
+    ],
+    [
+     0.12,
+     11
+    ],
+    [
+     0.22,
+     13
+    ],
+    [
+     0.33,
+     9
+    ],
+    [
+     0.36,
+     9
+    ],
+    [
+     0.5,
+     16
+    ],
+    [
+     0.64,
+     9
+    ],
+    [
+     0.67,
+     9
+    ],
+    [
+     0.78,
+     13
+    ],
+    [
+     0.88,
+     11
+    ],
+    [
+     1,
+     9
+    ]
+   ]
+  }
+ },
+ "tv": {
+  "share": {
+   "septal": 0.36,
+   "anterior": 0.36,
+   "posterior": 0.28
+  },
+  "thickness": 0.9,
+  "tenting": 3.0,
+  "coaptation": 6.0,
+  "min_coaptation": 2.0,
+  "billow": 1.0,
+  "open_lean": 0.2,
+  "open_bow": 1.5,
+  "open_area": 7.0,
+  "height": {
+   "septal": [
+    [
+     0,
+     7
+    ],
+    [
+     0.5,
+     17.2
+    ],
+    [
+     1,
+     7
+    ]
+   ],
+   "anterior": [
+    [
+     0,
+     7
+    ],
+    [
+     0.5,
+     20.7
+    ],
+    [
+     1,
+     7
+    ]
+   ],
+   "posterior": [
+    [
+     0,
+     7
+    ],
+    [
+     0.5,
+     18.9
+    ],
+    [
+     1,
+     7
+    ]
+   ]
+  }
+ },
+ "av": {
+  "thickness": 0.6,
+  "commissure_height": 19.4,
+  "coaptation_height": 15.6,
+  "lunula": 4.0,
+  "belly": 3.0,
+  "open_drop": 3.0,
+  "open_radius": 0.85
+ },
+ "pv": {
+  "thickness": 0.5,
+  "commissure_height": 17.0,
+  "coaptation_height": 12.0,
+  "lunula": 3.5,
+  "belly": 2.5,
+  "open_drop": 3.0,
+  "open_radius": 0.85
+ },
+ "_sources": {
+  "mv": "Henry 2022 (WASE) leaflet lengths, men; Oliveira 2020 P1-P3 and commissural heights; Sahasakul 1988 thickness (mean of AML 1.60, PML 1.13)",
+  "tv": "Skwarek 2006 attachment lengths (shares) and heights",
+  "av": "Jelenc 2024 commissural height 19.4, geometric height 15.6",
+  "pv": "Jelenc 2024 pulmonary commissural height 19.4 (cusp sizes kept a little under the aortic)"
+ }
+}

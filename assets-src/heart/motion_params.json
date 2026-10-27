@@ -1,0 +1,31 @@
+{
+ "mapse": 14.75,
+ "tapse": 24.0,
+ "twist_apex": 13.0,
+ "twist_base": -6.9,
+ "lv_esv": 44.3,
+ "rv_esv": 62.9,
+ "la_max": 109.7,
+ "ra_max": 137.1,
+ "follow_falloff_atrium": 25.0,
+ "follow_falloff_vessel": 30.0,
+ "guess": {
+  "lv_endo": 8.0,
+  "lv_epi": 2.0,
+  "rv_endo": 0.3,
+  "rv_epi": 0.2
+ },
+ "smooth": 2,
+ "septum_width": 0.8,
+ "axis_fade": 6.0,
+ "rv_join_fade": 8.0,
+ "_sources": {
+  "mapse": "Wang 2023, mean of septal 14.0 and lateral 15.5",
+  "tapse": "Lang 2015",
+  "twist": "Kocabay 2014",
+  "lv_esv": "EDV 126.6 x (1 - LVEF 0.65), Kawel-Boehm 2020",
+  "rv_esv": "EDV 149.8 x (1 - RVEF 0.58), Kawel-Boehm 2020",
+  "la_max": "CT ED + (78 - 32) mL, Kawel-Boehm 2020 Simpson with LAA, men",
+  "ra_max": "CT ED + (108 - 50) mL, Kawel-Boehm 2020 with RAA, men"
+ }
+}

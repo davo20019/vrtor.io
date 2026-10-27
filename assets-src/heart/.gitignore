@@ -1,0 +1,7 @@
+# Rodero et al. average heart (about 240 MB unpacked): fetch with fetch.sh
+raw/
+# everything the scripts regenerate
+work/
+review/
+.venv/
+__pycache__/
