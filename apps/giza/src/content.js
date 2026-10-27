@@ -1,6 +1,6 @@
 // What the card says, and where each stop of the tour stands. Every size and date has its source in
 // assets-src/giza/refs/survey.md; places are in survey.js's frame (x east, y up, z north, metres).
-import { ANTE, GALLERY, KING, PASSAGES, PIT, QUEEN, S, TUNNEL } from './survey.js';
+import { ANTE, ENTRANCE, GALLERY, KING, NEIGHBOURS, PASSAGES, PIT, QUEEN, S, TUNNEL } from './survey.js';
 import { chevrons } from './exterior.js';
 import { coreFaceZ } from './interior.js';
 
@@ -29,7 +29,7 @@ export const ABOUT = {
     kicker: 'Seen through',
     title: 'Inside the pyramid',
     text: 'The passages and chambers: the descending passage down into the rock, the ascending passage and Grand Gallery up to the King\'s Chamber, the Queen\'s Chamber, and Al-Ma\'mun\'s tunnel. In blue, what the ScanPyramids project found with cosmic rays: a corridor behind the chevrons, and a large void over the gallery.',
-    fact: 'The corridor\'s size is measured (2023). The void\'s place and shape are known only roughly: it is drawn here as the 2017 paper describes it, at least 30 m long.',
+    fact: 'The corridor is measured (2023). The void is drawn through the four places the 2017 muon detectors pinned it, each uncertain by about 5 m; its shape is not known. Above the King\'s Chamber, the five low relieving chambers are drawn from Vyse\'s survey.',
   },
   light: {
     kicker: 'The sun over Giza',
@@ -50,7 +50,6 @@ export function tour() {
     return [p.a[0] + (d[0] * s) / l, p.a[1] + (d[1] * s) / l, p.a[2] + (d[2] * s) / l];
   };
   const mouthZ = coreFaceZ(TUNNEL.floor + 1, TUNNEL.x) + 0.4;
-  const yF = 668.2 * IN - (4010.0 * IN - ch.face) * Math.tan((26.52 * Math.PI) / 180);
   return [
     {
       id: 'north', kicker: 'Outside', title: 'The north face', stand: [24, -0.53, 190], at: [0, 50, 0],
@@ -63,13 +62,13 @@ export function tour() {
       fact: 'The four sides differ in length by less than 5 cm in Petrie\'s survey, and by 8 cm in Dash\'s of 2015.',
     },
     {
-      id: 'casing', kicker: 'Outside', title: 'The last casing stones', stand: [-3, 0, S.half + 6.5], at: [-0.5, 0.6, S.half - 1],
+      id: 'casing', kicker: 'Outside', title: 'The last casing stones', stand: [-7.5, 0, S.half + 6.5], at: [-5.5, 0.6, S.half - 1],
       text: 'These few blocks at the middle of the north side are all that is left in place of the casing that covered the whole pyramid. Their sloping face is the angle of the pyramid itself, 51° 52′.',
       fact: 'Petrie found their joints to be half a millimetre wide on average, and cemented, on stones of some 16 tonnes.',
     },
     {
-      id: 'entrance', kicker: 'Outside', title: 'The original entrance', stand: [X, yF, ch.face + 1.0], at: [X, ch.spring + 1.5, ch.face],
-      text: 'The doorway was in the face of the casing, 16.97 m up and 7.29 m east of the middle. Above it lean two pairs of huge limestone blocks, set like a gable at 50° 28′, to carry the weight of the stone above off the passage.',
+      id: 'entrance', kicker: 'Outside', title: 'The original entrance', stand: [X, ch.floor, ENTRANCE.mouth + 2.4], at: [X, ch.spring + 2.2, ch.face],
+      text: 'The doorway was in the face of the casing, 16.97 m up and 7.29 m east of the middle, 10 m in front of where you stand: everything in front of you went with the casing. Above you lean two pairs of huge limestone blocks, set like a gable, to carry the weight of the stone above off the passage; more pairs once stood in front of them.',
       fact: 'In 2023 ScanPyramids confirmed a corridor 9 m long and 2 m wide right behind these blocks, found with cosmic-ray muons and looked into with an endoscope.',
     },
     {
@@ -113,7 +112,7 @@ export function tour() {
       fact: 'From here a passage leads on south for 16 m and stops, a rough first cut, in the rock.',
     },
     {
-      id: 'top', kicker: 'Outside', title: 'The top', stand: [1, S.levels[201], -2], at: [-343, 60, -345],
+      id: 'top', kicker: 'Outside', title: 'The top', stand: [1, S.levels[201], -2], at: [NEIGHBOURS[0].centre[0], 70, NEIGHBOURS[0].centre[1]],
       text: 'You are standing on course 201, 137.4 m up, on a platform about 11 m across. The point of the casing was another 9.3 m above you.',
       fact: 'Khafre\'s pyramid, beyond, still has its casing near the top.',
     },

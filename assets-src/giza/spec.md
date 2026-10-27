@@ -45,25 +45,31 @@ axes along the pyramid's sides (3' 43" anticlockwise of true north, P §21).
 - **Courses across a face.** Petrie levelled the corners; the courses dip by up to 1° across the faces (P §24).
   Here each course is level at its N.E. corner value.
 - **Hollowing on the E, S and W faces**: Petrie gives only the north face's 0.94 m; the same is used for all four.
-- **Chevron placement.** The slab thickness square to the slope is derived from Petrie's lengths assuming a level bed
-  and an upright butment (0.76 m lower, 0.83 m upper). The spring (19.3 m) is from the thin courses 20 to 21 that make
-  the lintel (P §32). The face is set 0.3 m behind the local core line, by eye from photographs.
-- **The notch round the entrance** (blocks stood back 1.6 m) and the masonry in front of the passage's mouth.
-- **Al-Ma'mun's tunnel.** Only "6th to 7th course, about 7 m up, 27 m straight, then left to the plugs" is published
-  (W, citing Tyldesley). Its line (4.4 m E of centre, the photographs put its mouth west of the entrance's line), its
-  section (1.9 x 2.1 m) and its last turn are estimates.
+- **Chevrons**: now measured (refs/entrance.md): their outline from the ScanPyramids 2023 laser-scan drawing and
+  Maragioglio & Rinaldi's dimensioned front view, tied to Petrie's frame at the passages' junction (checked three
+  ways); face at z 91.1 (M&R's drawing gives 90.1). Still estimated: the blocks' upright outer ends (from the level
+  bed, P §34), and the notch's width beside them (one block, 1.1 m) and under them (2.6 m).
+- **Al-Ma'mun's tunnel**: its mouth on the axis (Vyse, SP23), 27 m south, east some 20 ft to the descending passage
+  (P §177), the cavity west of the plugs (P pl. ix), floor near 6.2 m (the 2023 detectors in it; M&R say above the 7th
+  course). Still estimated: its section (1.9 x 2.1 m; the SP23 render suggests up to 2.7 x 3 m) and the exact bend.
 - **Today's stair** to the tunnel, the boardwalks, handrails and lamps are modelled after photographs, not measured.
 - **Casing stones in place**: their extent along the side (-6.5 to +5.5 m) and the pavement's reach in front.
 - **Gallery floor gap**: the floor starts where it clears the Queen's passage roof plus 0.5 m of slab (3.9 m up the
-  slope). The ramp holes are spaced evenly; Petrie's plate xii with their real places was not transcribed.
+  slope).
+- **Ramp holes**: now measured, all 56, from Smyth's survey (refs/gallery-kings.md, measured.js). Still estimated: the
+  height of the stones let into the walls above them (not measured by anyone; here at the ramp's top).
 - **Antechamber**: portcullis slot widths and spacing; the low passages' height (1.10 m).
-- **King's Chamber**: the vertical joints of the wall blocks, except the north wall's top course (P §52).
+- **King's Chamber joints**: now measured on every course of every wall (Smyth; Aiton and Inglis for course 4; Petrie
+  for the north and south top courses), each course scaled to the wall. Smyth's tables give 101 blocks, not the
+  usual 100; one stone is unaccounted for.
 - **Subterranean chamber floor**: rough steps rising west, from Petrie's description (P §37), not a survey.
-- **Relieving chambers** (see-through only): evenly spaced to 21.11 m above the floor (Vyse, unverified).
-- **Big Void** (see-through only): 30 m long, 18 m above the gallery, gallery-like section. Its place is uncertain.
-- **Neighbours**: Khafre (215.25 m, 143.5 m) and Menkaure (103.4 m, 65.5 m) sizes from Lehner 1997; their centres
-  ([-343, -345] and [-650, -760] m), Khafre's 10 m higher base and the extent of their remaining casing are
-  estimates from published plans and photographs. Not checked against GPMP coordinates.
+- **Relieving chambers** (see-through): now measured: levels from Vyse's and Perring's tables, matching the 2024
+  laser survey's section to 0.02-0.17 m; plans from Vyse (refs/above-kings.md).
+- **Big Void** (see-through): through the four centres triangulated in Morishima et al. 2017 (fig. 2), each uncertain by
+  about 5 m; its section ("comparable to the Grand Gallery") and whether level or inclined are not known.
+- **Neighbours**: now from Petrie's triangulation of the whole site (P §19), converted to this frame (checked against
+  his side lengths and centre distances to under 3 cm), base levels from Perring's levelling (refs/neighbours.md).
+  Still estimated: the height of Menkaure's granite casing on its east face (taken as the north's 7.87 m).
 - **Not modelled**: the well shaft (only its two mouths), Davison's passage, the Queen's Chamber shafts beyond 3 m,
   the boat pits, the queens' pyramids, the temple and causeway.
 

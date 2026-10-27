@@ -4,7 +4,7 @@
 import { Color3, Mesh, StandardMaterial } from '@babylonjs/core';
 import { Geo, add, mul, norm, sub } from './geom.js';
 import { chevrons } from './exterior.js';
-import { ENTRANCE, GALLERY, KING, RELIEVING, VOID } from './survey.js';
+import { ENTRANCE, RELIEVING, VOID } from './survey.js';
 
 function glow(scene, name, hex, alpha) {
   const m = new StandardMaterial(name, scene);
@@ -43,28 +43,32 @@ export function buildXray(scene, spaces) {
     if (sp.name === 'coffer') continue;
     solid(known, sp.box ? boxCorners(sp.box) : tubeCorners(sp.a, sp.b, sp.w, sp.h));
   }
-  // The relieving chambers: five low spaces above the King's Chamber, granite beams between, to 21.11 m above its
-  // floor (Vyse, unverified). Drawn evenly spaced in that height.
-  const K = KING;
-  const x1 = K.east + 0.3, x0 = x1 - RELIEVING.length;
-  const z1 = K.north + 0.0, z0 = z1 - RELIEVING.width;
-  const span = RELIEVING.top - K.ceiling;
-  for (let i = 0; i < RELIEVING.count; i++) {
-    const yb = K.ceiling + (span * (i + 0.45)) / (RELIEVING.count + 0.5);
-    solid(found, boxCorners([x0, yb, z0, x1, yb + (i === RELIEVING.count - 1 ? 2.2 : 0.9), z1]));
+  // The relieving chambers, each from its floor to its ceiling, Campbell's with its gable; Davison's passage.
+  for (const c of RELIEVING.chambers) {
+    const x1 = RELIEVING.east, x0 = x1 - c.length, z0 = RELIEVING.z - c.width / 2, z1 = RELIEVING.z + c.width / 2;
+    if (c.apex) {
+      solid(found, boxCorners([x0, c.floor, z0, x1, c.spring, z1]));
+      // The gable: a prism with its ridge east-west.
+      const zc = RELIEVING.z;
+      found.quad([x0, c.spring, z0], [x1, c.spring, z0], [x1, c.apex, zc], [x0, c.apex, zc], [[0, 0], [1, 0], [1, 1], [0, 1]], 1);
+      found.quad([x1, c.spring, z1], [x0, c.spring, z1], [x0, c.apex, zc], [x1, c.apex, zc], [[0, 0], [1, 0], [1, 1], [0, 1]], 1);
+      found.tri([x0, c.spring, z1], [x0, c.spring, z0], [x0, c.apex, zc], [[0, 0], [1, 0], [0.5, 1]], 1);
+      found.tri([x1, c.spring, z0], [x1, c.spring, z1], [x1, c.apex, zc], [[0, 0], [1, 0], [0.5, 1]], 1);
+    } else solid(found, boxCorners([x0, c.floor, z0, x1, c.ceiling, z1]));
   }
+  const dv = RELIEVING.davison;
+  solid(found, boxCorners([dv.x - dv.width / 2, dv.floor, dv.z1, dv.x + dv.width / 2, dv.floor + dv.height, dv.z0]));
   // The North Face Corridor (SP23): 9.06 m long behind the chevrons.
   const ch = chevrons();
   const n = ENTRANCE.nfc;
   const zN = ch.face - n.behind;
   solid(found, boxCorners([ENTRANCE.x - n.width / 2, n.floor, zN - n.length, ENTRANCE.x + n.width / 2, n.floor + n.height, zN]));
-  // The Big Void (SP17): at least 30 m, over the gallery, like it in section. Its place is uncertain.
-  const G = GALLERY;
-  const mid = mul(add(G.a, G.b), 0.5);
-  const dir = norm(sub(G.b, G.a));
-  const a = add(add(mid, mul(dir, -VOID.length / 2)), [0, VOID.above, 0]);
-  const b = add(add(mid, mul(dir, VOID.length / 2)), [0, VOID.above, 0]);
-  solid(found, tubeCorners(a, b, VOID.width, VOID.height));
+  // The Big Void (SP17): through its four measured centres, a gallery-like section. Uncertain by about 5 m.
+  const c = VOID.centres;
+  for (let i = 0; i < c.length - 1; i++) {
+    const a = [VOID.x, c[i][1] - VOID.height / 2, c[i][0]], b = [VOID.x, c[i + 1][1] - VOID.height / 2, c[i + 1][0]];
+    solid(found, tubeCorners(b, a, VOID.width, VOID.height));
+  }
 
   const mk = known.mesh('xray-known', scene);
   mk.material = glow(scene, 'xray-known', '#ffb347', 0.85);

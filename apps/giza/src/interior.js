@@ -6,6 +6,7 @@
 // (no lights to compute in the headset). What you walk on is kept apart, as invisible floors for walking and teleport.
 import { Color3, MeshBuilder, StandardMaterial } from '@babylonjs/core';
 import { Geo, add, cross, dot, fbm, hash, len, mul, norm, sub } from './geom.js';
+import { KING_BEAMS, KING_JOINTS, RAMP_HOLES } from './measured.js';
 import { ANTE, ENTRANCE, GALLERY, KING, PASSAGES, PIT, PLUGS, QUEEN, S, TUNNEL, casingHalf, coreRecess } from './survey.js';
 
 const UP = [0, 1, 0];
@@ -81,7 +82,7 @@ export function buildInterior(scene, mats) {
   // ---------------------------------------------------------------- the descending passage
 
   const D = PASSAGES.descending;
-  // Today it opens where the core face is, under the chevrons; the 3 m in front went with the casing.
+  // Today its roof begins at z 94.7 (SP23, M&R): in front of that it lies open, with the casing and the outer chevrons.
   const chevFace = chevronFaceZ();
   const dDir = norm(sub(D.b, D.a));
   const dFrom = (D.a[2] - chevFace) / -dDir[2];
@@ -90,9 +91,13 @@ export function buildInterior(scene, mats) {
   const junction = 1110.64 * 0.0254;
   // The lower end of the well shaft, in its west wall at 3825 to 3856 in from the entrance (P §35).
   const wellLow = [3825 * 0.0254, 3856 * 0.0254];
+  // Where Al-Ma'mun's tunnel, turning east, breaks into its west wall (P §177: "some twenty feet" east).
+  const tunMouth = coreFaceZ(TUNNEL.floor + 1, TUNNEL.x) + 0.4;
+  const tunIn = tunMouth - TUNNEL.length;
+  const tunS = (D.a[2] - tunIn) / -dDir[2];
   const desc = passage('descending', D.a, D.b, D.width, D.height, {
     from: dFrom,
-    holes: { left: [{ u0: wellLow[0], u1: wellLow[1], v0: 0, v1: 0.75 }] },
+    holes: { left: [{ u0: wellLow[0], u1: wellLow[1], v0: 0, v1: 0.75 }, { u0: tunS - 1.0, u1: tunS + 1.0, v0: 0, v1: 3 }] },
   });
   // Built of fine limestone for its first 34.3 m, then cut in the rock: the rock part is a little darker and rougher.
   // (One material serves both; the change is in the colour.)
@@ -131,15 +136,18 @@ export function buildInterior(scene, mats) {
   const breakIn = PLUGS.to + 0.25;
   const asc = { P: (s, t, v) => add(add(add(A.a, mul(aDir, s)), mul([1, 0, 0], t)), mul(UP, v)) };
   {
-    const yMouth = T.floor;
-    const zMouth = coreFaceZ(yMouth + 1, T.x) + 0.4;
-    const zIn = zMouth - T.length;
-    // Straight in, level, rough, then left and up to break into the ascending passage's west wall: one bore.
-    const target = asc.P(breakIn + 1.1, -A.width / 2 + 0.2, 0);
-    // The last metre and a half turns east, square into the passage's wall.
-    const turn = [target[0] - 1.5, target[1] - 0.05, target[2] + 0.25];
-    tunnel([[T.x, yMouth, zMouth], [T.x, yMouth, zIn + 1.0], [turn[0] - 0.2, turn[1] - 0.25, turn[2] + 1.2], turn, [target[0] + 0.3, target[1], target[2]]], T.width, T.height);
-    for (let z = zMouth - 3; z > zIn; z -= 7) lamp([T.x - T.width / 2 + 0.08, yMouth + 1.7, z], 4, [T.x - 4, yMouth - 1, zIn - 4, T.x + 4, yMouth + 5, zMouth + 1]);
+    const F = T.floor;
+    // In from the mouth on the axis, 27 m south, then east into the descending passage (refs/entrance.md).
+    const descAt = desc.P(tunS, 0, 0);
+    const east = [descAt[0] - D.width / 2 + 0.35, Math.min(F, descAt[1] + 0.05), tunIn - 0.2];
+    const bend = [T.x, F, tunIn];
+    const branchFrom = T.x + 4.4;
+    tunnel([[T.x, F, tunMouth], bend, east], T.width, T.height, [{ from: T.length + branchFrom - 1.2, to: T.length + branchFrom + 1.0, side: -1 }]);
+    // The cavity up the west side of the plugs into the ascending passage above them (P pl. ix: z 73.8 to 69.6).
+    const target = asc.P(breakIn + 1.0, -A.width / 2 + 0.15, 0);
+    tunnel([[branchFrom, F, tunIn - 0.4], [5.3, F + 0.1, 74.4], [5.6, target[1] - 0.6, 71.2], [target[0] - 1.2, target[1] - 0.05, target[2] + 0.1], target], 1.6, 2.0);
+    for (let z = tunMouth - 3; z > tunIn; z -= 7) lamp([T.x - T.width / 2 + 0.08, F + 1.7, z], 4, [T.x - 4, F - 1, tunIn - 4, T.x + 4, F + 5, tunMouth + 1]);
+    lamp([5.3, F + 1.8, 74.4], 4, [3, F - 1, 69, 8, F + 6, tunIn + 1]);
   }
 
   // ---------------------------------------------------------------- the ascending passage
@@ -301,7 +309,7 @@ export function buildInterior(scene, mats) {
   // ================================================================ helpers that need the buffers above
 
   function chevronFaceZ() {
-    return coreFaceZ(ENTRANCE.chevron.spring, ENTRANCE.x) - 0.3;
+    return ENTRANCE.mouth;
   }
 
   function boxAround(pp, s, reach) {
@@ -430,7 +438,7 @@ export function buildInterior(scene, mats) {
   }
 
   /** Al-Ma'mun's tunnel: a rough, uneven bore along a path of points, its walls pushed in and out by noise. */
-  function tunnel(path, w, h) {
+  function tunnel(path, w, h, openings = []) {
     // Sample the path every 0.5 m; each sample's section is square to its heading.
     const samples = [];
     for (let i = 0; i < path.length - 1; i++) {
@@ -459,6 +467,10 @@ export function buildInterior(scene, mats) {
     };
     for (let i = 0; i < frames.length - 1; i++) {
       for (let k = 0; k < nr; k++) {
+        // Leave a side open where another bore leaves this one (side: +1 right of the heading, -1 left).
+        const ang = ((k + 0.5) / nr) * Math.PI * 2;
+        const sm = (frames[i].s + frames[i + 1].s) / 2;
+        if (openings.some((o) => sm > o.from && sm < o.to && Math.cos(ang) * o.side > 0.25 && Math.sin(ang) > -0.5)) continue;
         const q = [ring(frames[i], k), ring(frames[i + 1], k), ring(frames[i + 1], k + 1), ring(frames[i], k + 1)];
         const mid = mul(add(q[0], q[2]), 0.5);
         const axis = add(mul(add(frames[i].p, frames[i + 1].p), 0.5), mul(UP, h / 2));
@@ -470,7 +482,7 @@ export function buildInterior(scene, mats) {
       const a = path[i], b = path[i + 1];
       const dir = norm(sub(b, a));
       const hd = norm([dir[0], 0, dir[2]]);
-      floor(add(a, mul(UP, 0.03)), dir, [-hd[2], 0, hd[0]], -0.3, len(sub(b, a)) + 0.3, -w / 2 + 0.3, w / 2 - 0.3);
+      floor(add(a, mul(UP, 0.03)), dir, [-hd[2], 0, hd[0]], -0.6, len(sub(b, a)) + 0.6, -w / 2 + 0.15, w / 2 - 0.15);
       spaces.push({ name: "Al-Ma'mun's tunnel", a, b, w, h });
     }
   }
@@ -520,27 +532,44 @@ export function buildInterior(scene, mats) {
     for (const sgn of [-1, 1]) {
       const t = (sgn * f) / 2;
       const inward = mul(side, -sgn);
-      const holes = [];
-      for (let i = 0; i < G.holes.count; i++) {
-        const sc = 0.9 + ((sStep - 1.8) * (i + 0.5)) / G.holes.count;
-        const hl = i % 2 ? G.holes.short : G.holes.long;
-        holes.push({ u0: sc - hl / 2, u1: sc + hl / 2 });
-      }
+      // The holes as Smyth measured them, 27 on the ramp and the 28th on the great step (measured.js).
+      const measured = RAMP_HOLES[sgn < 0 ? 'W' : 'E'];
+      const holes = measured.slice(0, 27).map(([u0, u1, breadth, depth, stone]) => ({ u0, u1, breadth, depth, stone }));
       // Inner side
       const wellHole = sgn < 0 ? [{ u0: G.well - 0.45, u1: G.well + 0.45, v0: 0, v1: G.ramp - 0.02 }] : [];
-      rect('fine', P(0, t, 0), dir, UP, gap, sStep, 0, G.ramp, inward, sgn < 0 ? [] : [], 0.85);
+      rect('fine', P(0, t, 0), dir, UP, gap, sStep, 0, G.ramp, inward, [], 0.85);
       rect('fine', P(0, t, 0), dir, UP, 0, gap, -(G.a[1] - PASSAGES.queens.a[1]) - 0.0, G.ramp, inward, wellHole, 0.85);
-      // Top, with its holes cut as dark recesses 20 cm deep against the wall.
-      const tw0 = (sgn * f) / 2, tw1 = (sgn * W) / 2;
-      const topHoles = holes.map((h) => ({ u0: h.u0, u1: h.u1, v0: 0, v1: 0.16 }));
+      // Top, with its holes against the wall, each its own breadth and depth; their ends are cut upright (S p. 78).
+      const tw1 = (sgn * W) / 2;
+      const topHoles = holes.map((h) => ({ u0: h.u0, u1: h.u1, v0: 0, v1: h.breadth }));
       const acrossDir = mul(side, sgn);
       // Measured from the wall inwards so the holes sit against it.
       rect('fine', P(0, tw1, G.ramp), dir, mul(acrossDir, -1), 0, sStep, 0, (W - f) / 2, UP, topHoles, 0.9);
-      for (const h of topHoles) {
-        const a = P(h.u0, tw1 - sgn * 0.16, G.ramp), b = P(h.u1, tw1 - sgn * 0.16, G.ramp);
-        const down = mul(UP, -0.2);
+      for (const h of holes) {
+        const a = P(h.u0, tw1 - sgn * h.breadth, G.ramp), b = P(h.u1, tw1 - sgn * h.breadth, G.ramp);
+        const down = mul(UP, -h.depth);
         g.dark.face([a, b, add(b, down), add(a, down)], inward, () => [0, 0], () => 0.4);
-        g.dark.face([add(a, down), add(b, down), add(add(b, down), mul(acrossDir, 0.16)), add(add(a, down), mul(acrossDir, 0.16))], UP, () => [0, 0], () => 0.15);
+        g.dark.face([add(a, down), add(b, down), add(add(b, down), mul(acrossDir, h.breadth)), add(add(a, down), mul(acrossDir, h.breadth))], UP, () => [0, 0], () => 0.15);
+        // The stone let into the wall over its middle: 18 in high, 13 in wide (S pp. 78-79), with the rough groove
+        // chopped across it (P §46). How high it starts above the ramp is not measured: here, at the ramp's top.
+        if (h.stone) {
+          const mid = (h.u0 + h.u1) / 2, half = 0.33 / 2;
+          const wallIn = tw1 - sgn * 0.004;
+          const c0 = P(mid - half, wallIn, G.ramp + 0.02), c1 = P(mid + half, wallIn, G.ramp + 0.02);
+          const up = mul(UP, 0.457);
+          g.fine.face([c0, c1, add(c1, up), add(c0, up)], inward, uvFor(2, side), tone(0.8));
+          const gy = mul(UP, 0.22);
+          g.dark.face([add(c0, gy), add(c1, gy), add(add(c1, gy), mul(UP, 0.05)), add(add(c0, gy), mul(UP, 0.05))].map((q) => add(q, mul(inward, 0.002))), inward, () => [0, 0], () => 0.35);
+        }
+      }
+      // Hole 28, cut into the top of the great step in its corner (S p. 78).
+      {
+        const [u0, u1, breadth] = measured[27];
+        const zA = G.a[2] + dir[2] * u0, zB = G.b[2];
+        const xw = G.b[0] + tw1;
+        const xi = xw - sgn * breadth;
+        g.dark.face([[xw, G.step.top + 0.003, zA], [xi, G.step.top + 0.003, zA], [xi, G.step.top + 0.003, zB], [xw, G.step.top + 0.003, zB]], UP, () => [0, 0], () => 0.12);
+        void u1;
       }
       if (sgn < 0) g.dark.face([P(G.well - 0.45, t + 0.005, 0.02), P(G.well + 0.45, t + 0.005, 0.02), P(G.well + 0.45, t + 0.005, G.ramp - 0.03), P(G.well - 0.45, t + 0.005, G.ramp - 0.03)].map((p) => [p[0], p[1] - (G.a[1] - PASSAGES.queens.a[1]) * 0, p[2]]), inward, () => [0, 0], () => 0.05);
       // The wall, then the seven laps, each stepping in by about 3 in.
@@ -653,29 +682,22 @@ export function buildInterior(scene, mats) {
         [[K.west + jd, 0, 0], N, K.south, K.north, [1, 0, 0]],
       ]) g.dark.rect(O, U, UP, u0, u1, y - 0.006, y + 0.006, n, { cell: 20, uv: () => [0, 0], col: () => 0.35 });
     }
-    // Vertical joints: the north wall's top course as measured; the rest of the blocks at estimated lengths (spec.md).
+    // Vertical joints, as measured, course by course on every wall (measured.js).
     const vjoint = (O, U, u, ya, yb, n) => g.dark.rect(O, U, UP, u - 0.005, u + 0.005, ya, yb, n, { cell: 20, uv: () => [0, 0], col: () => 0.35 });
     for (let c = 0; c < 5; c++) {
       const ya = Math.max(y0, K.base + c * K.course), yb = Math.min(y1, K.base + (c + 1) * K.course);
       if (yb <= ya) continue;
-      const walls = [
-        [[0, 0, K.north - jd], E, K.east, -1, [0, 0, -1], K.east - K.west],
-        [[0, 0, K.south + jd], E, K.east, -1, [0, 0, 1], K.east - K.west],
-      ];
-      for (const [O, U, start, sense, n, length] of walls) {
-        const cuts = c === 4 && n[2] < 0 ? K.topJoints : estimateJoints(length, c * 7 + (n[2] < 0 ? 1 : 2));
-        for (const d of cuts) vjoint(O, U, start + sense * d, ya, yb, n);
-      }
-      for (const [O, n, zs] of [[[K.east - jd, 0, 0], [-1, 0, 0], K.south], [[K.west + jd, 0, 0], [1, 0, 0], K.south]]) {
-        if (c === 4) continue; // the top course of the end walls is a single stone (P §52)
-        for (const d of estimateJoints(K.north - K.south, c * 5 + (n[0] < 0 ? 3 : 4))) vjoint(O, N, zs + d, ya, yb, n);
-      }
+      for (const x of KING_JOINTS.north[c]) vjoint([0, 0, K.north - jd], E, x, ya, yb, [0, 0, -1]);
+      for (const x of KING_JOINTS.south[c]) vjoint([0, 0, K.south + jd], E, x, ya, yb, [0, 0, 1]);
+      for (const z of KING_JOINTS.east[c]) vjoint([K.east - jd, 0, 0], N, z, ya, yb, [-1, 0, 0]);
+      for (const z of KING_JOINTS.west[c]) vjoint([K.west + jd, 0, 0], N, z, ya, yb, [1, 0, 0]);
     }
-    let x = K.east;
-    for (const w of K.beams.slice(0, -1)) {
-      x -= w;
-      g.dark.rect([x, y1 - jd, 0], N, E, K.south, K.north, -0.006, 0.006, [0, -1, 0], { cell: 20, uv: () => [0, 0], col: () => 0.3 });
-    }
+    // The roof beams' joints: each beam runs a little askew, from its place on the north wall to its place on the south.
+    KING_BEAMS.north.forEach((xn, i) => {
+      const xs = KING_BEAMS.south[i];
+      const yc = y1 - jd;
+      g.dark.face([[xn - 0.006, yc, K.north], [xn + 0.006, yc, K.north], [xs + 0.006, yc, K.south], [xs - 0.006, yc, K.south]], [0, -1, 0], () => [0, 0], () => 0.3);
+    });
     // The coffer: red granite, open, with the ledge for its lost lid.
     coffer();
     const box = [K.west - 0.5, y0 - 1, K.south - 0.5, K.east + 0.5, y1 + 0.5, K.north + 0.5];
@@ -684,16 +706,6 @@ export function buildInterior(scene, mats) {
     lamp([K.east - 0.35, y0 + 0.25, K.south + 0.35], 22, box);
     lamp([K.west + 0.35, y0 + 0.25, K.south + 0.35], 22, box);
     lamp([(K.east + K.west) / 2, y1 - 0.3, (K.north + K.south) / 2], 10, box, [1, 0.95, 0.88]);
-  }
-
-  function estimateJoints(length, seed) {
-    const out = [];
-    let d = 1.2 + 1.3 * hash(seed, 1);
-    while (d < length - 0.8) {
-      out.push(d);
-      d += 1.3 + 1.5 * hash(seed, Math.round(d * 10));
-    }
-    return out;
   }
 
   function coffer() {

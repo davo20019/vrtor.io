@@ -38,42 +38,66 @@ export function coreHalf(k) {
 }
 
 /**
- * Where the north face is opened: the blocks there stand further back. Round the entrance they were taken down to the
- * chevrons; at Al-Ma'mun's tunnel they were broken out. Returns how much further back, or 0.
+ * Where the north face is opened, as the z its blocks' fronts are cut back to (or null). Round the entrance, the
+ * casing and the pairs of chevrons in front of the two that remain went, leaving a deep notch: under the chevrons it
+ * reaches the passage's mouth (z 94.7), beside them their face (91.1), and behind their gable the masonry they shelter.
+ * At Al-Ma'mun's tunnel the blocks are broken out round its bore.
  */
 function cut(fi, u, y0, y1) {
-  if (fi !== 0) return 0;
+  if (fi !== 0) return null;
   const ch = chevrons();
   const y = (y0 + y1) / 2;
-  // The gable and the passage's mouth under it: a triangle on the passage's line, cleared to behind the chevrons.
-  if (y > ch.mouthFloor - 0.3 && y < ch.top + 0.4) {
-    const hw = y < ch.spring ? ch.mouthHalf : Math.max(0, (ch.top - y) / Math.tan(ENTRANCE.chevron.angle)) + 0.15;
-    if (Math.abs(u - ENTRANCE.x) < hw) return ch.depth;
+  const dx = Math.abs(u - ENTRANCE.x);
+  // The masonry over the passage's mouth, built here as its own face (buildNorthFace): blocks well back.
+  if (y > ch.floor && y < ch.spring && dx < ch.frame) return ENTRANCE.mouth - 2.5;
+  // Beside the mouth, under the chevrons: back to the mouth's plane.
+  if (y > ch.floor && y < ch.spring && dx < ch.notch) return ENTRANCE.mouth;
+  if (y >= ch.spring && y < ch.top + 0.3) {
+    const hw = ch.outline(y);
+    // Inside the gable's outline: behind the chevrons. Beside it, a block's width more: back to their face.
+    if (dx < hw) return ch.face - ch.depth - 0.3;
+    if (dx < hw + 1.1) return ch.face;
   }
   // The tunnel's mouth: a ragged hole round its bore.
   const t = TUNNEL;
-  if (Math.abs(u - t.x) < t.width / 2 + 0.5 && y > t.floor - 0.4 && y < t.floor + t.height + 0.5) return 2.6;
-  return 0;
+  if (Math.abs(u - t.x) < t.width / 2 + 0.5 && y > t.floor - 0.4 && y < t.floor + t.height + 0.5) return 'tunnel';
+  return null;
 }
 
 let chev = null;
-/** The chevron gable's layout on the face (survey.js ENTRANCE; spec.md, "Chevrons"). */
+/** The chevron gable on the face (survey.js ENTRANCE), its blocks as outlines in x, y. */
 export function chevrons() {
   if (chev) return chev;
   const c = ENTRANCE.chevron;
-  const A = c.angle;
-  // Thickness square to the slope, from the published lengths: top = soffit + w (cot A + tan A), with a level bed
-  // and an upright butment (P §34): 0.76 m for the lower pair, 0.83 m for the upper.
-  const k = 1 / Math.tan(A) + Math.tan(A);
-  const lower = { soffit: c.lower.soffit, w: (167.7 * 0.0254 - c.lower.soffit) / k };
-  const upper = { soffit: c.upper.soffit, w: (185 * 0.0254 - c.upper.soffit) / k };
-  const spring = c.spring;
-  const rise = lower.soffit * Math.sin(A);
-  const lowerApex = spring + rise + lower.w / Math.cos(A);
-  const top = lowerApex + upper.w / Math.cos(A);
-  const h = casingHalf(spring);
-  const face = h - coreRecess(spring, ENTRANCE.x, h) - 0.3;
-  chev = { A, lower, upper, spring, rise, lowerApex, top, face, depth: 1.6, mouthHalf: 1.0, mouthFloor: 15.0 };
+  const X = ENTRANCE.x;
+  const P = ([dx, y], s) => [X + s * dx, y];
+  // The upper block's foot: its underside length down the lower block's top from the apex (P §34).
+  const top = [c.lowerOuter[0] - c.lowerApexTop[0], c.lowerOuter[1] - c.lowerApexTop[1]];
+  const tl = Math.hypot(top[0], top[1]);
+  const upperFoot = [(top[0] / tl) * c.upperUnder, c.lowerApexTop[1] + (top[1] / tl) * c.upperUnder];
+  const blocks = [];
+  // Each block stands on a level bed (its 39° 30' angle on the base is its own slope, P §34) with an upright outer end.
+  for (const s of [-1, 1]) {
+    blocks.push([P(c.lowerFoot, s), P([c.lowerOuter[0], c.lowerFoot[1]], s), P(c.lowerOuter, s), P(c.lowerApexTop, s), P(c.lowerApexUnder, s)]);
+    blocks.push([P(upperFoot, s), P([c.upperOuter[0], upperFoot[1]], s), P(c.upperOuter, s), P(c.upperApex, s), P(c.lowerApexTop, s)]);
+  }
+  // Half-width of the gable's outline at height y, through its outer corners.
+  const pts = [[c.lowerFoot[1], c.lowerOuter[0]], [c.lowerOuter[1], c.lowerOuter[0]], [c.upperOuter[1], c.upperOuter[0]], [c.upperApex[1], 0]];
+  const outline = (y) => {
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [ya, wa] = pts[i], [yb, wb] = pts[i + 1];
+      if (y >= ya && y <= yb) return wa + ((wb - wa) * (y - ya)) / (yb - ya);
+    }
+    return 0;
+  };
+  const D = (26.52 * Math.PI) / 180;
+  // The passage's floor at its mouth today.
+  const floor = 668.2 * 0.0254 - (4010.0 * 0.0254 - ENTRANCE.mouth) * Math.tan(D);
+  chev = {
+    blocks, outline, face: c.face, depth: c.thick, spring: c.lowerFoot[1], top: c.upperApex[1],
+    underApex: c.lowerApexUnder[1], foot: c.lowerFoot[0],
+    floor, frame: 1.4, notch: 2.6,
+  };
   return chev;
 }
 
@@ -103,8 +127,10 @@ export function row(fi, k) {
     const mid = u + len / 2;
     const rec = recess(fi, k, i, mid, (y0 + y1) / 2, half);
     const tint = 0.84 + 0.18 * hash(fi, k, i, 3) + 0.12 * (fbm(mid, y0, 9, 40 + fi) - 0.5);
-    const back = cut(fi, mid, y0, y1);
-    blocks.push({ u0: u, u1: u + len, rec: rec + back, tint: back ? tint * 0.9 : tint, sag: 0.04 * hash(fi, k, i, 5) });
+    // Cut back: to a plane (a z on the north face), or broken out round the tunnel.
+    const c = cut(fi, mid, y0, y1);
+    const deep = c === 'tunnel' ? rec + 2.6 : c === null ? rec : Math.max(rec, half - c);
+    blocks.push({ u0: u, u1: u + len, rec: deep, cut: deep - rec, tint: c !== null ? tint * 0.9 : tint, sag: 0.04 * hash(fi, k, i, 5) });
     u += len;
     i++;
   }
@@ -154,7 +180,7 @@ function block(g, f, rw, b, prev, next, behind = 0, plain = false) {
   const lo = t * AO_FRONT, hi = t;
   const sNext = k + 1 < S.levels.length - 1 ? coreHalf(k + 1) : 0;
   // Far enough back to pass under the next course however far its blocks stand back.
-  const back = Math.max(0, sNext - 3.6);
+  const back = Math.max(0, Math.min(sNext - 3.6, half - b.rec - behind - 1.0));
   const P = (u, ss, y) => world(f, u, ss, y);
   const along = (p) => (p[0] * f.tx + p[2] * f.tz) / TILE;
   const out = (p) => (p[0] * f.nx + p[2] * f.nz) / TILE;
@@ -163,14 +189,18 @@ function block(g, f, rw, b, prev, next, behind = 0, plain = false) {
   const cl = (u, d) => Math.max(-d, Math.min(d, u));
 
   // The underside, seen where the course below stands further back.
+  // Over the entrance's notch and the tunnel's mouth the course below stands far back: the underside reaches over it.
+  const bm = (b.u0 + b.u1) / 2;
+  const overOpening = fi === 0 && ((Math.abs(bm - ENTRANCE.x) < 6.5 && rw.y0 > 12 && rw.y0 < 28) || (Math.abs(bm - TUNNEL.x) < 3 && rw.y0 > 5 && rw.y0 < 10.5));
   const under = (ua, ub, sf, d) => {
+    if (overOpening) d = Math.max(d, 8);
     const q = [P(ua, sf, y0), P(ub, sf, y0), P(ub, sf - d, y0), P(ua, sf - d, y0)];
     g.face(q, [0, -1, 0], (p) => [along(p), out(p)], () => lo * 0.6);
   };
   if (plain) {
     const q = [P(b.u0, s, y0), P(b.u1, s, y0), P(b.u1, s, y1), P(b.u0, s, y1)];
     g.quad(q[0], q[1], q[2], q[3], uvF(q), [lo, lo, hi, hi]);
-    under(b.u0, b.u1, s, 1.6);
+    under(b.u0, b.u1, s, 1.6 + (b.cut ?? 0));
     const tq = [P(cl(b.u0, s), s, y1), P(cl(b.u1, s), s, y1), P(cl(b.u1, back), back, y1), P(cl(b.u0, back), back, y1)];
     g.quad(tq[0], tq[1], tq[2], tq[3], uvT(tq), [hi, hi, t * AO_BACK, t * AO_BACK]);
     for (const [side, nb] of [[-1, prev], [1, next]]) {
@@ -209,7 +239,7 @@ function block(g, f, rw, b, prev, next, behind = 0, plain = false) {
       g.quad(q[0], q[1], q[2], q[3], uvF(q), [shade(r), shade(r), shade(r + 1), shade(r + 1)]);
     }
   }
-  under(u0, u1, s, 1.6);
+  under(u0, u1, s, 1.6 + (b.cut ?? 0));
   // The worn top arris, sloping back to the tread.
   const sT = sTop - ct;
   let q = [F[2][0], F[2][2], P(u1 - cs, sT, y1), P(u0 + cs, sT, y1)];
@@ -260,7 +290,7 @@ export function buildShell(scene) {
       let cur = null;
       for (const b of rw.blocks) {
         if (!cur || b.u0 - cur.u0 > 6 || Math.abs(b.rec - cur.rec) > 0.4) {
-          cur = { u0: b.u0, u1: b.u1, rec: b.rec, tint: b.tint, n: 1 };
+          cur = { u0: b.u0, u1: b.u1, rec: b.rec, tint: b.tint, n: 1, cut: b.cut };
           runs.push(cur);
         } else {
           cur.u1 = b.u1;
@@ -412,15 +442,14 @@ export function buildNorthFace(scene, mats) {
   const uvF = (p) => [p[0] / T, p[1] / T];
   const uvS = (p) => [p[2] / T, p[1] / T];
   const uvT = (p) => [p[0] / T, p[2] / T];
-  const depth = ENTRANCE.chevron.thick;
-  const z0 = ch.face, z1 = ch.face - depth;
-  const cA = Math.cos(ch.A), sA = Math.sin(ch.A);
+  const depth = ch.depth;
+  const z0 = ch.face;
 
   /** A prism from an x-y outline (four points), from the face back by `d`. */
   function prism(geo, pts, zf, d, tint) {
     const back = zf - d;
     const P = (q, z) => [q[0], q[1], z];
-    geo.face(pts.map((q) => P(q, zf)), [0, 0, 1], uvF, () => tint);
+    for (let i = 1; i < pts.length - 1; i++) geo.face([P(pts[0], zf), P(pts[i], zf), P(pts[i + 1], zf), P(pts[i + 1], zf)], [0, 0, 1], uvF, () => tint);
     for (let i = 0; i < pts.length; i++) {
       const a = pts[i], b = pts[(i + 1) % pts.length];
       // The edge's outward normal in x-y: pick the side away from the outline's centre.
@@ -434,38 +463,34 @@ export function buildNorthFace(scene, mats) {
     }
   }
 
-  // The chevrons: per side, the lower block then the upper resting on it.
-  for (const s of [-1, 1]) {
-    const lo = ch.lower, up = ch.upper;
-    const Sp = [X + s * lo.soffit * cA, ch.spring];
-    const Ap = [X, ch.spring + ch.rise];
-    const Eo = [Sp[0] + (s * lo.w) / sA, ch.spring];
-    const Em = [X, ch.lowerApex];
-    // A few centimetres of joint at the butment and between the pairs, so each block reads as itself.
-    const j = (q, dx, dy) => [q[0] + s * dx, q[1] + dy];
-    prism(core, [Sp, Eo, j(Em, 0.03, -0.03), j(Ap, 0.03, 0)], z0, depth, 1.0);
-    const Sp2 = [X + s * up.soffit * cA, ch.lowerApex - up.soffit * sA];
-    const Eo2 = [Sp2[0] + (s * up.w) / sA, Sp2[1]];
-    const Em2 = [X, ch.top];
-    prism(core, [j(Sp2, 0, 0.03), j(Eo2, 0, 0.03), j(Em2, 0.03, 0), j(Em, 0.03, 0.04)], z0 + 0.04, depth, 1.04);
-  }
-  // Behind the gable's opening, the masonry the North Face Corridor lies in (SP23): a wall 0.84 m back.
-  fine.rect([0, 0, z0 - ENTRANCE.nfc.behind], [1, 0, 0], [0, 1, 0], X - ch.lower.soffit * cA, X + ch.lower.soffit * cA, ch.spring, ch.spring + ch.rise, [0, 0, 1], { cell: 2, uv: uvF, col: () => 0.62 });
+  // The chevrons, as drawn from the scan: each block drawn in a little at its edges, so the joints between them show.
+  ch.blocks.forEach((pts, i) => {
+    const cx = pts.reduce((a, q) => a + q[0], 0) / pts.length, cy = pts.reduce((a, q) => a + q[1], 0) / pts.length;
+    const shrunk = pts.map(([x, y]) => {
+      const dx = x - cx, dy = y - cy, l = Math.hypot(dx, dy);
+      return [x - (dx / l) * 0.03, y - (dy / l) * 0.03];
+    });
+    prism(core, shrunk, z0, depth, i % 2 ? 1.04 : 1.0);
+  });
+  // The stone under the lower pair's gable, just behind them.
+  core.rect([0, 0, z0 - 0.08], [1, 0, 0], [0, 1, 0], X - ch.foot - 0.2, X + ch.foot + 0.2, ch.spring - 0.1, ch.underApex, [0, 0, 1], { cell: 1, uv: uvF, col: () => 0.72 });
 
-  // The mouth: the masonry round the passage, from below its floor to the chevrons' bed, with the passage through it.
+  // The mouth today, where the passage's roof begins (z 94.7): the masonry round it up to the chevrons' bed, with the
+  // passage through it, and the ledge from it back to the chevrons' feet.
   {
-    const D = 26.52 * Math.PI / 180;
-    const yF = 668.2 * 0.0254 - (4010.0 * 0.0254 - z0) * Math.tan(D);
-    const hv = 47.24 * 0.0254 / Math.cos(D);
+    const D = (26.52 * Math.PI) / 180;
+    const zm = ENTRANCE.mouth;
+    const yF = ch.floor;
+    const hv = (47.24 * 0.0254) / Math.cos(D);
     const w = 41.53 * 0.0254;
-    const hw = ch.mouthHalf + 0.15;
-    const yb = ch.mouthFloor - 0.15;
-    core.rect([0, 0, z0], [1, 0, 0], [0, 1, 0], X - hw, X + hw, yb, ch.spring, [0, 0, 1], { cell: 1.2, holes: [{ u0: X - w / 2, u1: X + w / 2, v0: yF, v1: yF + hv }], uv: uvF, col: (p) => 0.9 + 0.1 * hash(Math.round(p[0] * 2), Math.round(p[1] * 2)) });
-    for (const sx of [-1, 1]) core.rect([X + sx * hw, 0, 0], [0, 0, 1], [0, 1, 0], z0 - ch.depth, z0, yb, ch.spring, [sx, 0, 0], { cell: 1.2, uv: uvS, col: () => 0.8 });
-    core.rect([0, ch.spring, 0], [1, 0, 0], [0, 0, 1], X - hw, X + hw, z0 - ch.depth, z0, [0, 1, 0], { cell: 2, uv: uvT, col: () => 0.9 });
-    // Where you can stand in front of it.
-    floor.rect([0, yF, 0], [1, 0, 0], [0, 0, 1], X - 1.6, X + 1.6, z0, z0 + 1.2, [0, 1, 0], { cell: 4, uv: () => [0, 0] });
-    core.rect([0, yF, 0], [1, 0, 0], [0, 0, 1], X - hw, X + hw, z0, z0 + 1.1, [0, 1, 0], { cell: 1.2, uv: uvT, col: () => 0.85 });
+    const hw = ch.frame;
+    const yb = yF - 0.25;
+    core.rect([0, 0, zm], [1, 0, 0], [0, 1, 0], X - hw, X + hw, yb, ch.spring, [0, 0, 1], { cell: 1.2, holes: [{ u0: X - w / 2, u1: X + w / 2, v0: yF, v1: yF + hv }], uv: uvF, col: (p) => 0.85 + 0.12 * hash(Math.round(p[0] * 2), Math.round(p[1] * 1.5)) });
+    for (const sx of [-1, 1]) core.rect([X + sx * hw, 0, 0], [0, 0, 1], [0, 1, 0], zm - 2.5, zm, yb, ch.spring, [sx, 0, 0], { cell: 1.2, uv: uvS, col: () => 0.8 });
+    core.rect([0, ch.spring, 0], [1, 0, 0], [0, 0, 1], X - ch.notch, X + ch.notch, z0, zm, [0, 1, 0], { cell: 1.5, uv: uvT, col: () => 0.88 });
+    // The landing in front of the mouth, on the broken courses (its extent is estimated).
+    core.rect([0, yF, 0], [1, 0, 0], [0, 0, 1], X - ch.notch, X + ch.notch, zm, zm + 3.2, [0, 1, 0], { cell: 1.2, uv: uvT, col: (p) => 0.8 + 0.1 * hash(Math.round(p[0] * 3), Math.round(p[2] * 3)) });
+    floor.rect([0, yF, 0], [1, 0, 0], [0, 0, 1], X - ch.notch, X + ch.notch, zm, zm + 3.2, [0, 1, 0], { cell: 4, uv: () => [0, 0] });
   }
 
   // The casing stones in place at the middle of the north side, on their pavement (P §26, §27).

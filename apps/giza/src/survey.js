@@ -28,7 +28,7 @@ export const S = {
   pavement: { thick: 21 * IN, beyond: 0.43 },
   // Casing in place: course 1 at the middle of the north side, 1.495 m high, 1.575 m deep at the top and 2.743 m at the
   // bottom (P §26). Their extent along the side is estimated (spec.md).
-  casingStones: { u0: -6.5, u1: 5.5, height: 58.85 * IN, top: 62 * IN, bottom: 108 * IN },
+  casingStones: { u0: -10.5, u1: -1.6, height: 58.85 * IN, top: 62 * IN, bottom: 108 * IN },
 };
 S.half = S.base / 2;
 S.tan = Math.tan(S.slope);
@@ -99,8 +99,7 @@ export const GALLERY = {
   slab: 52.2 * IN,
   // The great step: its face 0.4 in S of centre, its top 43.030 m up, 1.55 m long (P §46).
   step: { z: -0.4 * IN, top: 1694.1 * IN, length: 61.25 * IN },
-  // Ramp holes: 28 a side, long and short in turn, 23.32 and 20.51 in (P §46; W).
-  holes: { count: 28, long: 23.32 * IN, short: 20.51 * IN },
+  // Ramp holes: measured.js (Smyth's survey of all 56).
   // The well shaft's upper mouth, in the west ramp, its middle 35.4 in from the north wall (P §46).
   well: 35.4 * IN,
 };
@@ -132,8 +131,6 @@ export const KING = {
   course: 47.04 * IN, // five granite courses (P §52)
   // Nine roof beams, their widths along the north side from the east (P §53).
   beams: [22.4, 45.5, 52.5, 49.1, 53.9, 44.8, 58.1, 62.7, 23.3].map((w) => w * IN),
-  // The north wall's top-course joints, from its east end (P §52).
-  topJoints: [62.1 * IN, 248.8 * IN],
   // The coffer (P §59), and where it stands: its N.W. corner 49.5 in from the north wall and 53.3 from the west (P §58).
   coffer: {
     length: 89.62 * IN, width: 38.5 * IN, height: 41.31 * IN,
@@ -183,41 +180,82 @@ export const PIT = {
 };
 
 /**
- * The entrance on the north face. The gable of the two remaining pairs of chevron blocks: 0.838 m thick, at 50° 28'
- * (P §34). Their lengths below are 107.6 in (lower) and 119 in (upper); their depth across the slope 91 and 114 in.
- * Where they stand on the face is estimated from photographs (spec.md, "Chevrons").
+ * The entrance on the north face (refs/entrance.md). The two remaining pairs of chevron blocks, as drawn from the
+ * laser scan in ScanPyramids 2023 (Fig. 5) and dimensioned by Maragioglio & Rinaldi (1965, tav. 2 fig. 8), tied to
+ * Petrie's frame at the passages' junction: per side, [x off the passage's line, y], for the lower block's foot,
+ * underside apex, top apex and outer top corner, and the upper block's outer top corner and apex. Their north face is
+ * at z 91.1, 0.838 m deep (P §34), the pairs flush; the upper rests on the lower's top face.
  */
 export const ENTRANCE = {
   x: X0,
-  chevron: { angle: deg(50, 28), thick: 33 * IN, lower: { soffit: 107.6 * IN, depth: 91 * IN }, upper: { soffit: 119.25 * IN, depth: 114 * IN }, spring: 19.3 },
-  // The North Face Corridor: 2.02 x 2.18 m, 9.06 m long, its north end 0.84 m behind the chevron's face, floor about
-  // 20 m up, on the passage's line (SP23).
-  nfc: { width: 2.02, height: 2.18, length: 9.06, behind: 0.84, floor: 20.0 },
+  chevron: {
+    face: 91.1,
+    thick: 33 * IN,
+    lowerFoot: [2.09, 18.15],
+    lowerApexUnder: [0, 19.95],
+    lowerApexTop: [0, 22.62],
+    lowerOuter: [3.37, 19.65],
+    upperUnder: 119.25 * IN, // the upper block's length below (P §34), down the lower block's top from the apex
+    upperOuter: [3.78, 22.33],
+    upperApex: [0, 25.62],
+  },
+  // The passage's first surviving roof block (SP23, M&R): the mouth today.
+  mouth: 94.7,
+  // The North Face Corridor: 2.02 x 2.18 m, 9.06 m long, from the chevron's back face south, floor at 20.67 (SP23).
+  nfc: { width: 2.02, height: 2.18, length: 9.06, behind: 0.84, floor: 20.67 },
 };
 
 /**
- * Al-Ma'mun's tunnel, the way in today: forced through the 6th and 7th courses about 7 m up, straight in for about
- * 27 m, then left to meet the ascending passage above the plugs (W, citing Tyldesley). Its line and section are
- * estimated from photographs (spec.md, "Robbers' tunnel").
+ * Al-Ma'mun's tunnel, the way in today (refs/entrance.md). Its mouth is on the pyramid's north-south axis (Vyse;
+ * SP23), forced through the 6th and 7th courses (Tyldesley; the 2023 detectors in it put its floor near 6.2 m). It
+ * runs about 27 m south, turns east some 20 ft (P §177) to the descending passage near the junction, and a cavity
+ * climbs the west side of the plugs into the ascending passage above them (P pl. ix). Its section is not published:
+ * about 1.9 x 2.1 m here, from photographs.
  */
-export const TUNNEL = { x: 4.4, floor: LEVELS[5] + 0.15, width: 1.9, height: 2.1, length: 27 };
+export const TUNNEL = { x: 0, floor: LEVELS[5] + 0.12, width: 1.9, height: 2.1, length: 27, turnEast: 6.1 };
 
 /**
- * The relieving chambers above the King's Chamber: five, to 21.11 m above its floor (Vyse, unverified); their plans
- * from P §62. Shown only seen through.
+ * The relieving chambers above the King's Chamber (refs/above-kings.md): floor (the rough tops of the beams, median)
+ * and ceiling levels from Vyse's and Perring's tables (Vyse II, App. pp. 112-113; Perring 1839), checked against the
+ * 2024 laser survey's section (Ciavatti, Hawass et al. 2025, fig. 4) to 0.02-0.17 m. Plans, E-W by N-S, from Vyse;
+ * centred on the King's Chamber's N-S middle; their east faces at x 8.3 to 8.7 (Petrie's masons' lines, P §62).
+ * Campbell's has a gable at about 33° (Perring 32.9°, 2024 survey 33.4°) from 62.03 to its apex at 64.05.
  */
-export const RELIEVING = { count: 5, top: 1692.8 * IN + 21.11, length: 470 * IN, width: 205 * IN };
-
-/** ScanPyramids' Big Void: at least 30 m long, above the gallery, its section like the gallery's (SP17). Uncertain. */
-export const VOID = { length: 30, height: 8, width: 2, above: 18 };
+const FT = 0.3048;
+export const RELIEVING = {
+  z: -11.02,
+  east: 8.45,
+  chambers: [
+    { name: "Davison's", floor: 50.75, ceiling: 51.76, length: 38 * FT + 4 * IN, width: 17 * FT + 1 * IN },
+    { name: "Wellington's", floor: 53.42, ceiling: 54.44, length: 38 * FT + 6 * IN, width: 17 * FT },
+    { name: "Nelson's", floor: 56.07, ceiling: 57.27, length: 38 * FT + 9 * IN, width: 16 * FT + 8 * IN },
+    { name: "Lady Arbuthnot's", floor: 58.84, ceiling: 60.11, length: 37 * FT + 4 * IN, width: 16 * FT + 4 * IN },
+    { name: "Campbell's", floor: 61.72, spring: 62.03, apex: 64.05, length: 37 * FT + 10 * IN, width: 20 * FT + 6 * IN },
+  ],
+  // Davison's passage from the top of the gallery's east wall: 0.724 x 0.813 m (P §62), level, south along the
+  // chambers' east ends (Perring's plan; its route is derived).
+  davison: { x: 8.07, floor: 50.85, z0: -1.0, z1: -8.4, width: 0.724, height: 0.813 },
+};
 
 /**
- * The other pyramids, seen from afar. centre: [x east, z north] of the centre of the base, from Khufu's.
- * Sizes from Lehner 1997; their places and plateau levels are ESTIMATED from published plans (spec.md, "Neighbours").
+ * ScanPyramids' Big Void (Morishima et al., Nature 2017, fig. 2g-i): four centres of the excess of muons, triangulated
+ * from the detectors, [z, y], each uncertain by about 5 m; over the gallery, x about 7.45. At least 30 m long, its
+ * section "comparable to that of the Grand Gallery"; whether level or inclined is not settled (refs/above-kings.md).
  */
+export const VOID = { x: 7.45, centres: [[3.5, 64.3], [15.0, 66.3], [24.3, 63.1], [30.9, 58.7]], width: 2.0, height: 6.0 };
+
+/**
+ * The other pyramids, seen from afar, from Petrie's triangulation of the whole site (P §19: the casing corners of all
+ * three pyramids in one system), converted to this frame (refs/neighbours.md). Base levels from Perring's levelling
+ * (Vyse II, App. p. 106). centre: [x east, z north]; turn: radians clockwise seen from above, relative to Khufu.
+ */
+const MIN = Math.PI / 180 / 60;
 export const NEIGHBOURS = [
-  // Khafre: 215.25 m, 143.5 m (Lehner 1997). Its casing survives over the top.
-  { name: 'khafre', centre: [-343, -345], baseY: 10, base: 215.25, height: 143.5, top: 136.4, course: 0.95, recess: 1.2, seed: 31, cased: [[96, 136.4, 'casing']] },
-  // Menkaure: about 103.4 m, 65.5 m. The lower courses keep part of their red granite casing.
-  { name: 'menkaure', centre: [-650, -760], baseY: 2, base: 103.4, height: 65.5, top: 62, course: 0.85, recess: 1.0, seed: 47, cased: [[0, 6, 'granite']] },
+  // Khafre: 215.26 m (P §66), 53° 10' to 143.87 m (P §67), 136.40 m today; its sides 1' 45" anticlockwise of Khufu's
+  // (P §66, §93; Nell & Ruggles 1.65'). Its casing survives from 90.7 to 96.8 m up to the top (Perring, Vyse p. 117).
+  { name: 'khafre', centre: [-334.29, -353.97], baseY: 10.11, base: 215.26, height: 143.87, top: 136.4, turn: -1.75 * MIN, course: 0.95, recess: 1.2, seed: 31, cased: [[93.75, 136.4, 'casing']] },
+  // Menkaure: 105.50 m (P §80), 51° 10' 30" to 65.55 m (P §82), 61.87 m in 1837 (Vyse p. 120); its sides 17' 46"
+  // clockwise of Khufu's (P §80). Of its 16 courses of red granite casing, the lower ones stand on the north (7.87 m
+  // in 1837) and east (Nell & Ruggles; its height there taken as the north's).
+  { name: 'menkaure', centre: [-574.2, -739.38], baseY: 12.68, base: 105.5, height: 65.55, top: 61.87, turn: 17.77 * MIN, course: 0.85, recess: 1.0, seed: 47, cased: [[0, 7.87, 'granite', 'ne']], built: [[0, 16.39, 'granite'], [16.39, 65.55, 'casing']] },
 ];

@@ -198,7 +198,8 @@ export function createApron(scene, material, half, y) {
 
 /**
  * A pyramid seen from afar: its stepped courses in runs, with the casing that still stands (Khafre's cap,
- * Menkaure's granite foot) smooth. `p`: centre [x, z], base, height, course height, cased: [[y0, y1, material]].
+ * Menkaure's granite foot) smooth. `p`: centre [x, z], base, height, course height, `turn` (radians clockwise seen
+ * from above, relative to Khufu's sides), cased: [[y0, y1, material, faces?]] with faces as 'nesw' letters.
  */
 export function farPyramid(scene, p, coreMat, casedMats) {
   const g = new Geo();
@@ -206,7 +207,8 @@ export function farPyramid(scene, p, coreMat, casedMats) {
   const half = p.base / 2;
   const tan = p.height / half;
   const halfAt = (y) => (p.height - y) / tan;
-  const [cx, cz] = p.centre;
+  // Built round its own centre, then placed and turned.
+  const cx = 0, cz = 0;
   const top = p.top ?? p.height;
   const faces = [[0, 1, 1, 0], [1, 0, 0, -1], [0, -1, -1, 0], [-1, 0, 0, 1]];
   const W = (nx, nz, tx, tz, u, s, y) => [cx + nx * s + tx * u, y, cz + nz * s + tz * u];
@@ -214,7 +216,7 @@ export function farPyramid(scene, p, coreMat, casedMats) {
     const [nx, nz, tx, tz] = faces[fi];
     for (let y0 = 0, k = 0; y0 < top - 0.01; k++) {
       const y1 = Math.min(top, y0 + p.course);
-      const cased = (p.cased ?? []).find((c) => y0 >= c[0] - 0.01 && y1 <= c[1] + 0.01);
+      const cased = (p.cased ?? []).find((c) => y0 >= c[0] - 0.01 && y1 <= c[1] + 0.01 && (!c[3] || c[3].includes('nesw'[fi])));
       const h0 = halfAt(y0), h1 = halfAt(y1);
       if (cased) {
         // Smooth casing: one sloped strip.
@@ -252,7 +254,8 @@ export function farPyramid(scene, p, coreMat, casedMats) {
     meshes.push(m);
   }
   for (const m of meshes) {
-    m.position.y = p.baseY ?? 0;
+    m.position.set(p.centre[0], p.baseY ?? 0, p.centre[1]);
+    m.rotation.y = p.turn ?? 0;
     m.isPickable = false;
     m.receiveShadows = true;
     m.freezeWorldMatrix();

@@ -38,7 +38,7 @@ def get(url, name):
     CACHE.mkdir(exist_ok=True)
     path = CACHE / name
     if not path.exists():
-        req = urllib.request.Request(url, headers={'User-Agent': 'vrtor-giza-texture-build/1.0 (hello@vrtor.io)'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'vrtor-giza-texture-build/1.0 (+https://vrtor.io)'})
         with urllib.request.urlopen(req, timeout=120) as r:
             path.write_bytes(r.read())
         print('downloaded', name, path.stat().st_size // 1024, 'KB')

@@ -109,7 +109,7 @@ casing.receiveShadows = true;
 casing.freezeWorldMatrix();
 casing.setEnabled(false);
 const neighbours = NEIGHBOURS.flatMap((n) => farPyramid(scene, { ...n, baseY: n.baseY + GROUND }, lit.core, { casing: lit.fine, granite: lit.granite }));
-const neighboursBuilt = NEIGHBOURS.flatMap((n) => farPyramid(scene, { ...n, name: `${n.name}-built`, baseY: n.baseY + GROUND, top: n.height, cased: [[0, n.height, 'casing']] }, lit.core, { casing: lit.casing }));
+const neighboursBuilt = NEIGHBOURS.flatMap((n) => farPyramid(scene, { ...n, name: `${n.name}-built`, baseY: n.baseY + GROUND, top: n.height, cased: n.built ?? [[0, n.height, 'casing']] }, lit.core, { casing: lit.casing, granite: lit.granite }));
 for (const m of neighboursBuilt) m.setEnabled(false);
 const interior = buildInterior(scene, inside);
 const lamplight = new HemisphericLight('lamplight', V(0.3, 1, 0.2), scene);
@@ -278,7 +278,27 @@ function within(p) {
   if (p.y < GROUND - 1.5) return true;
   if (p.y > S.apex) return false;
   const h = casingHalf(Math.max(0, p.y)) - 5;
-  return Math.abs(p.x) < h && Math.abs(p.z) < h;
+  return Math.abs(p.x) < h && Math.abs(p.z) < h && inSpace(p);
+}
+
+/** Whether a point is in one of the passages or chambers (with a little margin): not, say, in the notch outside. */
+function inSpace(p) {
+  const m = 0.6;
+  for (const sp of interior.spaces) {
+    if (sp.box) {
+      const [x0, y0, z0, x1, y1, z1] = sp.box;
+      if (p.x > x0 - m && p.x < x1 + m && p.y > y0 - m && p.y < y1 + 2 && p.z > z0 - m && p.z < z1 + m) return true;
+      continue;
+    }
+    const ax = sp.b[0] - sp.a[0], ay = sp.b[1] - sp.a[1], az = sp.b[2] - sp.a[2];
+    const L2 = ax * ax + ay * ay + az * az;
+    const t = ((p.x - sp.a[0]) * ax + (p.y - sp.a[1]) * ay + (p.z - sp.a[2]) * az) / L2;
+    const L = Math.sqrt(L2);
+    if (t * L < -0.3 || t * L > L + 0.3) continue;
+    const c = [sp.a[0] + ax * t, sp.a[1] + ay * t, sp.a[2] + az * t];
+    if (Math.hypot(p.x - c[0], p.z - c[2]) < sp.w / 2 + m && p.y > c[1] - m && p.y < c[1] + sp.h + 2) return true;
+  }
+  return false;
 }
 function setOutsideVisible(show) {
   for (const m of [ground, apron, sky.mesh]) m.setEnabled(show);
@@ -549,7 +569,7 @@ if (import.meta.env.DEV && new URLSearchParams(location.search).has('shot')) {
   orbit.radius = 330;
   cardOpen = false;
 }
-if (import.meta.env.DEV) window.__giza = { shot: (width, height) => Tools.CreateScreenshotUsingRenderTargetAsync(engine, scene.activeCamera, { width, height }, 'image/png', 4), scene, orbit, walker, blocks, travel, setTime, setBuilt, setSeeThrough, interior, STOPS, V };
+if (import.meta.env.DEV) window.__giza = { updateInside, shot: (width, height) => Tools.CreateScreenshotUsingRenderTargetAsync(engine, scene.activeCamera, { width, height }, 'image/png', 4), scene, orbit, walker, blocks, travel, setTime, setBuilt, setSeeThrough, interior, STOPS, V };
 
 start().catch((err) => {
   console.error('[giza] failed to start', err);
