@@ -7,7 +7,7 @@ The publisher identifies this [3D Warehouse model](https://3dwarehouse.sketchup.
 ## Changes by VRtor
 
 - Preserved all **32,759 triangles**; flattened the export hierarchy, centred the layout, and converted its coordinate scale by 0.01 for approximate human scale. The model is an architectural reconstruction, not a measured whole-site laser scan. Exact dimensions and present-day visitor routes are not verified.
-- Removed the original generic surface images (a fabricated brick grid) and replaced them with photo scans of real surfaces, sampled in world space at their real size; see [Photographed surfaces](#photographed-surfaces). The whole model remains an architectural reconstruction.
+- Removed the original generic surface images (a fabricated brick grid) and replaced them with photo scans of real surfaces, sampled in world space at their real size, and with masonry laid along each wall at sizes measured on CAST's laser scans; see [Photographed surfaces](#photographed-surfaces) and [Masonry](#masonry). The whole model remains an architectural reconstruction.
 - Compressed the geometry with Draco (16-bit positions, 12-bit normals), without further mesh reduction.
 - Derived landing surfaces from supported ground surfaces, excluding cliff edges and body intersections with walls. Teleport and click-to-travel use these surfaces. Continuous desktop/mobile movement can additionally follow narrow treads with five local foot-support checks, a 31 cm step limit, and body clearance checks. Unsupported areas remain inaccessible.
 - `citadel.json` records the source GLB hash, scale, bounds, triangle count, navigation surface corners and start position. Regenerate with `scripts/prepare-machu-site.py` and Blender.
@@ -22,12 +22,24 @@ The citadel's surfaces are CC0 photo scans (albedo and normal map), regraded so 
 
 | Surface | Scan | Size of one tile | Colour measured on the photographs (sRGB) |
 | --- | --- | ---: | --- |
-| Walls and wall tops | Poly Haven, [Stone Wall](https://polyhaven.com/a/stone_wall) (`stone_wall`): rough fieldstone in mud, like the citadel's pirka masonry | 2.0 m | 144, 134, 126 (7 photographs) |
+| Stones of the walls, wall tops | Poly Haven, [Rock Boulder Dry](https://polyhaven.com/a/rock_boulder_dry) (`rock_boulder_dry`), a different patch on every stone | 1.8 m | 144, 134, 126 (7 photographs) |
 | Lawns | ambientCG, [Grass 004](https://ambientcg.com/view?id=Grass004) | 1.4 m | 117, 125, 42 (sunlit half, 4 photographs) |
-| Earth floors | Poly Haven, [Dirt Floor](https://polyhaven.com/a/dirt_floor) (`dirt_floor`) | 2.07 m | 181, 158, 138 (the Main Temple floor, 2 photographs) |
+| Earth floors, mud mortar | Poly Haven, [Dirt Floor](https://polyhaven.com/a/dirt_floor) (`dirt_floor`) | 2.07 m | 181, 158, 138 (the Main Temple floor, 2 photographs) |
 | Laser-survey closeups | Poly Haven, [Rock Boulder Dry](https://polyhaven.com/a/rock_boulder_dry) (`rock_boulder_dry`), over the scans' own grey values | 1.8 m | as the walls |
 
-Poly Haven and ambientCG publish these under [CC0](https://creativecommons.org/publicdomain/zero/1.0/). The photographs (Wikimedia Commons; CC BY, CC BY-SA and public domain, listed in `assets-src/machu/photo_textures.py`) are used only to measure colour and are not shipped. In the scene a gain per surface brings the rendered colour, under the scene's sun and sky, to the photographs' mean, checked by sampling rendered pixels the same way. Every wall is the same rough masonry: the scene does not tell the fine ashlar of the temples from the rough walls, and the stones do not follow the model's courses. Regenerate with `python3 -I assets-src/machu/photo_textures.py`.
+Poly Haven and ambientCG publish these under [CC0](https://creativecommons.org/publicdomain/zero/1.0/). The photographs (Wikimedia Commons; CC BY, CC BY-SA and public domain, listed in `assets-src/machu/photo_textures.py`) are used only to measure colour and are not shipped. In the scene a gain per surface brings the rendered colour, under the scene's sun and sky, to the photographs' mean, checked by sampling rendered pixels the same way: stone 141, 131, 124 at eye level and 162, 149, 141 from above. Lawns and floors use stochastic tiling (three shifted reads blended on a triangle grid), so the scans don't show a repeat. Regenerate with `python3 -I assets-src/machu/photo_textures.py`.
+
+## Masonry
+
+The stones are laid out in the scene along each wall, in that wall's own frame: courses run level, start at its base and the last one finishes at its top, and a building's courses meet round its corners. Each stone takes a different patch of the granite scan and its own tone, so nothing repeats. Sizes are measured on CAST's laser scans (CC BY-NC 3.0, [credits](./CREDITS.md)), read as relief images at 1 cm a pixel:
+
+| Masonry | Measured on | Courses | Stones | Joints |
+| --- | --- | --- | --- | --- |
+| Coursed ashlar | Torreón (curved wall, 4.50 m radius) | 0.20-0.32 m, about 0.25 | 0.28-0.60 m, median about 0.40 | hairline; arrises rounded over about 15 mm |
+| Megalithic ashlar | Principal Temple | about 0.80 m at the base to 0.30 m at the top | 0.4-1.7 m, a few 2-3 m | hairline; arrises taken as 30 mm (estimate) |
+| Rustic, roughly coursed (pirka) | Knob Room, Water Mirrors | 0.24-0.36 m, about 0.28 | 0.22-0.60 m, median about 0.40 | mud, a few cm (taken as 3 cm) |
+
+Which walls are ashlar is in `citadel-masonry.json`, made by `assets-src/machu/masonry_zones.py`. The model carries no building names, so it is registered to the ruins mapped in [OpenStreetMap](https://www.openstreetmap.org/copyright) (© OpenStreetMap contributors, ODbL) through four landmarks: the Sacred Rock and House of the Guardian pads, the Intihuatana stone and the Torreón, the model's only curved building. The fit has residuals of 10 to 25 m (the model is schematic), so each building is matched to the walls standing there and checked by its shape. Ashlar: the Torreón, the Royal Residence beside it and the Intihuatana (coursed), and the Sacred Plaza court (megalithic). Every other wall, the Water Mirrors and the Condor included, is rustic; on site some of them have finer stretches the model can't place. The stones are generated to the measured sizes, not copied stone by stone from the real walls.
 
 ## Baked shading
 

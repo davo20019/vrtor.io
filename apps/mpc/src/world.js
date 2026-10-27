@@ -11,6 +11,7 @@ import { createGrass } from './grass.js';
 import { buildTerrain } from './terrain.js';
 import { createGraniteGrain, GraniteMaterial, loadCitadelOcclusion, loadSiteSurfaces } from './granite.js';
 import { AREAS, SITE } from './areas.js';
+import { addWallFrames } from './masonry.js';
 const BASE = import.meta.env.BASE_URL;
 DracoDecoder.DefaultConfiguration = {
   wasmUrl: `${BASE}draco/draco_wasm_wrapper_gltf.js`,
@@ -31,6 +32,9 @@ export async function buildWorld(engine, onProgress) {
   const siteResponse=await fetch(`${BASE}models/citadel.json`);
   if(!siteResponse.ok)throw new Error('The citadel information could not load.');
   survey.push(await siteResponse.json());
+  const masonryResponse=await fetch(`${BASE}models/citadel-masonry.json`);
+  if(!masonryResponse.ok)throw new Error('The citadel information could not load.');
+  const masonry=await masonryResponse.json();
   const scene = new Scene(engine);
   scene.fogMode = Scene.FOGMODE_EXP2;
   scene.fogDensity = .00005;
@@ -85,6 +89,8 @@ export async function buildWorld(engine, onProgress) {
     const meshes=container.meshes.filter(m => m.getTotalVertices()>0);
     const triangles=meshes.reduce((n,m)=>n+m.getTotalIndices()/3,0);
     if (triangles!==meta.triangles) {container.dispose();throw new Error('Survey geometry did not load completely.');}
+    // Lay the citadel's stones along each wall, ashlar where the building is (citadel-masonry.json).
+    if(i===SITE)addWallFrames(meshes,masonry.zones);
     for (const m of container.materials) if (m instanceof PBRMaterial) {
       // Open survey surfaces have no modeled thickness; preserve both visible sides.
       m.backFaceCulling=false;m.twoSidedLighting=true;m.metallic=0;

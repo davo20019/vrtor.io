@@ -1,8 +1,8 @@
 """Photographed surfaces for the Machu Picchu citadel walk (apps/mpc/public/materials), from CC0 photo scans.
 
 Each surface is a scan of a real one (Poly Haven, ambientCG; both CC0): its albedo and its OpenGL normal map.
-The albedo is graded to the colour measured on photographs of Machu Picchu (refs/SOURCES.md): the granite of its
-walls, its lawns and its packed earth floors. The scans tile seamlessly as published.
+The albedo is graded to the colour measured on photographs of Machu Picchu: the granite of its walls, its lawns and
+its packed earth floors (the earth scan is also the walls' mud mortar). The scans tile seamlessly as published.
 
     python3 -I assets-src/machu/photo_textures.py
 Downloads go to assets-src/machu/.cache (not committed).
@@ -36,11 +36,10 @@ PHOTOS = {
 
 # name: (source, id, output size, metres per tile, spread kept)
 MATERIALS = {
-    # Rough fieldstone laid in mud: the pirka masonry of most of the citadel's walls and terraces.
-    'stone': ('ph', 'stone_wall', 2048, 2.0, 1.0),
     'lawn': ('acg', 'Grass004', 1024, 1.4, 0.9),
     'earth': ('ph', 'dirt_floor', 1024, 2.07, 0.8),
-    # Weathered granite without joints, for the laser-scan closeups, whose stones and joints are the scan's geometry.
+    # Weathered granite without joints: each stone of the citadel's walls (laid out per wall in the scene, from
+    # sizes measured on the CAST scans) and the laser-scan closeups, whose stones and joints are the scan's geometry.
     'rock': ('ph', 'rock_boulder_dry', 1024, 1.8, 1.0),
 }
 
