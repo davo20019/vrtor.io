@@ -60,7 +60,12 @@ onto the CT) -> walls.py (triangle budget, coordinates kept) -> valves.py (valve
 ## Known differences and open work
 
 - The pulmonary ring is oval (36 x 22 mm) in the averaged CT; a real one is round. Built as measured.
-- Trabecular and pectinate sizes, the fossa's size and vessel wall thicknesses are guesses (not found).
-- The LV's last activated region comes out anterobasal; Durrer reports posterobasal.
-- A faint seam where the aortic tube meets the trimmed CT root.
+- Sizes now from refs/literature.md section 14: LV trabeculated segments (Kawel 2012, Dawson 2011), LAA and RAA
+  pectinate counts and LAA thickness, fossa ovalis 14.1 x 12.1 mm, vessel walls. Still guesses: the thickness of
+  a single trabecula, the RV's, RA pectinate thickness, the limbus, arch-branch walls.
+- Blood flow (flow.py, apps/hrt/src/blood.js): paths through both sides of the heart, moved on each stretch's
+  clock at the published peak velocities (Chiang 1989); blood waits behind shut valves. Particles follow the
+  beat with the global (unbanded) motion.
+- The aorta and pulmonary trunk now start at their ventricle, lofted through the CT stub's own sections (no
+  seam), and move with it; the LV's last activated region is posterobasal, as Durrer found.
 - Not yet tested on a headset (budget: 300k triangles, 4.4 MB GLB).

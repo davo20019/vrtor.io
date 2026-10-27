@@ -21,7 +21,8 @@ def add(pid, v, f, targets, m):
 CUTS = json.load(open('work/vessel_cuts.json')) if os.path.exists('work/vessel_cuts.json') else {}
 for k, (name, _) in WALLS.items():
     v, f = W[k + '_v'], W[k + '_f']
-    if k in CUTS:   # trimmed square where its continuation (vessels.py) starts
+    if k in CUTS: continue   # replaced whole by its vessel, which starts at its foot through its own sections (vessels.py)
+    if False:
         import pyvista as pv
         c, ax = map(np.array, CUTS[k])
         mm = pv.PolyData(v, np.hstack([np.full((len(f), 1), 3), f]).ravel()).clip(normal=ax, origin=c, invert=True).triangulate().clean()
@@ -52,17 +53,19 @@ for k, (col, X) in looks.items():
 import cycle_bands as CB
 A = np.load('work/activation.npz'); act_all = A['act']; qrs = float(A['qrs_onset'])
 TP = cKDTree(np.asarray(m.points)); lab = np.load('work/motion.npz')['label']
-BANDS = {}
+# every part's ventricular motion follows the activation of the ventricular muscle nearest it, and its atrial
+# motion the atrial muscle's: so a valve, a vessel or a coronary artery moves on the same beat as the wall it is on
+VEN_P = np.where(np.isin(lab, [1, 2]))[0]; ATR_P = np.where(np.isin(lab, [3, 4, 18, 19, 20, 21, 22, 23, 24]))[0]
+TV_, TA_ = cKDTree(np.asarray(m.points)[VEN_P]), cKDTree(np.asarray(m.points)[ATR_P])
 for k in list(meta):
     X = out[k + '_v']; _, i = TP.query(X); a = out.pop(k + '_t_act', None)
     a = act_all[i] if a is None else a
     out[k + '_act'] = ((CB.SA_AT + a) % CB.RR).astype('f4')
-    g = meta[k]['group']; vent = np.isin(lab[i], [1, 2]); atr = np.isin(lab[i], [3, 4, 18, 19, 20, 21, 22, 23, 24])
-    for field, sel, rel, centres in [('vsys', vent, a - qrs, CB.VENT_BANDS), ('afill', atr, a, CB.ATR_BANDS)]:
+    rel_v = act_all[VEN_P[TV_.query(X)[1]]] - qrs; rel_a = act_all[ATR_P[TA_.query(X)[1]]]
+    for field, rel, centres in [('vsys', rel_v, CB.VENT_BANDS), ('afill', rel_a, CB.ATR_BANDS)]:
         key = f'{k}_t_{field}'
-        if key not in out or not sel.any() or g in ('mv', 'tv', 'av', 'pv', 'mv_chordae', 'tv_chordae'): continue
-        w = CB.weights(np.where(sel, rel, centres[0]), centres)      # vertices off that tissue go with the first band
-        D = out.pop(key)
+        if key not in out or not np.abs(out[key]).max() > 1e-6: continue
+        w = CB.weights(rel, centres); D = out.pop(key)
         for b in range(len(centres)): out[f'{k}_t_{field}_{b}'] = (D * w[:, b:b + 1]).astype('f4')
         meta[k]['targets'] = [t for t in meta[k]['targets'] if t != field] + [f'{field}_{b}' for b in range(len(centres))]
 # the model's origin: the middle of the walls' bounds

@@ -242,25 +242,117 @@ Measured cohort (Alhakak 2025, Clin Res Cardiol 114:430, 10.1007/s00392-023-0226
 | O2 saturation, right heart (mixed venous) | ~75% | Guyton & Hall 14th ed. | **(unverified)** SVC runs 2-5% above PA |
 | O2 saturation, left heart / arterial | ~97% | Guyton & Hall 14th ed. | **(unverified)** |
 
+## 14. Sizes that were guesses
+
+Added 2026-10-26. Values read in the abstract or full text this session unless marked **(unverified)**. Where a number is my own arithmetic on a paper's data, the Notes say so. Several entries in sections 7 and 12 are refined here; those sections are left as they were.
+
+### 14.1 Trabeculae carneae
+
+| Quantity | Value | Source (authors, year, journal, DOI or URL) | Notes |
+|---|---|---|---|
+| Thickness/width of an individual trabecula, normal adult LV | not found | | No normal-heart per-trabecula width distribution located. Riekerk 2022 (J Anat, 10.1111/joa.13559) quotes the classic descriptions of trabeculae "a fraction of a millimeter" wide, but for excessively trabeculated hearts, not normals |
+| Thickness/width of an individual trabecula, normal adult RV | not found | | |
+| Ex vivo trabecular test strips (indirect) | width 2.06 ± 1.18 mm, thickness 1.11 ± 0.75 mm, length 12.41 ± 1.63 mm (n = 74) | Fatemifar F, et al. 2019, J Biomech Eng 141:021007, 10.1115/1.4041966 (PMC6298537) | strips of trabeculae AND myocardium pooled; 12 donor hearts, mostly hypertensive with LVH (free wall >15 mm). Upper bound only, not normal |
+| Number of LV trabeculae | 54.3 ± 17.2 per heart cut (about 28 apical, 9.5 septal, 16.8 free wall) | Halaney DL, et al. 2017, J Biomech Eng 139:031012, 10.1115/1.4035585 (PMC7104769) | 6 explanted hearts with LVH, so not normal; their FE model *assumed* 2 mm diameter (not a measurement) |
+| Spacing between trabeculae | not found | | |
+| LV trabeculated (NC) layer thickness by segment, ED | seg 7 (mid anterior) 5.6 ± 2.8; seg 11 (mid inferolateral) 4.2 ± 2.5; seg 12 (mid anterolateral) 4.4 ± 2.7; seg 13 (apical anterior) 5.6 ± 2.7; seg 16 (apical lateral) 7.1 ± 2.4 mm. Median 0 in segments 2, 3, 4, 8, 9, 14; median 0 with upper quartile 2.1-4.6 mm in 1, 5, 6, 10, 15 (seg 1 median 3.0, IQR 0-4.6) | Dawson DK, et al. 2011, Circ Cardiovasc Imaging 4:139-146, 10.1161/CIRCIMAGING.110.960229 (PMC3245853) | CMR SSFP, 120 healthy volunteers. Segment names assume standard AHA numbering |
+| LV trabeculated layer thickness by segment, ES | seg 7 4.5 ± 2.1; seg 11 3.1 ± 2.5; seg 12 2.8 ± 2.1; seg 13 4.2 ± 2.1; seg 16 5.0 ± 2.3 mm; 0 elsewhere | Dawson 2011 | trabeculae compress in systole |
+| LV compact layer thickness by segment | ED 6.1-9.6 mm (basal 7.0-9.6, mid 6.3-8.1, apical 6.1-7.3); ES 11.2-14.0 mm | Dawson 2011 | e.g. seg 2 (basal anteroseptal) 9.6 ± 2.5 ED; seg 16 6.1 ± 1.3 ED |
+| NC/C ratio, normal, by segment (ED) | 0 to 1.19; highest seg 16 (apical lateral) 1.190, seg 13 0.914, seg 7 0.879, seg 12 0.756, seg 11 0.704 | Dawson 2011 | ES ratios 0 to 0.49 |
+| Maximum trabeculation thickness (any region), healthy | 5th/50th/95th percentile 4.6 / 9.0 / 15.6 mm | Kawel N, et al. 2012, Circ Cardiovasc Imaging 5:357-366, 10.1161/CIRCIMAGING.111.971713 (PMC3399115), Table 2 | MESA, n = 323 free of cardiac disease and hypertension, age ~68; long-axis SSFP; 8 regions (mid and apical, no basal) |
+| Maximum T/M ratio, healthy | 5th/50th/95th percentile 1.0 / 2.2 / 4.6 | Kawel 2012, Table 2 | T/M >2.3 in at least 1 region in 43% |
+| Compact myocardium (Kawel subset) | apical 5.2 ± 1.2 (long axis) / 6.2 ± 1.7 (short axis); mid 7.3 ± 1.9 / 7.1 ± 2.0 mm | Kawel 2012 | n = 100 subset |
+| Which regions are trabeculated (prevalence in healthy) | apical lateral 81%, mid anterior 79%, mid lateral 67%, apical anterior 65%, apical inferior 63%; mid septal only 4% | Kawel 2012 (Results, Fig. 3) | Petersen 2005 (JACC 46:101) agrees: apical and lateral more than basal or septal |
+| LV trabecular volume, normal hearts | 15.6 (1.7)% of LV; average T/C (segments 1-16) 0.57 (0.11) | Riekerk HCE, et al. 2022, J Anat 240:357-375, 10.1111/joa.13559 (PMC8742974) | ex vivo high-resolution MRI, 6 normal hearts |
+| Fractal dimension (FD), maximal apical, healthy | whites 1.235 ± 0.004, blacks 1.253 ± 0.005 (mean ± SEM); LVNC 1.392 ± 0.010 | Captur G, et al. 2013, JCMR 15:36, 10.1186/1532-429X-15-36 (PMC3680331) | unitless; box counting on SAX cine |
+| FD maximal apical, population reference | BMI <25: 1.169 ± 0.05; 25-30: 1.194 ± 0.06; ≥30: 1.203 ± 0.06 | Captur G, et al. 2015, Radiology 277:707-715, 10.1148/radiol.2015142948 (PMC4666098) | MESA, n = 2547, age 68.7 |
+| RV trabeculated / compact layer thickness, normal | not found | | |
+
+### 14.2 Pectinate muscles
+
+| Quantity | Value | Source (authors, year, journal, DOI or URL) | Notes |
+|---|---|---|---|
+| Pectinate muscle thickness, LAA apex | arrowhead 1.2 ± 0.7, cauliflower 1.1 ± 0.6, chicken wing 0.9 ± 0.6 mm | Słodowska K, et al. 2021, Heart Lung Circ 30:1014-1022, 10.1016/j.hlc.2020.12.006 | 200 autopsy hearts, age 46.6 ± 19.1 |
+| Number of main pectinate muscles, LAA | 11 ± 4 (length 47 ± 16 mm) | Lexová M, et al. 2026, Clin Anat, 10.1002/ca.70145 | 153 cadaveric hearts; dissection, micro-CT, histology |
+| Number of pectinate muscles, RAA | 17 ± 4 (length 75 ± 17 mm); RAA larger but lower muscle density than LAA | Lexová 2026 | |
+| Pectinate muscle volume (casts) | RAA 444 ± 166 mm³, LAA 514 ± 217 mm³ | Shinoda K, et al. 2016, Biomed Res Int 2016:6492183, 10.1155/2016/6492183 (PMC5120179) | 34 cadaver hearts, silicone casts scanned by MDCT |
+| Thickness of individual RA pectinate muscles | not found | | |
+| Septum spurium (prominent anterior pectinate branch) width | 4.5 (1.2) mm, range 3-7 | Sánchez-Quintana D, et al. 2002, Heart 88:406-411, 10.1136/heart.88.4.406 (PMC1767383) | present in 80/97 necropsy hearts |
+| Taenia sagittalis (largest RA pectinate) | absent 15%, single 65%, multiple 20% | Loukas M, et al. 2008, Ann Anat 190:81-87, 10.1016/j.aanat.2007.05.002 | 300 hearts; thickness not in abstract |
+| RA pectinate arrangement / spacing | Type I perpendicular to crista, uniform spacing, no crossover 40%; haphazard with crossovers 20%; uniform, parallel to crista 15%; others 25% | Loukas 2008 | spacing in mm not given; Sánchez-Quintana 2002: non-uniform trabecular pattern in 80% |
+| Spacing between pectinate muscles (mm) | not found | | |
+| Wall thickness between pectinate muscles (RA or LAA) | not found (qualitative only) | Su P, McCarthy KP, Ho SY 2008, Heart 94:1166-1170, 10.1136/hrt.2006.111989 | LAA: "small crevices and areas of very thin wall" on histology; pits or thin areas within 20.9 mm of the os in 57.7% |
+| Left lateral ridge (LAA to left PVs) myocardial thickness | anterosuperior 2.8 ± 1.1, posteroinferior 1.7 ± 0.8 mm | Cabrera JA, et al. 2008, Eur Heart J 29:356-362, 10.1093/eurheartj/ehm606 | 40 specimens; context for wall beside the LAA, not between pectinates |
+
+### 14.3 Fossa ovalis
+
+| Quantity | Value | Source (authors, year, journal, DOI or URL) | Notes |
+|---|---|---|---|
+| Fossa ovalis diameters | cranio-caudal 12.1 ± 3.6, antero-posterior 14.1 ± 3.6 mm | Klimek-Piotrowska W, et al. 2016, Ann Anat 205:60-64, 10.1016/j.aanat.2016.01.009 | 135 autopsy hearts, age 47 |
+| Fossa ovalis diameters (second series) | horizontal 17.21 ± 4.11, vertical 12.74 ± 3.78 mm; oval in 69.8% | P Y, Chopra J, et al. 2025, Catheter Cardiovasc Interv 105:404-409, 10.1002/ccd.31304 | 97 fresh autopsy hearts |
+| Fossa ovalis diameters (third series) | transverse 24.21, vertical 26.84 mm (means, no SD) | Kishve P, Motwani R 2021, Anat Cell Biol 54:42-50, 10.5115/acb.20.286 | 50 cadaveric hearts; reported ranges (12-26, 14-28 mm) barely contain the means, so treat with caution. Section 7 cites this one |
+| Fossa position | 10.1 ± 4.4 mm above IVC ostium; 20.7 ± 5.2 mm from right AV ring; 12.6 ± 5.2 mm below RA roof; fossa = 18.3 ± 9.0% of septal area | Klimek-Piotrowska 2016 | |
+| Floor thickness | 0.71 ± 0.98 mm | P Y 2025 | redundant (aneurysmal-looking) floor in 47% |
+| Limbus (rim) thickness / width | not found | | Reig 1997 (Surg Radiol Anat 19:279-282, 10.1007/BF01637589) measured anterior limbus thickness (correlates with heart weight) but the value is not in the abstract |
+| Limbus prominence | prominent in 72.2% (all round 36.6%, antero-superior 28.2%) | P Y 2025 | Kishve 2021: raised in 84% |
+| PFO prevalence | 27.3% overall; 34.3% (decades 1-3), 25.4% (4-8), 20.2% (9-10); no sex difference | Hagen PT, Scholz DG, Edwards WD 1984, Mayo Clin Proc 59:17-20, 10.1016/S0025-6196(12)60336-X | 965 normal autopsy hearts |
+| PFO size | 1-19 mm maximal potential diameter, mean 4.9 mm; 1-10 mm in 98% | Hagen 1984 | mean 3.4 mm (1st decade) to 5.8 mm (10th) |
+| PFO in other series | 24.4%; channel length 10.5 ± 5.2 mm; tunnel (≥12 mm) 8.9% | Klimek-Piotrowska 2016 | P Y 2025: probe patent 10.3%; Kishve 2021: patent 6% plus probe patency 24% (section 7's "3%" is not what that paper reports) |
+
+### 14.4 Great vessel walls and sizes
+
+| Quantity | Value | Source (authors, year, journal, DOI or URL) | Notes |
+|---|---|---|---|
+| Ascending aorta wall, MRI | median W 1.46 (5th-95th 1.15-1.88), M 1.56 (1.22-1.99) mm | Mensel B, et al. 2014, Eur Radiol 24:2038-2044, 10.1007/s00330-014-3188-8 | SHIP, n = 753, age 21-81; increases with age |
+| Descending aorta wall, MRI | median W 1.26 (0.97-1.58), M 1.36 (1.04-1.75) mm | Mensel 2014 | |
+| Ascending aorta wall, MESA | mean 2.8 mm | Turkbey EB, et al. 2014, J Magn Reson Imaging 39:360-368, 10.1002/jmri.24183 (PMC3766427) | black-blood FSE, n = 1053, age 45-84; method gives about twice Mensel's value |
+| Ascending aorta wall, ex vivo | 2.08 ± 0.66 mm (thickest); sinuses of Valsalva 1.46 ± 0.31 mm (thinnest) | Xuan Y, et al. 2021, J Mech Behav Biomed Mater 123:104705, 10.1016/j.jmbbm.2021.104705 (PMC8513753) | 19 healthy donors, age 51 ± 11.7; unloaded tissue |
+| Aortic arch wall | not found | | |
+| Pulmonary trunk wall | 1.19 ± 0.19 mm | Manning EP, et al. 2024, Physiol Rep 12:e16090, 10.14814/phy2.16090 (PMC11181131) | main PA, Vernier calipers, ex vivo cadavers and donors (n = 21), age 18-89; no age effect |
+| SVC wall | intima 13-25 µm, media 200-360 µm, adventitia 2553-3836 µm; sum of layer means about 2.8-4.2 mm | Fernandez RK, Gupta C, Kalthur SG 2020, Ethiop J Health Sci 30:387-396, 10.4314/ejhs.v30i3.10 (PMC7445952) | 10 adult cadavers, histology at formation, middle, termination; total is my sum, not reported; adventitia dominates and its outer limit is uncertain |
+| IVC wall | intima 11-16 µm, media 257-564 µm, adventitia 2086-3797 µm; sum about 2.4-4.4 mm (thickest at termination) | Fernandez 2020 | same caveats |
+| Pulmonary vein wall at venoatrial junction | inner layer (endothelium + media) 1.4 ± 0.3; myocardial sleeve 2.6 ± 0.8; adventitia 2.15 ± 0.36 mm (mean maximal thickness) | Cabrera JA, et al. 2002, Circulation 106:968-973, 10.1161/01.CIR.0000026397.78200.C4 | 32 veins from 8 noncardiac deaths; IVUS + histology; sleeve thins toward hilum |
+| SVC diameter (ostium) | mediolateral 20.1 ± 3.2, anteroposterior 19.2 ± 3.1 mm | Klimek-Piotrowska W, et al. 2015, PeerJ 2015;3:e1548, 10.7717/peerj.1548 (PMC4731008) | 110 formalin-fixed autopsy hearts |
+| SVC cross-sectional area | 5th-95th 1.08-4.42 cm² (ED) | Lin FY, et al. 2009, Acad Radiol 16:981-987, 10.1016/j.acra.2009.02.013 | gated MDCT, 103 healthy normotensive non-obese adults |
+| SVC length and maximum diameter | 7.1 ± 1.4 cm; 2.1 ± 0.7 cm | Lin 2009 / Sonavane 2015 (RadioGraphics) as cited by Zakrzewski 2025, J Clin Med 14:7456 | **(unverified)** |
+| IVC diameter (ostium) | mediolateral 24.1 ± 5.7, anteroposterior 24.2 ± 5.5 mm; area 4.8 ± 2.0 cm² | Klimek-Piotrowska 2015 | autopsy, fixed |
+| IVC diameter, 2 cm below RA | AP 16.9 ± 3.2, transverse 26.2 ± 3.6 mm | Ansari A, et al. 2022, Cureus 14:e31845, 10.7759/cureus.31845 | CT, 200 Indian adults; IVC is oval and volume dependent |
+| Pulmonary trunk length (RV exit to bifurcation) | 39.0, 57.7, 45.7, 49.0, 67.3, 43.7, 66.3, 58.7 mm (mean 53.4, my calculation) | Manning 2024, Table 1 | n = 8 cadavers; increases with age (p = 0.004) |
+| Pulmonary trunk diameter, CT | 5th-95th 18.9-30.3 mm (ED, double oblique) | Lin 2009 | adds to section 12 |
+| Aortic arch diameter | proximal to innominate 29.4 ± 4.2; proximal transverse arch 27.7 ± 3.7; distal transverse arch 26.1 ± 4.1; isthmus 24.7 ± 4.0 mm | Hager A, et al. 2002, J Thorac Cardiovasc Surg 123:1060-1066, 10.1067/mtc.2002.122310 | helical CT, 70 adults 17-89 without CVD; all increase with age |
+| Ascending aorta diameter, MESA | mean M 33.4, W 30.5 mm; 95th pct (reference group) 38 mm | Turkbey 2014 | at RPA level, age 45-84 |
+| Pulmonary vein ostia, autopsy | LS 13.8 ± 2.9, LI 13.3 ± 3.4, RS 14.3 ± 2.9, RI 13.7 ± 3.3 mm; ostium to first tributary 11.0-15.1 mm | Klimek-Piotrowska W, et al. 2016, PeerJ 4:e1579, 10.7717/peerj.1579 (PMC4715466) | 130 hearts; four-vein pattern in 70.8%, right middle PV in 19.2% |
+
 ---
 
 ## References (full)
 
 - Almehandi A, et al. Unraveling the enigmatic morphology of the atrioventricular conduction axis using hierarchical phase-contrast tomography. Heart Rhythm 2026. 10.1016/j.hrthm.2026.07.018
 - Alhakak AS, et al. Age- and sex-based normal reference ranges of the cardiac time intervals: the Copenhagen City Heart Study. Clin Res Cardiol 2025;114:430-442. 10.1007/s00392-023-02269-2
+- Ansari A, Kohar S, Dhok A, Onkar P, Mitra K, Ladke P. Evaluation of normal inferior vena cava diameters in the Indian adult population by computed tomography. Cureus 2022;14:e31845. 10.7759/cureus.31845
 - Baumgartner H, et al. Echocardiographic assessment of valve stenosis: EAE/ASE recommendations. J Am Soc Echocardiogr 2009;22:1-23. 10.1016/j.echo.2008.11.029
 - Bhadoria P, et al. Cadaveric study on the morphology and morphometry of heart papillary muscles. Cureus 2022;14:e22722. 10.7759/cureus.22722
 - Bulluck H, et al. A simple technique to measure TAPSE and MAPSE on CMR and normal values. JCMR 2014;16(Suppl 1):P22. 10.1186/1532-429X-16-S1-P22
+- Cabrera JA, Ho SY, Climent V, Sánchez-Quintana D. The architecture of the left lateral atrial wall: a particular anatomic region with implications for ablation of atrial fibrillation. Eur Heart J 2008;29:356-362. 10.1093/eurheartj/ehm606
+- Cabrera JA, Sánchez-Quintana D, Farré J, et al. Ultrasonic characterization of the pulmonary venous wall: echographic and histological correlation. Circulation 2002;106:968-973. 10.1161/01.CIR.0000026397.78200.C4
+- Captur G, et al. Fractal analysis of myocardial trabeculations in 2547 study participants: Multi-Ethnic Study of Atherosclerosis. Radiology 2015;277:707-715. 10.1148/radiol.2015142948
+- Captur G, et al. Quantification of left ventricular trabeculae using fractal analysis. J Cardiovasc Magn Reson 2013;15:36. 10.1186/1532-429X-15-36
 - Chiang CW, et al. Doppler echocardiographic findings in healthy Chinese adults. J Formos Med Assoc (Taiwan Yi Xue Hui Za Zhi) 1989;88:772-777.
 - Choi BR, Ziv O, Salama G. Conduction delays across the specialized conduction system of the heart. Front Cardiovasc Med 2023;10:1158480. 10.3389/fcvm.2023.1158480
+- Dawson DK, Maceira AM, Raj VJ, Graham C, Pennell DJ, Kilner PJ. Regional thicknesses and thickening of compacted and trabeculated myocardial layers of the normal left ventricle studied by CMR. Circ Cardiovasc Imaging 2011;4:139-146. 10.1161/CIRCIMAGING.110.960229
 - de Kerchove L, et al. Free margin length and coaptation surface area in normal tricuspid aortic valve: an anatomical study. Eur J Cardiothorac Surg 2018;53:1040-1048. 10.1093/ejcts/ezx456
 - Demoulin JC, Kulbertus HE. Histopathological examination of concept of left hemiblock. Br Heart J 1972;34:807-814. 10.1136/hrt.34.8.807
 - Dodge JT Jr, et al. Lumen diameter of normal human coronary arteries. Circulation 1992;86:232-246. 10.1161/01.CIR.86.1.232
 - Durrer D, et al. Total excitation of the isolated human heart. Circulation 1970;41:899-912. 10.1161/01.CIR.41.6.899
+- Fatemifar F, Feldman MD, Oglesby M, Han HC. Comparison of biomechanical properties and microstructure of trabeculae carneae, papillary muscles, and myocardium in the human heart. J Biomech Eng 2019;141:021007. 10.1115/1.4041966
+- Fernandez RK, Gupta C, Kalthur SG. Age-related histological changes in vena caval system of human foetus and adult: a comparative study. Ethiop J Health Sci 2020;30:387-396. 10.4314/ejhs.v30i3.10
 - Fowler NO. Cardiac Diagnosis and Treatment, 3rd ed. Lippincott 1980, p. 11 (as tabulated in Merck Manual Professional, "Normal pressures in the heart and great vessels").
 - Gebhard C, et al. Coronary dominance and prognosis... CONFIRM registry. Eur Heart J Cardiovasc Imaging 2015;16:853-862. 10.1093/ehjci/jeu314
 - Gunnal SA, Wabale RN, Farooqui MS. Morphological study of chordae tendinae in human cadaveric hearts. Heart Views 2015;16:1-12. 10.4103/1995-705X.152994
 - Guyton AC, Hall JE (Hall JE, Hall ME). Textbook of Medical Physiology, 14th ed. Elsevier 2021.
+- Hagen PT, Scholz DG, Edwards WD. Incidence and size of patent foramen ovale during the first 10 decades of life: an autopsy study of 965 normal hearts. Mayo Clin Proc 1984;59:17-20. 10.1016/S0025-6196(12)60336-X
+- Hager A, Kaemmerer H, Rapp-Bernhardt U, et al. Diameters of the thoracic aorta throughout life as measured with helical computed tomography. J Thorac Cardiovasc Surg 2002;123:1060-1066. 10.1067/mtc.2002.122310
+- Halaney DL, et al. The effect of trabeculae carneae on left ventricular diastolic compliance: improvement in compliance with trabecular cutting. J Biomech Eng 2017;139:031012. 10.1115/1.4035585
 - Henry MP, et al. Three-dimensional transthoracic static and dynamic normative values of the mitral valve apparatus: WASE study. J Am Soc Echocardiogr 2022;35:738-751. 10.1016/j.echo.2022.02.010
 - Ho SY, Anderson RH, Sánchez-Quintana D. Atrial structure and fibres: morphologic bases of atrial conduction. Cardiovasc Res 2002;54:325-336.
 - Jelenc M, et al. Comparison of pulmonary and aortic root and cusp dimensions in normal adults using computed tomography. Interdiscip Cardiovasc Thorac Surg 2024;39:ivae206. 10.1093/icvts/ivae206
@@ -268,33 +360,51 @@ Measured cohort (Alhakak 2025, Clin Res Cardiol 114:430, 10.1007/s00392-023-0226
 - Kawel-Boehm N, et al. Reference ranges ("normal values") for CMR in adults and children: 2020 update. J Cardiovasc Magn Reson 2020;22:87. 10.1186/s12968-020-00683-3 (correction 10.1186/s12968-021-00815-3)
 - Kim YH, et al. Pulmonary vein diameter, cross-sectional area, and shape: CT analysis. Radiology 2005;235:43-50. 10.1148/radiol.2351032106
 - Kishve P, Motwani R. Morphometric study of fossa ovale in human cadaveric hearts. Anat Cell Biol 2021;54:42-50. 10.5115/acb.20.286
+- Klimek-Piotrowska W, Hołda MK, Koziej M, Piątek K, Hołda J. Anatomy of the true interatrial septum for transseptal access to the left atrium. Ann Anat 2016;205:60-64. 10.1016/j.aanat.2016.01.009
+- Klimek-Piotrowska W, Hołda MK, Koziej M, Strona M. Anatomical barriers in the right atrium to the coronary sinus cannulation. PeerJ 2015;3:e1548. 10.7717/peerj.1548
+- Klimek-Piotrowska W, Hołda MK, Piątek K, Koziej M, Hołda J. Normal distal pulmonary vein anatomy. PeerJ 2016;4:e1579. 10.7717/peerj.1579
 - Kocabay G, et al. Normal left ventricular mechanics by 2D speckle-tracking echocardiography. Rev Esp Cardiol 2014;67:651-658. 10.1016/j.rec.2013.12.009
 - Kocak A, et al. Structure of the human tricuspid valve leaflets and its chordae tendineae in unexpected death. Saudi Med J 2004;25:1051-1059.
 - Koshkelashvili N, et al. Aortic root and valve proportions: an example of the golden ratio? Monaldi Arch Chest Dis 2019;89:1022. 10.4081/monaldi.2019.1022
 - Kozłowski D, et al. Morphology of the tendon of Todaro within the human heart in ontogenesis. Folia Morphol 2000;59:201-206.
 - Lam JH, Ranganathan N, Wigle ED, Silver MD. Morphology of the human mitral valve. I. Chordae tendineae: a new classification. Circulation 1970;41:449-458. 10.1161/01.CIR.41.3.449
 - Lang RM, et al. Recommendations for cardiac chamber quantification by echocardiography in adults: 2015 update. J Am Soc Echocardiogr 2015;28:1-39. 10.1016/j.echo.2014.10.003
+- Lexová M, et al. Clinical anatomy of the left and right atrial appendages in humans: comparative and developmental perspective. Clin Anat 2026. 10.1002/ca.70145
+- Lin FY, et al. The right sided great vessels by cardiac multidetector computed tomography: normative reference values among healthy adults. Acad Radiol 2009;16:981-987. 10.1016/j.acra.2009.02.013
 - Loukas M, et al. Anatomical observations of the moderator band. Clin Anat 2010;23:443-450. 10.1002/ca.20968
+- Loukas M, Tubbs RS, Tongson JM, et al. The clinical anatomy of the crista terminalis, pectinate muscles and the teniae sagittalis. Ann Anat 2008;190:81-87. 10.1016/j.aanat.2007.05.002
+- Manning EP, et al. Stiffening of the human proximal pulmonary artery with increasing age. Physiol Rep 2024;12:e16090. 10.14814/phy2.16090
 - Massing GK, James TN. Anatomical configuration of the His bundle and bundle branches in the human heart. Circulation 1976;53:609-621. 10.1161/01.CIR.53.4.609
+- Mensel B, Quadrat A, Schneider T, et al. MRI-based determination of reference values of thoracic aortic wall thickness in a general population. Eur Radiol 2014;24:2038-2044. 10.1007/s00330-014-3188-8
 - Muraru D, et al. Reference ranges of tricuspid annulus geometry in healthy adults (3DE). Front Cardiovasc Med 2022;9:1011931. 10.3389/fcvm.2022.1011931
 - Nagueh SF, et al. Recommendations for the evaluation of LV diastolic function by echocardiography. Eur J Echocardiogr 2009;10:165-193. 10.1093/ejechocard/jep007 (age table read via echopedia.org reproduction)
 - Oliveira D, et al. Geometric description for the anatomy of the mitral valve: a review. J Anat 2020;237:209-224. 10.1111/joa.13196
+- P Y, Chopra J, Manik P, Rai A, Kumari S, Dande K. Morphological characteristics of interatrial septum and its clinical relevance. Catheter Cardiovasc Interv 2025;105:404-409. 10.1002/ccd.31304
 - Pathan F, et al. Normal ranges of left atrial strain by speckle-tracking echocardiography: meta-analysis. J Am Soc Echocardiogr 2017;30:59-70. 10.1016/j.echo.2016.09.007
 - Petersen SE, et al. Left ventricular non-compaction: insights from CMR. J Am Coll Cardiol 2005;46:101-105. 10.1016/j.jacc.2005.03.045
 - Plonek T, et al. Aortic annulus displacement during cardiac cycle using MRI. BMC Cardiovasc Disord 2018;18:154. 10.1186/s12872-018-0891-4
 - Pouch AM, et al. Statistical assessment of normal mitral annular geometry using automated 3D echocardiographic analysis. Ann Thorac Surg 2014;97:71-77. 10.1016/j.athoracsur.2013.07.096
 - Rajiah P, Fulton NL, Bolen M. MRI of the papillary muscles of the left ventricle. Insights Imaging 2019;10:83. 10.1186/s13244-019-0761-3
+- Reig J, Mirapeix R, Jornet A, Petit M. Morphologic characteristics of the fossa ovalis as an anatomic basis for transseptal catheterization. Surg Radiol Anat 1997;19:279-282. 10.1007/BF01637589
+- Riekerk HCE, et al. Higher spatial resolution improves the interpretation of the extent of ventricular trabeculation. J Anat 2022;240:357-375. 10.1111/joa.13559
 - Rijnbeek PR, et al. Normal values of the electrocardiogram for ages 16-90 years. J Electrocardiol 2014;47:914-921. 10.1016/j.jelectrocard.2014.07.022 (tables at normalecg.org)
 - Rudski LG, et al. Guidelines for the echocardiographic assessment of the right heart in adults. J Am Soc Echocardiogr 2010;23:685-713. 10.1016/j.echo.2010.05.010
 - Sahasakul Y, et al. Age-related changes in aortic and mitral valve thickness. Am J Cardiol 1988;62:424-430. 10.1016/0002-9149(88)90971-X
+- Sánchez-Quintana D, Anderson RH, Cabrera JA, et al. The terminal crest: morphological features relevant to electrophysiology. Heart 2002;88:406-411. 10.1136/heart.88.4.406
 - Sánchez-Quintana D, et al. Sinus node revisited in the era of electroanatomical mapping and catheter ablation. Heart 2005;91:189-194. 10.1136/hrt.2003.031542
+- Shinoda K, Hayashi S, Fukuoka D, Torii R, Watanabe T, Nakano T. Structural comparison between the right and left atrial appendages using multidetector computed tomography. Biomed Res Int 2016;2016:6492183. 10.1155/2016/6492183
 - Silver MD, Lam JH, Ranganathan N, Wigle ED. Morphology of the human tricuspid valve. Circulation 1971;43:333-348. 10.1161/01.CIR.43.3.333
 - Skwarek M, et al. The morphology of the right atrioventricular valve in the adult human heart. Folia Morphol 2006;65:200-208.
+- Słodowska K, et al. Morphology of the left atrial appendage: introduction of a new simplified shape-based classification system. Heart Lung Circ 2021;30:1014-1022. 10.1016/j.hlc.2020.12.006
+- Su P, McCarthy KP, Ho SY. Occluding the left atrial appendage: anatomical considerations. Heart 2008;94:1166-1170. 10.1136/hrt.2006.111989
 - Truong QA, et al. Reference values for normal pulmonary artery dimensions by noncontrast cardiac CT: Framingham. Circ Cardiovasc Imaging 2012;5:147-154. 10.1161/CIRCIMAGING.111.968610
+- Turkbey EB, et al. Determinants and normal values of ascending aortic diameter by age, gender and race/ethnicity in MESA. J Magn Reson Imaging 2014;39:360-368. 10.1002/jmri.24183
 - Vriz O, et al. Normal values of aortic root dimensions in healthy adults. Am J Cardiol 2014;114:921-927. 10.1016/j.amjcard.2014.06.028
 - Wang YH, et al. Normal reference values for MAPSE by M-mode and speckle tracking: multicentre study. Eur Heart J Cardiovasc Imaging 2023;24:1384-1393. 10.1093/ehjci/jead187
 - Weissler AM, Harris WS, Schoenfeld CD. Systolic time intervals in heart failure in man. Circulation 1968;37:149-159. 10.1161/01.CIR.37.2.149
+- Xuan Y, et al. Regional biomechanical and failure properties of healthy human ascending aorta and root. J Mech Behav Biomed Mater 2021;123:104705. 10.1016/j.jmbbm.2021.104705
 - Yingchoncharoen T, et al. Normal ranges of left ventricular strain: a meta-analysis. J Am Soc Echocardiogr 2013;26:185-191. 10.1016/j.echo.2012.10.008
+- Zakrzewski S, et al. Superior vena cava as an arrhythmogenic substrate in atrial fibrillation: anatomical, electrophysiological and clinical perspectives. J Clin Med 2025;14:7456. 10.3390/jcm14217456
 - Zhivadinovik J, et al. Dimensions of the triangle of Koch. Bratisl Lek Listy 2006;107:107-109.
 - Zhivadinovik J, et al. Anatomy of coronary sinus ostium. Folia Morphol 2016;75:264-267. 10.5603/FM.a2015.0089
 - Zuo K, et al. Biomechanical properties of aged human and ovine mitral valve chordae tendineae. J Mech Behav Biomed Mater 2016;62:607-618. 10.1016/j.jmbbm.2016.05.034

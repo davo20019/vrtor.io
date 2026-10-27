@@ -80,7 +80,7 @@ def trabeculae(side, p):
     v, u = W[side + '_v'], W[side + '_uvc']; n = normals(side)
     ax = np.load('work/motion.npz')['axis']
     zone = (u[:, 0] < 0.04) & (u[:, 2] > p['z'][0]) & (u[:, 2] < p['z'][1])
-    if side == 'lv': zone &= ~((np.abs(u[:, 1]) < p['smooth_septum']) & (u[:, 2] > 0.45))   # the upper septum is smooth
+    if side == 'lv': zone &= ~((np.abs(u[:, 1]) < p['smooth_septum']) & (u[:, 2] > p.get('septum_from', 0.45)))   # the septum is smooth but at the apex
     iv = np.where(zone)[0]; rng.shuffle(iv)
     nodes = []
     for i in iv:
@@ -138,9 +138,9 @@ def moderator_band(p):
     cand = lv[sept]; d = np.linalg.norm(cand - base, axis=1); s0 = cand[np.argmin(d)]
     mid = (s0 + base) / 2; ax = H.motion_at  # noqa
     # it sags a little into the cavity and flares where it meets the septum and the muscle
-    t = np.linspace(-0.06, 1.06, 24)[:, None]
+    t = np.linspace(-0.18, 1.14, 30)[:, None]          # its ends sunk into the septum and the muscle
     path = s0 * (1 - t) + base * t
-    tt = t[:, 0]; r = p['thickness'] / 2 * (1 + 0.6 * np.exp(-(tt / 0.12) ** 2) + 0.6 * np.exp(-((1 - tt) / 0.12) ** 2))
+    tt = t[:, 0]; r = p['thickness'] / 2 * (1 + 0.3 * np.exp(-((tt + 0.05) / 0.18) ** 2) + 0.3 * np.exp(-((1.03 - tt) / 0.18) ** 2))
     V, F = tube(path, r, sides=14)
     return V, F, float(np.linalg.norm(base - s0))
 
@@ -214,7 +214,7 @@ def left_appendage(p):
         s = v[rng.choice(near)]; aim = tip + rng.normal(0, 8, 3)
         path = march(s, aim, idx, v, n, T, length=rng.uniform(8, 18))
         if len(path) < 4: continue
-        path = smooth(dedupe(path), 2); pn = n[idx[T.query(path)[1]]]; r = rng.uniform(0.6, 1.0)
+        path = smooth(dedupe(path), 2); pn = n[idx[T.query(path)[1]]]; r = rng.uniform(*E['laa_pectinate_radius'])
         paths.append(ridge(path + pn * r * 0.4, r))
     return merge(paths), len(paths)
 

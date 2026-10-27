@@ -79,7 +79,10 @@ if __name__ == '__main__':
     mb = np.load('work/parts/endo_moderator_band.npz')['v']; pm = np.load('work/parts/rv_pm_ant.npz')['v']
     rv_site = nearest(VEN & (uvc[:, 3] > 0) & (uvc[:, 0] < 0.08), mb[np.argmin(np.linalg.norm(mb - pm.mean(0), axis=1))])
     sites.append((rv_site, q + C['rv_delay']))
-    purk = VEN & (uvc[:, 0] < C['purkinje_depth']) & (uvc[:, 2] < C['purkinje_top'])
+    # the Purkinje network reaches high on the septum and front wall (the anterior fascicle's dense net) but less far
+    # up the back wall, so the back of the base is activated last, as Durrer found
+    back = (uvc[:, 1] < C['purkinje_back_from']) & (uvc[:, 1] > -np.pi + 0.3)
+    purk = VEN & (uvc[:, 0] < C['purkinje_depth']) & (uvc[:, 2] < np.where(back, C['purkinje_top_back'], C['purkinje_top']))
     def vent(v):
         fast = purk[e[:, 0]] & purk[e[:, 1]]
         speed = np.where(fast, C['purkinje_speed'], v)

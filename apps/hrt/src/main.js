@@ -33,12 +33,13 @@ import { continueInVr, createCard, createMenuControls, createXr, headsetNote, st
 import { PHASES, RR, at, ecg } from './cycle.js';
 import { ABOUT, GROUP_NAME, SOURCES } from './content.js';
 import { createRoom } from './room.js';
+import { createBlood } from './blood.js';
 import { ELEC, applyTissue } from './tissue.js';
 window.__ELEC = ELEC;
 import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
-const MODEL_V = '9';
+const MODEL_V = '13';
 MeshoptCompression.Configuration = { decoder: { url: `${location.origin}${BASE}vendor/meshopt_decoder.js` } };
 
 const $ = (sel) => document.querySelector(sel);
@@ -47,7 +48,7 @@ const ui = {
   loading: $('.loading'), pct: $('.loading-pct'), retry: $('[data-retry]'),
   card: $('.card'), kicker: $('.card-kicker'), title: $('.card-title'), body: $('.card-body'), fact: $('.card-fact'),
   actions: $('.card-actions'), vr: $('[data-enter-vr]'), play: $('[data-play]'), speed: $('[data-speed]'),
-  cut: $('[data-cut]'), elec: $('[data-elec]'), size: $('[data-size]'), back: $('[data-back]'), hint: $('.hint'),
+  cut: $('[data-cut]'), elec: $('[data-elec]'), blood: $('[data-blood]'), size: $('[data-size]'), back: $('[data-back]'), hint: $('.hint'),
   ecg: $('.ecg canvas'), phase: $('.ecg-phase'),
 };
 const PICKED = Color3.FromHexString('#ffb020');
@@ -113,6 +114,7 @@ let meta = null;
 const parts = new Map();
 const card = createCard(scene, { name: 'heart-card', width: 0.9, height: 0.74 });
 let rig = null;
+let blood = null;
 let cardOpen = true;
 let picked = null;        // { kind: 'part' | 'group' | 'branch', key }
 let page = 'part';        // 'part' | 'cycle'
@@ -142,6 +144,8 @@ async function load() {
   for (const mat of container.materials) mat.backFaceCulling = false;
   applyTissue(container.materials);
   setSize(size);
+  const heartNode = container.transformNodes.find((n) => n.name === 'heart');
+  try { blood = await createBlood(scene, heartNode, `${BASE}models/flow.json?v=${MODEL_V}`); } catch (err) { console.warn('[hrt] no blood flow', err); }
   for (const p of parts.values()) p.home = { position: p.mesh.position.clone(), rotation: p.mesh.rotationQuaternion?.clone() ?? null, parent: p.mesh.parent };
 }
 
@@ -164,6 +168,7 @@ function beat(dt) {
   if (playing) clock += dt * speed;
   const s = at(clock);
   ELEC.clock = s.t;
+  blood?.update(playing ? dt * speed : 0, s);
   for (const p of parts.values()) {
     const mtm = p.mesh.morphTargetManager;
     if (!mtm) continue;
@@ -326,6 +331,7 @@ function tools() {
     act(speed === 1 ? 'Slow it down' : speed === 0.25 ? 'Slower' : 'Real speed', cycleSpeed),
     act(cut ? 'Close it' : 'Cut it open', () => { setCut(!cut); render(); }),
     act(electricity ? 'Hide the electricity' : 'Show the electricity', toggleElectricity),
+    act(blood?.visible ? 'Hide the blood' : 'Show the blood flow', toggleBlood),
     act(size === 'big' ? 'Life size' : 'Make it big', () => { setSize(size === 'big' ? 'life' : 'big'); render(); }),
     act('Put back', () => putBack([...parts.values()])),
   ];
@@ -370,6 +376,14 @@ function render() {
 }
 
 function togglePlay() { playing = !playing; render(); }
+function toggleBlood() {
+  if (!blood) return;
+  blood.show(!blood.visible);
+  if (blood.visible && !cut) setCut(true);       // the blood is inside: open the heart to see it
+  if (blood.visible && speed === 1) speed = 0.25;
+  ui.blood.setAttribute('aria-pressed', blood.visible ? 'true' : 'false');
+  render();
+}
 let electricity = false;
 function toggleElectricity() {
   electricity = !electricity;
@@ -537,7 +551,7 @@ async function start() {
   await Promise.race([scene.whenReadyAsync(), new Promise((r) => setTimeout(r, 6000))]);
   ui.loading.hidden = true;
   ui.hint.hidden = false;
-  for (const b of [ui.play, ui.speed, ui.cut, ui.elec, ui.size, ui.back]) b.disabled = false;
+  for (const b of [ui.play, ui.speed, ui.cut, ui.elec, ui.blood, ui.size, ui.back]) b.disabled = false;
   render();
 }
 
@@ -553,6 +567,7 @@ ui.play.addEventListener('click', togglePlay);
 ui.speed.addEventListener('click', cycleSpeed);
 ui.cut.addEventListener('click', () => { setCut(!cut); render(); });
 ui.elec.addEventListener('click', toggleElectricity);
+ui.blood.addEventListener('click', toggleBlood);
 ui.size.addEventListener('click', () => { setSize(size === 'big' ? 'life' : 'big'); render(); });
 ui.back.addEventListener('click', () => putBack([...parts.values()]));
 ui.retry.addEventListener('click', () => location.reload());
@@ -580,4 +595,4 @@ start().catch((err) => {
 });
 
 // For automated checks in a browser.
-window.__hrt = { ELEC: null, scene, camera, parts, setCut, setSize, pick: (id) => pickMesh(parts.get(id)?.mesh), content: () => content(), at, get clock() { return clock; }, set clock(v) { clock = v; }, pause: () => { playing = false; } };
+window.__hrt = { get blood() { return blood; }, scene, camera, parts, setCut, setSize, pick: (id) => pickMesh(parts.get(id)?.mesh), content: () => content(), at, get clock() { return clock; }, set clock(v) { clock = v; }, pause: () => { playing = false; } };

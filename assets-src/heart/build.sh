@@ -19,10 +19,12 @@ $PY vessels.py
 $PY endo.py
 $PY conduction.py
 $PY parts.py
+$PY flow.py
 blender -b --factory-startup --python-exit-code 1 --python assemble.py > out/assemble.log 2>&1 || { grep -E 'Error|assemble' out/assemble.log; exit 1; }
 grep '\[assemble\]' out/assemble.log
 npx -y @gltf-transform/cli optimize out/heart.glb out/heart.glb --compress meshopt --simplify false --flatten false \
   --join false --instance false --palette false --prune-attributes false
 cp out/heart.glb ../../apps/hrt/public/models/heart.glb
 cp work/heart_parts.json ../../apps/hrt/public/models/heart.json
+cp work/flow.json ../../apps/hrt/public/models/flow.json
 ls -l ../../apps/hrt/public/models/

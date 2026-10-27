@@ -90,7 +90,7 @@
     "FJ3645"
    ],
    "length": 70,
-   "wall": 1.0
+   "wall": 2.0
   },
   {
    "id": "rbcv",
@@ -123,7 +123,7 @@
     "FJ3441"
    ],
    "length": 30,
-   "wall": 1.0
+   "wall": 2.0
   },
   {
    "id": "lspv",
@@ -134,7 +134,7 @@
     "FJ2925"
    ],
    "length": 25,
-   "wall": 0.8
+   "wall": 1.4
   },
   {
    "id": "lipv",
@@ -145,7 +145,7 @@
     "FJ2944"
    ],
    "length": 25,
-   "wall": 0.8
+   "wall": 1.4
   },
   {
    "id": "ripv",
@@ -156,7 +156,7 @@
     "FJ3040"
    ],
    "length": 25,
-   "wall": 0.8
+   "wall": 1.4
   },
   {
    "id": "rspv",
@@ -167,14 +167,17 @@
     "FJ3020"
    ],
    "length": 25,
-   "wall": 0.8
+   "wall": 1.4
   }
  ],
  "_sources": {
   "paths and radii": "BodyParts3D 4.0 (CC BY 4.0), carried onto the CT heart",
-  "wall": "GUESS: wall thicknesses were not found in the literature search (aorta ~2 mm, pulmonary trunk ~1.2, veins ~0.8-1)",
+  "wall": "aorta 2.0 (Xuan 2021, healthy donors 2.08; MRI 1.5, Mensel 2014); pulmonary trunk 1.2 (Manning 2024); venae cavae 2.0 (histology layers sum 2.4-4.4, Fernandez 2020, uncertain); pulmonary veins 1.4 (inner layer at the junction, Cabrera 2002); arch branches and pulmonary arteries 1.0 GUESS",
   "lengths": "how far each is shown, a choice: the aorta a short way past its arch (as heart specimens are cut), the arch branches, the pulmonary split and the lung roots",
-  "cut_above_ring": "aorta and pulmonary trunk stubs trimmed 22 mm above their valve ring, just above the commissures (19.4 mm, Jelenc 2024)"
+  "cut_above_ring": "aorta and pulmonary trunk stubs trimmed 22 mm above their valve ring, just above the commissures (19.4 mm, Jelenc 2024)",
+  "fade": "how far along a vessel the heart's motion carries: the aortic root moves about 12 mm (Plonek 2018), the arch far less; GUESS 60 mm for arteries, 30 for veins"
  },
- "cut_above_ring": 22.0
+ "cut_above_ring": 22.0,
+ "fade_artery": 60.0,
+ "fade_vein": 30.0
 }

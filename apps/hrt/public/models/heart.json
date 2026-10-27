@@ -65,11 +65,12 @@
     "afill_3"
    ]
   },
-  "aorta": {
-   "name": "Aortic root",
-   "tissue": "artery_wall",
-   "group": "walls",
+  "mv_anterior": {
+   "name": "Anterior leaflet of the mitral valve",
+   "tissue": "valve",
+   "group": "mv",
    "targets": [
+    "open_mv",
     "vsys_0",
     "vsys_1",
     "vsys_2",
@@ -80,36 +81,20 @@
     "afill_3"
    ]
   },
-  "pa": {
-   "name": "Pulmonary trunk",
-   "tissue": "artery_wall",
-   "group": "walls",
-   "targets": [
-    "afill",
-    "vsys_0",
-    "vsys_1",
-    "vsys_2",
-    "vsys_3"
-   ]
-  },
-  "mv_anterior": {
-   "name": "Anterior leaflet of the mitral valve",
-   "tissue": "valve",
-   "group": "mv",
-   "targets": [
-    "vsys",
-    "afill",
-    "open_mv"
-   ]
-  },
   "mv_posterior": {
    "name": "Posterior leaflet of the mitral valve",
    "tissue": "valve",
    "group": "mv",
    "targets": [
-    "vsys",
-    "afill",
-    "open_mv"
+    "open_mv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "tv_septal": {
@@ -117,9 +102,15 @@
    "tissue": "valve",
    "group": "tv",
    "targets": [
-    "vsys",
-    "afill",
-    "open_tv"
+    "open_tv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "tv_anterior": {
@@ -127,9 +118,15 @@
    "tissue": "valve",
    "group": "tv",
    "targets": [
-    "vsys",
-    "afill",
-    "open_tv"
+    "open_tv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "tv_posterior": {
@@ -137,9 +134,15 @@
    "tissue": "valve",
    "group": "tv",
    "targets": [
-    "vsys",
-    "afill",
-    "open_tv"
+    "open_tv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "av_left_coronary": {
@@ -147,9 +150,15 @@
    "tissue": "valve",
    "group": "av",
    "targets": [
-    "vsys",
-    "afill",
-    "open_av"
+    "open_av",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "av_non_coronary": {
@@ -157,9 +166,15 @@
    "tissue": "valve",
    "group": "av",
    "targets": [
-    "vsys",
-    "afill",
-    "open_av"
+    "open_av",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "av_right_coronary": {
@@ -167,9 +182,15 @@
    "tissue": "valve",
    "group": "av",
    "targets": [
-    "vsys",
-    "afill",
-    "open_av"
+    "open_av",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "pv_right": {
@@ -177,9 +198,12 @@
    "tissue": "valve",
    "group": "pv",
    "targets": [
-    "vsys",
     "afill",
-    "open_pv"
+    "open_pv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "pv_anterior": {
@@ -187,9 +211,12 @@
    "tissue": "valve",
    "group": "pv",
    "targets": [
-    "vsys",
     "afill",
-    "open_pv"
+    "open_pv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "pv_left": {
@@ -197,9 +224,12 @@
    "tissue": "valve",
    "group": "pv",
    "targets": [
-    "vsys",
     "afill",
-    "open_pv"
+    "open_pv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "cond_av_node": {
@@ -224,7 +254,10 @@
    "group": "conduction",
    "mount": "heart",
    "targets": [
-    "vsys",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
     "afill_0",
     "afill_1",
     "afill_2",
@@ -253,11 +286,14 @@
    "group": "conduction",
    "mount": "heart",
    "targets": [
-    "afill",
     "vsys_0",
     "vsys_1",
     "vsys_2",
-    "vsys_3"
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "cond_purkinje": {
@@ -279,11 +315,14 @@
    "group": "conduction",
    "mount": "heart",
    "targets": [
-    "afill",
     "vsys_0",
     "vsys_1",
     "vsys_2",
-    "vsys_3"
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "cond_sa_node": {
@@ -292,7 +331,10 @@
    "group": "conduction",
    "mount": "heart",
    "targets": [
-    "vsys",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
     "afill_0",
     "afill_1",
     "afill_2",
@@ -1060,11 +1102,14 @@
    "mount": "heart",
    "bp3d": "FJ2692",
    "targets": [
-    "afill",
     "vsys_0",
     "vsys_1",
     "vsys_2",
-    "vsys_3"
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "cor_FJ2693": {
@@ -1080,11 +1125,14 @@
    "mount": "heart",
    "bp3d": "FJ2693",
    "targets": [
-    "afill",
     "vsys_0",
     "vsys_1",
     "vsys_2",
-    "vsys_3"
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "cor_FJ2694": {
@@ -1441,11 +1489,14 @@
    "mount": "heart",
    "bp3d": "FJ2724",
    "targets": [
-    "afill",
     "vsys_0",
     "vsys_1",
     "vsys_2",
-    "vsys_3"
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "cor_FJ2727": {
@@ -1517,11 +1568,14 @@
    "mount": "heart",
    "bp3d": "FJ2731",
    "targets": [
-    "afill",
     "vsys_0",
     "vsys_1",
     "vsys_2",
-    "vsys_3"
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "cor_FJ2737": {
@@ -1552,7 +1606,10 @@
    "group": "crista_terminalis",
    "mount": "ra",
    "targets": [
-    "vsys",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
     "afill_0",
     "afill_1",
     "afill_2",
@@ -1565,7 +1622,10 @@
    "group": "fossa_ovalis",
    "mount": "ra",
    "targets": [
-    "vsys",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
     "afill_0",
     "afill_1",
     "afill_2",
@@ -1578,7 +1638,10 @@
    "group": "pectinate_muscles",
    "mount": "la",
    "targets": [
-    "vsys",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
     "afill_0",
     "afill_1",
     "afill_2",
@@ -1617,7 +1680,10 @@
    "group": "pectinate_muscles",
    "mount": "ra",
    "targets": [
-    "vsys",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
     "afill_0",
     "afill_1",
     "afill_2",
@@ -1643,9 +1709,12 @@
    "group": "mv_chordae",
    "mount": "lv",
    "targets": [
-    "vsys",
     "afill",
-    "open_mv"
+    "open_mv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "lv_chordae_pm": {
@@ -1654,9 +1723,12 @@
    "group": "mv_chordae",
    "mount": "lv",
    "targets": [
-    "vsys",
     "afill",
-    "open_mv"
+    "open_mv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "lv_pm_al": {
@@ -1678,11 +1750,14 @@
    "group": "lv_papillary",
    "mount": "lv",
    "targets": [
-    "afill",
     "vsys_0",
     "vsys_1",
     "vsys_2",
-    "vsys_3"
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "rv_chordae_ant": {
@@ -1691,9 +1766,12 @@
    "group": "tv_chordae",
    "mount": "rv",
    "targets": [
-    "vsys",
     "afill",
-    "open_tv"
+    "open_tv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "rv_chordae_post": {
@@ -1702,9 +1780,12 @@
    "group": "tv_chordae",
    "mount": "rv",
    "targets": [
-    "vsys",
     "afill",
-    "open_tv"
+    "open_tv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "rv_chordae_sept": {
@@ -1713,9 +1794,12 @@
    "group": "tv_chordae",
    "mount": "rv",
    "targets": [
-    "vsys",
     "afill",
-    "open_tv"
+    "open_tv",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "rv_pm_ant": {
@@ -1805,8 +1889,14 @@
    "group": "great_veins",
    "mount": "body",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_lcca": {
@@ -1841,11 +1931,11 @@
    "group": "great_arteries",
    "mount": "body",
    "targets": [
-    "vsys",
-    "afill_0",
-    "afill_1",
-    "afill_2",
-    "afill_3"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "ves_lsa": {
@@ -1855,29 +1945,13 @@
    "mount": "body",
    "targets": [
     "vsys",
-    "afill_0",
-    "afill_1",
-    "afill_2",
-    "afill_3"
+    "afill"
    ]
   },
   "ves_lspv": {
    "name": "Left superior pulmonary vein",
    "tissue": "vein_wall",
    "group": "great_veins",
-   "mount": "body",
-   "targets": [
-    "vsys",
-    "afill_0",
-    "afill_1",
-    "afill_2",
-    "afill_3"
-   ]
-  },
-  "ves_pt": {
-   "name": "Pulmonary trunk",
-   "tissue": "artery_wall",
-   "group": "great_arteries",
    "mount": "body",
    "targets": [
     "vsys_0",
@@ -1890,14 +1964,33 @@
     "afill_3"
    ]
   },
+  "ves_pt": {
+   "name": "Pulmonary trunk",
+   "tissue": "artery_wall",
+   "group": "great_arteries",
+   "mount": "body",
+   "targets": [
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
+   ]
+  },
   "ves_rbcv": {
    "name": "Right brachiocephalic vein",
    "tissue": "vein_wall",
    "group": "great_veins",
    "mount": "body",
    "targets": [
-    "vsys",
-    "afill"
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
+    "afill_0",
+    "afill_1",
+    "afill_2",
+    "afill_3"
    ]
   },
   "ves_ripv": {
@@ -1906,7 +1999,10 @@
    "group": "great_veins",
    "mount": "body",
    "targets": [
-    "vsys",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
     "afill_0",
     "afill_1",
     "afill_2",
@@ -1919,11 +2015,11 @@
    "group": "great_arteries",
    "mount": "body",
    "targets": [
-    "vsys",
-    "afill_0",
-    "afill_1",
-    "afill_2",
-    "afill_3"
+    "afill",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3"
    ]
   },
   "ves_rspv": {
@@ -1932,7 +2028,10 @@
    "group": "great_veins",
    "mount": "body",
    "targets": [
-    "vsys",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
     "afill_0",
     "afill_1",
     "afill_2",
@@ -1945,7 +2044,10 @@
    "group": "great_veins",
    "mount": "body",
    "targets": [
-    "vsys",
+    "vsys_0",
+    "vsys_1",
+    "vsys_2",
+    "vsys_3",
     "afill_0",
     "afill_1",
     "afill_2",

@@ -4,7 +4,7 @@
    "count": 55,
    "z": [
     0.03,
-    0.62
+    0.66
    ],
    "length": [
     10,
@@ -12,7 +12,7 @@
    ],
    "radius": [
     0.7,
-    1.3
+    1.25
    ],
    "drift": 0.35,
    "r": 22,
@@ -21,7 +21,8 @@
    "spacing": 4.5,
    "across_cost": 1.2,
    "cross_share": 0.35,
-   "flatness": 0.55
+   "flatness": 0.8,
+   "septum_from": 0.25
   },
   "rv": {
    "count": 65,
@@ -58,7 +59,7 @@
    4.2
   ],
   "crista_bow": 6.0,
-  "pectinate_count": 14,
+  "pectinate_count": 17,
   "pectinate_length": [
    14,
    32
@@ -69,20 +70,24 @@
   ],
   "vestibule": 9.0,
   "fossa": [
-   16,
-   12
+   14.1,
+   12.1
   ],
   "limbus": 2.5
  },
  "left_appendage": {
-  "laa_count": 8,
+  "laa_count": 11,
   "laa_reach": 22
  },
  "_sources": {
-  "trabeculae": "a meshwork over the LV apical two thirds (upper septum smooth) and the RV; spacing and thickness GUESS (not found in the literature search), RV coarser",
+  "trabeculae": "LV: trabeculated on the mid and apical anterior, lateral and inferolateral walls, the septum (mid septal 4%) and base smooth (Kawel 2012; Dawson 2011: trabeculated layer 4.2-7.1 mm in those segments, median 0 septal and basal); about 54 trabeculae per heart, strips about 2 mm wide (Halaney 2017, Fatemifar 2019; hypertrophied hearts). RV sizes still a GUESS (not found)",
   "moderator_band": "Loukas 2010: thickness 4.5 +- 1.8 mm, length 16.23 +- 2.3 mm",
   "crista_thickness": "Sanchez-Quintana 2005: head 6.2, body 5.6, tail 4.2 mm",
-  "pectinate": "GUESS: thickness not found; spacing from the comb-like pattern in anatomy texts; the smooth vestibule round the tricuspid valve",
-  "fossa": "GUESS: size of the fossa ovalis and limbus thickness taken as typical (literature.md has the fossa as 'found', check it)"
- }
+  "pectinate": "LAA: 11 +- 4 muscles 0.9-1.2 mm thick (Lexova 2026, Slodowska 2021); RAA: 17 +- 4 (Lexova 2026); RA muscle thickness GUESS (not found)",
+  "fossa": "Klimek-Piotrowska 2016: 14.1 x 12.1 mm; limbus thickness GUESS (not found)"
+ },
+ "laa_pectinate_radius": [
+  0.45,
+  0.6
+ ]
 }

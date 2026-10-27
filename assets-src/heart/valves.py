@@ -234,7 +234,7 @@ def sl_valve(v, nu=34, nw=16):
             z = zc * (2 * u - 1) ** 2 * 0.999                      # crown: commissures high, nadir on the ring
             r = wr(ang, z)
             dirr = np.cos(ang) * e1 + np.sin(ang) * e2
-            A = c + n * z + dirr * (r + 0.3)                       # 0.3 mm into the wall
+            A = c + n * z + dirr * (r - 0.1)                       # at the inside of the wall (it ends there)
             # closed free edge: commissure -> centre -> commissure, along the two radial lines
             ca, cb = np.cos(a) * e1 + np.sin(a) * e2, np.cos(b) * e1 + np.sin(b) * e2
             rk = min(wr(a, zcoapt), wr(b, zcoapt))

@@ -27,6 +27,18 @@ P = json.load(open('vessels_params.json'))
 m = pv.read('work/average.vtu'); TAG = m.cell_data['ID']
 
 CUTS = {}
+SECTION = {}
+ROOT = {}
+def root_sections(name, rc, ax, h_top, step=1.5):
+    """The CT stub's cross-sections from its foot (where it meets the ventricle) up to the cut, every step mm:
+    for each, the centre and the outline's points (outer and inner surfaces)."""
+    M_ = H.mesh(name); S = np.asarray(M_.points); pr = (S - rc) @ ax
+    out = []
+    for h in np.arange(pr.min() + 0.6, h_top, step):
+        sl = np.asarray(M_.slice(normal=ax, origin=rc + ax * h).points)
+        if len(sl) > 20: out.append((rc + ax * h, sl))
+    return out
+
 def stub_end(label, ring=None):
     """Centre, outward direction and outer radius of a CT stub's open end. Vein caps (11-17) are discs closing
     the vessel: their centre and normal are the opening. The aorta and pulmonary trunk end in a slanted, ragged cut:
@@ -44,10 +56,15 @@ def stub_end(label, ring=None):
     ax = H.valve_frame({5: 'av', 6: 'pv'}[label])[1]
     pr = (S - rc) @ ax
     h = min(P['cut_above_ring'], pr.max() - 4)
-    x = S[np.abs(pr - h) < 1.0]; c = x.mean(0); c = c - ((c - rc) @ ax - h) * ax
-    rr = np.linalg.norm((x - c) - np.outer((x - c) @ ax, ax), axis=1)
+    # the stub's cross-section in the cut plane: its outer loop's middle is where the continuing tube starts
+    sl = np.asarray(H.mesh(name).slice(normal=ax, origin=rc + ax * h).points)
+    c = sl.mean(0)
+    rr = np.linalg.norm((sl - c) - np.outer((sl - c) @ ax, ax), axis=1)
     CUTS[name] = (c.tolist(), ax.tolist())
-    return c, ax, float(np.percentile(rr, 90))
+    SECTION[name] = sl
+    ROOT[name] = root_sections(name, rc, ax, h)
+    # the outer loop is the larger half of the section's radii; its mean is the circle the tube eases into
+    return c, ax, float(np.mean(np.sort(rr)[len(rr) // 2:]))
 
 def centreline(els, near, h=1.5):
     """Centreline and radius of BodyParts3D vessel elements (their union, carried onto the CT heart): the vessel
@@ -131,21 +148,46 @@ def frames(path):
         v = N[-1] - (N[-1] @ T[i]) * T[i]; N.append(v / np.linalg.norm(v))
     N = np.array(N); return T, N, np.cross(T, N)
 
-def wall_tube(path, r_out, wall, sides=40):
-    """A vessel's wall as a closed solid: outer and inner surfaces joined at both ends (the lumen is open)."""
-    T, N, B = frames(path); a = np.linspace(0, 2 * np.pi, sides, endpoint=False)
-    ring = lambda r: (path[:, None, :] + r[:, None, None] * (np.cos(a)[None, :, None] * N[:, None, :] + np.sin(a)[None, :, None] * B[:, None, :])).reshape(-1, 3)
-    out, inn = ring(r_out), ring(np.maximum(r_out - wall, 0.4)); n = len(out); L = len(path)
+def profile(points, centre, T0, N0, B0, sides):
+    """Outer and inner radius per angle (the tube's angles about N0, B0) of a cross-section's points."""
+    q = points - centre; q -= np.outer(q @ T0, T0)
+    ang = np.arctan2(q @ B0, q @ N0); rad = np.linalg.norm(q, axis=1)
+    bins = np.round((ang % (2 * np.pi)) / (2 * np.pi) * sides).astype(int) % sides
+    po, pi_ = np.full(sides, np.nan), np.full(sides, np.nan)
+    for k in range(sides):
+        r_ = rad[bins == k]
+        if len(r_): po[k], pi_[k] = r_.max(), r_.min()
+    idx = np.arange(sides); ok = ~np.isnan(po)
+    po = np.interp(idx, idx[ok], po[ok], period=sides); pi_ = np.interp(idx, idx[ok], pi_[ok], period=sides)
+    return po, np.minimum(pi_, po - 0.6)
+
+def wall_tube(path, r_out, wall, sides=40, start=None, blend=25.0, root=None):
+    """A vessel's wall as a closed solid: outer and inner surfaces joined at both ends (the lumen is open).
+    start: points of the wall it continues (a CT stub's surface at the cut): the first ring takes their exact
+    outline, outer and inner, per angle, and eases into the circle over blend mm, so the join has no step."""
+    T, N, B = frames(path); a = np.linspace(0, 2 * np.pi, sides, endpoint=False); L = len(path)
+    ro = np.repeat(np.asarray(r_out, 'f8')[:, None], sides, 1); ri = np.maximum(ro - wall, 0.4)
+    if start is not None:
+        po, pi_ = profile(start, path[0], T[0], N[0], B[0], sides)
+        s = np.cumsum(np.r_[0, np.linalg.norm(np.diff(path, axis=0), axis=1)])
+        w = np.clip(s / blend, 0, 1); w = (w * w * (3 - 2 * w))[:, None]
+        ro = po[None] * (1 - w) + ro * w; ri = pi_[None] * (1 - w) + ri * w
+    if root:   # rings below the path's start, through the measured sections, in the same frame
+        rc_ = np.array([c_ for c_, _ in root]); prof = [profile(p_, c_, T[0], N[0], B[0], sides) for c_, p_ in root]
+        path = np.vstack([rc_, path]); N = np.vstack([np.repeat(N[:1], len(root), 0), N]); B = np.vstack([np.repeat(B[:1], len(root), 0), B])
+        ro = np.vstack([np.array([p_[0] for p_ in prof]), ro]); ri = np.vstack([np.array([p_[1] for p_ in prof]), ri]); L = len(path)
+    ring = lambda r: (path[:, None, :] + r[:, :, None] * (np.cos(a)[None, :, None] * N[:, None, :] + np.sin(a)[None, :, None] * B[:, None, :])).reshape(-1, 3)
+    out, inn = ring(ro), ring(ri); n = len(out)
     F = []
     for i in range(L - 1):
         for j in range(sides):
-            p, q = i * sides + j, i * sides + (j + 1) % sides
-            F += [[p, q, q + sides], [p, q + sides, p + sides]]
-            F += [[n + p, n + q + sides, n + q], [n + p, n + p + sides, n + q + sides]]
+            p, q_ = i * sides + j, i * sides + (j + 1) % sides
+            F += [[p, q_, q_ + sides], [p, q_ + sides, p + sides]]
+            F += [[n + p, n + q_ + sides, n + q_], [n + p, n + p + sides, n + q_ + sides]]
     for i, flip in [(0, True), (L - 1, False)]:
         for j in range(sides):
-            p, q = i * sides + j, i * sides + (j + 1) % sides
-            f = [[p, n + p, n + q], [p, n + q, q]]
+            p, q_ = i * sides + j, i * sides + (j + 1) % sides
+            f = [[p, n + p, n + q_], [p, n + q_, q_]]
             F += [x[::-1] for x in f] if flip else f
     return np.vstack([out, inn]), np.array(F, 'i4')
 
@@ -166,16 +208,30 @@ def bp3d_cloud(els, per_mm2=1.0):
     NORMALS = np.vstack(nrm)
     return warp(np.vstack(out))
 
-def save(pid, V, F, name, group, extra=None):
-    z = np.zeros_like(V)
-    np.savez_compressed(f'work/parts/{pid}.npz', v=V.astype('f4'), f=F, vsys=z.astype('f4'), afill=z.astype('f4'))
+def tube_motion(V, path, sides, start_vs, start_af, fade):
+    """A vessel moves with what it leaves (its first ring takes the motion of the wall or vessel it continues),
+    less and less along its length: none beyond fade mm. V is wall_tube's layout (outer rings, then inner)."""
+    L = len(path); s = np.cumsum(np.r_[0, np.linalg.norm(np.diff(path, axis=0), axis=1)])
+    f = np.clip(1 - s / fade, 0, 1); f = f * f * (3 - 2 * f)
+    # it follows the wall exactly where it joins it, then moves as a whole (the ring's mean) within 8 mm, so the
+    # wall's uneven twist and squeeze don't wrinkle it
+    b = np.clip(s / 8.0, 0, 1); b = b * b * (3 - 2 * b)
+    def field(st):
+        ring = st[None] * (1 - b)[:, None, None] + st.mean(0)[None, None] * b[:, None, None]   # L x sides x 3
+        ring = ring * f[:, None, None]
+        return np.vstack([ring.reshape(-1, 3), ring.reshape(-1, 3)])
+    return field(start_vs), field(start_af)
+
+def save(pid, V, F, name, group, extra=None, vs=None, af=None):
+    z = np.zeros_like(V); vs = z if vs is None else vs; af = z if af is None else af
+    np.savez_compressed(f'work/parts/{pid}.npz', v=V.astype('f4'), f=F, vsys=vs.astype('f4'), afill=af.astype('f4'))
     json.dump({'name': name, 'tissue': 'artery_wall' if group == 'great_arteries' else 'vein_wall', 'group': group,
                'mount': 'body', **(extra or {})}, open(f'work/parts/{pid}.json', 'w'), indent=1)
 
 if __name__ == '__main__':
     os.makedirs('work/parts', exist_ok=True)
     for f in glob.glob('work/parts/ves_*'): os.remove(f)
-    built = {}; CUTS.clear(); SCALE = {}; RMED = {}
+    built = {}; CUTS.clear(); SCALE = {}; RMED = {}; MOT = {}; PATHS = {}
     for v in P['vessels']:
         if 'stub' in v:   # continues a CT stub
             c, d, r0 = stub_end(v['stub'], v.get('ring'))
@@ -201,9 +257,23 @@ if __name__ == '__main__':
             if len(path) < 3: print('!', v['id'], 'trace failed'); continue
         if 'stub' not in v: path, rad = spline(path, rad)
         Vt, Ft = wall_tube(path, rad, v['wall'])
-        save('ves_' + v['id'], Vt, Ft, v['name'], v['group'])
         built[v['id']] = path; RMED[v['id']] = float(np.median(rad))
-        if 'stub' in v and v.get('ring'): Vt, Ft = wall_tube(np.vstack([path[0] - d * 1.0, path]), np.r_[rad[0], rad], v['wall'])
-        save('ves_' + v['id'], Vt, Ft, v['name'], v['group'])
+        if 'stub' in v and v.get('ring'):   # starts on the square cut, in the cut's own outline
+            name = {5: 'aorta', 6: 'pa'}[v['stub']]; cc, axc = map(np.array, CUTS[name])
+            Vt, Ft = wall_tube(path, rad, v['wall'], start=SECTION[name], root=ROOT[name])
+            path = np.vstack([np.array([c_ for c_, _ in ROOT[name]]), path])   # the tube now starts at the stub's foot
+        sides = 40; fade = P['fade_artery'] if v['group'] == 'great_arteries' else P['fade_vein']
+        if 'stub' in v:      # the wall it continues, at its first ring
+            mount = {5: 'aorta', 6: 'pa'}.get(v['stub'], 'heart')
+            s_vs, s_af = H.motion_at(Vt[:sides], mount)
+        else:                # its parent, where it leaves it
+            (pvs, paf), pp = MOT[v['from']]; j = np.argmin(np.linalg.norm(pp - path[0], axis=1))
+            s_vs, s_af = np.tile(pvs[j], (sides, 1)), np.tile(paf[j], (sides, 1))
+        vs, af = tube_motion(Vt, path, sides, s_vs, s_af, fade)
+        n1 = len(path) * sides
+        MOT[v['id']] = ((vs[:n1].reshape(len(path), sides, 3).mean(1), af[:n1].reshape(len(path), sides, 3).mean(1)), path)
+        save('ves_' + v['id'], Vt, Ft, v['name'], v['group'], vs=vs, af=af)
+        PATHS[v['id'] + '_path'] = path; PATHS[v['id'] + '_rad'] = np.r_[np.full(len(path) - len(rad), rad[0]), rad] - v['wall']
         print(f"{v['name']:32s} {len(path) * 2:4d} mm, radius {rad.min():.1f}-{rad.max():.1f} mm")
     json.dump(CUTS, open('work/vessel_cuts.json', 'w'))
+    np.savez_compressed('work/vessel_paths.npz', **PATHS)
