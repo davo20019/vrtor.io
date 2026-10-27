@@ -107,7 +107,9 @@ export function createRoom(scene) {
 
   // The room around: further walls and a ceiling, the painting the brightest thing in it.
   const box = MeshBuilder.CreateBox('room', { width: 26, height: 9, depth: 26, sideOrientation: 1 }, scene);
-  box.position.set(0, 4.5, 12); // its far wall behind the painting's own wall
+  // Its far wall behind the painting's own wall, and its floor 10 cm under the parquet: level with it, the two
+  // fought for the same pixels and the floor flickered in the headset.
+  box.position.set(0, 4.4, 12);
   const bm = new PBRMaterial('room', scene);
   bm.albedoColor = Color3.FromHexString('#121722');
   bm.metallic = 0;
@@ -121,6 +123,7 @@ export function createRoom(scene) {
   fm.albedoTexture = parquetTexture(scene);
   fm.albedoTexture.uScale = 13;
   fm.albedoTexture.vScale = 13;
+  fm.albedoTexture.anisotropicFilteringLevel = 8; // seen at a glancing angle: without it the boards shimmer
   fm.metallic = 0;
   fm.roughness = 0.32; // waxed
   floor.material = fm;
