@@ -71,7 +71,7 @@ MAT = {
     'oak': material('oak', 'oak_color.png', 'oak_normal.png', roughness=0.75),
     'metal': material('steel', base=(0.55, 0.55, 0.56), roughness=0.45, metallic=1.0),
     'gilt': material('gilt', 'gilt_color.png', 'gilt_normal.png', 'gilt_orm.png'),
-    'giltplain': material('gilt_plain', 'giltplain_color.png', roughness=0.38, metallic=1.0),
+    'giltplain': material('gilt_plain', 'giltplain_color.png', roughness=0.46, metallic=1.0),
     'giltback': material('frame_back', base=(0.16, 0.11, 0.07), roughness=0.9),
 }
 
@@ -104,12 +104,18 @@ def warp_raw(u, v):
 
 
 _peak = max(warp_raw(i / 50 - 1, j / 50 - 1) for i in range(101) for j in range(101))
+# The edges' most forward point (the middle of the top and bottom edges, the plank cupping across its grain).
+_rim = max(max(warp_raw(i / 50 - 1, s) for i in range(101) for s in (-1, 1)),
+           max(warp_raw(s, j / 50 - 1) for j in range(101) for s in (-1, 1))) / _peak * P['warp_max']
+RIM = _rim * MM
 
 
 def warp(x, z):
-    """How far forward (m) the panel's front stands at (x, z) above the plane of its corners: doubly curved
-    toward the front, most on the left (Mona Lisa Project: 11 mm at most)."""
-    return warp_raw(2 * x / W, 2 * z / H) / _peak * P['warp_max'] * MM
+    """How far forward (m) the panel's front stands at (x, z) of the plane its edges rest against (the châssis
+    lip, y = 0): doubly curved toward the front, 11 mm at most above its corners, most on the left (Mona Lisa
+    Project). The edges' most forward point touches the lip and the corners stand back from it, as a cupped
+    panel sits in a straight rebate. Measured from the corners instead, the edges came through the frame."""
+    return (warp_raw(2 * x / W, 2 * z / H) / _peak * P['warp_max']) * MM - RIM
 
 
 # ---------------------------------------------------------------- the panel
@@ -210,7 +216,9 @@ def keys(parent):
             loop[uv].uv = (t[0] * 0.5, t[1] * 0.1)
     bmesh.ops.triangulate(bm, faces=bm.faces)
     socket = obj('socket', bm, ['canvas'], parent)
-    key = patch('key', butterfly(crack_x(P['key_lower_y'] * MM), zl), 'walnut', parent, scale_uv=P['key_len'] * MM)
+    # Layers on the back stand 0.5 mm apart at least: closer, a headset can't tell which is in front and they
+    # flicker. The key is let in flush (drawn 0.5 mm proud); the canvas lies over the crack and the key (1 mm).
+    key = patch('key', butterfly(crack_x(P['key_lower_y'] * MM), zl), 'walnut', parent, lift=0.0005, scale_uv=P['key_len'] * MM)
     # Canvas glued along the crack, from the top edge down past its end.
     strip = []
     zs = [top - k * 0.01 for k in range(int(P['crack_len'] / 10) + 3)]
@@ -218,7 +226,7 @@ def keys(parent):
         strip.append((crack_x(top - z) - 0.009, z))
     for z in zs[::-1]:
         strip.append((crack_x(top - z) + 0.009, z))
-    lining = patch('crack_lining', strip, 'canvas', parent, lift=0.0002, scale_uv=0.04)
+    lining = patch('crack_lining', strip, 'canvas', parent, lift=0.001, scale_uv=0.04)
     return socket, key, lining
 
 
@@ -272,8 +280,8 @@ def chassis(parent):
     bars = []
     n = P['crossbars']
     bw, bt = P['crossbar_w'] * MM, P['crossbar_t'] * MM
-    # Straight bars resting on the back at the panel's edges (where the back is furthest back: the front bulges).
-    yb = T
+    # Straight bars resting on the back at the panel's corners, where the back is furthest back.
+    yb = T + RIM
     for k in range(n):
         z = -H / 2 + H * (k + 0.5) / n
         b = box(f'crossbar_{k + 1}', -ox + 0.01, ox - 0.01, yb, yb + bt, z - bw / 2, z + bw / 2, 'oak', parent)

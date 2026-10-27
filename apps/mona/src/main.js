@@ -34,7 +34,7 @@ import { HANG, createRoom } from './room.js';
 import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
-const MODEL_V = '3';
+const MODEL_V = '5';
 const ktx2 = (file) => new URL(`${BASE}ktx2/${file}`, location.href).href;
 KhronosTextureContainer2.URLConfig = {
   ...KhronosTextureContainer2.URLConfig,
@@ -173,6 +173,9 @@ async function load() {
   front.environmentIntensity = 0.2;
   for (const m of container.materials) {
     if (m.name.startsWith('gilt')) m.environmentIntensity = 0.9;
+    // From a distance a pixel covers many of the gilding's bright edges and punched marks, and flashed between
+    // them as the head moved: this widens the highlight where the detail gets smaller than a pixel.
+    m.enableSpecularAntiAliasing = true;
   }
   dressFrame();
 }

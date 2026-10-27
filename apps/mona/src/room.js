@@ -87,11 +87,12 @@ export function createRoom(scene) {
   const shelf = MeshBuilder.CreateBox('case-shelf', { width: CASE.width, height: shelfH, depth: CASE.depth + shelfOut }, scene);
   shelf.position.set(0, cy0 + shelfH / 2, CASE.out + shelfOut - (CASE.depth + shelfOut) / 2);
   shelf.material = steel;
-  // A slit of light along its top edge, behind the glass.
-  const slit = MeshBuilder.CreateBox('case-light', { width: CASE.width - 0.2, height: 0.012, depth: 0.05 }, scene);
-  slit.position.set(0, cy0 + shelfH + 0.006, -0.05);
+  // A frosted light bar along its top edge, behind the glass. 4 cm tall: a thinner one is a pixel or two high
+  // from the visitors' line and flickers as the head moves.
+  const slit = MeshBuilder.CreateBox('case-light', { width: CASE.width - 0.2, height: 0.04, depth: 0.03 }, scene);
+  slit.position.set(0, cy0 + shelfH + 0.02 + 0.001, -0.05);
   const sm = new StandardMaterial('case-light', scene);
-  sm.emissiveColor = Color3.FromHexString('#fff0da');
+  sm.emissiveColor = Color3.FromHexString('#d9ccb8');
   sm.disableLighting = true;
   slit.material = sm;
 
@@ -172,10 +173,11 @@ export function createRoom(scene) {
   for (const m of [...posts, ...sides, ...surround, lid, shelf, slit, back]) m.isPickable = false;
 
   // The room's ceiling lamp, lit from inside: what the gilt and varnish reflect.
-  const lamp = MeshBuilder.CreateCylinder('lamp', { height: 0.12, diameter: 0.18 }, scene);
-  lamp.position.set(0, 7.9, 3.5);
+  // A wide, dim disc rather than a small bright one, which flickered from below.
+  const lamp = MeshBuilder.CreateCylinder('lamp', { height: 0.06, diameter: 0.6 }, scene);
+  lamp.position.set(0, 8.85, 3.5);
   const lm = new StandardMaterial('lamp', scene);
-  lm.emissiveColor = Color3.FromHexString('#fff1dc');
+  lm.emissiveColor = Color3.FromHexString('#cfc4b4');
   lm.disableLighting = true;
   lamp.material = lm;
   lamp.isPickable = false;
