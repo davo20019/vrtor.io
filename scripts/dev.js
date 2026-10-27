@@ -34,6 +34,8 @@ const children = [
   run('npx', ['wrangler', 'dev', '-c', 'apps/hrt/wrangler.jsonc', '--port', '8805', '--inspector-port', '9255']),
   run('npm', ['run', 'watch', '-w', '@vrtor/mona']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/mona/wrangler.jsonc', '--port', '8806', '--inspector-port', '9256']),
+  run('npm', ['run', 'watch', '-w', '@vrtor/sacre']),
+  run('npx', ['wrangler', 'dev', '-c', 'apps/sacre/wrangler.jsonc', '--port', '8807', '--inspector-port', '9257']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/bdy/wrangler.jsonc', '--port', '8802', '--inspector-port', '9252']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/rds/wrangler.jsonc', '--port', '8801', '--inspector-port', '9251']),
   run('npx', ['wrangler', 'dev', '-c', 'apps/snd/wrangler.jsonc', '--port', '8800', '--inspector-port', '9250']),

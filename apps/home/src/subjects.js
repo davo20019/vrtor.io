@@ -31,6 +31,8 @@ const CELL = { name: 'The cell', code: 'cel', service: 'CEL' };
 const HEART = { name: 'The heart', code: 'hrt', service: 'HRT' };
 // Leonardo's Mona Lisa as the object it is: the C2RMF scan on its warped poplar plank, in its case (apps/mona).
 const MONA = { name: 'Mona Lisa', code: 'mona', service: 'MONA' };
+// David's Coronation of Napoleon at its real size, in its frame on the Salle Daru's red wall (apps/sacre).
+const SACRE = { name: 'The Coronation of Napoleon', code: 'sacre', service: 'SACRE' };
 const SOUND_LAB = { name: 'Sound Lab', code: 'snd', service: 'SND' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
@@ -130,6 +132,14 @@ export const SUBJECTS = {
   joconde: MONA,
   'la-joconde': MONA,
   leonardo: MONA,
+
+  sacre: SACRE,
+  coronation: SACRE,
+  'coronation-of-napoleon': SACRE,
+  'le-sacre': SACRE,
+  'sacre-de-napoleon': SACRE,
+  napoleon: SACRE,
+  couronnement: SACRE,
 
   mec: MECHANICS,
   mechanics: MECHANICS,

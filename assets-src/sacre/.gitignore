@@ -1,0 +1,7 @@
+raw/
+work/
+out/
+review/
+.venv
+__pycache__/
+refs/*.jpg

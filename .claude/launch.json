@@ -68,6 +68,19 @@
       ],
       "port": 4341,
       "url": "http://localhost:4341"
+    },
+    {
+      "name": "sacre-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "apps/sacre",
+        "--port",
+        "4361",
+        "--strictPort"
+      ],
+      "port": 4361,
+      "url": "http://localhost:4361"
     }
   ]
 }

@@ -1,0 +1,21 @@
+{
+ "frame": "y-up, front +z, metres; origin at the middle of the canvas front",
+ "canvas_mm": [
+  9790,
+  6210,
+  2
+ ],
+ "sight_mm": [
+  9756,
+  6176
+ ],
+ "tiles": [
+  2,
+  3
+ ],
+ "frame_outer_mm": [
+  10476,
+  6896
+ ],
+ "frame_front_mm": 84
+}
