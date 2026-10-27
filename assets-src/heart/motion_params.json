@@ -29,5 +29,6 @@
   "ra_max": "CT ED + (108 - 50) mL, Kawel-Boehm 2020 with RAA, men"
  },
  "outflow_reach": 25.0,
- "surface_smooth": 20
+ "surface_smooth": 20,
+ "vein_hold": 10.0
 }

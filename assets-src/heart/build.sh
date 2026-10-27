@@ -15,6 +15,7 @@ $PY subvalve.py
 # Nothing that lives inside the heart may come out through its walls, at rest or squeezed: the build stops.
 $PY check_inside.py
 $PY coronaries.py
+$PY vessels.py
 $PY parts.py
 blender -b --factory-startup --python-exit-code 1 --python assemble.py > out/assemble.log 2>&1 || { grep -E 'Error|assemble' out/assemble.log; exit 1; }
 grep '\[assemble\]' out/assemble.log

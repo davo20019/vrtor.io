@@ -66,9 +66,18 @@ export const ABOUT = {
     text: 'The heart\'s veins collect blood from its muscle into the coronary sinus, which runs in the groove at the back between the left atrium and ventricle and opens into the right atrium.',
     fact: 'The great cardiac vein runs beside the anterior descending artery, then round the left side to become the coronary sinus.',
   },
+  great_arteries: {
+    text: 'The aorta rises from the left ventricle, arches over the pulmonary arteries and the left main bronchus, and runs down beside the spine. From its arch leave the brachiocephalic trunk, the left common carotid and the left subclavian arteries, to the head and arms. The pulmonary trunk divides under the arch into the left and right pulmonary arteries, one to each lung.',
+    fact: 'Paths from BodyParts3D, widths matched to this heart\'s CT where they leave it.',
+  },
+  great_veins: {
+    text: 'Blood comes back to the right atrium through the superior vena cava (from the head and arms, formed by the two brachiocephalic veins) and the inferior vena cava (from the rest of the body, through the diaphragm). Four pulmonary veins, two from each lung, bring oxygen-rich blood to the left atrium.',
+    fact: 'The veins have no valves where they enter the atria: when the atria contract, a little blood is pushed back up them.',
+  },
 };
 
 export const GROUP_NAME = {
+  great_arteries: 'Great arteries', great_veins: 'Great veins',
   walls: 'Walls', mv: 'Mitral valve', tv: 'Tricuspid valve', av: 'Aortic valve', pv: 'Pulmonary valve',
   lv_papillary: 'Papillary muscles of the left ventricle', rv_papillary: 'Papillary muscles of the right ventricle',
   mv_chordae: 'Chordae of the mitral valve', tv_chordae: 'Chordae of the tricuspid valve',

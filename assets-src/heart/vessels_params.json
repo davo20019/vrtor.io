@@ -11,7 +11,7 @@
     "FJ3411",
     "FJ3427"
    ],
-   "length": 240,
+   "length": 150,
    "wall": 2.0
   },
   {
@@ -173,6 +173,8 @@
  "_sources": {
   "paths and radii": "BodyParts3D 4.0 (CC BY 4.0), carried onto the CT heart",
   "wall": "GUESS: wall thicknesses were not found in the literature search (aorta ~2 mm, pulmonary trunk ~1.2, veins ~0.8-1)",
-  "lengths": "how far each is shown, a choice: to the arch branches, the pulmonary split and the lung roots"
- }
+  "lengths": "how far each is shown, a choice: the aorta a short way past its arch (as heart specimens are cut), the arch branches, the pulmonary split and the lung roots",
+  "cut_above_ring": "aorta and pulmonary trunk stubs trimmed 22 mm above their valve ring, just above the commissures (19.4 mm, Jelenc 2024)"
+ },
+ "cut_above_ring": 22.0
 }

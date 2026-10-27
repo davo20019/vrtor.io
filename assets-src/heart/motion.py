@@ -142,7 +142,10 @@ def atria(amp_la, amp_ra):
         c = P[part].mean(0); q = P[part] - c; dirn = q / np.linalg.norm(q, axis=1, keepdims=True)
         ringpts = np.unique(cells[tag == ring].ravel())
         d = cKDTree(P[ringpts]).query(P[part])[0]
-        D[part] = amp * dirn * (1 - np.exp(-(d / M['follow_falloff_atrium']) ** 2))[:, None]
+        # zero at the valve ring (it moves with the ventricles) and at the vein mouths (the veins are held there)
+        caps = np.unique(cells[np.isin(tag, [11, 12, 13, 14, 15, 16, 17])].ravel())
+        dc = cKDTree(P[caps]).query(P[part])[0]
+        D[part] = amp * dirn * ((1 - np.exp(-(d / M['follow_falloff_atrium']) ** 2)) * (1 - np.exp(-(dc / M['vein_hold']) ** 2)))[:, None]
     return D
 
 def vol(D):

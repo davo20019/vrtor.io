@@ -39,5 +39,19 @@ export function createRoom(scene) {
   rm.emissiveColor = Color3.FromHexString('#e0566a');
   ring.material = rm;
   ring.isPickable = false;
-  return { floors: [floor] };
+  // Two soft overhead panels, like an operating theatre's lights: they are what the wet tissue reflects.
+  const lamps = [];
+  for (const [i, x] of [[0, -1.6], [1, 1.8]]) {
+    const p = MeshBuilder.CreatePlane(`lamp-${i}`, { width: 2.4, height: 1.2 }, scene);
+    p.position.set(x, 5.5, 0.8 * (i ? -1 : 1));
+    p.rotation.x = Math.PI / 2;
+    const lm = new StandardMaterial(`lamp-${i}`, scene);
+    lm.disableLighting = true;
+    lm.emissiveColor = Color3.FromHexString('#fff6ec');
+    lm.backFaceCulling = false;
+    p.material = lm;
+    p.isPickable = false;
+    lamps.push(p);
+  }
+  return { floors: [floor], envMeshes: [dome, floor, ring, ...lamps] };
 }

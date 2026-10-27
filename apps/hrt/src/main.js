@@ -22,6 +22,8 @@ import {
   PointerEventTypes,
   Quaternion,
   Ray,
+  ReflectionProbe,
+  RenderTargetTexture,
   Scene,
   TransformNode,
   Vector3,
@@ -31,10 +33,11 @@ import { continueInVr, createCard, createMenuControls, createXr, headsetNote, st
 import { PHASES, RR, at, ecg } from './cycle.js';
 import { ABOUT, GROUP_NAME, SOURCES } from './content.js';
 import { createRoom } from './room.js';
+import { applyTissue } from './tissue.js';
 import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
-const MODEL_V = '2';
+const MODEL_V = '7';
 MeshoptCompression.Configuration = { decoder: { url: `${location.origin}${BASE}vendor/meshopt_decoder.js` } };
 
 const $ = (sel) => document.querySelector(sel);
@@ -60,6 +63,12 @@ ip.exposure = 1.25;
 ip.contrast = 1.1;
 
 const room = createRoom(scene);
+const probe = new ReflectionProbe('env', 128, scene);
+probe.position = new Vector3(0, 1.4, 1.2);
+probe.renderList.push(...room.envMeshes);
+probe.refreshRate = RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
+scene.environmentTexture = probe.cubeTexture;
+scene.environmentIntensity = 0.9;
 // The heart floats over the ring at the room's middle. "Big" is 8 times life size (about a metre), to walk round
 // and look into; "Life size" is its real size.
 const SIZES = { big: { scale: 8, y: 1.35 }, life: { scale: 1, y: 1.3 } };
@@ -130,6 +139,7 @@ async function load() {
     parts.set(id, { id, mesh, meta: m, home: null });
   }
   for (const mat of container.materials) mat.backFaceCulling = false;
+  applyTissue(container.materials);
   setSize(size);
   for (const p of parts.values()) p.home = { position: p.mesh.position.clone(), rotation: p.mesh.rotationQuaternion?.clone() ?? null, parent: p.mesh.parent };
 }

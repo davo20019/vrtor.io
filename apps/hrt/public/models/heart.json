@@ -1319,6 +1319,156 @@
     "vsys",
     "afill"
    ]
+  },
+  "ves_aorta": {
+   "name": "Aorta",
+   "tissue": "artery_wall",
+   "group": "great_arteries",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_brachiocephalic": {
+   "name": "Brachiocephalic trunk",
+   "tissue": "artery_wall",
+   "group": "great_arteries",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_ivc": {
+   "name": "Inferior vena cava",
+   "tissue": "vein_wall",
+   "group": "great_veins",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_lbcv": {
+   "name": "Left brachiocephalic vein",
+   "tissue": "vein_wall",
+   "group": "great_veins",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_lcca": {
+   "name": "Left common carotid artery",
+   "tissue": "artery_wall",
+   "group": "great_arteries",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_lipv": {
+   "name": "Left inferior pulmonary vein",
+   "tissue": "vein_wall",
+   "group": "great_veins",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_lpa": {
+   "name": "Left pulmonary artery",
+   "tissue": "artery_wall",
+   "group": "great_arteries",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_lsa": {
+   "name": "Left subclavian artery",
+   "tissue": "artery_wall",
+   "group": "great_arteries",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_lspv": {
+   "name": "Left superior pulmonary vein",
+   "tissue": "vein_wall",
+   "group": "great_veins",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_pt": {
+   "name": "Pulmonary trunk",
+   "tissue": "artery_wall",
+   "group": "great_arteries",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_rbcv": {
+   "name": "Right brachiocephalic vein",
+   "tissue": "vein_wall",
+   "group": "great_veins",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_ripv": {
+   "name": "Right inferior pulmonary vein",
+   "tissue": "vein_wall",
+   "group": "great_veins",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_rpa": {
+   "name": "Right pulmonary artery",
+   "tissue": "artery_wall",
+   "group": "great_arteries",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_rspv": {
+   "name": "Right superior pulmonary vein",
+   "tissue": "vein_wall",
+   "group": "great_veins",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
+  },
+  "ves_svc": {
+   "name": "Superior vena cava",
+   "tissue": "vein_wall",
+   "group": "great_veins",
+   "mount": "body",
+   "targets": [
+    "vsys",
+    "afill"
+   ]
   }
  }
 }

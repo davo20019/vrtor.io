@@ -17,8 +17,15 @@ def add(pid, v, f, targets, m):
     for k, d in targets.items(): out[f'{pid}_t_{k}'] = d.astype('f4')
     m['targets'] = list(targets); meta[pid] = m
 
+CUTS = json.load(open('work/vessel_cuts.json')) if os.path.exists('work/vessel_cuts.json') else {}
 for k, (name, _) in WALLS.items():
-    v, f = W[k + '_v'], W[k + '_f']; vs, af = H.motion_at(v, 'heart')
+    v, f = W[k + '_v'], W[k + '_f']
+    if k in CUTS:   # trimmed square where its continuation (vessels.py) starts
+        import pyvista as pv
+        c, ax = map(np.array, CUTS[k])
+        mm = pv.PolyData(v, np.hstack([np.full((len(f), 1), 3), f]).ravel()).clip(normal=ax, origin=c, invert=True).triangulate().clean()
+        v, f = np.asarray(mm.points), mm.faces.reshape(-1, 4)[:, 1:]
+    vs, af = H.motion_at(v, 'heart')
     add(k, v, f, {'vsys': vs, 'afill': af}, {'name': name, 'tissue': TISSUE[k], 'group': 'walls'})
 for k, mm in VM.items():
     v = VAL[k + '_closed']; vs, af = H.motion_at(v, mm['valve'])
@@ -27,6 +34,15 @@ for k, mm in VM.items():
 for p in sorted(glob.glob('work/parts/*.npz')):
     pid = os.path.basename(p)[:-4]; d = dict(np.load(p)); m = json.load(open(p[:-4] + '.json'))
     add(pid, d['v'], d['f'], {k: d[k] for k in d if k not in ('v', 'f')}, m)
+# how each part looks (surface.py): colour per vertex, and the epicardial fat raising the walls' outside
+import pyvista as pv, surface
+m = pv.read('work/average.vtu'); t = np.isin(m.cell_data['ID'], [1, 2, 3, 4, 5, 6, 18, 19, 20, 21, 22, 23, 24, 7, 8, 9, 10])
+o = m.extract_cells(t).extract_surface(algorithm='dataset_surface').triangulate().connectivity('largest')
+o = o.extract_surface(algorithm='dataset_surface').compute_normals(auto_orient_normals=True)
+looks = surface.paint({k: {'v': out[k + '_v'].astype('f8'), 'f': out[k + '_f'], 'meta': meta[k]} for k in meta},
+                      (np.asarray(o.points), np.asarray(o.point_normals)))
+for k, (col, X) in looks.items():
+    out[k + '_v'] = X.astype('f4'); out[k + '_col'] = col.astype('f4')
 # the model's origin: the middle of the walls' bounds
 allv = np.vstack([W[k + '_v'] for k in WALLS]); centre = (allv.min(0) + allv.max(0)) / 2
 np.savez_compressed('work/heart_parts.npz', **out)
