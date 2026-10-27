@@ -29,6 +29,8 @@ const AIF = { name: 'AI foundations', code: 'aif', service: 'AIF' };
 const CELL = { name: 'The cell', code: 'cel', service: 'CEL' };
 // A normal adult heart from the average of 19 adults' CT, beating, its valves opening and shutting (apps/hrt).
 const HEART = { name: 'The heart', code: 'hrt', service: 'HRT' };
+// Leonardo's Mona Lisa as the object it is: the C2RMF scan on its warped poplar plank, in its case (apps/mona).
+const MONA = { name: 'Mona Lisa', code: 'mona', service: 'MONA' };
 const SOUND_LAB = { name: 'Sound Lab', code: 'snd', service: 'SND' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
@@ -119,6 +121,15 @@ export const SUBJECTS = {
   coeur: HEART,
   cuore: HEART,
   coracao: HEART,
+
+  mona: MONA,
+  'mona-lisa': MONA,
+  monalisa: MONA,
+  gioconda: MONA,
+  'la-gioconda': MONA,
+  joconde: MONA,
+  'la-joconde': MONA,
+  leonardo: MONA,
 
   mec: MECHANICS,
   mechanics: MECHANICS,

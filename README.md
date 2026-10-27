@@ -18,6 +18,7 @@ apps/fly/        Wright Flyer: the 1903 Flyer at Kill Devil Hills, Worker "vrtor
 apps/orca/       Orca: a killer whale skeleton, inside out, Worker "vrtor-orca"
 apps/snd/        Sound Lab: English sound contrasts and the LES sound library, Worker "vrtor-snd"
 apps/aif/        AI foundations: data, a neuron, error, gradient descent and a network, Worker "vrtor-aif"
+apps/mona/       Mona Lisa: the C2RMF scan on its warped poplar panel, in its case as the Louvre shows it, Worker "vrtor-mona"
 apps/cel/        The cell: an animal and a plant cell at 150,000x, every part out in your hands, Worker "vrtor-cel"
 apps/geo/        Earth (unlisted experiment): open imagery, terrain and buildings from orbit to
                  street level (three.js + 3d-tiles-renderer, not Babylon), Worker "vrtor-geo"

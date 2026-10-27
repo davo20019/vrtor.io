@@ -1,0 +1,10 @@
+{
+ "frame": "y-up, front +z, metres; origin at the middle of the plane through the panel front corners",
+ "panel_mm": [
+  534,
+  794,
+  13
+ ],
+ "warp_max_mm": 11,
+ "front_material": "painting"
+}

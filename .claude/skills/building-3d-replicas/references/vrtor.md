@@ -11,6 +11,10 @@
 - `assets-src/heart/` (a normal adult heart, /hrt): no photos; the CT average of 19 adults as the shape, BodyParts3D
   carried onto it, valves, papillary muscles and chordae rebuilt to published sizes (refs/literature.md), and
   the beat as morph targets calibrated on chamber volumes (motion.py). The worked example for references/organic.md.
+- `assets-src/monalisa/` (Leonardo's Mona Lisa, /mona): the public-domain C2RMF scan straightened onto the panel
+  (textures.py), relief and varnish read from it, the warped panel, its back, châssis and a stand-in frame built
+  from published structure (assemble.py), shown in its case as the Louvre shows it. The worked example for
+  references/flat.md.
 
 ## Frame
 

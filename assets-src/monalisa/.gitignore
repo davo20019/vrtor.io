@@ -1,0 +1,6 @@
+raw/
+work/
+out/
+review/
+.venv/
+__pycache__/
