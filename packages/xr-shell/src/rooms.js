@@ -8,6 +8,7 @@
 export const ROOMS = [
   { code: 'snd', name: 'Sound Lab' },
   { code: 'taj', name: 'Taj Mahal' },
+  { code: 'giza', name: 'Great Pyramid' },
   { code: 'mpc', name: 'Machu Picchu' },
   { code: 'apo', name: 'Apollo 11' },
   { code: 'fly', name: 'Wright Flyer' },

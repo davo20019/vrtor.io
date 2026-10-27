@@ -33,6 +33,8 @@ const HEART = { name: 'The heart', code: 'hrt', service: 'HRT' };
 const MONA = { name: 'Mona Lisa', code: 'mona', service: 'MONA' };
 // David's Coronation of Napoleon at its real size, in its frame on the Salle Daru's red wall (apps/sacre).
 const SACRE = { name: 'The Coronation of Napoleon', code: 'sacre', service: 'SACRE' };
+// Khufu's pyramid at its real size, course by course from Petrie's survey, inside and out (apps/giza).
+const GIZA = { name: 'The Great Pyramid', code: 'giza', service: 'GIZA' };
 const SOUND_LAB = { name: 'Sound Lab', code: 'snd', service: 'SND' };
 const MECHANICS = { name: 'Mechanics' };
 const MATH = { name: 'Math' };
@@ -140,6 +142,14 @@ export const SUBJECTS = {
   'sacre-de-napoleon': SACRE,
   napoleon: SACRE,
   couronnement: SACRE,
+
+  giza: GIZA,
+  pyramid: GIZA,
+  pyramids: GIZA,
+  'great-pyramid': GIZA,
+  'great-pyramid-of-giza': GIZA,
+  khufu: GIZA,
+  cheops: GIZA,
 
   mec: MECHANICS,
   mechanics: MECHANICS,

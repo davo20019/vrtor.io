@@ -81,6 +81,19 @@
       ],
       "port": 4361,
       "url": "http://localhost:4361"
+    },
+    {
+      "name": "giza-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "apps/giza",
+        "--port",
+        "4371",
+        "--strictPort"
+      ],
+      "port": 4371,
+      "url": "http://localhost:4371"
     }
   ]
 }
