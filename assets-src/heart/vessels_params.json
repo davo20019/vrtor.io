@@ -1,0 +1,178 @@
+{
+ "vessels": [
+  {
+   "id": "aorta",
+   "name": "Aorta",
+   "group": "great_arteries",
+   "stub": 5,
+   "ring": 9,
+   "bp3d": [
+    "FJ3413",
+    "FJ3411",
+    "FJ3427"
+   ],
+   "length": 240,
+   "wall": 2.0
+  },
+  {
+   "id": "brachiocephalic",
+   "name": "Brachiocephalic trunk",
+   "group": "great_arteries",
+   "from": "aorta",
+   "bp3d": [
+    "FJ3417"
+   ],
+   "length": 40,
+   "wall": 1.2
+  },
+  {
+   "id": "lcca",
+   "name": "Left common carotid artery",
+   "group": "great_arteries",
+   "from": "aorta",
+   "bp3d": [
+    "FJ3483"
+   ],
+   "length": 40,
+   "wall": 1.0
+  },
+  {
+   "id": "lsa",
+   "name": "Left subclavian artery",
+   "group": "great_arteries",
+   "from": "aorta",
+   "bp3d": [
+    "FJ3479"
+   ],
+   "length": 40,
+   "wall": 1.0
+  },
+  {
+   "id": "pt",
+   "name": "Pulmonary trunk",
+   "group": "great_arteries",
+   "stub": 6,
+   "ring": 10,
+   "bp3d": [
+    "FJ2966"
+   ],
+   "length": 35,
+   "wall": 1.2
+  },
+  {
+   "id": "lpa",
+   "name": "Left pulmonary artery",
+   "group": "great_arteries",
+   "from": "pt",
+   "bp3d": [
+    "FJ2924"
+   ],
+   "length": 40,
+   "wall": 1.0
+  },
+  {
+   "id": "rpa",
+   "name": "Right pulmonary artery",
+   "group": "great_arteries",
+   "from": "pt",
+   "bp3d": [
+    "FJ3019"
+   ],
+   "length": 50,
+   "wall": 1.0
+  },
+  {
+   "id": "svc",
+   "name": "Superior vena cava",
+   "group": "great_veins",
+   "stub": 16,
+   "bp3d": [
+    "FJ3645"
+   ],
+   "length": 70,
+   "wall": 1.0
+  },
+  {
+   "id": "rbcv",
+   "name": "Right brachiocephalic vein",
+   "group": "great_veins",
+   "from": "svc",
+   "bp3d": [
+    "FJ3583"
+   ],
+   "length": 35,
+   "wall": 0.8
+  },
+  {
+   "id": "lbcv",
+   "name": "Left brachiocephalic vein",
+   "group": "great_veins",
+   "from": "svc",
+   "bp3d": [
+    "FJ3482"
+   ],
+   "length": 60,
+   "wall": 0.8
+  },
+  {
+   "id": "ivc",
+   "name": "Inferior vena cava",
+   "group": "great_veins",
+   "stub": 17,
+   "bp3d": [
+    "FJ3441"
+   ],
+   "length": 30,
+   "wall": 1.0
+  },
+  {
+   "id": "lspv",
+   "name": "Left superior pulmonary vein",
+   "group": "great_veins",
+   "stub": 12,
+   "bp3d": [
+    "FJ2925"
+   ],
+   "length": 25,
+   "wall": 0.8
+  },
+  {
+   "id": "lipv",
+   "name": "Left inferior pulmonary vein",
+   "group": "great_veins",
+   "stub": 13,
+   "bp3d": [
+    "FJ2944"
+   ],
+   "length": 25,
+   "wall": 0.8
+  },
+  {
+   "id": "ripv",
+   "name": "Right inferior pulmonary vein",
+   "group": "great_veins",
+   "stub": 14,
+   "bp3d": [
+    "FJ3040"
+   ],
+   "length": 25,
+   "wall": 0.8
+  },
+  {
+   "id": "rspv",
+   "name": "Right superior pulmonary vein",
+   "group": "great_veins",
+   "stub": 15,
+   "bp3d": [
+    "FJ3020"
+   ],
+   "length": 25,
+   "wall": 0.8
+  }
+ ],
+ "_sources": {
+  "paths and radii": "BodyParts3D 4.0 (CC BY 4.0), carried onto the CT heart",
+  "wall": "GUESS: wall thicknesses were not found in the literature search (aorta ~2 mm, pulmonary trunk ~1.2, veins ~0.8-1)",
+  "lengths": "how far each is shown, a choice: to the arch branches, the pulmonary split and the lung roots"
+ }
+}

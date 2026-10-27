@@ -82,12 +82,12 @@ def ring_mid(v):
 
 # ---------------------------------------------------------------- papillary muscles
 
-def papillary(base, inward, toward, length, width, heads, name):
+def papillary(base, inward, toward, length, width, heads, name, root=3.0):
     """A finger of muscle growing out of the wall: its centreline starts 3 mm inside the wall at base, leaves
     along the wall's normal (inward) and curves towards its valve (toward); a root flared where it meets
     the wall; heads at the tip. Returns mesh, head tips, and each vertex's fraction along it (0 wall, 1 tip)."""
     inward = inward / np.linalg.norm(inward); toward = toward / np.linalg.norm(toward)
-    p0 = base - inward * 3.0; p1 = base + inward * (width * 0.6)
+    p0 = base - inward * root; p1 = base + inward * (width * 0.6)
     tip = p1 + toward * length * 0.85
     t = np.linspace(0, 1, 18)[:, None]
     path = (1 - t) ** 2 * p0 + 2 * (1 - t) * t * (p1 + toward * 2) + t ** 2 * tip   # quadratic Bezier
@@ -125,6 +125,29 @@ def bowed(p0, p1, length, sag_dir, n):
     return straight + np.outer(4 * h * t * (1 - t), s)
 
 # ---------------------------------------------------------------- build
+
+_outer = None
+def keep_inside(V, clear=0.4):
+    """Pull any vertex that reaches the heart's outer surface back in along its normal: a muscle's root is
+    inside the wall, never showing on the outside, however thin the wall is."""
+    global _outer
+    if _outer is None:
+        m = pv.read('work/average.vtu'); t = np.isin(m.cell_data['ID'], [1, 2, 3, 4, 5, 6, 18, 19, 20, 21, 22, 23, 24, 7, 8, 9, 10])
+        o = m.extract_cells(t).extract_surface(algorithm='dataset_surface').triangulate().connectivity('largest')
+        _outer = o.extract_surface(algorithm='dataset_surface').compute_normals(auto_orient_normals=True)
+    sd = pv.PolyData(V).compute_implicit_distance(_outer)['implicit_distance']
+    _, i = cKDTree(_outer.points).query(V); n = _outer.point_normals[i]
+    push = np.maximum(sd + clear, 0)
+    return V - n * push[:, None]
+
+
+def chord_motion(V, head, insert, side, valve):
+    """A chorda's vertices move as its two ends do, in proportion along it: its head with the cavity (the muscle's
+    tip), its insertion with the leaflet (the valve ring's motion)."""
+    t = np.clip(((V - head) @ (insert - head)) / max(np.sum((insert - head) ** 2), 1e-9), 0, 1)[:, None]
+    h = H.cavity_motion(head[None], side)[0][0]; q = H.motion_at(insert[None], valve)[0][0]
+    return h * (1 - t) + q * t
+
 
 def save(pid, V, F, targets, meta):
     np.savez_compressed(f'work/parts/{pid}.npz', v=V.astype('f4'), f=F.astype('i4'),
@@ -178,10 +201,11 @@ if __name__ == '__main__':
             else:              # LV: both muscles' angle and level solved together (below)
                 base, inward, Zs = lv_fit[pm['id']]
             target = c + nrm * 8                                   # towards the middle of the orifice, below the ring
-            V, F, tips, frac = papillary(base, inward, target - base, pm['length'], pm['width'], pm['heads'], pm['name'])
-            bvs, baf = H.motion_at(V, side)
-            # the base moves with the wall; towards the tip, with the ring (the muscle shortens)
-            vs = bvs * (1 - frac[:, None]) + ring_vs * frac[:, None]; af = baf * (1 - frac[:, None]) + ring_af * frac[:, None]
+            V, F, tips, frac = papillary(base, inward, target - base, pm['length'], pm['width'], pm['heads'], pm['name'],
+                                         root=3.0 if side == 'lv' else 1.2)   # the RV wall is under 4 mm thick
+            V = keep_inside(V)
+            # carried by the walls round it (its root is in the wall, so it moves with the wall there)
+            vs, af = H.cavity_motion(V, side)
             pid = f'{side}_pm_{pm["id"]}'
             save(pid, V, F, {'vsys': vs, 'afill': af}, {'name': pm['name'], 'tissue': 'heart', 'group': f'{side}_papillary',
                                                          'mount': side})
@@ -223,12 +247,12 @@ if __name__ == '__main__':
                         parts = [tube(tr, radius * 1.6, sides=6, cap=False)]
                         vs_list, op_list = [], []
                         L = [np.sum(np.linalg.norm(np.diff(b, axis=0), axis=1)) for b in brs]
-                        tvs = np.zeros((len(tr) * 6, 3)); vs_list.append(tvs + ring_vs); op_list.append(np.zeros((len(tr) * 6, 3)))
+                        vs_list.append(chord_motion(parts[0][0], h, ins_c[g].mean(0), side, valve)); op_list.append(np.zeros((len(tr) * 6, 3)))
                         for b, bo, Lb, q_c, q_o in zip(brs, brs_o, L, ins_c[g], ins_o[g]):
                             bv, bf = tube(b, radius, sides=6, cap=False); parts.append((bv, bf))
                             fan = b[0]; bow = bowed(fan, q_o, Lb, nrm, len(b))
                             Vo, _ = tube(bow, radius, sides=6, cap=False)
-                            vs_list.append(np.tile(ring_vs, (len(bv), 1))); op_list.append(Vo - bv)
+                            vs_list.append(chord_motion(bv, h, q_c, side, valve)); op_list.append(Vo - bv)
                         V, F = merge(parts)
                         chord_parts[pmid].append((V, F)); chord_vs[pmid].append(np.vstack(vs_list)); chord_op[pmid].append(np.vstack(op_list))
                         counts[order] = counts.get(order, 0) + len(g)
@@ -241,7 +265,7 @@ if __name__ == '__main__':
                     if np.linalg.norm(H.motion_at(q_c[None], 'mv')[0]) < 0: pass
                     V, F = tube(p, S['strut_d'] / 2, sides=8, cap=False)
                     Vo, _ = tube(bowed(h, q_o, np.linalg.norm(q_c - h), nrm, 10), S['strut_d'] / 2, sides=8, cap=False)
-                    chord_parts[pmid].append((V, F)); chord_vs[pmid].append(np.tile(ring_vs, (len(V), 1))); chord_op[pmid].append(Vo - V)
+                    chord_parts[pmid].append((V, F)); chord_vs[pmid].append(chord_motion(V, h, q_c, side, valve)); chord_op[pmid].append(Vo - V)
                     counts['strut'] = counts.get('strut', 0) + 1
         for pm in pms:
             if not chord_parts[pm['id']]: continue

@@ -34,7 +34,7 @@ import { createRoom } from './room.js';
 import './style.css';
 
 const BASE = import.meta.env.BASE_URL;
-const MODEL_V = '1';
+const MODEL_V = '2';
 MeshoptCompression.Configuration = { decoder: { url: `${location.origin}${BASE}vendor/meshopt_decoder.js` } };
 
 const $ = (sel) => document.querySelector(sel);

@@ -107,3 +107,20 @@ def motion_at(X, mount):
         sel = np.where(np.isin(_mo['label'], labs) & _mo['onsurf'])[0]; _mo['trees'][key] = (cKDTree(_mo['P'][sel]), sel)
     t, sel = _mo['trees'][key]; _, i = t.query(X)
     return _mo['vsys'][sel[i]], _mo['afill'][sel[i]]
+
+_cav = {}
+def cavity_motion(X, side):
+    """The beat's displacement (vsys, afill) at points inside a ventricle's cavity: interpolated from the inner
+    surface of its walls round it (inverse distance, cubed, over the 48 nearest wall points), so whatever is in
+    the cavity is carried along by the walls and the walls can never pass through it."""
+    if side not in _cav:
+        w = walls(); sel = w[side + '_uvc'][:, 0] < 0.05
+        if side == 'rv':   # the RV's cavity is also bounded by the septum, which is LV muscle
+            u = w['lv_uvc']; sept = (u[:, 0] > 0.95) & (np.abs(u[:, 1]) < 0.9)
+            P = np.vstack([w['rv_v'][sel], w['lv_v'][sept]])
+        else:
+            P = w['lv_v'][sel]
+        vs, af = motion_at(P, 'heart'); _cav[side] = (cKDTree(P), vs, af)
+    t, vs, af = _cav[side]; d, i = t.query(X, 48)
+    wgt = 1 / np.maximum(d, 0.5) ** 3; wgt /= wgt.sum(1, keepdims=True)
+    return (vs[i] * wgt[..., None]).sum(1), (af[i] * wgt[..., None]).sum(1)
