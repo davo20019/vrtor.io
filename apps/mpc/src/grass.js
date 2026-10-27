@@ -16,7 +16,8 @@ export async function createGrass(scene,enabled){
   material.albedoColor=Color3.White();material.roughness=1;material.metallic=0;
   material.backFaceCulling=false;material.twoSidedLighting=true;
   const positions=[],normals=[],colors=[],indices=[];
-  const root=Color3.FromHexString('#35451d').toLinearSpace(),tip=Color3.FromHexString('#86984c').toLinearSpace();
+  // The lawn's rendered albedo (photo scan times its gain, granite.js), standing blades catch less sun than the lawn, so they are lighter, more so at the tip.
+  const lawn=new Color3(.173,.183,.0155),root=lawn.scale(.9),tip=lawn.scale(1.6);
   for(let blade=0;blade<3;blade++){
     const angle=blade*Math.PI/3,dx=Math.cos(angle),dz=Math.sin(angle),base=positions.length/3;
     positions.push(-dx*.012,0,-dz*.012,dx*.012,0,dz*.012,dx*.012+.018,.085,dz*.003,-dx*.003+.018,.085,-dz*.003);

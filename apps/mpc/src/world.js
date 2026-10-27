@@ -9,7 +9,7 @@ import { createSurfaceWalker } from './walk.js';
 import { createSky } from './sky.js';
 import { createGrass } from './grass.js';
 import { buildTerrain } from './terrain.js';
-import { createGraniteGrain, GraniteMaterial, loadCitadelOcclusion, loadSurveyStone } from './granite.js';
+import { createGraniteGrain, GraniteMaterial, loadCitadelOcclusion, loadSiteSurfaces } from './granite.js';
 import { AREAS, SITE } from './areas.js';
 const BASE = import.meta.env.BASE_URL;
 DracoDecoder.DefaultConfiguration = {
@@ -72,7 +72,7 @@ export async function buildWorld(engine, onProgress) {
     if(cascaded)shadows.shadowMaxZ=scene.activeCamera?.getClassName()==='ArcRotateCamera'?1200:220;
   });
   // The elevation backdrop supplies the local ground too, avoiding overlapping planes.
-  const grain=createGraniteGrain(scene),surveyStone=loadSurveyStone(scene),occlusion=loadCitadelOcclusion(scene);
+  const grain=createGraniteGrain(scene),siteSurfaces=loadSiteSurfaces(scene),occlusion=loadCitadelOcclusion(scene);
   const [terrain]=await buildTerrain(scene,grain);terrain.receiveShadows=true;
   let current=null, active=-1, light=0;
   const floors=[];
@@ -86,11 +86,15 @@ export async function buildWorld(engine, onProgress) {
     const triangles=meshes.reduce((n,m)=>n+m.getTotalIndices()/3,0);
     if (triangles!==meta.triangles) {container.dispose();throw new Error('Survey geometry did not load completely.');}
     for (const m of container.materials) if (m instanceof PBRMaterial) {
-      const stone=i!==SITE||m.name.includes('stone');
-      if(stone)m.albedoColor=Color3.FromHexString(i===SITE?'#bcb9ae':'#d8d3c4').toLinearSpace();m.roughness=.88;m.metallic=0;
-      if(i===SITE&&m.name.includes('grass')){m.albedoColor=Color3.FromHexString('#647b36').toLinearSpace();m.zOffset=-2;m.zOffsetUnits=-2;}
       // Open survey surfaces have no modeled thickness; preserve both visible sides.
-      m.backFaceCulling=false;m.twoSidedLighting=true;if(stone||i===SITE)new GraniteMaterial(m,grain,i===SITE?surveyStone:null,i===SITE?occlusion:null,m.name.includes('grass'));
+      m.backFaceCulling=false;m.twoSidedLighting=true;m.metallic=0;
+      // The scans' grey values stay; a granite photo scan adds the stone's colour and grain.
+      if(i!==SITE){m.albedoColor=Color3.White();m.roughness=.88;new GraniteMaterial(m,grain,siteSurfaces,null,'rock');continue;}
+      // The citadel's surfaces are photo scans; the shader sets the albedo.
+      const kind=m.name.includes('grass')?'lawn':m.name.includes('earth')?'earth':'stone';
+      m.albedoColor=Color3.White();m.albedoTexture=null;m.roughness=kind==='lawn'?.95:.9;
+      if(kind==='lawn'){m.zOffset=-2;m.zOffsetUnits=-2;}
+      new GraniteMaterial(m,grain,siteSurfaces,occlusion,kind);
     }
     for (const m of meshes) {m.isPickable=false;m.receiveShadows=true;}
     return {i,meta,container,meshes,triangles};

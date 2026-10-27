@@ -7,7 +7,7 @@ The publisher identifies this [3D Warehouse model](https://3dwarehouse.sketchup.
 ## Changes by VRtor
 
 - Preserved all **32,759 triangles**; flattened the export hierarchy, centred the layout, and converted its coordinate scale by 0.01 for approximate human scale. The model is an architectural reconstruction, not a measured whole-site laser scan. Exact dimensions and present-day visitor routes are not verified.
-- Removed the original generic surface images and supplied illustrative stone, earth and vegetation colors with procedural mineral grain and a reusable normal/relief sample derived from CAST’s measured Main Temple geometry. These source-based surface cues replace the fabricated brick grid. Their placement and stone colors are illustrative; the whole model remains an architectural reconstruction.
+- Removed the original generic surface images (a fabricated brick grid) and replaced them with photo scans of real surfaces, sampled in world space at their real size; see [Photographed surfaces](#photographed-surfaces). The whole model remains an architectural reconstruction.
 - Compressed the geometry with Draco (16-bit positions, 12-bit normals), without further mesh reduction.
 - Derived landing surfaces from supported ground surfaces, excluding cliff edges and body intersections with walls. Teleport and click-to-travel use these surfaces. Continuous desktop/mobile movement can additionally follow narrow treads with five local foot-support checks, a 31 cm step limit, and body clearance checks. Unsupported areas remain inaccessible.
 - `citadel.json` records the source GLB hash, scale, bounds, triangle count, navigation surface corners and start position. Regenerate with `scripts/prepare-machu-site.py` and Blender.
@@ -16,11 +16,18 @@ The primary experience uses this single connected model. The six detailed **CAST
 
 The elevation backdrop remains Mapzen Terrain Tiles, SRTM/GMTED2010 courtesy of USGS, now coloured with Sentinel-2 cloudless 2016 imagery by EOX (CC BY 4.0); see [survey and terrain credits](./CREDITS.md). To fit the connected model, the illustrative local join now flattens a 350 m radius and blends to the elevation relief by 600 m. Neither archaeological model is registered to that terrain.
 
-## Survey-derived surface detail
+## Photographed surfaces
 
-`../materials/survey-stone-normal.png` and `survey-stone-relief.png` are derived from the **Main Temple** laser mesh supplied by **Instituto Nacional de Cultura (Peru)**, **Center for Advanced Spatial Technologies (University of Arkansas)**, and **Cotsen Institute for Archaeology (UCLA)**, under **CC BY-NC 3.0**. [Full contributors, source archive and restrictions](./CREDITS.md). These adapted maps retain the noncommercial restriction; the Ministry architectural geometry separately remains CC BY 4.0.
+The citadel's surfaces are CC0 photo scans (albedo and normal map), regraded so their mean colour is the colour measured on photographs of Machu Picchu. Vertical faces of every material are stone, since the source groups terrace walls with the lawns.
 
-`../materials/survey-stone.json` records the source OBJ hash, 4 m × 1.4 m sample, projection, 100% measured coverage, and adaptations. Reproduce with `scripts/bake-machu-stone.py` and Blender. Plane removal, periodic boundary correction and scan-noise filtering produce a mipmapped surface normal; depth supplies illustrative cavity shading and tone. This is not measured color, added geometric detail, or a claim that every facade matches this sample. No photographs or AI-generated images are used.
+| Surface | Scan | Size of one tile | Colour measured on the photographs (sRGB) |
+| --- | --- | ---: | --- |
+| Walls and wall tops | Poly Haven, [Stone Wall](https://polyhaven.com/a/stone_wall) (`stone_wall`): rough fieldstone in mud, like the citadel's pirka masonry | 2.0 m | 144, 134, 126 (7 photographs) |
+| Lawns | ambientCG, [Grass 004](https://ambientcg.com/view?id=Grass004) | 1.4 m | 117, 125, 42 (sunlit half, 4 photographs) |
+| Earth floors | Poly Haven, [Dirt Floor](https://polyhaven.com/a/dirt_floor) (`dirt_floor`) | 2.07 m | 181, 158, 138 (the Main Temple floor, 2 photographs) |
+| Laser-survey closeups | Poly Haven, [Rock Boulder Dry](https://polyhaven.com/a/rock_boulder_dry) (`rock_boulder_dry`), over the scans' own grey values | 1.8 m | as the walls |
+
+Poly Haven and ambientCG publish these under [CC0](https://creativecommons.org/publicdomain/zero/1.0/). The photographs (Wikimedia Commons; CC BY, CC BY-SA and public domain, listed in `assets-src/machu/photo_textures.py`) are used only to measure colour and are not shipped. In the scene a gain per surface brings the rendered colour, under the scene's sun and sky, to the photographs' mean, checked by sampling rendered pixels the same way. Every wall is the same rough masonry: the scene does not tell the fine ashlar of the temples from the rough walls, and the stones do not follow the model's courses. Regenerate with `python3 -I assets-src/machu/photo_textures.py`.
 
 ## Baked shading
 

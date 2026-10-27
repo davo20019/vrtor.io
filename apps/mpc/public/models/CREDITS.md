@@ -28,17 +28,13 @@ All **4,064,071 triangles** in the published OBJ meshes are retained. These arch
 - Centred each area independently, with no change to its proportions. Areas are **not** registered into a continuous whole-site reconstruction.
 - Preserved every published triangle; smooth normals and Draco compression (16-bit positions, 12-bit normals), without additional decimation.
 - Preserved and normalized the original 8-bit grayscale vertex values; repaired reversed face winding in the Condor archive.
-- The source OBJ meshes contain no photographic textures. Granite colors, procedural mineral grain, lighting, sky and local outdoor ground are illustrative; they do not represent measured appearance or terrain.
+- The source OBJ meshes contain no photographic textures. Their grey values are multiplied by a CC0 photo scan of weathered granite, graded to the stone colour measured on photographs of the site ([Photographed surfaces](./SITE-CREDITS.md#photographed-surfaces)). Lighting, sky and local outdoor ground are illustrative.
 - Derived restricted teleport surfaces from supported, relatively level scan surfaces. Gaps, walls and steep surfaces remain excluded.
 - The catalog image is a rendering of this adapted noncommercial educational experience and carries the same source attribution and noncommercial restriction.
 
 The experience is offered for free educational use, with no advertising, subscriptions, purchase links or paid-product promotion within it. These assets and their adapted versions must not be incorporated into paid products or commercial promotional material without separate permission from the rights holders. Free access alone does not determine whether other reuse is noncommercial.
 
 This file, the experience’s About panel, and the headset introduction identify the source and adaptations. The adapted survey assets remain CC BY-NC 3.0. No endorsement by the credited institutions is implied.
-
-## Survey-derived wall maps
-
-The connected walk also uses a reusable 4 m × 1.4 m Main Temple geometry sample as normal/relief maps, under the same CC BY-NC 3.0 terms and credits. These maps provide surface cues; their placement and colors remain illustrative. [Processing and limits](./SITE-CREDITS.md#survey-derived-surface-detail).
 
 ## Andean terrain backdrop
 
