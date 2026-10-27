@@ -61,8 +61,9 @@ void masonryCourse(float v,float H,float kind,out float row,out float c0,out flo
 void masonryStone(vec2 at,float H,float kind,out vec2 id,out vec2 edge,out vec2 toward,out float size){
   float row,c0,c1;masonryCourse(at.y,H,kind,row,c0,c1);
   float hc=c1-c0;
-  // Stone lengths: coursed 0.28-0.60 m, rustic 0.22-0.60 m, megalithic 0.4-1.7 m, about 1.6 course heights.
-  float L=kind>1.5?hc*1.6:kind>.5?.42:.4,spread=kind>1.5?.4:kind>.5?.2:.3;
+  // Stone lengths: coursed 0.28-0.60 m, rustic 0.22-0.60 m (scans); megalithic 1.8-3 course heights (photograph of
+  // the Principal Temple's back wall, Laslovarga 116; the scan's mesh splits its long blocks).
+  float L=kind>1.5?hc*2.3:kind>.5?.42:.4,spread=kind>1.5?.3:kind>.5?.2:.3;
   float x=at.x+masonryHash(vec2(row,3.0))*L*7.0,j=floor(x/L);
   float e0=(j+spread*(2.0*masonryHash(vec2(j,row))-1.0))*L,e1=(j+1.0+spread*(2.0*masonryHash(vec2(j+1.0,row))-1.0))*L;
   if(x<e0){j-=1.0;e1=e0;e0=(j+spread*(2.0*masonryHash(vec2(j,row))-1.0))*L;}
@@ -152,8 +153,9 @@ export class GraniteMaterial extends MaterialPluginBase {
         vec2 inner=stoneEdge+wander;
         float edgeDistance=min(inner.x,inner.y);
         if(inner.x<corner&&inner.y<corner)edgeDistance=corner-length(corner-inner);
-        // Arrises: about 15 mm on the Torreón's blocks; the Principal Temple's bigger blocks are taken as 30 mm (estimate).
-        float joint=rustic?.016:.0015,arris=rustic?.05:wallKind>1.5?.03:.015;
+        // Arrises, measured across joints on full-size photographs scaled by the scans' course heights: rounded
+        // over about 17 mm on the Torreón, 35 mm on the Principal Temple (the scans' 31-47 mm mesh can't resolve them).
+        float joint=rustic?.016:.0015,arris=rustic?.05:wallKind>1.5?.035:.017;
         float mortar=1.0-smoothstep(joint-pixel,joint+pixel,edgeDistance);
         float jointShare=clamp(2.0*joint*(2.0/max(stoneSize,.1)),0.0,1.0);
         mortar=mix(mortar,jointShare,smoothstep(joint,joint*6.0,pixel));

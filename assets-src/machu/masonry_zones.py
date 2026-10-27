@@ -143,8 +143,8 @@ def main():
         'frame': 'Babylon world metres; box = [xmin, ymin, zmin, xmax, ymax, zmax]',
         # Measured on the CAST laser scans (CC BY-NC 3.0) as relief images at 1 cm a pixel.
         'measured': {
-            'coursed': 'Torreón: courses 0.20-0.32 m (about 0.25), blocks 0.28-0.60 m (median about 0.40), hairline joints, arrises rounded over about 15 mm',
-            'megalithic': 'Principal Temple: courses about 0.80 m at the base to 0.30 m at the top, blocks 0.4-1.7 m and a few 2-3 m, hairline joints',
+            'coursed': 'Torreón: courses 0.20-0.32 m (about 0.25), blocks 0.28-0.60 m (median about 0.40) from the scan; hairline joints, arrises rounded over about 17 mm (photograph Peru-174)',
+            'megalithic': 'Principal Temple: courses about 0.80 m at the base to 0.30 m at the top (scan); blocks 1.8-3 course heights long, hairline joints, arrises rounded over about 35 mm (photograph Laslovarga 116)',
             'rustic': 'Knob Room and Water Mirrors: courses 0.24-0.36 m (about 0.28), stones 0.22-0.60 m (median about 0.40), mud joints a few cm',
         },
         'zones': zones,
