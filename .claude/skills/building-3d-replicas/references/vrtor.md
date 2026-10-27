@@ -8,6 +8,9 @@
   planar facets as half-spaces, wheels on steer and spin nodes, an interior audited against the published room
   dimensions (measure/cabin/audit.py). REPORT.md lists what went wrong and how it was fixed.
 - The standalone repo's `examples/cowbell/` (CC0): five photos, graded against the museum's scan.
+- `assets-src/heart/` (a normal adult heart, /hrt): no photos; the CT average of 19 adults as the shape, BodyParts3D
+  carried onto it, valves, papillary muscles and chordae rebuilt to published sizes (refs/literature.md), and
+  the beat as morph targets calibrated on chamber volumes (motion.py). The worked example for references/organic.md.
 
 ## Frame
 
