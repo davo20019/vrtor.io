@@ -7,6 +7,7 @@
 // Why: on a Quest the CPU cost of a draw call, twice a frame (one per eye), held the whole body to 9 fps.
 // See-through tissues (fascia, lungs, capsules...) stay as separate parts, so they are still sorted back to front.
 import { Matrix, MaterialPluginBase, Mesh, Vector3, VertexBuffer } from '@babylonjs/core';
+import { F_ATTR, giveDetail, partDetail } from './detail.js';
 
 const ATTR = 'bodyPartOn';
 /** The parts' usual layer mask (Babylon's default); 0 keeps a camera from drawing them. */
@@ -44,8 +45,15 @@ export function createBatches(scene, frame, meshes) {
   frame.computeWorldMatrix(true);
   const toFrame = Matrix.Invert(frame.getWorldMatrix());
   const groups = new Map();
+  const rel0 = new Matrix();
   for (const m of meshes) {
-    if (!m.material || m.material.needAlphaBlending()) continue;
+    if (!m.material) continue;
+    if (m.material.needAlphaBlending()) {
+      // Never batched: it draws as itself from the start, so it carries its surface's data from the start.
+      m.getWorldMatrix().multiplyToRef(toFrame, rel0);
+      giveDetail(m, partDetail(m, rel0));
+      continue;
+    }
     if (!groups.has(m.material)) groups.set(m.material, []);
     groups.get(m.material).push(m);
   }
@@ -62,6 +70,8 @@ export function createBatches(scene, frame, meshes) {
     }
     const pos = new Float32Array(verts * 3), nor = new Float32Array(verts * 3), col = new Float32Array(verts * 4);
     const on = new Float32Array(verts);
+    const fibrous = !!mat.pluginManager?.getPlugin('BodyDetail')?.fibre;
+    const fib = fibrous ? new Float32Array(verts * 4) : null;
     const ind = new Uint32Array(idx);
     let v0 = 0, i0 = 0;
     const batch = new Mesh(`batch-${mat.name}`, scene);
@@ -81,7 +91,11 @@ export function createBatches(scene, frame, meshes) {
       if (C) col.set(C.subarray(0, count * 4), v0 * 4);
       else col.fill(1, v0 * 4, (v0 + count) * 4);
       for (let k = 0; k < I.length; k++) ind[i0 + k] = I[k] + v0;
-      parts.push({ mesh: m, batch, start: v0, count, home: Float32Array.from(m.getWorldMatrix().m), on: false });
+      // The fibres are worked out once, here, from the part's vertices in the body; the part gets its own copy
+      // (and its vertices' places in the body) only when it first draws as itself: see sync().
+      const fibres = fib ? partDetail(m, rel).fibres : null;
+      if (fibres) fib.set(fibres, v0 * 4);
+      parts.push({ mesh: m, batch, start: v0, count, home: Float32Array.from(m.getWorldMatrix().m), on: false, detail: false });
       v0 += count;
       i0 += I.length;
     }
@@ -89,6 +103,8 @@ export function createBatches(scene, frame, meshes) {
     batch.setVerticesData(VertexBuffer.NormalKind, nor, false);
     batch.setVerticesData(VertexBuffer.ColorKind, col, false, 4);
     batch.setIndices(ind, verts);
+    if (fib) batch.setVerticesBuffer(new VertexBuffer(engine, fib, F_ATTR, false, false, 4));
+    batch.metadata = { batch: true, fib };
     const onBuffer = new VertexBuffer(engine, on, ATTR, true, false, 1);
     batch.setVerticesBuffer(onBuffer);
     // The glTF parts wind their triangles the other way from a new mesh's default.
@@ -96,7 +112,6 @@ export function createBatches(scene, frame, meshes) {
     batch.parent = frame;
     batch.material = mat;
     batch.isPickable = false;
-    batch.metadata = { batch: true };
     batch.computeWorldMatrix(true);
     batch.freezeWorldMatrix();
     batches.push({ mesh: batch, on, onBuffer, lo: Infinity, hi: -1 });
@@ -112,6 +127,12 @@ export function createBatches(scene, frame, meshes) {
     for (const part of parts) {
       const m = part.mesh;
       const inBatch = m.isEnabled() && !m.renderOverlay && m.isWorldMatrixFrozen && atHome(part);
+      if (!inBatch && !part.detail && m.isEnabled()) {
+        part.detail = true;
+        const b = part.batch, fib = b.metadata.fib;
+        const pos = b.getVerticesData(VertexBuffer.PositionKind).subarray(part.start * 3, (part.start + part.count) * 3);
+        giveDetail(m, { pos: pos.slice(), fibres: fib ? fib.slice(part.start * 4, (part.start + part.count) * 4) : null });
+      }
       m.layerMask = inBatch ? 0 : SHOWN;
       if (inBatch === part.on) continue;
       part.on = inBatch;

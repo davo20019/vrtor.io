@@ -4,6 +4,17 @@
 // red-brown with a wet sheen, arteries a paler red than the purple-blue veins, the liver dark and glossy,
 // nerves a dull cream, cartilage bluish and glassy. Colours are sRGB hex.
 import { Color3, PBRMaterial } from '@babylonjs/core';
+import { addDetail } from './detail.js';
+
+/** The surface each tissue has close up (detail.js); a tissue not listed is smooth. */
+const SURFACE = {
+  muscle: 'fibre', ligament: 'cord', bone: 'bone', skin: 'skin',
+  heart: 'soft', brain: 'soft', whitematter: 'soft', liver: 'soft', spleen: 'soft', kidney: 'soft', pancreas: 'soft',
+  gland: 'soft', tongue: 'soft', stomach: 'soft', gut: 'soft', bladder: 'soft', repro: 'soft', lung: 'soft',
+  node: 'soft', cartilage: 'soft', bronchus: 'soft', artery: 'soft', vein: 'soft', nerve: 'soft',
+};
+/** A muscle's tendons: pearly white, as ligament. */
+const TENDON = '#e2dacb';
 
 /** albedo, roughness, clearcoat (the wet film over living tissue, 0..1), alpha */
 export const TISSUES = {
@@ -11,7 +22,8 @@ export const TISSUES = {
   // Hyaline cartilage (the nose, the larynx, the ribs' ends): pearly white with a faint blue, glassy.
   cartilage:   { color: '#e2e6df', rough: 0.3, coat: 0.7 },
   ligament:    { color: '#e2dacb', rough: 0.4, coat: 0.5 },
-  muscle:      { color: '#8a2b22', rough: 0.5, coat: 0.55 },
+  // The wet film is thin: most of the shine comes off the fibres themselves, broken into streaks along them.
+  muscle:      { color: '#8a2b22', rough: 0.42, coat: 0.22 },
   heart:       { color: '#7e2a22', rough: 0.45, coat: 0.7 },
   valve:       { color: '#e4cfb2', rough: 0.4, coat: 0.6 },
   // The heart's chambers are casts of the blood in them: seen through, so the valves between them show.
@@ -74,6 +86,14 @@ export function createTissues(scene, { lite = false } = {}) {
       m.alpha = t.alpha;
       m.transparencyMode = PBRMaterial.MATERIAL_ALPHABLEND;
       m.backFaceCulling = true;
+    }
+    if (SURFACE[name]) {
+      let tint;
+      if (name === 'muscle') {
+        const a = m.albedoColor, b = Color3.FromHexString(TENDON).toLinearSpace();
+        tint = [b.r / a.r, b.g / a.g, b.b / a.b];
+      }
+      addDetail(m, SURFACE[name], tint);
     }
     mats[name] = m;
   }
