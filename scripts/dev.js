@@ -1,56 +1,34 @@
-// Local dev for the whole site at http://localhost:8790 (`npm run dev -- --port 9000` to change).
-// Rebuilds the subject apps on change and runs each Worker in its own wrangler
-// process; wrangler's dev registry connects the service bindings (vrtor.io/spc)
-// like in production. (One process with several -c configs returns 500 for a
-// bound Worker's static assets in wrangler 4.145.)
+// Local dev for the whole site at http://localhost:8790:
+//   npm run dev                  every subject (heavy: one Vite watcher and one wrangler per app)
+//   npm run dev -- mpc taj       only those subjects; the others' links fail locally
+//   npm run dev -- --port 9000   home on another port (any other flags go to home's wrangler)
+// Rebuilds the subject apps on change and runs each Worker in its own wrangler process;
+// wrangler's dev registry connects the service bindings (vrtor.io/spc) like in production.
+// (One process with several -c configs returns 500 for a bound Worker's static assets in
+// wrangler 4.145.)
 import { spawn, spawnSync } from 'node:child_process';
+import { HOME, SUBJECTS, inspectorPort } from './apps.js';
 
-const run = (cmd, args) => spawn(cmd, args, { stdio: 'inherit' });
+const args = process.argv.slice(2);
+const only = args.filter((a) => SUBJECTS.some((s) => s.code === a));
+const homeArgs = args.filter((a) => !only.includes(a));
+if (!homeArgs.includes('--port')) homeArgs.push('--port', String(HOME.port));
+const subjects = only.length ? SUBJECTS.filter((s) => only.includes(s.code)) : SUBJECTS;
 
-const first = spawnSync('npm', ['run', 'build'], { stdio: 'inherit' });
+const first = spawnSync('node', ['scripts/each.js', 'build', ...subjects.map((s) => s.code)], { stdio: 'inherit' });
 if (first.status !== 0) process.exit(first.status ?? 1);
 
-const homeArgs = process.argv.slice(2);
-if (!homeArgs.includes('--port')) homeArgs.push('--port', '8790');
+const run = (cmd, cmdArgs) => spawn(cmd, cmdArgs, { stdio: 'inherit' });
+const wrangler = (app, extra = []) =>
+  run('npx', ['wrangler', 'dev', '-c', `apps/${app.code}/wrangler.jsonc`, '--inspector-port', String(inspectorPort(app)), ...extra]);
 
 const children = [
-  run('npm', ['run', 'watch', '-w', '@vrtor/snd']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/spc']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/taj']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/mpc']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/apo']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/fly']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/orca']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/geo']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/jump']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/cyb']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/rds']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/bdy']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/aif']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/aif/wrangler.jsonc', '--port', '8803', '--inspector-port', '9253']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/cel']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/cel/wrangler.jsonc', '--port', '8804', '--inspector-port', '9254']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/hrt']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/hrt/wrangler.jsonc', '--port', '8805', '--inspector-port', '9255']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/mona']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/mona/wrangler.jsonc', '--port', '8806', '--inspector-port', '9256']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/sacre']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/sacre/wrangler.jsonc', '--port', '8807', '--inspector-port', '9257']),
-  run('npm', ['run', 'watch', '-w', '@vrtor/giza']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/giza/wrangler.jsonc', '--port', '8808', '--inspector-port', '9258']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/bdy/wrangler.jsonc', '--port', '8802', '--inspector-port', '9252']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/rds/wrangler.jsonc', '--port', '8801', '--inspector-port', '9251']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/snd/wrangler.jsonc', '--port', '8800', '--inspector-port', '9250']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/cyb/wrangler.jsonc', '--port', '8799', '--inspector-port', '9249']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/jump/wrangler.jsonc', '--port', '8798', '--inspector-port', '9248']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/geo/wrangler.jsonc', '--port', '8797', '--inspector-port', '9247']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/orca/wrangler.jsonc', '--port', '8796', '--inspector-port', '9246']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/fly/wrangler.jsonc', '--port', '8795', '--inspector-port', '9245']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/apo/wrangler.jsonc', '--port', '8794', '--inspector-port', '9244']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/mpc/wrangler.jsonc', '--port', '8793', '--inspector-port', '9243']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/taj/wrangler.jsonc', '--port', '8792', '--inspector-port', '9242']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/spc/wrangler.jsonc', '--port', '8791', '--inspector-port', '9241']),
-  run('npx', ['wrangler', 'dev', '-c', 'apps/home/wrangler.jsonc', '--inspector-port', '9240', ...homeArgs]),
+  ...subjects.flatMap((app) => [
+    run('npm', ['run', 'watch', '-w', `@vrtor/${app.code}`]),
+    wrangler(app, ['--port', String(app.port)]),
+  ]),
+  // DEV stops home's canonical-host redirect: wrangler dev presents requests as http://vrtor.io.
+  wrangler(HOME, ['--var', 'DEV:1', ...homeArgs]),
 ];
 const stop = () => children.forEach((c) => c.kill());
 process.on('SIGINT', stop);

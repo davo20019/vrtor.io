@@ -2,6 +2,17 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "site-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "spc"
+      ],
+      "port": 8790
+    },
+    {
       "name": "rds-preview",
       "runtimeExecutable": "npx",
       "runtimeArgs": [

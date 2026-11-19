@@ -1,0 +1,30 @@
+name: Headset report
+description: You tried a subject in a VR headset. Tell us how it went, good or bad.
+labels: [headset]
+body:
+  - type: input
+    id: address
+    attributes:
+      label: Subject address
+      placeholder: vrtor.io/hrt
+    validations:
+      required: true
+  - type: input
+    id: headset
+    attributes:
+      label: Headset and browser
+      placeholder: Quest 3, Meta Quest Browser 40
+    validations:
+      required: true
+  - type: dropdown
+    id: smooth
+    attributes:
+      label: Did it feel smooth?
+      options: [Smooth, Mostly smooth, Stutters, Unusable]
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Comfort, anything hard to read or reach, controls that didn't work, the frame rate if you could see it.

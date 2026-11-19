@@ -1,0 +1,23 @@
+name: New subject
+description: Propose a new subject before building it
+labels: [new subject]
+body:
+  - type: textarea
+    id: learn
+    attributes:
+      label: What would a visitor learn or do?
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: 3D sources and their licences
+      description: Links to the models, scans or data you'd use, and the licence of each. Redistribution must be allowed (see ASSETS.md).
+    validations:
+      required: true
+  - type: input
+    id: code
+    attributes:
+      label: Proposed address
+      description: Three or four letters, easy to type with a controller.
+      placeholder: vrtor.io/xyz

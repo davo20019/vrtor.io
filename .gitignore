@@ -6,3 +6,32 @@ dist
 # Generated renders and videos (large, regenerable)
 output/
 __pycache__/
+*.log
+
+# Private notes (plans, integrations): kept locally, not published
+notes/
+
+# Not redistributable, kept out of git (see ASSETS.md, "Not in this repository")
+apps/snd/src/audio/
+apps/apo/public/models/suit.glb
+apps/apo/public/models/helmet.glb
+# Copyrighted reference photos, manuals and video frames used to measure the replicas,
+# and the photo overlays made from them. Each SOURCES.md lists the references.
+assets-src/cybertruck/refs/**
+assets-src/roadster/refs/**
+assets-src/altimeter/refs/**
+!assets-src/*/refs/**/
+!assets-src/*/refs/**/SOURCES.md
+assets-src/*/measure/**/*.png
+assets-src/*/measure/**/*.jpg
+assets-src/*/measure/**/*.jpeg
+assets-src/*/review/**/*.png
+assets-src/*/review/**/*.jpg
+assets-src/*/review/**/*.jpeg
+assets-src/*/review/**/*.html
+assets-src/*/review/**/*.mp4
+assets-src/*/review/**/*.webm
+assets-src/*/fit/**/*.png
+assets-src/*/fit/**/*.jpg
+assets-src/*/fit/**/*.jpeg
+.claude/scheduled_tasks.lock
