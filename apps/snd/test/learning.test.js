@@ -31,11 +31,16 @@ test('library has 44 unique LES guides with valid links and labeled regional ent
   assert.equal(new URL(guideUrl('unknown')).hostname, 'www.learnenglishsounds.com');
 });
 
-test('every exercise and guide has a committed playable audio asset', () => {
+// The clips themselves are not in the public repository (macOS voice licence; see ASSETS.md), so
+// they are checked only where they have been built (node scripts/build-sound-audio.mjs).
+const haveAudio = existsSync(new URL('../src/audio/', import.meta.url));
+
+test('every exercise and guide has an audio clip in the manifest, playable where the clips are built', () => {
   const manifest = JSON.parse(readFileSync(new URL('../src/audio-manifest.json', import.meta.url)));
   const check = (text, accent = 'American English') => {
     const path = manifest[`${accent}:${text}`];
     assert.ok(path, text);
+    if (!haveAudio) return;
     assert.ok(existsSync(new URL(`../src/${path}`, import.meta.url)), text);
     assert.ok(readFileSync(new URL(`../src/${path}`, import.meta.url)).length > 1000, text);
   };
